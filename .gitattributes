@@ -1,0 +1,4 @@
+* text=auto !eol
+/Makemain.inc -text
+/coin.m4 -text
+/run_autotools -text

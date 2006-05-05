@@ -1,0 +1,29 @@
+#!/bin/sh
+
+pos_dirs=`find . -type d`
+dirs=
+for dir in $pos_dirs; do
+  if test -r $dir/configure.ac; then
+    dirs="$dirs $dir"
+  fi
+done
+echo Running autotools in $dirs
+
+toolsdir=`pwd`/BuildTools
+
+for dir in $dirs; do
+  (cd $dir
+   echo creating acinclude.m4 in $dir
+   cat $HOME/share/aclocal/libtool.m4 $toolsdir/coin.m4> acinclude.m4
+   echo running aclocal in $dir
+   aclocal
+   if grep AC_CONFIG_HEADER configure.ac >/dev/null 2>&1; then
+     echo running autoheader in $dir
+     autoheader
+   fi
+   echo running automake -a -c in $dir
+   automake -a -c
+   echo running autoconf in $dir
+   autoconf
+   )
+done
