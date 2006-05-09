@@ -24,19 +24,85 @@ AC_PREREQ(2.59)
 AC_DEFUN([AC_COIN_MAIN_SUBDIRS],
 [coin_subdirs=
 m4_ifvaln([$1],[AC_MSG_CHECKING(whether directory $1 is available)
-                if test -r $1/configure; then
+                if test -r $srcdir/$1/configure; then
                   coin_subdirs="$coin_subdirs $1"
                   AC_MSG_RESULT(yes)
+                  AC_CONFIG_SUBDIRS($1)
                 else
                   AC_MSG_RESULT(no)
                 fi])
-AC_MSG_CHECKING(whether directory Data is available)
-if test -r Data/configure; then
-  coin_subdirs="$coin_subdirs $1"
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
+m4_ifvaln([$2],[AC_MSG_CHECKING(whether directory $2 is available)
+                if test -r $srcdir/$2/configure; then
+                  coin_subdirs="$coin_subdirs $2"
+                  AC_MSG_RESULT(yes)
+                  AC_CONFIG_SUBDIRS($2)
+                else
+                  AC_MSG_RESULT(no)
+                fi])
+m4_ifvaln([$3],[AC_MSG_CHECKING(whether directory $3 is available)
+                if test -r $srcdir/$3/configure; then
+                  coin_subdirs="$coin_subdirs $3"
+                  AC_MSG_RESULT(yes)
+                  AC_CONFIG_SUBDIRS($3)
+                else
+                  AC_MSG_RESULT(no)
+                fi])
+m4_ifvaln([$4],[AC_MSG_CHECKING(whether directory $4 is available)
+                if test -r $srcdir/$4/configure; then
+                  coin_subdirs="$coin_subdirs $4"
+                  AC_MSG_RESULT(yes)
+                  AC_CONFIG_SUBDIRS($4)
+                else
+                  AC_MSG_RESULT(no)
+                fi])
+m4_ifvaln([$5],[AC_MSG_CHECKING(whether directory $5 is available)
+                if test -r $srcdir/$5/configure; then
+                  coin_subdirs="$coin_subdirs $5"
+                  AC_MSG_RESULT(yes)
+                  AC_CONFIG_SUBDIRS($5)
+                else
+                  AC_MSG_RESULT(no)
+                fi])
+m4_ifvaln([$6],[AC_MSG_CHECKING(whether directory $6 is available)
+                if test -r $srcdir/$6/configure; then
+                  coin_subdirs="$coin_subdirs $6"
+                  AC_MSG_RESULT(yes)
+                  AC_CONFIG_SUBDIRS($6)
+                else
+                  AC_MSG_RESULT(no)
+                fi])
+m4_ifvaln([$7],[AC_MSG_CHECKING(whether directory $7 is available)
+                if test -r $srcdir/$7/configure; then
+                  coin_subdirs="$coin_subdirs $7"
+                  AC_MSG_RESULT(yes)
+                  AC_CONFIG_SUBDIRS($7)
+                else
+                  AC_MSG_RESULT(no)
+                fi])
+m4_ifvaln([$8],[AC_MSG_CHECKING(whether directory $8 is available)
+                if test -r $srcdir/$8/configure; then
+                  coin_subdirs="$coin_subdirs $8"
+                  AC_MSG_RESULT(yes)
+                  AC_CONFIG_SUBDIRS($8)
+                else
+                  AC_MSG_RESULT(no)
+                fi])
+m4_ifvaln([$9],[AC_MSG_CHECKING(whether directory $9 is available)
+                if test -r $srcdir/$9/configure; then
+                  coin_subdirs="$coin_subdirs $9"
+                  AC_MSG_RESULT(yes)
+                  AC_CONFIG_SUBDIRS($9)
+                else
+                  AC_MSG_RESULT(no)
+                fi])
+m4_ifvaln([$10],[AC_MSG_CHECKING(whether directory $10 is available)
+                if test -r $srcdir/$10/configure; then
+                  coin_subdirs="$coin_subdirs $10"
+                  AC_MSG_RESULT(yes)
+                  AC_CONFIG_SUBDIRS($10)
+                else
+                  AC_MSG_RESULT(no)
+                fi])
 ]) # AC_COIN_MAIN_SUBDIRS
 
 ###########################################################################
@@ -49,7 +115,7 @@ fi
 AC_DEFUN([AC_COIN_SRCDIR_INIT],
 [
 # Figure out if this is a VPATH configuration
-if test $coin_abs_srcdir != `pwd`; then
+if test `cd $srcdir; pwd` != `pwd`; then
   coin_vpath_config=true;
 else
   coin_vpath_config=false;
@@ -1114,27 +1180,24 @@ AC_SUBST(EXAMPLE_CLEAN_FILES)
 ###########################################################################
 
 # This macro sets up usage of a Coin package.  It defines the
-# PKGINCDIR variable, and it defines COIN_HAS_PKG preprocessor macro
-# and makefile conditional.  The argument should be the name (Pkg) of
-# the project (in correct lower and upper case)
+# PKGSRCDIR and PKGOBJDIR variables, refering to the main source and
+# object directory of the package, respectively.  It also defines
+# a COIN_HAS_PKG preprocessor macro and makefile conditional.  The
+# argument should be the name (Pkg) of the project (in correct lower
+# and upper case)
 
 AC_DEFUN([AC_COIN_HAS_PROJECT],
-[AC_REQUIRE([AC_COIN_GET_EXTERNALS])
-AC_MSG_CHECKING([for COIN project $1])
+[AC_MSG_CHECKING([for COIN project $1])
 
 # First check, if the sub-project is actually available (ToDo: allow
 # other locations)
 
 m4_tolower(coin_has_$1)=unavailable
-if test -d $coin_basedir/$1; then
-  m4_tolower(coin_has_$1)=$coin_basedir/$1
+if test $PACKAGE_TARNAME = m4_tolower($1); then
+  m4_tolower(coin_has_$1)=.
 else
-  if test $PACKAGE_TARNAME = m4_tolower($1); then
-    m4_tolower(coin_has_$1)=self
-  else
-    if test $coin_baseproject = m4_tolower($1); then
-      m4_tolower(coin_has_$1)=$coin_basedir
-    fi
+  if test -d $srcdir/../$1; then
+    m4_tolower(coin_has_$1)=../$1
   fi
 fi
 
@@ -1142,22 +1205,14 @@ if test $m4_tolower(coin_has_$1) != unavailable; then
   # Set the #define if the component is available
   AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 package is used])
 
-  # Set the include dir
-  AC_SUBST(m4_toupper($1INCDIR))
-  if test $m4_tolower(coin_has_$1) = self; then
-    m4_toupper($1INCDIR)=$srcdir/src
-  else
-    m4_toupper($1INCDIR)=$m4_tolower(coin_has_$1)/src
-    # If this is the base project and the code is in a subdirectory,
-    # recurse into it in the Makefiles and configure
-    if test $coin_is_base_project = true && \
-       test $m4_tolower(coin_has_$1) = $coin_basedir/$1; then
-      AC_CONFIG_SUBDIRS($1)
-    fi
-  fi
-  # Define the Makefile conditional
+  # Set the variables for source and object code location
+  AC_SUBST(m4_toupper($1SRCDIR))
+  m4_toupper($1SRCDIR)=`cd $srcdir/$m4_tolower(coin_has_$1); pwd`
+  AC_SUBST(m4_toupper($1OBJDIR))
+  m4_toupper($1OBJDIR)=`cd $m4_tolower(coin_has_$1); pwd`
 fi
 
+  # Define the Makefile conditional
 AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
                test $m4_tolower(coin_has_$1) != unavailable)
 AC_MSG_RESULT([$m4_tolower(coin_has_$1)])

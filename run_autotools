@@ -1,6 +1,6 @@
 #!/bin/sh
 
-pos_dirs=`find . -type d`
+pos_dirs=`find . -name configure.ac | sed -e s%/configure.ac%%g`
 dirs=
 for dir in $pos_dirs; do
   if test -r $dir/configure.ac; then
@@ -21,8 +21,8 @@ for dir in $dirs; do
      echo running autoheader in $dir
      autoheader
    fi
-   echo running automake -a -c in $dir
-   automake -a -c
+   echo running automake in $dir
+   automake
    echo running autoconf in $dir
    autoconf
    )

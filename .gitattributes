@@ -1,4 +1,9 @@
 * text=auto !eol
 /Makemain.inc -text
 /coin.m4 -text
+/config.guess -text
+/config.sub -text
+/depcomp -text
+/install-sh -text
+/missing -text
 /run_autotools -text
