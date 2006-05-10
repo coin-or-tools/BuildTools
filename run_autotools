@@ -9,7 +9,17 @@ for dir in $pos_dirs; do
 done
 echo Running autotools in $dirs
 
-toolsdir=`pwd`/BuildTools
+currdir=`pwd`
+if test -r $currdir/BuildTools/coin.m4; then
+  toolsdir=$currdir/BuildTools
+else
+  if test -r $currdir/../BuildTools/coin.m4; then
+    toolsdir=$currdir/../BuildTools
+  else
+    echo Cannot find BuildTools directory.
+    exit 1
+  fi
+fi
 
 for dir in $dirs; do
   (cd $dir

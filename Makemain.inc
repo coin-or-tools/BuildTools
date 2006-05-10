@@ -12,28 +12,45 @@
 
 if MAINTAINER_MODE
 
-BUILDTOOLSDIR=$(srcdir)/BuildTools
-
 # Make sure acinclude is using most recent coin.m4
 $(srcdir)/acinclude.m4: $(BUILDTOOLSDIR)/coin.m4
 	cat $(LIBTOOLM4) $< > $@
 
 # Make sure the autotools scripts are up to date
-$(srcdir)/install-sh: $(BUILDTOOLSDIR)/install-sh
+$(AUX_DIR)/install-sh: $(BUILDTOOLSDIR)/install-sh
 	cp $< $@
 
-$(srcdir)/missing: $(BUILDTOOLSDIR)/missing
+$(AUX_DIR)/missing: $(BUILDTOOLSDIR)/missing
 	cp $< $@
 
-$(srcdir)/config.guess: $(BUILDTOOLSDIR)/config.guess
+if MAINTAINER_SMALL
+else
+$(AUX_DIR)/config.guess: $(BUILDTOOLSDIR)/config.guess
 	cp $< $@
 
-$(srcdir)/config.sub: $(BUILDTOOLSDIR)/config.sub
+$(AUX_DIR)/config.sub: $(BUILDTOOLSDIR)/config.sub
 	cp $< $@
 
-$(srcdir)/depcomp: $(BUILDTOOLSDIR)/depcomp
+$(AUX_DIR)/depcomp: $(BUILDTOOLSDIR)/depcomp
 	cp $< $@
 
-$(srcdir)/ltmain.sh: $(BUILDTOOLSDIR)/ltmain.sh
+$(AUX_DIR)/ltmain.sh: $(BUILDTOOLSDIR)/ltmain.sh
 	cp $< $@
+endif
+
+# Take care of updating externals (if Externals file exists)
+if HAVE_EXTERNALS
+$(top_builddir)/Makefile: .Externals-stamp
+
+.Externals-stamp: $(srcdir)/Externals
+	cd $(srcdir); svn propset svn:externals -F Externals .
+	touch .Externals-stamp
+
+distclean-local:
+	rm -f .Externals-stamp
+
+EXTRA_DIST += Externals
+
+endif
+
 endif

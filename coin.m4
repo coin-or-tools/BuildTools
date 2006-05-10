@@ -106,6 +106,20 @@ m4_ifvaln([$10],[AC_MSG_CHECKING(whether directory $10 is available)
 ]) # AC_COIN_MAIN_SUBDIRS
 
 ###########################################################################
+#                           COIN_CHECK_VPATH                              #
+###########################################################################
+
+# This macro sets the variable coin_vpath_config to true if this is a
+# VPATH configuration, otherwise it sets it to false.
+AC_DEFUN([AC_COIN_CHECK_VPATH],
+[if test `cd $srcdir; pwd` != `pwd`; then
+  coin_vpath_config=true;
+else
+  coin_vpath_config=false;
+fi
+]) # AC_COIN_CHECK_VPATH
+
+###########################################################################
 #                           COIN_SRCDIR_INIT                              #
 ###########################################################################
 
@@ -113,20 +127,14 @@ m4_ifvaln([$10],[AC_MSG_CHECKING(whether directory $10 is available)
 # configure script, such as defining a few variables.
 
 AC_DEFUN([AC_COIN_SRCDIR_INIT],
-[
-# Figure out if this is a VPATH configuration
-if test `cd $srcdir; pwd` != `pwd`; then
-  coin_vpath_config=true;
-else
-  coin_vpath_config=false;
-fi
-
-# Initialize the ADDLIBS variable (a number of library require -lm)
+[# Initialize the ADDLIBS variable (a number of library require -lm)
 ADDLIBS="-lm"
 AC_SUBST(ADDLIBS)
 
 # A useful makefile conditional that is always false
 AM_CONDITIONAL(ALWAYS_FALSE, false)
+
+# A makefile conditional that is set to true if 
 ]) # AC_COIN_SRCDIR_INIT
 
 ###########################################################################
@@ -732,66 +740,30 @@ esac
 
 
 ###########################################################################
-#                         COIN_INIT_AUTO_TOOLS                            #
+#                          COIN_INIT_AUTOMAKE                             #
 ###########################################################################
 
-# Initialize the auto tools automake and libtool, with all
-# modifications we want for COIN packages.
-#
-# This also defines the AC_SUBST variables:
-# pkg_source_dir     absolute path to source code for this package
-# pkg_bin_dir        absolute path to the directory where binaries are
-#                    going to be installed (prefix/bin)
-# pkg_lib_dir        absolute path to the directory where libraries are
-#                    going to be installed (prefix/lib)
-# pkg_include_dir    absolute path to the directory where the header files
-#                    are installed (prefix/include)
+# This macro calls the regular INIT_AUTOMAKE and MAINTAINER_MODE
+# macros, and defines additional variables and makefile conditionals,
+# that are used in the maintainer parts of the makfile.  It also
+# checks if the correct versions of the autotools are used.
 
-# This is a trick to have this code before AC_COIN_PROG_LIBTOOL
-AC_DEFUN([AC_COIN_DISABLE_STATIC],
-[
-# On Cygwin, building DLLs doesn't work
-case $build in
-  *-cygwin*)
-    if test x"$enable_shared" = xyes; then
-      AC_MSG_WARN([On Cygwin, shared objects are not supported. I'm disabling your choice.])
-    fi
-    enable_shared=no
-  ;;
-esac
-# By default, we only want the shared objects to be compiled
-AC_DISABLE_STATIC
-])
-
-AC_DEFUN([AC_COIN_INIT_AUTO_TOOLS],
-[AC_BEFORE([AC_COIN_PROG_CXX],[$0])
-AC_BEFORE([AC_COIN_PROG_CC],[$0])
-AC_BEFORE([AC_COIN_PROG_F77],[$0])
-AC_REQUIRE([AC_COIN_DISABLE_STATIC])
-
+AC_DEFUN([AC_COIN_INIT_AUTOMAKE],
+[AC_REQUIRE([AC_PROG_EGREP])
 # Stuff for automake
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
 
-# COIN Utility directory
-AC_SUBST(UTILSDIR)
-UTILSDIR=$coin_basedir/Utils
-
-# Location of this coin.m4 macro definion file (for maintainer mode)
-AC_SUBST(COINM4)
-COINM4=$UTILSDIR/coin.m4
-
-# Stuff for libtool
-AC_COIN_PROG_LIBTOOL
-
-# If maintainer mode is chosen, we make sure that the correct versions
-# of the tools are used, and that we know where libtoo.m4 is (to
-# recreate acinclude.m4)
-
-AC_SUBST(LIBTOOLM4)
-LIBTOOLM4=
-
+coin_have_externals=no
+coin_maintainer_small=no
 if test "$enable_maintainer_mode" = yes; then
+
+  # If maintainer mode is chosen, we make sure that the correct versions
+  # of the tools are used, and that we know where libtoo.m4 is (to
+  # recreate acinclude.m4)
+
+  AC_SUBST(LIBTOOLM4)
+  LIBTOOLM4=
 
   # Check if we have autoconf
   AC_CHECK_PROG([have_autoconf],[autoconf],[yes],[no])
@@ -869,7 +841,82 @@ if test "$enable_maintainer_mode" = yes; then
   else
     AC_MSG_ERROR([I cannot find the file ltmain.sh in $LIBTOOLPREFIX/share/libtool])
   fi  
+
+  # Check if we have an Externals file
+  if test -r $srcdir/Externals; then
+    coin_have_externals=yes
+  fi
+
+  # Check if this is a limited project (without config.guess)
+  if test -r $srcdir/config.guess; then :; else
+    coin_maintainer_small=yes
+  fi
+
+  # Find the location of the BuildTools directory
+  BUILDTOOLSDIR=
+  if test -r $srcdir/BuildTools/coin.m4; then
+    BUILDTOOLSDIR=$srcdir/BuildTools
+  else
+    if test -r $srcdir/../BuildTools/coin.m4; then
+      BUILDTOOLSDIR=$srcdir/../BuildTools
+    fi
+  fi
+  AC_SUBST(BUILDTOOLSDIR)
+
+  # The following variable is set to the name of the directory where
+  # the autotool scripts are located
+  AC_SUBST(AUX_DIR)
+  AUX_DIR=$ac_aux_dir
 fi
+AM_CONDITIONAL(HAVE_EXTERNALS,test $coin_have_externals = yes)
+AM_CONDITIONAL(MAINTAINER_SMALL,test $coin_maintainer_small = yes)
+]) # AC_COIN_INIT_AUTOMAKE
+
+
+
+###########################################################################
+#                         COIN_INIT_AUTO_TOOLS                            #
+###########################################################################
+
+# Initialize the auto tools automake and libtool, with all
+# modifications we want for COIN packages.
+#
+# This also defines the AC_SUBST variables:
+# pkg_source_dir     absolute path to source code for this package
+# pkg_bin_dir        absolute path to the directory where binaries are
+#                    going to be installed (prefix/bin)
+# pkg_lib_dir        absolute path to the directory where libraries are
+#                    going to be installed (prefix/lib)
+# pkg_include_dir    absolute path to the directory where the header files
+#                    are installed (prefix/include)
+
+# This is a trick to have this code before AC_COIN_PROG_LIBTOOL
+AC_DEFUN([AC_COIN_DISABLE_STATIC],
+[
+# On Cygwin, building DLLs doesn't work
+case $build in
+  *-cygwin*)
+    if test x"$enable_shared" = xyes; then
+      AC_MSG_WARN([On Cygwin, shared objects are not supported. I'm disabling your choice.])
+    fi
+    enable_shared=no
+  ;;
+esac
+# By default, we only want the shared objects to be compiled
+AC_DISABLE_STATIC
+])
+
+AC_DEFUN([AC_COIN_INIT_AUTO_TOOLS],
+[AC_BEFORE([AC_COIN_PROG_CXX],[$0])
+AC_BEFORE([AC_COIN_PROG_CC],[$0])
+AC_BEFORE([AC_COIN_PROG_F77],[$0])
+AC_REQUIRE([AC_COIN_DISABLE_STATIC])
+
+# Initialize automake
+AC_COIN_INIT_AUTOMAKE
+
+# Stuff for libtool
+AC_COIN_PROG_LIBTOOL
 
 # helpful variable for the base directory of this package
 pkg_source_dir=`cd $srcdir; pwd`
@@ -1016,7 +1063,7 @@ AC_SUBST(RPATH_FLAGS)
 # if this package is the main package to be installed
 
 AC_DEFUN([AC_COIN_VPATH_LINKS],
-[
+[AC_REQUIRE([AC_COIN_CHECK_VPATH])
 if test $coin_vpath_config = true; then
   AC_CONFIG_LINKS($1:$1)
 fi
@@ -1121,18 +1168,17 @@ LIBS="$coin_save_LIBS"
 ###########################################################################
 
 # This macro makes sure that the data files in the Data subdirectory
-# are available in the Test subdirectory.  The argument is the
-# subdirectory name in the Data COIN project.  This macro defines the
-# preprocessor macro COIN_HAS_DATA_SUBDIR (where SUBDIR is the name of
-# the subdirectory in capital letters) and the makefile conditional
-# with the same name.  If this is the base project, it also adds the
-# directory to the recursive list.
+# are available.  The argument is the subdirectory name in the Data
+# COIN project.  This macro defines the preprocessor macro
+# COIN_HAS_DATA_SUBDIR (where SUBDIR is the name of the subdirectory
+# in capital letters) and the makefile conditional with the same name.
+# If this is the base project, it also adds the directory to the
+# recursive list.
 
 AC_DEFUN([AC_COIN_HAS_DATA],
 [AC_MSG_CHECKING([whether Data directory $1 is available])
 if test -r ../Data/$1; then
-  AC_CONFIG_LINKS(Test/$1:../Data/$1)
-  AC_DEFINE(m4_toupper(COIN_HAS_Data_$1),[1],
+  AC_DEFINE(m4_toupper(COIN_HAS_DATA_$1),[1],
             [Define to 1 if Data subdirectory $1 is available])
   AC_MSG_RESULT(yes)
   have_data=yes
@@ -1153,14 +1199,15 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_DATA_$1),test $have_data = yes)
 # creates soft links to the example files
 
 AC_DEFUN([AC_COIN_EXAMPLE_FILES],
-[AC_REQUIRE([AC_PROG_LN_S])
+[AC_REQUIRE([AC_COIN_CHECK_VPATH])
 files=`cd $srcdir; ls $1`
 # We need to do the following loop to make sure that are no newlines
 # in the variable
 for file in $files; do
   EXAMPLE_FILES="$EXAMPLE_FILES $file"
 done
-if test `cd $scrdir; pwd` != `pwd`; then
+if test $coin_vpath_config = true; then
+  AC_PROG_LN_S
   AC_MSG_NOTICE([Creating links to the example files ($1)])
   for file in $EXAMPLE_FILES; do
     rm -f $file
