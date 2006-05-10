@@ -859,6 +859,12 @@ if test "$enable_maintainer_mode" = yes; then
   else
     if test -r $srcdir/../BuildTools/coin.m4; then
       BUILDTOOLSDIR=$srcdir/../BuildTools
+    else
+      if test -r $srcdir/../../BuildTools/coin.m4; then
+        BUILDTOOLSDIR=$srcdir/../../BuildTools
+      else
+        AC_MSG_ERROR(Cannot find the BuildTools directory)
+      fi
     fi
   fi
   AC_SUBST(BUILDTOOLSDIR)
