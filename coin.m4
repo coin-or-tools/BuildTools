@@ -1295,7 +1295,7 @@ AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
 # in the library.
 
 AC_DEFUN([AC_COIN_HAS_USER_LIBRARY],
-[AC_REQUIRE([AC_COIN_GET_EXTERNALS])
+[AC_REQUIRE([AC_COIN_SRCDIR_INIT])
 AC_MSG_CHECKING(if user provides library for $1)
 
 # Check for header file directory

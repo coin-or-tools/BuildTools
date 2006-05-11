@@ -46,7 +46,9 @@ $(top_builddir)/Makefile: .Externals-stamp
 	cd $(srcdir); svn propset svn:externals -F Externals .
 	touch .Externals-stamp
 
-distclean-local:
+distclean-local: clean-externals-stamp
+
+clean-externals-stamp:
 	rm -f .Externals-stamp
 
 EXTRA_DIST += Externals
