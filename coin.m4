@@ -112,11 +112,13 @@ m4_ifvaln([$10],[AC_MSG_CHECKING(whether directory $10 is available)
 # This macro sets the variable coin_vpath_config to true if this is a
 # VPATH configuration, otherwise it sets it to false.
 AC_DEFUN([AC_COIN_CHECK_VPATH],
-[if test `cd $srcdir; pwd` != `pwd`; then
-  coin_vpath_config=true;
+[AC_MSG_CHECKING(whether this is a VPATH configuration)
+if test `cd $srcdir; pwd` != `pwd`; then
+  coin_vpath_config=yes;
 else
-  coin_vpath_config=false;
+  coin_vpath_config=no;
 fi
+AC_MSG_RESULT($coin_vpath_config)
 ]) # AC_COIN_CHECK_VPATH
 
 ###########################################################################
@@ -1070,7 +1072,7 @@ AC_SUBST(RPATH_FLAGS)
 
 AC_DEFUN([AC_COIN_VPATH_LINKS],
 [AC_REQUIRE([AC_COIN_CHECK_VPATH])
-if test $coin_vpath_config = true; then
+if test $coin_vpath_config = yes; then
   AC_CONFIG_LINKS($1:$1)
 fi
 ]) #AC_COIN_VPATH_CONFIG_LINK
@@ -1212,7 +1214,7 @@ files=`cd $srcdir; ls $1`
 for file in $files; do
   EXAMPLE_FILES="$EXAMPLE_FILES $file"
 done
-if test $coin_vpath_config = true; then
+if test $coin_vpath_config = yes; then
   AC_PROG_LN_S
   AC_MSG_NOTICE([Creating links to the example files ($1)])
   for file in $EXAMPLE_FILES; do
@@ -1262,7 +1264,7 @@ if test $m4_tolower(coin_has_$1) != unavailable; then
   AC_SUBST(m4_toupper($1SRCDIR))
   m4_toupper($1SRCDIR)=`cd $srcdir/$m4_tolower(coin_has_$1); pwd`
   AC_SUBST(m4_toupper($1OBJDIR))
-  m4_toupper($1OBJDIR)=`cd $m4_tolower(coin_has_$1); pwd`
+  m4_toupper($1OBJDIR)=`pwd`/$m4_tolower(coin_has_$1)
 fi
 
   # Define the Makefile conditional
