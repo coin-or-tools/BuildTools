@@ -17,7 +17,7 @@ else
     toolsdir=$currdir/../BuildTools
   else
     echo Cannot find BuildTools directory.
-    exit 1
+    exit
   fi
 fi
 
