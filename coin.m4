@@ -200,8 +200,8 @@ coin_has_cxx=yes
 
 save_cxxflags="$CXXFLAGS"
 case $build in
-  *-cygwin*) comps="g++ cl" ;;
-  *-mingw*)  comps="g++ cl" ;;
+  *-cygwin* | *-mingw*)
+             comps="g++ cl" ;;
   *-darwin*) comps="g++ c++ CC" ;;
           *) comps="xlC aCC CC g++ c++ pgCC icpc" ;;
 esac
@@ -241,7 +241,7 @@ AC_CACHE_CHECK([for C++ compiler options],[coin_cv_cxxflags],
   fi
   if test -z "$coin_opt_cxxflags"; then
     case $build in
-      *-cygwin*)
+      *-cygwin* | *-mingw*)
         case "$CXX" in
           cl | */cl)
             coin_opt_cxxflags='-Ot1'
@@ -438,8 +438,8 @@ coin_has_cc=yes
 
 save_cflags="$CFLAGS"
 case $build in
-  *-cygwin*) comps="gcc cl" ;;
-  *-mingw*)  comps="gcc cl" ;;
+  *-cygwin* | *-mingw*)
+             comps="gcc cl" ;;
   *-linux-*) comps="xlc gcc cc pgcc icc" ;;
   *)         comps="xlc cc gcc pgcc icc" ;;
 esac
@@ -477,7 +477,7 @@ AC_CACHE_CHECK([for C compiler options],[coin_cv_cflags],
   fi
   if test -z "$coin_opt_cflags"; then
     case $build in
-      *-cygwin*)
+      *-cygwin* | *-mingw*)
         case "$CC" in
           cl | */cl)
             coin_opt_cflags='-Ot1'
@@ -577,8 +577,8 @@ coin_has_f77=yes
 
 save_fflags="$FFLAGS"
 case $build in
-  *-cygwin*) comps="gfortran g77 ifort" ;;
-  *-mingw*)  comps="gfortran g77 ifort" ;;
+  *-cygwin* | *-mingw*)
+             comps="gfortran g77 ifort" ;;
   *)         comps="xlf fort77 gfortran f77 g77 pgf90 pgf77 ifort ifc" ;;
 esac
 AC_PROG_F77($comps)
@@ -606,7 +606,7 @@ AC_CACHE_CHECK([for Fortran compiler options],[coin_cv_fflags],
     esac
   else
     case $build in
-      *-cygwin*)
+      *-cygwin* | *-mingw*)
         case $F77 in
           ifort | */ifort)
             coin_opt_fflags='-O3'
@@ -720,7 +720,7 @@ fi
 
 case $build in
 # The following is a fix to define FLIBS for ifort on Windows
-   *-cygwin*)
+   *-cygwin* | *-mingw*)
      case $F77 in
        ifort | */ifort)
            FLIBS="/link libifcorert.lib $LIBS /NODEFAULTLIB:libc.lib";;
@@ -904,12 +904,22 @@ AC_DEFUN([AC_COIN_DISABLE_STATIC],
 # On Cygwin, building DLLs doesn't work
 case $build in
   *-cygwin*)
-    if test x"$enable_shared" = xyes; then
-      AC_MSG_WARN([On Cygwin, shared objects are not supported. I'm disabling your choice.])
-    fi
-    enable_shared=no
+    coin_disable_shared=yes
+  ;;
+  *-mingw*)
+    case $CXX in
+      cl)
+        coin_disable_shared=yes
+    ;;
+    esac
   ;;
 esac
+if test x"$coin_disable_shared" = xyes; then
+  if test x"$enable_shared" = xyes; then
+    AC_MSG_WARN([On Cygwin, shared objects are not supported. I'm disabling your choice.])
+  fi
+  enable_shared=no
+fi
 # By default, we only want the shared objects to be compiled
 AC_DISABLE_STATIC
 ])
