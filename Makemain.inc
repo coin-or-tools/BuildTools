@@ -49,10 +49,7 @@ $(top_builddir)/Makefile: .Externals-stamp
 update-externals: .Externals-stamp
 	cd $(srcdir); svn update
 
-distclean-local: clean-externals-stamp
-
-clean-externals-stamp:
-	rm -f .Externals-stamp
+DISTCLEANFILES += .Externals-stamp
 
 EXTRA_DIST += Externals
 

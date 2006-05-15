@@ -130,7 +130,7 @@ AC_MSG_RESULT($coin_vpath_config)
 
 AC_DEFUN([AC_COIN_SRCDIR_INIT],
 [# Initialize the ADDLIBS variable (a number of library require -lm)
-ADDLIBS="-lm"
+ADDLIBS="" #"-lm"
 AC_SUBST(ADDLIBS)
 
 # A useful makefile conditional that is always false
@@ -1088,28 +1088,47 @@ fi
 ]) #AC_COIN_VPATH_CONFIG_LINK
 
 ###########################################################################
+#                       COIN_ENABLE_GNU_PACKAGES                          #
+###########################################################################
+
+# This macro defined the --enable-gnu-packages flag.  This can be used
+# to check if a user wants to compile GNU packges (such as readline or
+# zlib) into the executable.  By default, GNU packages are disabled.
+
+AC_DEFUN([AC_COIN_ENABLE_GNU_PACKAGES],
+[AC_ARG_ENABLE([gnu-packages],
+               [AC_HELP_STRING([--enable-gnu-packages],
+                               [compile with GNU packages (disabled by default)])],
+	       [coin_enable_gnu=$enableval],
+	       [coin_enable_gnu=no])
+]) # AC_COIN_ENABLE_GNU_PACKAGES
+
+###########################################################################
 #                             COIN_CHECK_ZLIB                             #
 ###########################################################################
 
 # This macro checks for the libz library.
 
 AC_DEFUN([AC_COIN_CHECK_ZLIB],
-[AC_BEFORE([AC_COIN_PROG_CXX],[$0])
+[AC_REQUIRE([AC_COIN_ENABLE_GNU_PACKAGES])
+AC_BEFORE([AC_COIN_PROG_CXX],[$0])
 AC_BEFORE([AC_COIN_PROG_CC],[$0])
 AC_BEFORE([AC_COIN_PROG_F77],[$0])
 AC_BEFORE([$0],[AC_COIN_FINISH])
 
-coin_has_zlib=no
-AC_COIN_CHECK_HEADER([zlib.h],[coin_has_zlib=yes])
+if test $coin_enable_gnu = yes; then
+  coin_has_zlib=no
+  AC_COIN_CHECK_HEADER([zlib.h],[coin_has_zlib=yes])
 
-if test $coin_has_zlib = yes; then
-  AC_CHECK_LIB([z],[gzopen],
-               [ADDLIBS="-lz $ADDLIBS"],
-               [coin_has_zlib=no])
-fi
+  if test $coin_has_zlib = yes; then
+    AC_CHECK_LIB([z],[gzopen],
+                 [ADDLIBS="-lz $ADDLIBS"],
+                 [coin_has_zlib=no])
+  fi
 
-if test $coin_has_zlib = yes; then
-  AC_DEFINE([COIN_HAS_ZLIB],[1],[Define to 1 if zlib is available])
+  if test $coin_has_zlib = yes; then
+    AC_DEFINE([COIN_HAS_ZLIB],[1],[Define to 1 if zlib is available])
+  fi
 fi
 ]) # AC_COIN_CHECK_ZLIB
 
@@ -1121,22 +1140,25 @@ fi
 # This macro checks for the libbz2 library.
 
 AC_DEFUN([AC_COIN_CHECK_BZLIB],
-[AC_BEFORE([AC_COIN_PROG_CXX],[$0])
+[AC_REQUIRE([AC_COIN_ENABLE_GNU_PACKAGES])
+AC_BEFORE([AC_COIN_PROG_CXX],[$0])
 AC_BEFORE([AC_COIN_PROG_CC],[$0])
 AC_BEFORE([AC_COIN_PROG_F77],[$0])
 AC_BEFORE([$0],[AC_COIN_FINISH])
 
-coin_has_bzlib=no
-AC_COIN_CHECK_HEADER([bzlib.h],[coin_has_bzlib=yes])
+if test $coin_enable_gnu = yes; then
+  coin_has_bzlib=no
+  AC_COIN_CHECK_HEADER([bzlib.h],[coin_has_bzlib=yes])
 
-if test $coin_has_bzlib = yes; then
-  AC_CHECK_LIB([bz2],[BZ2_bzReadOpen],
-               [ADDLIBS="-lbz2 $ADDLIBS"],
-               [coin_has_bzlib=no])
-fi
+  if test $coin_has_bzlib = yes; then
+    AC_CHECK_LIB([bz2],[BZ2_bzReadOpen],
+                 [ADDLIBS="-lbz2 $ADDLIBS"],
+                 [coin_has_bzlib=no])
+  fi
 
-if test $coin_has_bzlib = yes; then
-  AC_DEFINE([COIN_HAS_BZLIB],[1],[Define to 1 if bzlib is available])
+  if test $coin_has_bzlib = yes; then
+    AC_DEFINE([COIN_HAS_BZLIB],[1],[Define to 1 if bzlib is available])
+  fi
 fi
 ]) # AC_COIN_CHECK_BZLIB
 
@@ -1151,34 +1173,39 @@ fi
 # in the source file before the #include<readline/readline.h>
 
 AC_DEFUN([AC_COIN_CHECK_READLINE],
-[AC_BEFORE([AC_COIN_PROG_CXX],[$0])
+[AC_REQUIRE([AC_COIN_ENABLE_GNU_PACKAGES])
+AC_BEFORE([AC_COIN_PROG_CXX],[$0])
 AC_BEFORE([AC_COIN_PROG_CC],[$0])
 AC_BEFORE([AC_COIN_PROG_F77],[$0])
 AC_BEFORE([$0],[AC_COIN_FINISH])
 
-coin_has_readline=no
-AC_COIN_CHECK_HEADER([readline/readline.h],[coin_has_readline=yes],[],[#include <stdio.h>])
+if test $coin_enable_gnu = yes; then
+  coin_has_readline=no
+  AC_COIN_CHECK_HEADER([readline/readline.h],
+                       [coin_has_readline=yes],[],
+                       [#include <stdio.h>])
 
-coin_save_LIBS="$LIBS"
-LIBS=
-# First we check if tputs and friends are available
-if test $coin_has_readline = yes; then
-  AC_SEARCH_LIBS([tputs],[ncurses termcap curses],[],
+  coin_save_LIBS="$LIBS"
+  LIBS=
+  # First we check if tputs and friends are available
+  if test $coin_has_readline = yes; then
+    AC_SEARCH_LIBS([tputs],[ncurses termcap curses],[],
+                   [coin_has_readline=no])
+  fi
+
+  # Now we check for readline
+  if test $coin_has_readline = yes; then
+    AC_CHECK_LIB([readline],[readline],
+                 [ADDLIBS="-lreadline $LIBS $ADDLIBS"],
                  [coin_has_readline=no])
-fi
+  fi
 
-# Now we check for readline
-if test $coin_has_readline = yes; then
-  AC_CHECK_LIB([readline],[readline],
-               [ADDLIBS="-lreadline $LIBS $ADDLIBS"],
-               [coin_has_readline=no])
-fi
+  if test $coin_has_readline = yes; then
+    AC_DEFINE([COIN_HAS_READLINE],[1],[Define to 1 if readline is available])
+  fi
 
-if test $coin_has_readline = yes; then
-  AC_DEFINE([COIN_HAS_READLINE],[1],[Define to 1 if readline is available])
+  LIBS="$coin_save_LIBS"
 fi
-
-LIBS="$coin_save_LIBS"
 ]) # AC_COIN_CHECK_READLINE
 
 ###########################################################################
@@ -1288,23 +1315,21 @@ AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
 ###########################################################################
 
 # This macro sets up usage of a library with header files.  It defines
-# the LIBINCDIR variable, and it defines COIN_HAS_LBRY preprocessor
+# the LBRYINCDIR variable, and it defines COIN_HAS_LBRY preprocessor
 # macro and makefile conditional.  The first argument should be the
 # full name (LibraryName) of the library, and the second argument (in
 # upper case letters) the abbreviation (LBRY).  This macro also
 # introduces the configure arguments --with-libraryname-incdir and
-# --with-libraryname-libdir which have to be both given by a user to
-# use this solver to tell the configure script where the include files
-# and the library are located.  Those arguments can also be given as
-# environement variables LBRYINCDIR and LBRYLIBDIR, but a --with-*
-# argument overwrites an environment variable.  The third argument
-# indicates the name of the library, as the string after '-l' (e.g.,
-# 'glpk' for -lglpk).  If a forth argument is given, it is assume that
-# this is the name of a header file that can be checked for in the
-# given include directory, and if a fifth argument is given, it is
-# assumed to be the name of a C function which is given and defined in
-# the library, and a test is done to check if that symbol is defined
-# in the library.
+# --with-libraryname-lib which have to be both given by a user to use
+# this solver to tell the configure script where the include files and
+# the library are located.  Those arguments can also be given as
+# environement variables LBRYINCDIR and LBRYLIB, but a --with-*
+# argument overwrites an environment variable.  If a third argument is
+# given, it is assumed that this is the name of a header file that can
+# be checked for in the given include directory, and if a fourth
+# argument is given, it is assumed to be the name of a C function
+# which is given and defined in the library, and a test is done to
+# check if that symbol is defined in the library.
 
 AC_DEFUN([AC_COIN_HAS_USER_LIBRARY],
 [AC_REQUIRE([AC_COIN_SRCDIR_INIT])
@@ -1316,12 +1341,12 @@ AC_ARG_WITH(m4_tolower($1)-incdir,
                            [specify the directory with the header files for library $1]),
                            [$2INCDIR=`cd $withval; pwd`])
 # Check for library directory
-AC_ARG_WITH(m4_tolower($1)-libdir,
-            AC_HELP_STRING([--with-m4_tolower($1)-libdir],
-                           [specify the directory with the library $1]),
-                           [$2LIBDIR=`cd $withval; pwd`])
+AC_ARG_WITH(m4_tolower($1)-lib,
+            AC_HELP_STRING([--with-m4_tolower($1)-lib],
+                           [specify the flags to link with the library $1]),
+                           [$2LIB=$withval])
 
-if test x"$$2INCDIR" != x || test x"$$2LIBDIR" != x; then
+if test x"$$2INCDIR" != x || test x"$$2LIB" != x; then
   m4_tolower(coin_has_$2)=true
 else
   m4_tolower(coin_has_$2)=false
@@ -1329,27 +1354,31 @@ fi
 
 if test $m4_tolower(coin_has_$2) = true; then
 # Check either both arguments or none are given
-  if test x"$$2INCDIR" = x || test x"$$2LIBDIR" = x; then
-    AC_MSG_ERROR([You need to specify both --with-m4_tolower($1)-incdir and --with-m4_tolower($1)-libdir if you want to use library $1])
+  if test x"$$2INCDIR" = x || test x"$$2LIB" = x; then
+    AC_MSG_ERROR([You need to specify both --with-m4_tolower($1)-incdir and --with-m4_tolower($1)-lib if you want to use library $1])
   fi
   AC_MSG_RESULT(yes)
   # Check if the given header file is there
-  m4_ifvaln([$4],[AC_CHECK_FILE([$$2INCDIR/$4],[],
-                 [AC_MSG_ERROR([Cannot find file $4 in $$2INCDIR])])])
+  m4_ifvaln([$3],[AC_CHECK_FILE([$$2INCDIR/$3],[],
+                 [AC_MSG_ERROR([Cannot find file $3 in $$2INCDIR])])])
   # Check if the symbol is provided in the library
-  m4_ifvaln([$5],[coin_save_LIBS="$LIBS"
-                  LIBS="-L$$2LIBDIR -l$3 $ADDLIBS"
-                  AC_CHECK_LIB([$3],[$5],[:],
-                               [AC_MSG_ERROR([Cannot find symbol $5 in library -l$3])])
+  # ToDo: FOR NOW WE ASSUME THAT WE ARE USING THE C++ COMPILER
+  m4_ifvaln([$4],[coin_save_LIBS="$LIBS"
+                  LIBS="$$2LIB $ADDLIBS"
+		  AC_MSG_CHECKING([whether symbol $4 is available with $2])
+                  AC_TRY_LINK([extern "C" {void $4();}],[$4()],
+                              [AC_MSG_RESULT(yes)],
+			      [AC_MSG_RESULT(no)
+                               AC_MSG_ERROR([Cannot find symbol $4 with $2])])
                   LIBS="$coin_save_LIBS"])
-  ADDLIBS="-L$$2LIBDIR -l$3 $ADDLIBS"
+  ADDLIBS="$$2LIB $ADDLIBS"
   AC_DEFINE(COIN_HAS_$2,[1],[Define to 1 if the $1 package is used])
 else
   AC_MSG_RESULT(no)
 fi
 
 AC_SUBST($2INCDIR)
-AC_SUBST($2LIBDIR)
+AC_SUBST($2LIB)
 AM_CONDITIONAL(COIN_HAS_$2,
                test $m4_tolower(coin_has_$2) = true)
 ]) #AC_COIN_HAS_SOLVER 
