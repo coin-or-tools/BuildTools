@@ -223,7 +223,7 @@ AC_CACHE_CHECK([for C++ compiler options],[coin_cv_cxxflags],
         ;;
       *)
 # ToDo decide about unroll-loops
-        coin_opt_cxxflags="-O3"
+        coin_opt_cxxflags="-O3 -fomit-frame-pointer"
         coin_add_cxxflags="-pipe"
         coin_dbg_cxxflags="-g"
         coin_warn_cxxflags="-pedantic-errors -Wimplicit -Wparentheses -Wreturn-type -Wcast-qual -Wall -Wpointer-arith -Wwrite-strings -Wconversion"
@@ -459,7 +459,7 @@ AC_CACHE_CHECK([for C compiler options],[coin_cv_cflags],
       icc | */icc)
         ;;
       *)
-        coin_opt_cflags="-O3"
+        coin_opt_cflags="-O3 -fomit-frame-pointer"
         coin_add_cflags="-pipe"
         coin_dbg_cflags="-g"
         coin_warn_cflags="-pedantic-errors -Wimplicit -Wparentheses -Wsequence-point -Wreturn-type -Wcast-qual -Wall"
@@ -593,7 +593,7 @@ AC_CACHE_CHECK([for Fortran compiler options],[coin_cv_fflags],
   coin_warn_fflags=
 
   if test "$G77" = "yes"; then
-    coin_opt_fflags="-O3"
+    coin_opt_fflags="-O3 -fomit-frame-pointer"
     coin_add_fflags="-pipe"
     coin_dbg_fflags="-g"
     case $build in
