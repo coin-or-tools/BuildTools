@@ -129,8 +129,8 @@ AC_MSG_RESULT($coin_vpath_config)
 # configure script, such as defining a few variables.
 
 AC_DEFUN([AC_COIN_SRCDIR_INIT],
-[# Initialize the ADDLIBS variable (a number of library require -lm)
-ADDLIBS="" #"-lm"
+[# Initialize the ADDLIBS variable
+ADDLIBS=
 AC_SUBST(ADDLIBS)
 
 # A useful makefile conditional that is always false
@@ -244,8 +244,8 @@ AC_CACHE_CHECK([for C++ compiler options],[coin_cv_cxxflags],
       *-cygwin* | *-mingw*)
         case "$CXX" in
           cl | */cl)
-            coin_opt_cxxflags='-Ot1'
-            coin_add_cxxflags='-nologo -EHsc -GR -MT'
+            coin_opt_cxxflags='-O2'
+            coin_add_cxxflags='-nologo -GX -GR -MT'
             coin_dbg_cxxflags='-Yd'
             ;;
         esac
@@ -480,7 +480,7 @@ AC_CACHE_CHECK([for C compiler options],[coin_cv_cflags],
       *-cygwin* | *-mingw*)
         case "$CC" in
           cl | */cl)
-            coin_opt_cflags='-Ot1'
+            coin_opt_cflags='-O2'
             coin_add_cflags='-nologo'
             coin_dbg_cflags='-Yd'
             ;;
@@ -1000,8 +1000,9 @@ case $build in
           -e 's%compile_deplibs=\"\$dir/\$linklib \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$linklib | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
 	  -e 's%lib /OUT:%lib -OUT:%' \
 	  -e "s%cygpath -w%$CYGPATH_W%" \
-	  -e 's%$AR x \\$f_ex_an_ar_oldlib%bla=\\`lib -nologo -list \\$f_ex_an_ar_oldlib | xargs echo\\`; echo dd \\$bla; for i in \\$bla; do lib -nologo -extract:\\$i \\$f_ex_an_ar_oldlib; done%' \
+	  -e 's%$AR x \\$f_ex_an_ar_oldlib%bla=\\`lib -nologo -list \\$f_ex_an_ar_oldlib | xargs echo\\`; echo \\$bla; for i in \\$bla; do lib -nologo -extract:\\$i \\$f_ex_an_ar_oldlib; done%' \
 	  -e 's/$AR t/lib -nologo -list/' \
+	  -e 's%f_ex_an_ar_oldlib="\($?*1*\)"%f_ex_an_ar_oldlib='\`"$CYGPATH_W"' \1`%' \ 
       libtool > conftest.bla
 
       mv conftest.bla libtool
@@ -1096,6 +1097,7 @@ fi
 # This macro defined the --enable-gnu-packages flag.  This can be used
 # to check if a user wants to compile GNU packges (such as readline or
 # zlib) into the executable.  By default, GNU packages are disabled.
+# This also defines the automake conditional COIN_ENABLE_GNU_PACKAGES
 
 AC_DEFUN([AC_COIN_ENABLE_GNU_PACKAGES],
 [AC_ARG_ENABLE([gnu-packages],
@@ -1118,8 +1120,8 @@ AC_BEFORE([AC_COIN_PROG_CC],[$0])
 AC_BEFORE([AC_COIN_PROG_F77],[$0])
 AC_BEFORE([$0],[AC_COIN_FINISH])
 
+coin_has_zlib=no
 if test $coin_enable_gnu = yes; then
-  coin_has_zlib=no
   AC_COIN_CHECK_HEADER([zlib.h],[coin_has_zlib=yes])
 
   if test $coin_has_zlib = yes; then
@@ -1132,6 +1134,8 @@ if test $coin_enable_gnu = yes; then
     AC_DEFINE([COIN_HAS_ZLIB],[1],[Define to 1 if zlib is available])
   fi
 fi
+
+AM_CONDITIONAL(COIN_HAS_ZLIB,test x$coin_has_zlib = xyes)
 ]) # AC_COIN_CHECK_ZLIB
 
 
@@ -1148,8 +1152,8 @@ AC_BEFORE([AC_COIN_PROG_CC],[$0])
 AC_BEFORE([AC_COIN_PROG_F77],[$0])
 AC_BEFORE([$0],[AC_COIN_FINISH])
 
+coin_has_bzlib=no
 if test $coin_enable_gnu = yes; then
-  coin_has_bzlib=no
   AC_COIN_CHECK_HEADER([bzlib.h],[coin_has_bzlib=yes])
 
   if test $coin_has_bzlib = yes; then
@@ -1181,8 +1185,8 @@ AC_BEFORE([AC_COIN_PROG_CC],[$0])
 AC_BEFORE([AC_COIN_PROG_F77],[$0])
 AC_BEFORE([$0],[AC_COIN_FINISH])
 
+coin_has_readline=no
 if test $coin_enable_gnu = yes; then
-  coin_has_readline=no
   AC_COIN_CHECK_HEADER([readline/readline.h],
                        [coin_has_readline=yes],[],
                        [#include <stdio.h>])
@@ -1243,10 +1247,11 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_DATA_$1),test $have_data = yes)
 # This macro determines the names of the example files (using the
 # argument in an "ls" command) and sets up the variables EXAMPLE_FILES
 # and EXAMPLE_CLEAN_FILES.  If this is a VPATH configuration, it also
-# creates soft links to the example files
+# creates soft links to the example files.
 
 AC_DEFUN([AC_COIN_EXAMPLE_FILES],
-[AC_REQUIRE([AC_COIN_CHECK_VPATH])
+[AC_REQUIRE([AC_COIN_CHECK_ZLIB])
+AC_REQUIRE([AC_COIN_CHECK_VPATH])
 files=`cd $srcdir; ls $1`
 # We need to do the following loop to make sure that are no newlines
 # in the variable
@@ -1265,6 +1270,18 @@ else
   EXAMPLE_CLEAN_FILES=
 fi
 
+# In case there are compressed files, we create a variable with the
+# uncompressed names
+EXAMPLE_UNCOMPRESSED_FILES=
+for file in $EXAMPLE_FILES; do
+  case $file in
+    *.gz)
+      EXAMPLE_UNCOMPRESSED_FILES="$EXAMPLE_UNCOMPRESSED_FILES `echo $file | sed -e s/.gz//`"
+      ;;
+  esac
+done
+
+AC_SUBST(EXAMPLE_UNCOMPRESSED_FILES)
 AC_SUBST(EXAMPLE_FILES)
 AC_SUBST(EXAMPLE_CLEAN_FILES)
 ]) #AC_COIN_EXAMPLE_FILES
