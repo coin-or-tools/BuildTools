@@ -135,8 +135,6 @@ AC_SUBST(ADDLIBS)
 
 # A useful makefile conditional that is always false
 AM_CONDITIONAL(ALWAYS_FALSE, false)
-
-# A makefile conditional that is set to true if 
 ]) # AC_COIN_SRCDIR_INIT
 
 ###########################################################################
@@ -192,7 +190,8 @@ AM_CONDITIONAL([COIN_DEBUG],[test "$coin_debug_compile" = true])
 # possible to provide additional -D flags in the variable CXXDEFS.
 
 AC_DEFUN([AC_COIN_PROG_CXX],
-[AC_LANG_PUSH(C++)
+[AC_REQUIRE([AC_COIN_PROG_CC]) #Let's try if that overcomes configuration problem with VC++ 6.0
+AC_LANG_PUSH(C++)
 
 AC_ARG_VAR(CXXDEFS,[Additional -D flags to be used when compiling C++ code.])
 
@@ -245,7 +244,7 @@ AC_CACHE_CHECK([for C++ compiler options],[coin_cv_cxxflags],
         case "$CXX" in
           cl | */cl)
             coin_opt_cxxflags='-O2'
-            coin_add_cxxflags='-nologo -GX -GR -MT'
+            coin_add_cxxflags='-nologo -EHsc -GR -MT'
             coin_dbg_cxxflags='-Yd'
             ;;
         esac
@@ -431,6 +430,19 @@ AC_LANG_POP(C++)
 
 AC_DEFUN([AC_COIN_PROG_CC],
 [AC_LANG_PUSH(C)
+
+# For consistency, we set the C compiler to the same value of the C++
+# compiler, if the C++ is set, but the C compiler isn't (only for CXX=cl)
+if test x"$CXX" != x; then
+  case $CXX in
+    cl*)
+      if test x"$CC" = x; then
+        CC="$CXX"
+        AC_MSG_WARN([C++ compiler name provided as $CXX, but CC is unset. Setting CC to $CXX])
+      fi
+      ;;
+  esac
+fi
 
 AC_ARG_VAR(CDEFS,[Additional -D flags to be used when compiling C code.])
 
