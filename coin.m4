@@ -1017,6 +1017,7 @@ case $build in
 	  -e 's%$AR x \\$f_ex_an_ar_oldlib%bla=\\`lib -nologo -list \\$f_ex_an_ar_oldlib | xargs echo\\`; echo \\$bla; for i in \\$bla; do lib -nologo -extract:\\$i \\$f_ex_an_ar_oldlib; done%' \
 	  -e 's/$AR t/lib -nologo -list/' \
 	  -e 's%f_ex_an_ar_oldlib="\($?*1*\)"%f_ex_an_ar_oldlib='\`"$CYGPATH_W"' \1`%' \ 
+	  -e  's%^archive_cmds=.*%archive_cmds="\\$CC -o \\$lib \\$libobjs \\$compiler_flags \\\\\\`echo \\\\\\"\\$deplibs\\\\\\" | \\$SED -e '"\'"'s/ -lc\\$//'"\'"'\\\\\\` -link -dll~linknames="%' \
       libtool > conftest.bla
 
       mv conftest.bla libtool
@@ -1025,6 +1026,18 @@ case $build in
     
   esac
 esac
+
+# Unless we are on Darwin, we want to use the -no-undefined flag for
+# libtool to be able to create shared objects
+case $build in
+  *-darwin*)
+    LT_LDFLAGS=
+    ;;
+  *)
+    LT_LDFLAGS=-no-undefined
+    ;;
+esac
+AC_SUBST(LT_LDFLAGS)
 ]) # AC_COIN_PROG_LIBTOOL
 
 # This is a trick to force the check for the dlfcn header to be done before
