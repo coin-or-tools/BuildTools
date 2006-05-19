@@ -917,20 +917,22 @@ AC_DEFUN([AC_COIN_DISABLE_STATIC],
 case $build in
   *-cygwin*)
     coin_disable_shared=yes
+    platform=Cygwin
   ;;
   *-mingw*)
     case $CXX in
       cl)
         coin_disable_shared=yes
+        platform="Msys with cl"
     ;;
     esac
   ;;
 esac
 if test x"$coin_disable_shared" = xyes; then
   if test x"$enable_shared" = xyes; then
-    AC_MSG_WARN([On Cygwin, shared objects are not supported. I'm disabling your choice.])
+    AC_MSG_WARN([On $platform, shared objects are not supported. I'm disabling your choice.])
   fi
-  enable_shared=no
+#  enable_shared=no
 fi
 # By default, we only want the shared objects to be compiled
 AC_DISABLE_STATIC
