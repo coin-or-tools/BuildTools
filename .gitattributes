@@ -21,7 +21,6 @@ MSDevStudio/Cgl/v6/libCglProbing/libCglProbing.dsp -text
 MSDevStudio/Cgl/v6/libCglRedSplit/libCglRedSplit.dsp -text
 MSDevStudio/Cgl/v6/libCglSimpleRounding/libCglSimpleRounding.dsp -text
 MSDevStudio/Cgl/v6/libCglTwomir/libCglTwomir.dsp -text
-MSDevStudio/Clp/Externals -text
 MSDevStudio/Clp/v6/clp/clp.dsp -text
 MSDevStudio/Clp/v6/libClp/libClp.dsp -text
 MSDevStudio/CoinUtils/v6/libCoinUtils/libCoinUtils.dsp -text
