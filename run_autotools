@@ -13,13 +13,12 @@ currdir=`pwd`
 if test -r $currdir/BuildTools/coin.m4; then
   toolsdir=$currdir/BuildTools
 else
-  if test -r $currdir/../BuildTools/coin.m4; then
-    toolsdir=$currdir/../BuildTools
-  else
-    echo Cannot find BuildTools directory.
-    exit
-  fi
+  echo Cannot find BuildTools directory.
+  exit
 fi
+
+echo Copying autotools scripts into this directory
+cp $toolsdir/config.guess $toolsdir/config.sub $toolsdir/depcomp $toolsdir/install-sh $toolsdir/ltmain.sh $toolsdir/missing .
 
 for dir in $dirs; do
   (cd $dir
