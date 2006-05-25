@@ -23,8 +23,6 @@ $(AUX_DIR)/install-sh: $(BUILDTOOLSDIR)/install-sh
 $(AUX_DIR)/missing: $(BUILDTOOLSDIR)/missing
 	cp $< $@
 
-if MAINTAINER_SMALL
-else
 $(AUX_DIR)/config.guess: $(BUILDTOOLSDIR)/config.guess
 	cp $< $@
 
@@ -36,7 +34,6 @@ $(AUX_DIR)/depcomp: $(BUILDTOOLSDIR)/depcomp
 
 $(AUX_DIR)/ltmain.sh: $(BUILDTOOLSDIR)/ltmain.sh
 	cp $< $@
-endif
 
 # Take care of updating externals (if Externals file exists)
 if HAVE_EXTERNALS

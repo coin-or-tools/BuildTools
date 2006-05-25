@@ -769,7 +769,6 @@ AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
 
 coin_have_externals=no
-coin_maintainer_small=no
 if test "$enable_maintainer_mode" = yes; then
 
   # If maintainer mode is chosen, we make sure that the correct versions
@@ -861,11 +860,6 @@ if test "$enable_maintainer_mode" = yes; then
     coin_have_externals=yes
   fi
 
-  # Check if this is a limited project (without config.guess)
-  if test -r $srcdir/config.guess; then :; else
-    coin_maintainer_small=yes
-  fi
-
   # Find the location of the BuildTools directory
   BUILDTOOLSDIR=
   if test -r $srcdir/BuildTools/coin.m4; then
@@ -889,7 +883,6 @@ if test "$enable_maintainer_mode" = yes; then
   AUX_DIR=$ac_aux_dir
 fi
 AM_CONDITIONAL(HAVE_EXTERNALS,test $coin_have_externals = yes)
-AM_CONDITIONAL(MAINTAINER_SMALL,test $coin_maintainer_small = yes)
 ]) # AC_COIN_INIT_AUTOMAKE
 
 
@@ -902,13 +895,14 @@ AM_CONDITIONAL(MAINTAINER_SMALL,test $coin_maintainer_small = yes)
 # modifications we want for COIN packages.
 #
 # This also defines the AC_SUBST variables:
-# pkg_source_dir     absolute path to source code for this package
-# pkg_bin_dir        absolute path to the directory where binaries are
+# abs_source_dir     absolute path to source code for this package
+# abs_bin_dir        absolute path to the directory where binaries are
 #                    going to be installed (prefix/bin)
-# pkg_lib_dir        absolute path to the directory where libraries are
+# abs_lib_dir        absolute path to the directory where libraries are
 #                    going to be installed (prefix/lib)
-# pkg_include_dir    absolute path to the directory where the header files
+# abs_include_dir    absolute path to the directory where the header files
 #                    are installed (prefix/include)
+# RPATH_FLAGS        link flags for hardcoding path to shared objects
 
 # This is a trick to have this code before AC_COIN_PROG_LIBTOOL
 AC_DEFUN([AC_COIN_DISABLE_STATIC],
@@ -951,17 +945,25 @@ AC_COIN_INIT_AUTOMAKE
 AC_COIN_PROG_LIBTOOL
 
 # helpful variable for the base directory of this package
-pkg_source_dir=`cd $srcdir; pwd`
+abs_source_dir=`cd $srcdir; pwd`
 
 # Stuff for example Makefiles
-full_prefix=`echo $exec_prefix | pwd`
-AC_SUBST(pkg_lib_dir)
-pkg_lib_dir=$full_prefix/lib
-AC_SUBST(pkg_include_dir)
-pkg_include_dir=$full_prefix/include
-AC_SUBST(pkg_bin_dir)
-pkg_bin_dir=$full_prefix/bin
+if test x$prefix = xNONE; then
+  full_prefix=$ac_default_prefix
+else
+  full_prefix=$prefix
+fi
+full_prefix=`cd $full_prefix ; pwd`
+AC_SUBST(abs_lib_dir)
+abs_lib_dir=$full_prefix/lib
+AC_SUBST(abs_include_dir)
+abs_include_dir=$full_prefix/include
+AC_SUBST(abs_bin_dir)
+abs_bin_dir=$full_prefix/bin
 
+# set RPATH_FLAGS to the compiler link flags required to hardcode location
+# of the shared objects
+AC_COIN_RPATH_FLAGS($abs_lib_dir)
 ]) # AC_COIN_INIT_AUTO_TOOLS
 
 ###########################################################################
@@ -1060,62 +1062,64 @@ AC_LANG_POP(C)
 AC_DEFUN([AC_COIN_RPATH_FLAGS],
 [RPATH_FLAGS=
 
-if test "$GXX" = "yes"; then
-  RPATH_FLAGS=
-  for dir in $1; do
-    RPATH_FLAGS="$RPATH_FLAGS -Wl,--rpath -Wl,$dir"
-  done
-else
-  case $build in
-    *-linux-*)
-      case "$CXX" in
-      icpc | */icpc)
-        RPATH_FLAGS=
-        for dir in $1; do
-          RPATH_FLAGS="$RPATH_FLAGS -Wl,--rpath -Wl,$dir"
-        done
-      esac ;;
-    *-ibm-*)
-      case "$CXX" in
-      xlC* | */xlC* | mpxlC* | */mpxlC*)
-        RPATH_FLAGS=nothing ;;
-      esac ;;
-    *-hp-*)
-        RPATH_FLAGS=nothing ;;
-    *-mingw32)
-        RPATH_FLAGS=nothing ;;
-    *-sun-*)
-        RPATH_FLAGS=
-        for dir in $1; do
-          RPATH_FLAGS="$RPATH_FLAGS -R$dir"
-        done
-   esac
-fi
+if test $enable_shared = yes; then
+  if test "$GXX" = "yes"; then
+    RPATH_FLAGS=
+    for dir in $1; do
+      RPATH_FLAGS="$RPATH_FLAGS -Wl,--rpath -Wl,$dir"
+    done
+  else
+    case $build in
+      *-linux-*)
+        case "$CXX" in
+        icpc | */icpc)
+          RPATH_FLAGS=
+          for dir in $1; do
+            RPATH_FLAGS="$RPATH_FLAGS -Wl,--rpath -Wl,$dir"
+          done
+        esac ;;
+      *-ibm-*)
+        case "$CXX" in
+        xlC* | */xlC* | mpxlC* | */mpxlC*)
+          RPATH_FLAGS=nothing ;;
+        esac ;;
+      *-hp-*)
+          RPATH_FLAGS=nothing ;;
+      *-mingw32)
+          RPATH_FLAGS=nothing ;;
+      *-sun-*)
+          RPATH_FLAGS=
+          for dir in $1; do
+            RPATH_FLAGS="$RPATH_FLAGS -R$dir"
+          done
+     esac
+  fi
 
-if test "$RPATH_FLAGS" = ""; then
-  AC_MSG_WARN([Could not automatically determine how to tell the linker about automatic inclusion of the path for shared libraries.  The test examples might not work if you link against shared objects.  You will need to set the LD_LIBRARY_PATH or LIBDIR variable manually.])
-fi
-if test "$RPATH_FLAGS" = "nothing"; then
-  RPATH_FLAGS=
+  if test "$RPATH_FLAGS" = ""; then
+    AC_MSG_WARN([Could not automatically determine how to tell the linker about automatic inclusion of the path for shared libraries.  The test examples might not work if you link against shared objects.  You will need to set the LD_LIBRARY_PATH or LIBDIR variable manually.])
+  fi
+  if test "$RPATH_FLAGS" = "nothing"; then
+    RPATH_FLAGS=
+  fi
 fi
 
 AC_SUBST(RPATH_FLAGS)
 ]) # AC_COIN_RPATH_FLAGS
 
 ###########################################################################
-#                        COIN_VPATH_CONFIG_LINK                           #
+#                             COIN_VPATH_LINK                             #
 ###########################################################################
 
 # This macro makes sure that a symbolic link is created to a file in
 # the source code directory tree if we are in a VPATH compilation, and
 # if this package is the main package to be installed
 
-AC_DEFUN([AC_COIN_VPATH_LINKS],
+AC_DEFUN([AC_COIN_VPATH_LINK],
 [AC_REQUIRE([AC_COIN_CHECK_VPATH])
 if test $coin_vpath_config = yes; then
   AC_CONFIG_LINKS($1:$1)
 fi
-]) #AC_COIN_VPATH_CONFIG_LINK
+]) #AC_COIN_VPATH_LINK
 
 ###########################################################################
 #                       COIN_ENABLE_GNU_PACKAGES                          #
