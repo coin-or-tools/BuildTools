@@ -9,3 +9,4 @@ headers/configall_system_msc.h -text
 /install-sh -text
 /missing -text
 /run_autotools -text
+share/config.site -text
