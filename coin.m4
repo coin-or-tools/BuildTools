@@ -286,7 +286,7 @@ AC_CACHE_CHECK([for C++ compiler options],[coin_cv_cxxflags],
         esac
         ;;
       *-sun-*)
-          coin_opt_cxxflags="-O4 -xtarget=native"
+          coin_opt_cxxflags="-O4"
           coin_dbg_cxxflags="-g"
         ;;
     esac
@@ -531,7 +531,7 @@ AC_CACHE_CHECK([for C compiler options],[coin_cv_cflags],
         coin_dbg_cflags="-g"
         ;;
       *-sun-*)
-        coin_opt_cflags="-xO4 -xtarget=native"
+        coin_opt_cflags="-xO4"
         coin_dbg_cflags="-g"
         ;;
       *-sgi-*)
@@ -660,7 +660,7 @@ AC_CACHE_CHECK([for Fortran compiler options],[coin_cv_fflags],
         coin_dbg_fflags="-C -g"
         ;;
       *-sun-*)
-        coin_opt_fflags="-O4 -xtarget=native"
+        coin_opt_fflags="-O4"
         coin_dbg_fflags="-g"
         ;;
       *-sgi-*)
