@@ -46,10 +46,13 @@ $(top_builddir)/Makefile: .Externals-stamp
 update-externals: .Externals-stamp
 	cd $(srcdir); svn update
 
-DISTCLEANFILES += .Externals-stamp
+endif
 
+endif
+
+if HAVE_EXTERNALS
 EXTRA_DIST += Externals
-
+DISTCLEANFILES += .Externals-stamp
 endif
 
-endif
+DISTCLEANFILES += $(VPATH_DISTCLEANFILES)

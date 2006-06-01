@@ -122,20 +122,26 @@ AC_MSG_RESULT($coin_vpath_config)
 ]) # AC_COIN_CHECK_VPATH
 
 ###########################################################################
-#                           COIN_SRCDIR_INIT                              #
+#                         COIN_PROJECTDIR_INIT                            #
 ###########################################################################
 
 # This macro does everything that is required in the early part in the
-# configure script, such as defining a few variables.
+# configure script, such as defining a few variables.  This should only
+# be used in the main directory of a project directory (the one under
+# which src is)
 
-AC_DEFUN([AC_COIN_SRCDIR_INIT],
+AC_DEFUN([AC_COIN_PROJECTDIR_INIT],
 [# Initialize the ADDLIBS variable
 ADDLIBS=
 AC_SUBST(ADDLIBS)
 
 # A useful makefile conditional that is always false
 AM_CONDITIONAL(ALWAYS_FALSE, false)
-]) # AC_COIN_SRCDIR_INIT
+
+# We set the following variable so that we know later in AC_COIN_FINALIZE
+# that we are in a project main directory
+coin_projectdir=yes
+]) # AC_COIN_PROJECTDIR_INIT
 
 ###########################################################################
 #                          COIN_DEBUG_COMPILE                             #
@@ -885,8 +891,6 @@ fi
 AM_CONDITIONAL(HAVE_EXTERNALS,test $coin_have_externals = yes)
 ]) # AC_COIN_INIT_AUTOMAKE
 
-
-
 ###########################################################################
 #                         COIN_INIT_AUTO_TOOLS                            #
 ###########################################################################
@@ -1029,16 +1033,11 @@ case $build in
   esac
 esac
 
-# Unless we are on Darwin, we want to use the -no-undefined flag for
-# libtool to be able to create shared objects
-case $build in
-  *-darwin*)
-    LT_LDFLAGS=
-    ;;
-  *)
-    LT_LDFLAGS=-no-undefined
-    ;;
-esac
+# ToDo
+# For now, don't use the -no-undefined flag, since the Makefiles are
+# not yet set up that way.  But we need to fix this, when we want
+# to comile DLLs under Windows.
+LT_LDFLAGS=
 AC_SUBST(LT_LDFLAGS)
 ]) # AC_COIN_PROG_LIBTOOL
 
@@ -1107,6 +1106,39 @@ AC_SUBST(RPATH_FLAGS)
 ]) # AC_COIN_RPATH_FLAGS
 
 ###########################################################################
+#                              COIN_FINALIZE                              #
+###########################################################################
+
+# This macro should be called at the very end of the configure.ac file.
+# It creates the output files (by using AC_OUTPUT), and might do some other
+# things (such as generating links to data files in a VPATH configuration).
+# It also prints the "success" message.
+
+AC_DEFUN([AC_COIN_FINALIZE],
+[
+AC_OUTPUT
+
+if test x"$coin_vpath_link_files" = x; then : ; else
+  AC_MSG_NOTICE(Creating VPATH links for data files)
+  for file in $coin_vpath_link_files; do
+    rm -f $file
+    $LN_S $srcdir/$file $file
+  done
+fi
+
+# Define VPATH_DISTCLEANFILES to be everything that needs to be
+# cleaned for distclean in a vpath configuration
+AC_SUBST(VPATH_DISTCLEANFILES)
+VPATH_DISTCLEANFILES="$coin_vpath_link_files"
+
+if test x$coin_projectdir = xyes; then
+  AC_MSG_NOTICE([Configuration of $PACKAGE_NAME successful])
+else
+  AC_MSG_NOTICE([Main configuration of $PACKAGE_NAME successful])
+fi
+]) #AC_COIN_FINALIZE
+
+###########################################################################
 #                             COIN_VPATH_LINK                             #
 ###########################################################################
 
@@ -1117,7 +1149,7 @@ AC_SUBST(RPATH_FLAGS)
 AC_DEFUN([AC_COIN_VPATH_LINK],
 [AC_REQUIRE([AC_COIN_CHECK_VPATH])
 if test $coin_vpath_config = yes; then
-  AC_CONFIG_LINKS($1:$1)
+  coin_vpath_link_files="$coin_vpath_link_files $1"
 fi
 ]) #AC_COIN_VPATH_LINK
 
@@ -1139,12 +1171,12 @@ AC_DEFUN([AC_COIN_ENABLE_GNU_PACKAGES],
 ]) # AC_COIN_ENABLE_GNU_PACKAGES
 
 ###########################################################################
-#                             COIN_CHECK_ZLIB                             #
+#                           COIN_CHECK_GNU_ZLIB                           #
 ###########################################################################
 
 # This macro checks for the libz library.
 
-AC_DEFUN([AC_COIN_CHECK_ZLIB],
+AC_DEFUN([AC_COIN_CHECK_GNU_ZLIB],
 [AC_REQUIRE([AC_COIN_ENABLE_GNU_PACKAGES])
 AC_BEFORE([AC_COIN_PROG_CXX],[$0])
 AC_BEFORE([AC_COIN_PROG_CC],[$0])
@@ -1167,16 +1199,16 @@ if test $coin_enable_gnu = yes; then
 fi
 
 AM_CONDITIONAL(COIN_HAS_ZLIB,test x$coin_has_zlib = xyes)
-]) # AC_COIN_CHECK_ZLIB
+]) # AC_COIN_CHECK_GNU_ZLIB
 
 
 ###########################################################################
-#                            COIN_CHECK_BZLIB                             #
+#                          COIN_CHECK_GNU_BZLIB                           #
 ###########################################################################
 
 # This macro checks for the libbz2 library.
 
-AC_DEFUN([AC_COIN_CHECK_BZLIB],
+AC_DEFUN([AC_COIN_CHECK_GNU_BZLIB],
 [AC_REQUIRE([AC_COIN_ENABLE_GNU_PACKAGES])
 AC_BEFORE([AC_COIN_PROG_CXX],[$0])
 AC_BEFORE([AC_COIN_PROG_CC],[$0])
@@ -1197,11 +1229,11 @@ if test $coin_enable_gnu = yes; then
     AC_DEFINE([COIN_HAS_BZLIB],[1],[Define to 1 if bzlib is available])
   fi
 fi
-]) # AC_COIN_CHECK_BZLIB
+]) # AC_COIN_CHECK_GNU_BZLIB
 
 
 ###########################################################################
-#                           COIN_CHECK_READLINE                           #
+#                         COIN_CHECK_GNU_READLINE                         #
 ###########################################################################
 
 # This macro checks for GNU's readline.  It verifies that the header
@@ -1209,7 +1241,7 @@ fi
 # contains "readline".  It is assumed that #include <stdio.h> is included
 # in the source file before the #include<readline/readline.h>
 
-AC_DEFUN([AC_COIN_CHECK_READLINE],
+AC_DEFUN([AC_COIN_CHECK_GNU_READLINE],
 [AC_REQUIRE([AC_COIN_ENABLE_GNU_PACKAGES])
 AC_BEFORE([AC_COIN_PROG_CXX],[$0])
 AC_BEFORE([AC_COIN_PROG_CC],[$0])
@@ -1243,7 +1275,7 @@ if test $coin_enable_gnu = yes; then
 
   LIBS="$coin_save_LIBS"
 fi
-]) # AC_COIN_CHECK_READLINE
+]) # AC_COIN_CHECK_GNU_READLINE
 
 ###########################################################################
 #                             COIN_HAS_DATA                               #
@@ -1382,7 +1414,7 @@ AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
 # check if that symbol is defined in the library.
 
 AC_DEFUN([AC_COIN_HAS_USER_LIBRARY],
-[AC_REQUIRE([AC_COIN_SRCDIR_INIT])
+[AC_REQUIRE([AC_COIN_PROJECTDIR_INIT])
 AC_MSG_CHECKING(if user provides library for $1)
 
 # Check for header file directory
