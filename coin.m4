@@ -1313,7 +1313,7 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_DATA_$1),test $have_data = yes)
 # creates soft links to the example files.
 
 AC_DEFUN([AC_COIN_EXAMPLE_FILES],
-[AC_REQUIRE([AC_COIN_CHECK_ZLIB])
+[AC_REQUIRE([AC_COIN_CHECK_GNU_ZLIB])
 AC_REQUIRE([AC_COIN_CHECK_VPATH])
 files=`cd $srcdir; ls $1`
 # We need to do the following loop to make sure that are no newlines
