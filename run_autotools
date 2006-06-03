@@ -20,10 +20,14 @@ fi
 echo Copying autotools scripts into this directory
 cp $toolsdir/config.guess $toolsdir/config.sub $toolsdir/depcomp $toolsdir/install-sh $toolsdir/ltmain.sh $toolsdir/missing .
 
+if test x$AUTOTOOLS_DIR = x; then
+  AUTOTOOLS_DIR=$HOME
+fi
+
 for dir in $dirs; do
   (cd $dir
    echo creating acinclude.m4 in $dir
-   cat $HOME/share/aclocal/libtool.m4 $toolsdir/coin.m4> acinclude.m4
+   cat $AUTOTOOLS_DIR/share/aclocal/libtool.m4 $toolsdir/coin.m4> acinclude.m4
    echo running aclocal in $dir
    aclocal
    if grep AC_CONFIG_HEADER configure.ac >/dev/null 2>&1; then

@@ -804,6 +804,23 @@ if test "$enable_maintainer_mode" = yes; then
   fi
   rm -f confauto.out
 
+  # Check if the executable autoconf is picked up from the correct location
+  AC_MSG_CHECKING([whether autoconf is coming from the correct location])
+  autoconf_dir=`which autoconf | sed -e 's=/autoconf=='`
+  autoconf_dir=`cd $autoconf_dir; pwd`
+  if test x$AUTOTOOLS_DIR = x; then
+    want_dir=$HOME/bin
+  else
+    want_dir=$AUTOTOOLS_DIR/bin
+  fi
+  if test $autoconf_dir = `cd $want_dir; pwd`; then
+    AC_MSG_RESULT([yes])
+  else
+    rm -f confauto.out
+    AC_MSG_RESULT([no])
+    AC_MSG_ERROR([The autoconf executable should be picked up from \$HOME/bin or \$AUTOTOOLS_DIR/bin.])
+  fi
+
   # Check if we have automake
   AC_CHECK_PROG([have_automake],[automake],[yes],[no])
   if test $have_automake = no; then
@@ -824,41 +841,50 @@ if test "$enable_maintainer_mode" = yes; then
   fi
   rm -f confauto.out
 
-  # Check if we can find the libtool file
-  if test "${LIBTOOLPREFIX:+set}" != set; then
-    for p in $HOME ; do
-      AC_CHECK_FILE([$p/share/aclocal/libtool.m4],
-                    [LIBTOOLM4="$p/share/aclocal/libtool.m4"
-                     LIBTOOLPREFIX="$p"],)
-      if test x"$LIBTOOLM4" != x; then
-        break;
-      fi
-    done
-    if test x"$LIBTOOLM4" = x; then
-      AC_MSG_ERROR([You specified you want to use maintainer mode, but I cannot find the file libtool.m4 on your system.  Please set the prefix of the location of the correct file with the LIBTOOLPREFIX variable, so that it is in $LIBTOOLPREFIX/share/aclocal.  We assume here that it is the plain version obtained from the GNU tarball.])
-    fi
+  # Check if the executable automake is picked up from the correct location
+  AC_MSG_CHECKING([whether automake is coming from the correct location])
+  automake_dir=`which automake | sed -e 's=/automake=='`
+  automake_dir=`cd $automake_dir; pwd`
+  if test x$AUTOTOOLS_DIR = x; then
+    want_dir=$HOME/bin
   else
-    AC_CHECK_FILE([$LIBTOOLPREFIX/share/aclocal/libtool.m4],
-                  [LIBTOOLM4="$LIBTOOLPREFIX/share/aclocal/libtool.m4"],
-                  [AC_MSG_ERROR([You specified LIBTOOLPREFIX, but I cannot find the file libtool.m4 in $LIBTOOLPREFIX/share/aclocal.])])
+    want_dir=$AUTOTOOLS_DIR/bin
   fi
+  if test $automake_dir = `cd $want_dir; pwd`; then
+    AC_MSG_RESULT([yes])
+  else
+    rm -f confauto.out
+    AC_MSG_RESULT([no])
+    AC_MSG_ERROR([The automake executable should be picked up from \$HOME/bin or \$AUTOTOOLS_DIR/bin.])
+  fi
+
+  # Check if we can find the libtool file
+  if test x$AUTOTOOLS_DIR = x; then
+    want_dir=$HOME/share
+  else
+    want_dir=$AUTOTOOLS_DIR/share
+  fi
+  AC_CHECK_FILE([$want_dir/aclocal/libtool.m4],
+                [LIBTOOLM4="$want_dir/aclocal/libtool.m4"],
+                [AC_MSG_ERROR([I cannot find the libtool.m4 file.])])
 
   # Check if this is the correct version of libtool (with escaped dots)
   correct_version='1.5.22'
   grep_version=`echo  $correct_version | sed -e 's/\\./\\\\\\./g'`
-  AC_CHECK_FILE([$LIBTOOLPREFIX/share/libtool/ltmain.sh],
+  AC_CHECK_FILE([$want_dir/libtool/ltmain.sh],
 	        [have_ltmain=yes],
                 [have_ltmain=no])
   AC_MSG_CHECKING([whether we are using the correct version ($correct_version) of libtool.])
   if test $have_ltmain = yes; then
-    if $EGREP $grep_version $LIBTOOLPREFIX/share/libtool/ltmain.sh >/dev/null 2>&1; then
+    if $EGREP $grep_version $want_dir/libtool/ltmain.sh >/dev/null 2>&1; then
       AC_MSG_RESULT([yes])
     else
       AC_MSG_RESULT([no])
-      AC_MSG_ERROR([You don't have the correct version of libtool.  Please set LIBTOOLPREFIX to the correct installation prefix, so that the correct version of ltmain.sh is in $LIBTOOLPREFIX/share/libtool.])
+      AC_MSG_ERROR([You don't have the correct version of libtool.])
     fi
   else
-    AC_MSG_ERROR([I cannot find the file ltmain.sh in $LIBTOOLPREFIX/share/libtool])
+    AC_MSG_RESULT([no])
+    AC_MSG_ERROR([I cannot find the ltmain.sh file.])
   fi  
 
   # Check if we have an Externals file
