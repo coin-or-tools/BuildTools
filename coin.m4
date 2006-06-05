@@ -976,6 +976,7 @@ AC_COIN_PROG_LIBTOOL
 
 # helpful variable for the base directory of this package
 abs_source_dir=`cd $srcdir; pwd`
+AC_SUBST(abs_source_dir)
 
 # Stuff for example Makefiles
 if test x$prefix = xNONE; then
@@ -1474,7 +1475,9 @@ if test $m4_tolower(coin_has_$2) = true; then
   m4_ifvaln([$4],[coin_save_LIBS="$LIBS"
                   LIBS="$$2LIB $ADDLIBS"
 		  AC_MSG_CHECKING([whether symbol $4 is available with $2])
-                  AC_TRY_LINK([extern "C" {void $4();}],[$4()],
+# ToDo find out what to do about extern "C"
+#                  AC_TRY_LINK([extern "C" {void $4();}],[$4()],
+                  AC_TRY_LINK([void $4();],[$4()],
                               [AC_MSG_RESULT(yes)],
 			      [AC_MSG_RESULT(no)
                                AC_MSG_ERROR([Cannot find symbol $4 with $2])])
