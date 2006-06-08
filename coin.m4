@@ -328,6 +328,12 @@ coin_cv_cxxflags="$CXXFLAGS"
 ]) # AC_CACHE_CHECK([for C++ compiler options CXXFLAGS]
 CXXFLAGS="$coin_cv_cxxflags"
 
+AC_ARG_VAR(MPICXX,[C++ MPI Compiler])
+if test x"$MPICXX" = x; then :; else
+  AC_MSG_NOTICE([Will use MPI C++ compiler $MPICXX])
+  CXX="$MPICXX"
+fi
+
 AC_LANG_POP(C++)
 ]) # AC_COIN_PROG_CXX
 
@@ -577,6 +583,12 @@ coin_cv_cflags="$CFLAGS"
 ]) # AC_CACHE_CHECK([for C compiler options CXXFLAGS]
 CFLAGS="$coin_cv_cflags"
 
+AC_ARG_VAR(MPICC,[C MPI Compiler])
+if test x"$MPICC" = x; then :; else
+  AC_MSG_NOTICE([Will use MPI C compiler $MPICC])
+  CC="$MPICC"
+fi
+
 AC_LANG_POP(C)
 ]) # AC_COIN_PROG_CC
 
@@ -706,6 +718,12 @@ fi
 coin_cv_fflags="$FFLAGS"
 ]) # AC_CACHE_CHECK([for Fortran compiler options FFLAGS]
 FFLAGS="$coin_cv_fflags"
+
+AC_ARG_VAR(MPIF77,[Fortran MPI Compiler])
+if test x"$MPIF77" = x; then :; else
+  AC_MSG_NOTICE([Will use MPI Fortran compiler $MPIF77])
+  F77="$MPIF77"
+fi
 
 AC_LANG_POP([Fortran 77])
 ]) # AC_COIN_PROG_F77
