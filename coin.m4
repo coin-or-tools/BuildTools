@@ -168,6 +168,7 @@ AC_ARG_ENABLE([debug],
                    yes) coin_debug_compile=true
                      AC_DEFINE([COIN_DEBUG],[1],
                                [If defined, debug sanity checks are performed during runtime])
+                     enable_shared=no
                      ;;
                    no)  coin_debug_compile=false
                      ;;
@@ -909,6 +910,18 @@ if test "$enable_maintainer_mode" = yes; then
   if test -r $srcdir/Externals; then
     coin_have_externals=yes
   fi
+  # Check if subversion is installed and understands https
+  AC_CHECK_PROG([have_svn],[svn],[yes],[no])
+  if test x$have_svn = xyes; then
+    AC_MSG_CHECKING([svn understands https])
+    svn --version > confauto.out 2>&1
+    if $EGREP https confauto.out >/dev/null 2>&1; then
+      AC_MSG_RESULT(yes)
+    else
+      AC_MSG_RESULT(no)
+      have_svn=no
+    fi
+  fi
 
   # Find the location of the BuildTools directory
   BUILDTOOLSDIR=
@@ -932,7 +945,11 @@ if test "$enable_maintainer_mode" = yes; then
   AC_SUBST(AUX_DIR)
   AUX_DIR=$ac_aux_dir
 fi
-AM_CONDITIONAL(HAVE_EXTERNALS,test $coin_have_externals = yes)
+
+
+
+AM_CONDITIONAL(HAVE_EXTERNALS,
+               test $coin_have_externals = yes && test x$have_svn = xyes)
 ]) # AC_COIN_INIT_AUTOMAKE
 
 ###########################################################################
