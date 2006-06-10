@@ -132,7 +132,7 @@ AC_MSG_RESULT($coin_vpath_config)
 
 AC_DEFUN([AC_COIN_PROJECTDIR_INIT],
 [# Initialize the ADDLIBS variable
-ADDLIBS=
+ADDLIBS='-lm'
 AC_SUBST(ADDLIBS)
 
 # A useful makefile conditional that is always false
@@ -225,7 +225,7 @@ AC_CACHE_CHECK([for C++ compiler options],[coin_cv_cxxflags],
 
   if test "$GXX" = "yes"; then
     case "$CXX" in
-      icpc | */icpc)
+      icpc* | */icpc*)
         ;;
       *)
 # ToDo decide about unroll-loops
@@ -249,7 +249,7 @@ AC_CACHE_CHECK([for C++ compiler options],[coin_cv_cxxflags],
     case $build in
       *-cygwin* | *-mingw*)
         case "$CXX" in
-          cl | */cl)
+          cl* | */cl*)
             coin_opt_cxxflags='-O2'
             coin_add_cxxflags='-nologo -EHsc -GR -MT'
             coin_dbg_cxxflags='-Yd'
@@ -258,7 +258,7 @@ AC_CACHE_CHECK([for C++ compiler options],[coin_cv_cxxflags],
         ;;
       *-linux-*)
         case "$CXX" in
-          icpc | */icpc)
+          icpc* | */icpc*)
             coin_opt_cxxflags="-O3 -ip"
             coin_add_cxxflags=""
             coin_dbg_cxxflags="-g"
@@ -267,7 +267,7 @@ AC_CACHE_CHECK([for C++ compiler options],[coin_cv_cxxflags],
             AC_TRY_LINK([],[int i=0; i++;],[],
                         [coin_add_cxxflags="-i_dynamic $coin_add_cxxflags"])
             ;;
-          pgCC | */pgCC)
+          pgCC* | */pgCC*)
             coin_opt_cxxflags="-fast"
             coin_add_cxxflags="-Kieee -pc 64"
             coin_dbg_cxxflags="-g"
@@ -285,7 +285,7 @@ AC_CACHE_CHECK([for C++ compiler options],[coin_cv_cxxflags],
         ;;
       *-hp-*)
         case "$CXX" in
-          aCC | */aCC )
+          aCC* | */aCC* )
             coin_opt_cxxflags="-O"
             coin_add_cxxflags="-AA"
             coin_dbg_cxxflags="-g"
@@ -353,7 +353,7 @@ AC_ARG_VAR(CXXLIBS,[Libraries necessary for linking C++ code with Fortran compil
 if test -z "$CXXLIBS"; then
   if test "$GXX" = "yes"; then
     case "$CXX" in
-      icpc | */icpc)
+      icpc* | */icpc*)
         CXXLIBS=""
         ;;
       *)
@@ -364,10 +364,10 @@ if test -z "$CXXLIBS"; then
     case $build in
      *-linux-*)
       case "$CXX" in
-      icpc | */icpc)
+      icpc* | */icpc*)
         CXXLIBS=""
              ;;
-      pgCC | */pgCC)
+      pgCC* | */pgCC*)
         CXXLIBS="-lstd -lC -lc"
              ;;
       esac;;
@@ -481,7 +481,7 @@ AC_CACHE_CHECK([for C compiler options],[coin_cv_cflags],
 
   if test "$GCC" = "yes"; then
     case "$CC" in
-      icc | */icc)
+      icc* | */icc*)
         ;;
       *)
         coin_opt_cflags="-O3 -fomit-frame-pointer"
@@ -504,7 +504,7 @@ AC_CACHE_CHECK([for C compiler options],[coin_cv_cflags],
     case $build in
       *-cygwin* | *-mingw*)
         case "$CC" in
-          cl | */cl)
+          cl* | */cl*)
             coin_opt_cflags='-O2'
             coin_add_cflags='-nologo'
             coin_dbg_cflags='-Yd'
@@ -513,7 +513,7 @@ AC_CACHE_CHECK([for C compiler options],[coin_cv_cflags],
         ;;
       *-linux-*)
         case "$CC" in
-          icc | */icc)
+          icc* | */icc*)
             coin_opt_cflags="-O3 -ip"
             coin_add_cflags=""
             coin_dbg_cflags="-g"
@@ -522,7 +522,7 @@ AC_CACHE_CHECK([for C compiler options],[coin_cv_cflags],
             AC_TRY_LINK([],[int i=0; i++;],[],
                         [coin_add_cflags="-i_dynamic $coin_add_cflags"])
             ;;
-          pgcc | */pgcc)
+          pgcc* | */pgcc*)
             coin_opt_cflags="-fast"
             coin_add_cflags="-Kieee -pc 64"
             coin_dbg_cflags="-g"
@@ -590,6 +590,13 @@ if test x"$MPICC" = x; then :; else
   CC="$MPICC"
 fi
 
+# Correct ADDLIBS initialization if we are using the MS compiler
+case "$CC" in
+  cl)
+    ADDLIBS=lib.m
+    ;;
+esac
+
 AC_LANG_POP(C)
 ]) # AC_COIN_PROG_CC
 
@@ -639,7 +646,7 @@ AC_CACHE_CHECK([for Fortran compiler options],[coin_cv_fflags],
     case $build in
       *-cygwin* | *-mingw*)
         case $F77 in
-          ifort | */ifort)
+          ifort* | */ifort*)
             coin_opt_fflags='-O3'
             coin_add_fflags='-nologo'
             coin_dbg_fflags='-debug'
@@ -648,7 +655,7 @@ AC_CACHE_CHECK([for Fortran compiler options],[coin_cv_fflags],
         ;;
       *-linux-*)
         case $F77 in
-          ifc | */ifc | ifort | */ifort)
+          ifc* | */ifc* | ifort* | */ifort*)
             coin_opt_fflags="-O3 -ip"
             coin_add_fflags="-cm -w90 -w95"
             coin_dbg_fflags="-g -CA -CB -CS"
@@ -657,7 +664,7 @@ AC_CACHE_CHECK([for Fortran compiler options],[coin_cv_fflags],
             AC_TRY_LINK([],[      write(*,*) 'Hello world'],[],
                         [coin_add_fflags="-i_dynamic $coin_add_fflags"])
             ;;
-          pgf77 | */pgf77 | pgf90 | */pgf90)
+          pgf77* | */pgf77* | pgf90* | */pgf90*)
             coin_opt_fflags="-fast"
             coin_add_fflags="-Kieee -pc 64"
             coin_dbg_fflags="-g"
@@ -759,7 +766,7 @@ case $build in
 # The following is a fix to define FLIBS for ifort on Windows
    *-cygwin* | *-mingw*)
      case $F77 in
-       ifort | */ifort)
+       ifort* | */ifort*)
            FLIBS="/link libifcorert.lib $LIBS /NODEFAULTLIB:libc.lib";;
      esac;;
    *-hp-*)
@@ -768,7 +775,7 @@ case $build in
        FLIBS=`echo $FLIBS | sed 's/-lc)/-lc/g'` ;;
    *-linux-*)
      case "$F77" in
-       pgf77 | */pgf77 | pgf90 | */pgf90)
+       pgf77* | */pgf77* | pgf90* | */pgf90*)
 # ask linker to go through the archives multiple times
 # (the Fortran compiler seems to do that automatically...
          FLIBS="-Wl,--start-group $FLIBS -Wl,--end-group" ;;
@@ -980,7 +987,7 @@ case $build in
   ;;
   *-mingw*)
     case $CXX in
-      cl)
+      cl*)
         coin_disable_shared=yes
         platform="Msys with cl"
     ;;
@@ -1133,7 +1140,7 @@ if test $enable_shared = yes; then
     case $build in
       *-linux-*)
         case "$CXX" in
-        icpc | */icpc)
+        icpc* | */icpc*)
           RPATH_FLAGS=
           for dir in $1; do
             RPATH_FLAGS="$RPATH_FLAGS -Wl,--rpath -Wl,$dir"
