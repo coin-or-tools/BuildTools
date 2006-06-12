@@ -593,7 +593,7 @@ fi
 # Correct ADDLIBS initialization if we are using the MS compiler
 case "$CC" in
   cl)
-    ADDLIBS=lib.m
+    ADDLIBS=
     ;;
 esac
 
