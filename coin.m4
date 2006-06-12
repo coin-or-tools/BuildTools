@@ -140,7 +140,7 @@ AM_CONDITIONAL(ALWAYS_FALSE, false)
 
 # We set the following variable so that we know later in AC_COIN_FINALIZE
 # that we are in a project main directory
-coin_projectdir=yes
+
 ]) # AC_COIN_PROJECTDIR_INIT
 
 ###########################################################################
@@ -186,6 +186,22 @@ fi
 AM_CONDITIONAL([COIN_DEBUG],[test "$coin_debug_compile" = true])
 ]) # AC_COIN_DEBUG_COMPILE
 
+###########################################################################
+#                          COIN_MINGW_LD_FIX                              #
+###########################################################################
+
+# This macro is included by any PROG_compiler macro, to set the LD
+# environment variable on MinWG to the correct value (link)
+
+AC_DEFUN([AC_COIN_MINGW_LD_FIX],
+[case $build in
+  *-mingw*)
+    if test "${LD+set}" = set; then :; else
+      LD=link
+    fi
+    ;;
+esac
+])
 
 ###########################################################################
 #                             COIN_PROG_CXX                               #
@@ -197,7 +213,8 @@ AM_CONDITIONAL([COIN_DEBUG],[test "$coin_debug_compile" = true])
 # possible to provide additional -D flags in the variable CXXDEFS.
 
 AC_DEFUN([AC_COIN_PROG_CXX],
-[AC_REQUIRE([AC_COIN_PROG_CC]) #Let's try if that overcomes configuration problem with VC++ 6.0
+[AC_REQUIRE([AC_COIN_MINGW_LD_FIX])
+AC_REQUIRE([AC_COIN_PROG_CC]) #Let's try if that overcomes configuration problem with VC++ 6.0
 AC_LANG_PUSH(C++)
 
 AC_ARG_VAR(CXXDEFS,[Additional -D flags to be used when compiling C++ code.])
@@ -442,7 +459,8 @@ AC_LANG_POP(C++)
 # possible to provide additional -D flags in the variable CDEFS.
 
 AC_DEFUN([AC_COIN_PROG_CC],
-[AC_LANG_PUSH(C)
+[AC_REQUIRE([AC_COIN_MINGW_LD_FIX])
+AC_LANG_PUSH(C)
 
 # For consistency, we set the C compiler to the same value of the C++
 # compiler, if the C++ is set, but the C compiler isn't (only for CXX=cl)
@@ -609,7 +627,8 @@ AC_LANG_POP(C)
 # given my the user), and find an appropriate value for FFLAGS
 
 AC_DEFUN([AC_COIN_PROG_F77],
-[AC_LANG_PUSH([Fortran 77])
+[AC_REQUIRE([AC_COIN_MINGW_LD_FIX])
+AC_LANG_PUSH([Fortran 77])
 
 coin_has_f77=yes
 
@@ -986,7 +1005,7 @@ case $build in
     platform=Cygwin
   ;;
   *-mingw*)
-    case $CXX in
+    case "$CXX" in
       cl*)
         coin_disable_shared=yes
         platform="Msys with cl"
@@ -998,7 +1017,7 @@ if test x"$coin_disable_shared" = xyes; then
   if test x"$enable_shared" = xyes; then
     AC_MSG_WARN([On $platform, shared objects are not supported. I'm disabling your choice.])
   fi
-#  enable_shared=no
+  enable_shared=no
 fi
 # By default, we only want the shared objects to be compiled
 AC_DISABLE_STATIC
