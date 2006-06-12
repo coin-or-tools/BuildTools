@@ -213,8 +213,7 @@ esac
 # possible to provide additional -D flags in the variable CXXDEFS.
 
 AC_DEFUN([AC_COIN_PROG_CXX],
-[AC_REQUIRE([AC_COIN_MINGW_LD_FIX])
-AC_REQUIRE([AC_COIN_PROG_CC]) #Let's try if that overcomes configuration problem with VC++ 6.0
+[AC_REQUIRE([AC_COIN_PROG_CC]) #Let's try if that overcomes configuration problem with VC++ 6.0
 AC_LANG_PUSH(C++)
 
 AC_ARG_VAR(CXXDEFS,[Additional -D flags to be used when compiling C++ code.])
@@ -351,6 +350,12 @@ if test x"$MPICXX" = x; then :; else
   AC_MSG_NOTICE([Will use MPI C++ compiler $MPICXX])
   CXX="$MPICXX"
 fi
+
+case "$CXX" in
+  cl*)
+    AC_COIN_MINGW_LD_FIX
+    ;;
+esac
 
 AC_LANG_POP(C++)
 ]) # AC_COIN_PROG_CXX
@@ -610,8 +615,9 @@ fi
 
 # Correct ADDLIBS initialization if we are using the MS compiler
 case "$CC" in
-  cl)
+  cl*)
     ADDLIBS=
+    AC_COIN_MINGW_LD_FIX
     ;;
 esac
 
@@ -751,6 +757,12 @@ if test x"$MPIF77" = x; then :; else
   AC_MSG_NOTICE([Will use MPI Fortran compiler $MPIF77])
   F77="$MPIF77"
 fi
+
+case "$F77" in
+  ifort*)
+    AC_COIN_MINGW_LD_FIX
+    ;;
+esac
 
 AC_LANG_POP([Fortran 77])
 ]) # AC_COIN_PROG_F77
