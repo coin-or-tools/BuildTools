@@ -1112,7 +1112,7 @@ esac
 case $build in
   *-cygwin* | *-mingw*)
   case "$CXX" in
-    cl | */cl) 
+    cl* | */cl*) 
       AC_MSG_NOTICE(Applying patches to libtool for cl compiler)
       sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
           -e 's|fix_srcfile_path=\"\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
