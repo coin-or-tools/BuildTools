@@ -824,6 +824,15 @@ esac
 # macros, and defines additional variables and makefile conditionals,
 # that are used in the maintainer parts of the makfile.  It also
 # checks if the correct versions of the autotools are used.
+#
+# This also defines the AC_SUBST variables:
+# abs_source_dir     absolute path to source code for this package
+# abs_bin_dir        absolute path to the directory where binaries are
+#                    going to be installed (prefix/bin)
+# abs_lib_dir        absolute path to the directory where libraries are
+#                    going to be installed (prefix/lib)
+# abs_include_dir    absolute path to the directory where the header files
+#                    are installed (prefix/include)
 
 AC_DEFUN([AC_COIN_INIT_AUTOMAKE],
 [AC_REQUIRE([AC_PROG_EGREP])
@@ -984,7 +993,23 @@ if test "$enable_maintainer_mode" = yes; then
   AUX_DIR=$ac_aux_dir
 fi
 
+# helpful variable for the base directory of this package
+abs_source_dir=`cd $srcdir; pwd`
+AC_SUBST(abs_source_dir)
 
+# Stuff for example Makefiles
+if test x$prefix = xNONE; then
+  full_prefix=$ac_default_prefix
+else
+  full_prefix=$prefix
+fi
+full_prefix=`cd $full_prefix ; pwd`
+AC_SUBST(abs_lib_dir)
+abs_lib_dir=$full_prefix/lib
+AC_SUBST(abs_include_dir)
+abs_include_dir=$full_prefix/include
+AC_SUBST(abs_bin_dir)
+abs_bin_dir=$full_prefix/bin
 
 AM_CONDITIONAL(HAVE_EXTERNALS,
                test $coin_have_externals = yes && test x$have_svn = xyes)
@@ -997,14 +1022,6 @@ AM_CONDITIONAL(HAVE_EXTERNALS,
 # Initialize the auto tools automake and libtool, with all
 # modifications we want for COIN packages.
 #
-# This also defines the AC_SUBST variables:
-# abs_source_dir     absolute path to source code for this package
-# abs_bin_dir        absolute path to the directory where binaries are
-#                    going to be installed (prefix/bin)
-# abs_lib_dir        absolute path to the directory where libraries are
-#                    going to be installed (prefix/lib)
-# abs_include_dir    absolute path to the directory where the header files
-#                    are installed (prefix/include)
 # RPATH_FLAGS        link flags for hardcoding path to shared objects
 
 # This is a trick to have this code before AC_COIN_PROG_LIBTOOL
@@ -1046,24 +1063,6 @@ AC_COIN_INIT_AUTOMAKE
 
 # Stuff for libtool
 AC_COIN_PROG_LIBTOOL
-
-# helpful variable for the base directory of this package
-abs_source_dir=`cd $srcdir; pwd`
-AC_SUBST(abs_source_dir)
-
-# Stuff for example Makefiles
-if test x$prefix = xNONE; then
-  full_prefix=$ac_default_prefix
-else
-  full_prefix=$prefix
-fi
-full_prefix=`cd $full_prefix ; pwd`
-AC_SUBST(abs_lib_dir)
-abs_lib_dir=$full_prefix/lib
-AC_SUBST(abs_include_dir)
-abs_include_dir=$full_prefix/include
-AC_SUBST(abs_bin_dir)
-abs_bin_dir=$full_prefix/bin
 
 # set RPATH_FLAGS to the compiler link flags required to hardcode location
 # of the shared objects
