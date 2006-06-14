@@ -22,8 +22,7 @@ AC_PREREQ(2.59)
 # This automatically also checks for the Data subdirectory.
 
 AC_DEFUN([AC_COIN_MAIN_SUBDIRS],
-[coin_subdirs=
-m4_ifvaln([$1],[AC_MSG_CHECKING(whether directory $1 is available)
+[m4_ifvaln([$1],[AC_MSG_CHECKING(whether directory $1 is available)
                 if test -r $srcdir/$1/configure; then
                   coin_subdirs="$coin_subdirs $1"
                   AC_MSG_RESULT(yes)
@@ -104,6 +103,29 @@ m4_ifvaln([$10],[AC_MSG_CHECKING(whether directory $10 is available)
                   AC_MSG_RESULT(no)
                 fi])
 ]) # AC_COIN_MAIN_SUBDIRS
+
+###########################################################################
+#                        COIN_THIRDPARTY_SUBDIRS                          #
+###########################################################################
+
+# This macro sets up the recursion into the configure script in a
+# subdirectory for compilation of third party code.  The first
+# argument is just the string that appears in the configure output.
+# The second argument is the directory with the configure script, and
+# the third one is a file that should exists in that directory.  If
+# this file does not exist, we assume that the user has not downloaded
+# the code, and we are not going to compile it
+
+AC_DEFUN([AC_COIN_THIRDPARTY_SUBDIRS],
+[AC_MSG_CHECKING(whether code for third party package $1 is available)
+if test -r $srcdir/$2/$3; then
+  coin_subdirs="$coin_subdirs $2"
+  AC_MSG_RESULT(yes)
+  AC_CONFIG_SUBDIRS($2)
+else
+  AC_MSG_RESULT(no)
+fi
+]) # AC_COIN_THIRDPARTY_SUBDIRS
 
 ###########################################################################
 #                           COIN_CHECK_VPATH                              #
@@ -968,6 +990,7 @@ if test "$enable_maintainer_mode" = yes; then
       AC_MSG_RESULT(no)
       have_svn=no
     fi
+    rm -f confauto.out
   fi
 
   # Find the location of the BuildTools directory
@@ -1565,3 +1588,73 @@ AC_SUBST($2LIB)
 AM_CONDITIONAL(COIN_HAS_$2,
                test $m4_tolower(coin_has_$2) = true)
 ]) #AC_COIN_HAS_SOLVER 
+
+###########################################################################
+#                               COIN_HAS_ASL                              #
+###########################################################################
+
+# This macro checks if the user has provide arguments that say where
+# the precompiled ASL files should be found (with the --with-asldir
+# flag).  If this is not the case, we check if the ThirdParty/ASL
+# directory has been configured, which indicates that the files will
+# be in that directory and can be used.
+
+AC_DEFUN([AC_COIN_HAS_ASL],
+[coin_aslobjdir=../ThirdParty/ASL
+coin_aslsrcdir=$srcdir/$coin_aslobjdir
+
+# Determine the name of the ASL library
+case "$CXX" in
+  cl* | */cl*)
+    ampllib=amplsolv.lib ;;
+  *)
+    ampllib=amplsolver.a ;;
+esac
+
+AC_ARG_WITH([asldir],
+            AC_HELP_STRING([--with-asldir],
+                           [specify path to AMPL solver directory (or BUILD for compilation, or "no" for disabling AMPL)]),
+            [use_asldir=$withval], [use_asldir=])
+
+if test "$use_asldir" = BUILD; then
+  AC_CHECK_FILE([$coin_aslobjdir/Makefile],[],
+                [AC_MSG_ERROR([option \"BUILD\" specified for asldir, but directory is not configure (sources missing?)])])
+elif test -z "$use_asldir"; then
+ # try to find sources - if not given don't compile
+  AC_CHECK_FILE([$coin_aslobjdir/Makefile],[use_asldir=BUILD],[use_asldir=no])
+elif test "$use_asldir" != "no"; then
+  AC_CHECK_FILE([$use_asldir/$ampllib],[],
+                [AC_MSG_ERROR([ASL directory \"$use_asldir\" specified, but library missing])])
+  AC_CHECK_FILE([$use_asldir/asl.h],[],
+                [AC_MSG_ERROR([ASL directory \"$use_asldir\" specified, but header files are missing])])
+  use_asldir=`cd $use_asldir; pwd`
+  case $build in
+    *-cygwin*) use_asldir=`cygpath -w $use_asldir | sed -e sX\\\\\\\\X/Xg` ;;
+  esac
+fi
+
+# Variable containing ASL library (including full path)
+AC_SUBST(ASLLIB)
+# Variable containing flags for including ASL header files
+AC_SUBST(ASL_CPPFLAGS)
+
+if test "$use_asldir" = BUILD; then
+  coin_aslobjdir=`cd $coin_aslobjdir; pwd`
+  ASLLIB="$coin_aslobjdir/$ampllib"
+  coin_aslsrcdir=`cd $coin_aslsrcdir; pwd`
+  ASL_CPPFLAGS="-I"`$CYGPATH_W $coin_aslobjdir`" -I"`$CYGPATH_W $coin_aslsrcdir/solvers`
+elif test "$use_asldir" != no; then
+  ASLLIB="$use_asldir/$ampllib"
+  ASL_CPPFLAGS="-I"`$CYGPATH_W $use_asldir`
+fi
+
+if test "$use_asldir" != no; then
+  AC_CHECK_LIB(dl,[dlopen],[ASLLIB="$ASLLIB -ldl"],[])
+  coin_has_asl=yes
+  AC_DEFINE([COIN_HAS_ASL],[1],
+            [If defined, the Ampl Solver Library is available.])
+else
+  coin_has_asl=no
+fi
+AM_CONDITIONAL(COIN_HAS_ASL, test $coin_has_asl = yes)
+]) # AC_COIN_HAS_ASL
