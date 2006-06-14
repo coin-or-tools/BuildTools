@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 #
-## $Id: coin.m4,v 1.1.2.1 2006/04/19 23:25:12 andreasw Exp $
+## $Id$
 #
 # Author: Andreas Wachter    IBM      2006-04-14
 
