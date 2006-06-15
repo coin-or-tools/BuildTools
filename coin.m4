@@ -22,8 +22,20 @@ AC_PREREQ(2.59)
 # This automatically also checks for the Data subdirectory.
 
 AC_DEFUN([AC_COIN_MAIN_SUBDIRS],
-[m4_ifvaln([$1],[AC_MSG_CHECKING(whether directory $1 is available)
-                if test -r $srcdir/$1/configure; then
+[AC_ARG_VAR([COIN_SKIP_PROJECTS],[Set to the subdirectories of projects that should be skipped in the configuration])
+
+m4_ifvaln([$1],[AC_MSG_CHECKING(whether directory $1 is available)
+                coin_skip=no
+                if test x"$COIN_SKIP_PROJECTS" != x; then
+                  for dir in $COIN_SKIP_PROJECTS; do
+                    if test $dir = $1; then
+                      coin_skip=yes
+                    fi
+                  done
+                fi
+                if test $coin_skip = yes; then
+                  AC_MSG_RESULT(skipping)
+                elif test -r $srcdir/$1/configure; then
                   coin_subdirs="$coin_subdirs $1"
                   AC_MSG_RESULT(yes)
                   AC_CONFIG_SUBDIRS($1)
@@ -31,7 +43,17 @@ AC_DEFUN([AC_COIN_MAIN_SUBDIRS],
                   AC_MSG_RESULT(no)
                 fi])
 m4_ifvaln([$2],[AC_MSG_CHECKING(whether directory $2 is available)
-                if test -r $srcdir/$2/configure; then
+                coin_skip=no
+                if test x"$COIN_SKIP_PROJECTS" != x; then
+                  for dir in $COIN_SKIP_PROJECTS; do
+                    if test $dir = $2; then
+                      coin_skip=yes
+                    fi
+                  done
+                fi
+                if test $coin_skip = yes; then
+                  AC_MSG_RESULT(skipping)
+                elif test -r $srcdir/$2/configure; then
                   coin_subdirs="$coin_subdirs $2"
                   AC_MSG_RESULT(yes)
                   AC_CONFIG_SUBDIRS($2)
@@ -39,7 +61,17 @@ m4_ifvaln([$2],[AC_MSG_CHECKING(whether directory $2 is available)
                   AC_MSG_RESULT(no)
                 fi])
 m4_ifvaln([$3],[AC_MSG_CHECKING(whether directory $3 is available)
-                if test -r $srcdir/$3/configure; then
+                coin_skip=no
+                if test x"$COIN_SKIP_PROJECTS" != x; then
+                  for dir in $COIN_SKIP_PROJECTS; do
+                    if test $dir = $3; then
+                      coin_skip=yes
+                    fi
+                  done
+                fi
+                if test $coin_skip = yes; then
+                  AC_MSG_RESULT(skipping)
+                elif test -r $srcdir/$3/configure; then
                   coin_subdirs="$coin_subdirs $3"
                   AC_MSG_RESULT(yes)
                   AC_CONFIG_SUBDIRS($3)
@@ -47,7 +79,17 @@ m4_ifvaln([$3],[AC_MSG_CHECKING(whether directory $3 is available)
                   AC_MSG_RESULT(no)
                 fi])
 m4_ifvaln([$4],[AC_MSG_CHECKING(whether directory $4 is available)
-                if test -r $srcdir/$4/configure; then
+                coin_skip=no
+                if test x"$COIN_SKIP_PROJECTS" != x; then
+                  for dir in $COIN_SKIP_PROJECTS; do
+                    if test $dir = $4; then
+                      coin_skip=yes
+                    fi
+                  done
+                fi
+                if test $coin_skip = yes; then
+                  AC_MSG_RESULT(skipping)
+                elif test -r $srcdir/$4/configure; then
                   coin_subdirs="$coin_subdirs $4"
                   AC_MSG_RESULT(yes)
                   AC_CONFIG_SUBDIRS($4)
@@ -55,7 +97,17 @@ m4_ifvaln([$4],[AC_MSG_CHECKING(whether directory $4 is available)
                   AC_MSG_RESULT(no)
                 fi])
 m4_ifvaln([$5],[AC_MSG_CHECKING(whether directory $5 is available)
-                if test -r $srcdir/$5/configure; then
+                coin_skip=no
+                if test x"$COIN_SKIP_PROJECTS" != x; then
+                  for dir in $COIN_SKIP_PROJECTS; do
+                    if test $dir = $5; then
+                      coin_skip=yes
+                    fi
+                  done
+                fi
+                if test $coin_skip = yes; then
+                  AC_MSG_RESULT(skipping)
+                elif test -r $srcdir/$5/configure; then
                   coin_subdirs="$coin_subdirs $5"
                   AC_MSG_RESULT(yes)
                   AC_CONFIG_SUBDIRS($5)
@@ -63,7 +115,17 @@ m4_ifvaln([$5],[AC_MSG_CHECKING(whether directory $5 is available)
                   AC_MSG_RESULT(no)
                 fi])
 m4_ifvaln([$6],[AC_MSG_CHECKING(whether directory $6 is available)
-                if test -r $srcdir/$6/configure; then
+                coin_skip=no
+                if test x"$COIN_SKIP_PROJECTS" != x; then
+                  for dir in $COIN_SKIP_PROJECTS; do
+                    if test $dir = $6; then
+                      coin_skip=yes
+                    fi
+                  done
+                fi
+                if test $coin_skip = yes; then
+                  AC_MSG_RESULT(skipping)
+                elif test -r $srcdir/$6/configure; then
                   coin_subdirs="$coin_subdirs $6"
                   AC_MSG_RESULT(yes)
                   AC_CONFIG_SUBDIRS($6)
@@ -71,7 +133,17 @@ m4_ifvaln([$6],[AC_MSG_CHECKING(whether directory $6 is available)
                   AC_MSG_RESULT(no)
                 fi])
 m4_ifvaln([$7],[AC_MSG_CHECKING(whether directory $7 is available)
-                if test -r $srcdir/$7/configure; then
+                coin_skip=no
+                if test x"$COIN_SKIP_PROJECTS" != x; then
+                  for dir in $COIN_SKIP_PROJECTS; do
+                    if test $dir = $7; then
+                      coin_skip=yes
+                    fi
+                  done
+                fi
+                if test $coin_skip = yes; then
+                  AC_MSG_RESULT(skipping)
+                elif test -r $srcdir/$7/configure; then
                   coin_subdirs="$coin_subdirs $7"
                   AC_MSG_RESULT(yes)
                   AC_CONFIG_SUBDIRS($7)
@@ -79,7 +151,17 @@ m4_ifvaln([$7],[AC_MSG_CHECKING(whether directory $7 is available)
                   AC_MSG_RESULT(no)
                 fi])
 m4_ifvaln([$8],[AC_MSG_CHECKING(whether directory $8 is available)
-                if test -r $srcdir/$8/configure; then
+                coin_skip=no
+                if test x"$COIN_SKIP_PROJECTS" != x; then
+                  for dir in $COIN_SKIP_PROJECTS; do
+                    if test $dir = $8; then
+                      coin_skip=yes
+                    fi
+                  done
+                fi
+                if test $coin_skip = yes; then
+                  AC_MSG_RESULT(skipping)
+                elif test -r $srcdir/$8/configure; then
                   coin_subdirs="$coin_subdirs $8"
                   AC_MSG_RESULT(yes)
                   AC_CONFIG_SUBDIRS($8)
@@ -87,7 +169,17 @@ m4_ifvaln([$8],[AC_MSG_CHECKING(whether directory $8 is available)
                   AC_MSG_RESULT(no)
                 fi])
 m4_ifvaln([$9],[AC_MSG_CHECKING(whether directory $9 is available)
-                if test -r $srcdir/$9/configure; then
+                coin_skip=no
+                if test x"$COIN_SKIP_PROJECTS" != x; then
+                  for dir in $COIN_SKIP_PROJECTS; do
+                    if test $dir = $9; then
+                      coin_skip=yes
+                    fi
+                  done
+                fi
+                if test $coin_skip = yes; then
+                  AC_MSG_RESULT(skipping)
+                elif test -r $srcdir/$9/configure; then
                   coin_subdirs="$coin_subdirs $9"
                   AC_MSG_RESULT(yes)
                   AC_CONFIG_SUBDIRS($9)
@@ -95,7 +187,17 @@ m4_ifvaln([$9],[AC_MSG_CHECKING(whether directory $9 is available)
                   AC_MSG_RESULT(no)
                 fi])
 m4_ifvaln([$10],[AC_MSG_CHECKING(whether directory $10 is available)
-                if test -r $srcdir/$10/configure; then
+                coin_skip=no
+                if test x"$COIN_SKIP_PROJECTS" != x; then
+                  for dir in $COIN_SKIP_PROJECTS; do
+                    if test $dir = $10; then
+                      coin_skip=yes
+                    fi
+                  done
+                fi
+                if test $coin_skip = yes; then
+                  AC_MSG_RESULT(skipping)
+                elif test -r $srcdir/$10/configure; then
                   coin_subdirs="$coin_subdirs $10"
                   AC_MSG_RESULT(yes)
                   AC_CONFIG_SUBDIRS($10)
@@ -118,7 +220,17 @@ m4_ifvaln([$10],[AC_MSG_CHECKING(whether directory $10 is available)
 
 AC_DEFUN([AC_COIN_THIRDPARTY_SUBDIRS],
 [AC_MSG_CHECKING(whether code for third party package $1 is available)
-if test -r $srcdir/$2/$3; then
+coin_skip=no
+if test x"$COIN_SKIP_PROJECTS" != x; then
+  for dir in $COIN_SKIP_PROJECTS; do
+    if test $dir = $2; then
+      coin_skip=yes
+    fi
+  done
+fi
+if test $coin_skip = yes; then
+  AC_MSG_RESULT(skipping)
+elif test -r $srcdir/$2/$3; then
   coin_subdirs="$coin_subdirs $2"
   AC_MSG_RESULT(yes)
   AC_CONFIG_SUBDIRS($2)
@@ -162,7 +274,7 @@ AM_CONDITIONAL(ALWAYS_FALSE, false)
 
 # We set the following variable so that we know later in AC_COIN_FINALIZE
 # that we are in a project main directory
-
+coin_projectdir=yes
 ]) # AC_COIN_PROJECTDIR_INIT
 
 ###########################################################################
@@ -315,7 +427,7 @@ AC_CACHE_CHECK([for C++ compiler options],[coin_cv_cxxflags],
       *-ibm-*)
         case "$CXX" in
           xlC* | */xlC* | mpxlC* | */mpxlC*)
-            coin_opt_cxxflags="-O3 -qarch=auto -qcache=auto -qhot -qtune=auto -qmaxmem=-1"
+            coin_opt_cxxflags="-O3 -qarch=auto -qcache=auto -qtune=auto -qmaxmem=-1"
             coin_add_cxxflags="-bmaxdata:0x80000000 -qrtti=dyna"
             coin_dbg_cxxflags="-g"
             ;;
@@ -351,6 +463,12 @@ AC_CACHE_CHECK([for C++ compiler options],[coin_cv_cxxflags],
     fi
     CXXFLAGS="$coin_opt_cxxflags $coin_add_cxxflags -DNDEBUG $CXXDEFS $coin_warn_cxxflags"
   fi
+fi
+
+# Check if user wants to have additional CXXFLAGS options
+AC_ARG_VAR(ADD_CXXFLAGS,[Additional C++ compiler options])
+if test x"$ADD_CXXFLAGS" != x; then
+  CXXFLAGS="$CXXFLAGS $ADD_CXXFLAGS"
 fi
 
 # Try if CXXFLAGS works
@@ -577,7 +695,7 @@ AC_CACHE_CHECK([for C compiler options],[coin_cv_cflags],
       *-ibm-*)
         case "$CC" in
           xlc* | */xlc* | mpxlc* | */mpxlc*)
-            coin_opt_cflags="-O3 -qarch=auto -qcache=auto -qhot -qtune=auto -qmaxmem=-1"
+            coin_opt_cflags="-O3 -qarch=auto -qcache=auto -qtune=auto -qmaxmem=-1"
             coin_add_cflags="-bmaxdata:0x80000000"
             coin_dbg_cflags="-g"
           ;;
@@ -613,6 +731,12 @@ AC_CACHE_CHECK([for C compiler options],[coin_cv_cflags],
     fi
     CFLAGS="$coin_opt_cflags $coin_add_cflags -DNDEBUG $CDEFS $coin_warn_cflags"
   fi
+fi
+
+# Check if user wants to have additional CFLAGS options
+AC_ARG_VAR(ADD_CFLAGS,[Additional C compiler options])
+if test x"$ADD_CFLAGS" != x; then
+  CFLAGS="$CFLAGS $ADD_CFLAGS"
 fi
 
 # Try if CFLAGS works
@@ -721,7 +845,7 @@ AC_CACHE_CHECK([for Fortran compiler options],[coin_cv_fflags],
       *-ibm-*)
         case $F77 in
           xlf* | */xlf* | mpxlf* | */mpxlf* )
-            coin_opt_fflags="-O3 -qarch=auto -qcache=auto -qhot -qtune=auto -qmaxmem=-1"
+            coin_opt_fflags="-O3 -qarch=auto -qcache=auto -qtune=auto -qmaxmem=-1"
             coin_add_fflags="-bmaxdata:0x80000000"
             coin_dbg_fflags="-g -C"
             ;;
@@ -758,6 +882,12 @@ AC_CACHE_CHECK([for Fortran compiler options],[coin_cv_fflags],
     fi
     FFLAGS="$coin_opt_fflags $coin_add_fflags $coin_warn_fflags"
   fi
+fi
+
+# Check if user wants to have additional FFLAGS options
+AC_ARG_VAR(ADD_FFLAGS,[Additional Fortran compiler options])
+if test x"$ADD_FFLAGS" != x; then
+  FFLAGS="$FFLAGS $ADD_FFLAGS"
 fi
 
 # Try if FFLAGS works
@@ -1238,6 +1368,10 @@ AC_SUBST(RPATH_FLAGS)
 
 AC_DEFUN([AC_COIN_FINALIZE],
 [
+if test x"$coin_need_flibs" = xyes; then
+  ADDLIBS="$ADDLIBS $FLIBS"
+fi
+
 AC_OUTPUT
 
 if test x"$coin_vpath_link_files" = x; then : ; else
@@ -1658,3 +1792,274 @@ else
 fi
 AM_CONDITIONAL(COIN_HAS_ASL, test $coin_has_asl = yes)
 ]) # AC_COIN_HAS_ASL
+
+###########################################################################
+#                            COIN_TRY_FLINK                               #
+###########################################################################
+
+# Auxilliary macro to test if a Fortran function name can be linked,
+# given the current settings of LIBS.  We determine from the context, what
+# the currently active programming language is, and cast the name accordingly.
+# The first argument is the name of the function/subroutine, in small letters,
+# the second argument are the actions taken when the test works, and the
+# third argument are the actions taken if the test fails.
+
+AC_DEFUN([AC_COIN_TRY_FLINK],
+[case $ac_ext in
+  f)
+    AC_TRY_LINK([],[      call $1],[$2],[$3])
+    ;;
+  c)
+    AC_F77_FUNC($1,cfunc$1)
+    if test x"$coin_need_flibs" = xyes; then
+      flink_try=no;
+    else
+      AC_TRY_LINK([void $cfunc$1();],[$cfunc$1()],
+                  [flink_try=yes],[flink_try=no])
+    fi
+    if test $flink_try = yes; then
+      $2
+    else
+      if test x"$FLIBS" != x; then
+        flink_save_libs="$LIBS"
+        LIBS="$LIBS $FLIBS"
+        AC_TRY_LINK([void $cfunc$1();],[$cfunc$1()],
+                    [LIBS="$flink_save_libs"
+                     $2
+                     coin_need_flibs=yes],
+                    [LIBS="$flink_save_libs"
+                     $3])
+      else
+        $3
+      fi
+    fi
+    ;;
+  cc)
+    AC_F77_FUNC($1,cfunc$1)
+    if test x"$coin_need_flibs" = xyes; then
+      flink_try=no;
+    else
+      AC_TRY_LINK([extern "C" {void $cfunc$1();}],[$cfunc$1()],
+                  [flink_try=yes],[flink_try=no])
+    fi
+    if test $flink_try = yes; then
+      $2
+    else
+      if test x"$FLIBS" != x; then
+        flink_save_libs="$LIBS"
+        LIBS="$LIBS $FLIBS"
+        AC_TRY_LINK([extern "C" {void $cfunc$1();}],[$cfunc$1()],
+                    [LIBS="$flink_save_libs"
+                     $2
+                     coin_need_flibs=yes],
+                    [LIBS="$flink_save_libs"
+                     $3])
+      else
+        $3
+      fi
+    fi
+    ;;
+esac
+]) # AC_COIN_TRY_FLINK
+
+###########################################################################
+#                             COIN_HAS_BLAS                               #
+###########################################################################
+
+# This macro checks for a library containing the BLAS library.  It
+# tried standard libraries, and if none is found to be working, it
+# checks whether the BLAS ThirdParty/Blas directory has been configured.
+# It adds to ADDLIBS any flags required to link with an externally provided
+# BLAS.  It defines the makefile conditional and preprocessor macro
+# COIN_HAS_BLAS, if blas is available, and it defines the makefile conditional
+# COIN_BUILD_BLAS, if blas is compiled within COIN.
+
+AC_DEFUN([AC_COIN_HAS_BLAS],
+[coin_blasobjdir=../ThirdParty/Blas
+coin_blassrcdir=$srcdir/$coin_blasobjdir
+
+AC_ARG_WITH([blas],
+            AC_HELP_STRING([--with-blas],
+                           [specify BLAS library (or BUILD for compilation)]),
+            [use_blas=$withval], [use_blas=])
+
+# Check if user supplied option makes sense
+if test x"$use_blas" != x; then
+  if test "$use_blas" = "BUILD"; then
+    AC_CHECK_FILE([$coin_blasobjdir/Makefile],[],
+                  [AC_MSG_ERROR([option \"BUILD\" specified for Blas, but $coin_blasobjdir directory is not configured])])
+  else
+    AC_MSG_CHECKING([whether user supplied BLASLIB=\"$use_blas\" works])
+    LIBS="$use_blas $LIBS"
+    ADDLIBS="$use_blas $ADDLIBS"
+    AC_COIN_TRY_FLINK([daxpy],
+                      [AC_MSG_RESULT([yes])],
+                      [AC_MSG_RESULT([no])
+                       AC_MSG_ERROR([user supplied BLAS library \"$use_blas\" does not work])])
+  fi
+else
+# Try to autodetect the library for blas based on build system
+  case $build in
+    *-sgi-*) 
+      SAVE_LIBS="$LIBS"
+      AC_MSG_CHECKING([whether -lcomplib.sgimath has BLAS])
+      LIBS="-lcomplib.sgimath $LIBS"
+      AC_COIN_TRY_FLINK([daxpy],
+                        [AC_MSG_RESULT([yes])
+                         use_blas=-lcomplib.sgimath;
+                         ADDLIBS="-lcomplib.sgimath $ADDLIBS"],
+                        [AC_MSG_RESULT([no])
+                         SAVE_LIBS="$LIBS"])
+      ;;
+    *-sun-*)
+      SAVE_LIBS="$LIBS"
+      AC_MSG_CHECKING([whether -xlic_lib=sunperf has BLAS])
+      LIBS="-xlic_lib=sunperf $LIBS"
+      AC_COIN_TRY_FLINK([daxpy],
+                        [AC_MSG_RESULT([yes])
+                         use_blas='-xlic_lib=sunperf'],
+                         ADDLIBS="-xlic_lib=sunperf $ADDLIBS"
+                        [AC_MSG_RESULT([no])
+                         LIBS="$SAVE_LIBS"])
+      ;;
+  esac
+  # On cygwin, unless otherwise specified, recompile blas because it
+  # otherwise links with the cygwin blas which doesn't run under DOS
+  case $build in
+    *-cygwin*) ;;
+    *)
+      if test -z "$use_blas"; then
+        SAVE_LIBS="$LIBS"
+        AC_MSG_CHECKING([whether -lblas has BLAS])
+        LIBS="-lblas $LIBS"
+        AC_COIN_TRY_FLINK([daxpy],
+                          [AC_MSG_RESULT([yes])
+                           ADDLIBS="-lblas $ADDLIBS"
+                           use_blas='-lblas'],
+                          [AC_MSG_RESULT([no])
+                           LIBS="$SAVE_LIBS"])
+      fi
+      ;;
+  esac
+  if test -z "$use_blas"; then
+    AC_CHECK_FILE([$coin_blasobjdir/Makefile],[use_blas=BUILD])
+  fi
+fi
+
+AM_CONDITIONAL([COIN_HAS_BLAS],[test x"$use_blas" != x])
+AM_CONDITIONAL([COIN_BUILD_BLAS],[test "$use_blas" = BUILD])
+
+if test x"$use_blas" = x; then
+  coin_has_blas=no
+else
+  coin_has_blas=yes
+  AC_DEFINE([COIN_HAS_BLAS],[1],
+            [If defined, the BLAS Library is available.])
+fi
+]) # AC_COIN_HAS_BLAS
+
+###########################################################################
+#                            COIN_HAS_LAPACK                              #
+###########################################################################
+
+# This macro checks for a library containing the LAPACK library.  It
+# tried standard libraries, and if none is found to be working, it
+# checks whether the LAPACK ThirdParty/Lapack directory has been
+# configured.  It adds to ADDLIBS any flags required to link with an
+# externally provided LAPACK.  It defines the makefile conditional and
+# preprocessor macro COIN_HAS_LAPACK, if lapack is available, and it
+# defines the makefile conditional COIN_BUILD_LAPACK, if lapack is
+# compiled within COIN.
+
+AC_DEFUN([AC_COIN_HAS_LAPACK],
+[coin_lapackobjdir=../ThirdParty/Lapack
+coin_lapacksrcdir=$srcdir/$coin_lapackobjdir
+
+AC_ARG_WITH([lapack],
+            AC_HELP_STRING([--with-lapack],
+                           [specify LAPACK library (or BUILD for compilation)]),
+            [use_lapack=$withval], [use_lapack=])
+
+# Check if user supplied option makes sense
+if test x"$use_lapack" != x; then
+  if test "$use_lapack" = "BUILD"; then
+    AC_CHECK_FILE([$coin_lapackobjdir/Makefile],[],
+                  [AC_MSG_ERROR([option \"BUILD\" specified for Lapack, but $coin_lapackobjdir directory is not configured])])
+  else
+    AC_MSG_CHECKING([whether user supplied LAPACKLIB=\"$use_lapack\" works])
+    LIBS="$use_lapack $LIBS"
+    ADDLIBS="$use_lapack $ADDLIBS"
+    AC_COIN_TRY_FLINK([dsyev],
+                      [AC_MSG_RESULT([yes])],
+                      [AC_MSG_RESULT([no])
+                       AC_MSG_ERROR([user supplied LAPACK library \"$use_lapack\" does not work])])
+  fi
+else
+  if test x$coin_has_blas = xyes; then
+    # First try to see if LAPACK is already available with BLAS library
+    AC_MSG_CHECKING([whether LAPACK is already available with BLAS library])
+    AC_COIN_TRY_FLINK([dsyev],
+                      [AC_MSG_RESULT([yes]); use_lapack=ok],
+                      [AC_MSG_RESULT([no])])
+  fi
+  if test -z "$use_lapack"; then
+    # Try to autodetect the library for lapack based on build system
+    case $build in
+      *-sgi-*) 
+        SAVE_LIBS="$LIBS"
+        AC_MSG_CHECKING([whether -lcomplib.sgimath has LAPACK])
+        LIBS="-lcomplib.sgimath $LIBS"
+        AC_COIN_TRY_FLINK([dsyev],
+                          [AC_MSG_RESULT([yes])
+                           use_lapack=-lcomplib.sgimath;
+                           ADDLIBS="-lcomplib.sgimath $ADDLIBS"],
+                          [AC_MSG_RESULT([no])
+                           SAVE_LIBS="$LIBS"])
+        ;;
+      *-sun-*)
+        SAVE_LIBS="$LIBS"
+        AC_MSG_CHECKING([whether -xlic_lib=sunperf has LAPACK])
+        LIBS="-xlic_lib=sunperf $LIBS"
+        AC_COIN_TRY_FLINK([dsyev],
+                          [AC_MSG_RESULT([yes])
+                           use_lapack='-xlic_lib=sunperf'],
+                           ADDLIBS="-xlic_lib=sunperf $ADDLIBS"
+                          [AC_MSG_RESULT([no])
+                           LIBS="$SAVE_LIBS"])
+        ;;
+    esac
+  fi
+  # On cygwin, unless otherwise specified, recompile lapack because it
+  # otherwise links with the cygwin lapack which doesn't run under DOS
+  case $build in
+    *-cygwin*) ;;
+    *)
+      if test -z "$use_lapack"; then
+        SAVE_LIBS="$LIBS"
+        AC_MSG_CHECKING([whether -llapack has LAPACK])
+        LIBS="-llapack $LIBS"
+        AC_COIN_TRY_FLINK([dsyev],
+                          [AC_MSG_RESULT([yes])
+                           ADDLIBS="-llapack $ADDLIBS"
+                           use_lapack='-llapack'],
+                          [AC_MSG_RESULT([no])
+                           LIBS="$SAVE_LIBS"])
+      fi
+      ;;
+  esac
+  if test -z "$use_lapack"; then
+    AC_CHECK_FILE([$coin_lapackobjdir/Makefile],[use_lapack=BUILD])
+  fi
+fi
+
+AM_CONDITIONAL([COIN_HAS_LAPACK],[test x"$use_lapack" != x])
+AM_CONDITIONAL([COIN_BUILD_LAPACK],[test "$use_lapack" = BUILD])
+
+if test x"$use_lapack" = x; then
+  coin_has_lapack=no
+else
+  coin_has_lapack=yes
+  AC_DEFINE([COIN_HAS_LAPACK],[1],
+            [If defined, the LAPACK Library is available.])
+fi
+]) # AC_COIN_HAS_LAPACK
