@@ -1378,7 +1378,7 @@ if test x"$coin_vpath_link_files" = x; then : ; else
   AC_MSG_NOTICE(Creating VPATH links for data files)
   for file in $coin_vpath_link_files; do
     rm -f $file
-    $LN_S $srcdir/$file $file
+    $LN_S $abs_source_dir/$file $file
   done
 fi
 
