@@ -1623,15 +1623,26 @@ AC_DEFUN([AC_COIN_HAS_PROJECT],
 # other locations)
 
 m4_tolower(coin_has_$1)=unavailable
-if test $PACKAGE_TARNAME = m4_tolower($1); then
-  m4_tolower(coin_has_$1)=.
-else
-  if test -d $srcdir/../$1; then
-    m4_tolower(coin_has_$1)=../$1
+if test x"$COIN_SKIP_PROJECTS" != x; then
+  for dir in $COIN_SKIP_PROJECTS; do
+    if test $dir = $1; then
+      m4_tolower(coin_has_$1)=skipping
+    fi
+  done
+fi
+
+if test $m4_tolower(coin_has_$1) != skipping; then
+  if test $PACKAGE_TARNAME = m4_tolower($1); then
+    m4_tolower(coin_has_$1)=.
+  else
+    if test -d $srcdir/../$1; then
+      m4_tolower(coin_has_$1)=../$1
+    fi
   fi
 fi
 
-if test $m4_tolower(coin_has_$1) != unavailable; then
+if test $m4_tolower(coin_has_$1) != unavailable &&
+   test $m4_tolower(coin_has_$1) != skipping; then
   # Set the #define if the component is available
   AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 package is used])
 
@@ -1644,7 +1655,8 @@ fi
 
   # Define the Makefile conditional
 AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
-               test $m4_tolower(coin_has_$1) != unavailable)
+               [test $m4_tolower(coin_has_$1) != unavailable &&
+                test $m4_tolower(coin_has_$1) != skipping])
 AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
 ]) # AC_COIN_HAS
 
