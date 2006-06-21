@@ -1314,40 +1314,33 @@ AC_DEFUN([AC_COIN_RPATH_FLAGS],
 [RPATH_FLAGS=
 
 if test $enable_shared = yes; then
-  if test "$GXX" = "yes"; then
-    RPATH_FLAGS=
-    for dir in $1; do
-      RPATH_FLAGS="$RPATH_FLAGS -Wl,-rpath -Wl,$dir"
-    done
-  else
-    case $build in
-      *-linux-*)
-        case "$CXX" in
-        icpc* | */icpc*)
-          RPATH_FLAGS=
-          for dir in $1; do
-            RPATH_FLAGS="$RPATH_FLAGS -Wl,-rpath -Wl,$dir"
-          done
-        esac ;;
-      *-ibm-*)
-        case "$CXX" in
-        xlC* | */xlC* | mpxlC* | */mpxlC*)
-          RPATH_FLAGS=nothing ;;
-        esac ;;
-      *-hp-*)
-          RPATH_FLAGS=nothing ;;
-      *-mingw32)
-          RPATH_FLAGS=nothing ;;
-      *-sun-*)
-          RPATH_FLAGS=
-          for dir in $1; do
-            RPATH_FLAGS="$RPATH_FLAGS -R$dir"
-          done
-     esac
-  fi
+  case $build in
+    *-linux-*)
+      case "$CXX" in
+      icpc* | */icpc*)
+        RPATH_FLAGS=
+        for dir in $1; do
+          RPATH_FLAGS="$RPATH_FLAGS -Wl,--rpath -Wl,$dir"
+        done
+      esac ;;
+    *-ibm-*)
+      case "$CXX" in
+      xlC* | */xlC* | mpxlC* | */mpxlC*)
+        RPATH_FLAGS=nothing ;;
+      esac ;;
+    *-hp-*)
+        RPATH_FLAGS=nothing ;;
+    *-mingw32)
+        RPATH_FLAGS=nothing ;;
+    *-sun-*)
+        RPATH_FLAGS=
+        for dir in $1; do
+          RPATH_FLAGS="$RPATH_FLAGS -R$dir"
+        done
+  esac
 
   if test "$RPATH_FLAGS" = ""; then
-    AC_MSG_WARN([Could not automatically determine how to tell the linker about automatic inclusion of the path for shared libraries.  The test examples might not work if you link against shared objects.  You will need to set the LD_LIBRARY_PATH or LIBDIR variable manually.])
+    AC_MSG_WARN([Could not automatically determine how to tell the linker about automatic inclusion of the path for shared libraries.  The test examples might not work if you link against shared objects.  You will need to set the LD_LIBRARY_PATH, DYLP_LIBRARY_PATH, or LIBDIR variable manually.])
   fi
   if test "$RPATH_FLAGS" = "nothing"; then
     RPATH_FLAGS=
