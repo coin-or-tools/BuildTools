@@ -1281,7 +1281,15 @@ case $build in
       mv conftest.bla libtool
       chmod 755 libtool
       ;;
-    
+    *)
+      AC_MSG_NOTICE(Applying patches to libtool for GNU compiler)
+      sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
+          -e 's|"lib /OUT:\\$oldlib\\$oldobjs\\$old_deplibs"|"\\$AR \\$AR_FLAGS \\$oldlib\\$oldobjs\\$old_deplibs~\\$RANLIB \\$oldlib"|' \
+      libtool > conftest.bla
+
+      mv conftest.bla libtool
+      chmod 755 libtool
+      ;;
   esac
 esac
 
