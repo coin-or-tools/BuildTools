@@ -269,6 +269,11 @@ AC_DEFUN([AC_COIN_PROJECTDIR_INIT],
 ADDLIBS='-lm'
 AC_SUBST(ADDLIBS)
 
+# Initialize the FADDLIBS variable (which is to be used with a fortran
+# compiler and will not include FLIBS)
+FADDLIBS=
+AC_SUBST(FADDLIBS)
+
 # A useful makefile conditional that is always false
 AM_CONDITIONAL(ALWAYS_FALSE, false)
 
@@ -361,6 +366,10 @@ case $build in
   *-darwin*) comps="g++ c++ CC" ;;
           *) comps="xlC aCC CC g++ c++ pgCC icpc" ;;
 esac
+
+# We delete the cached value, since the test might not have been
+# performed with out choise of compilers earlier
+ac_cv_prog_CXX=
 AC_PROG_CXX([$comps])
 CXXFLAGS="$save_cxxflags"
 
@@ -631,6 +640,10 @@ case $build in
   *-linux-*) comps="xlc gcc cc pgcc icc" ;;
   *)         comps="xlc cc gcc pgcc icc" ;;
 esac
+
+# We delete the cached value, since the test might not have been
+# performed with out choise of compilers earlier
+ac_cv_prog_CC=
 AC_PROG_CC([$comps])
 CFLAGS="$save_cflags"
 
@@ -790,6 +803,10 @@ case $build in
              comps="gfortran g77 ifort" ;;
   *)         comps="xlf fort77 gfortran f77 g77 pgf90 pgf77 ifort ifc" ;;
 esac
+
+# We delete the cached value, since the test might not have been
+# performed with out choise of compilers earlier
+ac_cv_prog_F77=
 AC_PROG_F77($comps)
 FFLAGS="$save_fflags"
 
@@ -950,7 +967,7 @@ case $build in
    *-cygwin* | *-mingw*)
      case $F77 in
        ifort* | */ifort*)
-           FLIBS="/link libifcorert.lib $LIBS /NODEFAULTLIB:libc.lib";;
+           FLIBS="-link libifcorert.lib $LIBS /NODEFAULTLIB:libc.lib";;
      esac;;
    *-hp-*)
        FLIBS="$FLIBS -lm";;
@@ -1187,12 +1204,14 @@ case $build in
     platform=Cygwin
   ;;
   *-mingw*)
-    case "$CXX" in
-      cl*)
-        coin_disable_shared=yes
-        platform="Msys with cl"
-    ;;
-    esac
+    coin_disable_shared=yes
+    platform="Msys"
+#    case "$CXX" in
+#      cl*)
+#        coin_disable_shared=yes
+#        platform="Msys with cl"
+#    ;;
+#    esac
   ;;
 esac
 if test x"$coin_disable_shared" = xyes; then
@@ -1285,6 +1304,7 @@ case $build in
       AC_MSG_NOTICE(Applying patches to libtool for GNU compiler)
       sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
           -e 's|"lib /OUT:\\$oldlib\\$oldobjs\\$old_deplibs"|"\\$AR \\$AR_FLAGS \\$oldlib\\$oldobjs\\$old_deplibs~\\$RANLIB \\$oldlib"|' \
+          -e 's|libext="lib"|libext="a"|' \
       libtool > conftest.bla
 
       mv conftest.bla libtool
@@ -1331,6 +1351,8 @@ if test $enable_shared = yes; then
           RPATH_FLAGS="$RPATH_FLAGS -Wl,--rpath -Wl,$dir"
         done
       esac ;;
+    *-darwin*)
+        RPATH_FLAGS=nothing ;;
     *-ibm-*)
       case "$CXX" in
       xlC* | */xlC* | mpxlC* | */mpxlC*)
@@ -1369,6 +1391,7 @@ AC_SUBST(RPATH_FLAGS)
 
 AC_DEFUN([AC_COIN_FINALIZE],
 [
+FADDLIBS="$ADDLIBS"
 if test x"$coin_need_flibs" = xyes; then
   ADDLIBS="$ADDLIBS $FLIBS"
 fi
