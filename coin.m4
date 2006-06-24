@@ -1352,13 +1352,12 @@ AC_DEFUN([AC_COIN_RPATH_FLAGS],
 if test $enable_shared = yes; then
   case $build in
     *-linux-*)
-      case "$CXX" in
-      icpc* | */icpc*)
+      if test "$GXX" = "yes"; then
         RPATH_FLAGS=
         for dir in $1; do
           RPATH_FLAGS="$RPATH_FLAGS -Wl,--rpath -Wl,$dir"
         done
-      esac ;;
+      fi ;;
     *-darwin*)
         RPATH_FLAGS=nothing ;;
     *-ibm-*)
@@ -1411,6 +1410,11 @@ case "$CC" in
     *) LIBEXT=a ;;
 esac
 
+# Define VPATH_DISTCLEANFILES to be everything that needs to be
+# cleaned for distclean in a vpath configuration
+AC_SUBST(VPATH_DISTCLEANFILES)
+VPATH_DISTCLEANFILES="$coin_vpath_link_files"
+
 AC_OUTPUT
 
 if test x"$coin_vpath_link_files" = x; then : ; else
@@ -1420,11 +1424,6 @@ if test x"$coin_vpath_link_files" = x; then : ; else
     $LN_S $abs_source_dir/$file $file
   done
 fi
-
-# Define VPATH_DISTCLEANFILES to be everything that needs to be
-# cleaned for distclean in a vpath configuration
-AC_SUBST(VPATH_DISTCLEANFILES)
-VPATH_DISTCLEANFILES="$coin_vpath_link_files"
 
 if test x$coin_projectdir = xyes; then
   AC_MSG_NOTICE([Configuration of $PACKAGE_NAME successful])
