@@ -533,6 +533,11 @@ if test -z "$CXXLIBS"; then
     esac
   else
     case $build in
+     *-mingw32 | *-cygwin-* )
+      case "$CXX" in
+      cl*)
+        CXXLIBS=nothing;;
+      esac;;
      *-linux-*)
       case "$CXX" in
       icpc* | */icpc*)
@@ -557,6 +562,9 @@ if test -z "$CXXLIBS"; then
   AC_MSG_WARN([Could not automatically determine CXXLIBS (C++ link libraries; necessary if main program is in Fortran of C).])
 else
   AC_MSG_NOTICE([Assuming that CXXLIBS is \"$CXXLIBS\".])
+fi
+if test x"$CXXLIBS" = xnothing; then
+  CXXLIBS=
 fi
 AC_LANG_POP(C++)
 ]) # AC_COIN_CXXLIBS
@@ -619,7 +627,7 @@ AC_LANG_PUSH(C)
 # For consistency, we set the C compiler to the same value of the C++
 # compiler, if the C++ is set, but the C compiler isn't (only for CXX=cl)
 if test x"$CXX" != x; then
-  case $CXX in
+  case "$CXX" in
     cl*)
       if test x"$CC" = x; then
         CC="$CXX"
@@ -836,7 +844,7 @@ AC_CACHE_CHECK([for Fortran compiler options],[coin_cv_fflags],
         case $F77 in
           ifort* | */ifort*)
             coin_opt_fflags='-O3'
-            coin_add_fflags='-nologo'
+            coin_add_fflags='-nologo -MT'
             coin_dbg_fflags='-debug'
           ;;
         esac
@@ -860,7 +868,7 @@ AC_CACHE_CHECK([for Fortran compiler options],[coin_cv_fflags],
         esac
         ;;
       *-ibm-*)
-        case $F77 in
+        case "$F77" in
           xlf* | */xlf* | mpxlf* | */mpxlf* )
             coin_opt_fflags="-O3 -qarch=auto -qcache=auto -qtune=auto -qmaxmem=-1"
             coin_add_fflags="-bmaxdata:0x80000000"
@@ -965,7 +973,7 @@ fi
 case $build in
 # The following is a fix to define FLIBS for ifort on Windows
    *-cygwin* | *-mingw*)
-     case $F77 in
+     case "$F77" in
        ifort* | */ifort*)
            FLIBS="-link libifcorert.lib $LIBS /NODEFAULTLIB:libc.lib";;
      esac;;
@@ -1396,6 +1404,13 @@ if test x"$coin_need_flibs" = xyes; then
   ADDLIBS="$ADDLIBS $FLIBS"
 fi
 
+# library extension
+AC_SUBST(LIBEXT)
+case "$CC" in
+  cl*) LIBEXT=lib ;;
+    *) LIBEXT=a ;;
+esac
+
 AC_OUTPUT
 
 if test x"$coin_vpath_link_files" = x; then : ; else
@@ -1810,11 +1825,11 @@ AC_SUBST(ASL_CPPFLAGS)
 
 if test "$use_asldir" = BUILD; then
   coin_aslobjdir=`cd $coin_aslobjdir; pwd`
-  ASLLIB="$coin_aslobjdir/$ampllib"
+  ASLLIB=`$CYGPATH_W $coin_aslobjdir/$ampllib | sed -e sX\\\\\\\\X/Xg`
   coin_aslsrcdir=`cd $coin_aslsrcdir; pwd`
   ASL_CPPFLAGS="-I"`$CYGPATH_W $coin_aslobjdir | sed -e sX\\\\\\\\X/Xg`" -I"`$CYGPATH_W $coin_aslsrcdir/solvers | sed -e sX\\\\\\\\X/Xg`
 elif test "$use_asldir" != no; then
-  ASLLIB="$use_asldir/$ampllib"
+  ASLLIB=`$CYGPATH_W $use_asldir/$ampllib | sed -e sX\\\\\\\\X/Xg`
   ASL_CPPFLAGS="-I"`$CYGPATH_W $use_asldir | sed -e sX\\\\\\\\X/Xg`
 fi
 
