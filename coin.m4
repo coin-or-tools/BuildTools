@@ -1718,6 +1718,9 @@ AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
 # argument is given, it is assumed to be the name of a C function
 # which is given and defined in the library, and a test is done to
 # check if that symbol is defined in the library.
+# If it possible to disable the check, by specifying
+# --disable-libraryname-libcheck - this is a workaround for platforms
+# where checks don't work (yet) properly.
 
 AC_DEFUN([AC_COIN_HAS_USER_LIBRARY],
 [AC_REQUIRE([AC_COIN_PROJECTDIR_INIT])
@@ -1733,6 +1736,12 @@ AC_ARG_WITH(m4_tolower($1)-lib,
             AC_HELP_STRING([--with-m4_tolower($1)-lib],
                            [specify the flags to link with the library $1]),
                            [$2LIB=$withval])
+# Switch to disable library check if requested
+AC_ARG_ENABLE(m4_tolower($1)-libcheck,
+              AC_HELP_STRING([--enable-m4_tolower($1)-libcheck],
+                             [use disable-m4_tolower($1)-libcheck to skip the link check at configuration time]),
+              [m4_tolower($1)_libcheck=$enableval],
+              [m4_tolower($1)_libcheck=yes])
 
 if test x"$$2INCDIR" != x || test x"$$2LIB" != x; then
   m4_tolower(coin_has_$2)=true
@@ -1751,16 +1760,18 @@ if test $m4_tolower(coin_has_$2) = true; then
                  [AC_MSG_ERROR([Cannot find file $3 in $$2INCDIR])])])
   # Check if the symbol is provided in the library
   # ToDo: FOR NOW WE ASSUME THAT WE ARE USING THE C++ COMPILER
-  m4_ifvaln([$4],[coin_save_LIBS="$LIBS"
-                  LIBS="$$2LIB $ADDLIBS"
-		  AC_MSG_CHECKING([whether symbol $4 is available with $2])
+  m4_ifvaln([$4],[if test x"$m4_tolower($1)_libcheck" != xno; then
+                    coin_save_LIBS="$LIBS"
+                    LIBS="$$2LIB $ADDLIBS"
+		    AC_MSG_CHECKING([whether symbol $4 is available with $2])
 # ToDo find out what to do about extern "C"
-#                  AC_TRY_LINK([extern "C" {void $4();}],[$4()],
-                  AC_TRY_LINK([void $4();],[$4()],
-                              [AC_MSG_RESULT(yes)],
-			      [AC_MSG_RESULT(no)
-                               AC_MSG_ERROR([Cannot find symbol $4 with $2])])
-                  LIBS="$coin_save_LIBS"])
+#                    AC_TRY_LINK([extern "C" {void $4();}],[$4()],
+                    AC_TRY_LINK([void $4();],[$4()],
+                                [AC_MSG_RESULT(yes)],
+			        [AC_MSG_RESULT(no)
+                                 AC_MSG_ERROR([Cannot find symbol $4 with $2])])
+                    LIBS="$coin_save_LIBS"
+                  fi])
   ADDLIBS="$$2LIB $ADDLIBS"
   AC_DEFINE(COIN_HAS_$2,[1],[Define to 1 if the $1 package is used])
 else
