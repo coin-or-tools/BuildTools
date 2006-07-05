@@ -463,7 +463,7 @@ AC_CACHE_CHECK([for C++ compiler options],[coin_cv_cxxflags],
   fi
 
   if test "$coin_debug_compile" = "true"; then
-    CXXFLAGS="$coin_dbg_cxxflags $coin_add_cxxflags $coin_warn_cxxflags"
+    CXXFLAGS="$coin_dbg_cxxflags $coin_add_cxxflags $CXXDEFS $coin_warn_cxxflags"
   else
     if test -z "$coin_opt_cxxflags"; then
       # Try if -O option works if nothing else is set
@@ -743,7 +743,7 @@ AC_CACHE_CHECK([for C compiler options],[coin_cv_cflags],
   fi
 
   if test "$coin_debug_compile" = "true"; then
-    CFLAGS="$coin_dbg_cflags $coin_add_cflags $coin_warn_cflags"
+    CFLAGS="$coin_dbg_cflags $coin_add_cflags $CDEFS $coin_warn_cflags"
   else
     if test -z "$coin_opt_cflags"; then
       # Try if -O option works if nothing else is set
