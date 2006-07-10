@@ -83,7 +83,11 @@ for dir in $dirs; do
      echo creating acinclude.m4 in $dir
      cat $AUTOTOOLS_DIR/share/aclocal/libtool.m4 $toolsdir/coin.m4> acinclude.m4
      echo running aclocal in $dir
-     aclocal
+     if test -d m4; then
+       aclocal -I m4
+     else
+       aclocal
+     fi
      if grep AC_CONFIG_HEADER configure.ac >/dev/null 2>&1; then
        echo running autoheader in $dir
        autoheader

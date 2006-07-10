@@ -286,12 +286,17 @@ coin_projectdir=yes
 #                          COIN_DEBUG_COMPILE                             #
 ###########################################################################
 
-# enable the configure flag --enable-debug and set the variable
-# coin_debug_compile to true or false
-# This is used by COIN_PROG_CXX, COIN_PROG_CC and COIN_PROG_F77
-# to determine the compilation flags.
-# It defines the #define macro COIN_DEBUG if it is chosen, and the makefile
-# conditional COIN_DEBUG is defined
+# enable the configure flags --enable-debug and --enable-debug-prjct
+# (where prcjt is the name of the project in lower case) and set the
+# variable coin_debug_compile to true or false This is used by
+# COIN_PROG_CXX, COIN_PROG_CC and COIN_PROG_F77 to determine the
+# compilation flags.  This macro also makes the switches
+# --with-prjct-verbosity and --with-prjct-checklevel available, which
+# define the preprocessor macros COIN_PRJCT_VERBOSITY and
+# COIN_PRJCT_CHECKLEVEL to the specified value (default is 0).
+#
+# The project specific flags are only made available, if one gives the
+# name of the project as first argument to this macro.
 
 AC_DEFUN([AC_COIN_DEBUG_COMPILE],
 [AC_BEFORE([$0],[AC_COIN_PROG_CXX])dnl
@@ -302,19 +307,32 @@ AC_MSG_CHECKING([whether we want to compile in debug mode])
 
 AC_ARG_ENABLE([debug],
 [AC_HELP_STRING([--enable-debug],
-                [compile with debug options and runtime tests])],
-                [case "${enableval}" in
-                   yes) coin_debug_compile=true
-                     AC_DEFINE([COIN_DEBUG],[1],
-                               [If defined, debug sanity checks are performed during runtime])
-                     enable_shared=no
-                     ;;
-                   no)  coin_debug_compile=false
-                     ;;
-                    *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug)
-                     ;;
-                 esac],
-                [coin_debug_compile=false])
+                [compile all projects with debug options tests])],
+[case "${enableval}" in
+   yes) coin_debug_compile=true
+        enable_shared=no
+        ;;
+   no)  coin_debug_compile=false
+        ;;
+   *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug)
+        ;;
+esac],
+[coin_debug_compile=false])
+
+m4_ifvaln([$1],
+[AC_ARG_ENABLE(debug-m4_tolower($1),
+ [AC_HELP_STRING([--enable-debug-m4_tolower($1)],
+                 [compile this project ($1) with debug options])],
+ [case "${enableval}" in
+    yes) coin_debug_compile=true
+         enable_shared=no
+         ;;
+    no)  coin_debug_compile=false
+         ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug-m4_tolower($1))
+         ;;
+ esac],[:])
+]) # m4_ifvaln([$1],
 
 if test $coin_debug_compile = true; then
   AC_MSG_RESULT([yes])
@@ -322,7 +340,31 @@ else
   AC_MSG_RESULT([no])
 fi
 
-AM_CONDITIONAL([COIN_DEBUG],[test "$coin_debug_compile" = true])
+m4_ifvaln([$1],
+[AC_ARG_WITH(m4_tolower($1)-verbosity,
+             AC_HELP_STRING([--with-m4_tolower($1)-verbosity],
+                            [specify the debug verbosity level for project $1]),
+             [m4_tolower(coin_$1_verbosity)=$withval],
+             [m4_tolower(coin_$1_verbosity)=0])
+ AC_DEFINE_UNQUOTED(m4_toupper(COIN_$1_VERBOSITY),
+                    m4_tolower($coin_$1_verbosity),
+                    [Define to the debug verbosity level (0 is no output)])
+
+ AC_ARG_WITH(m4_tolower($1)-checklevel,
+             AC_HELP_STRING([--with-m4_tolower($1)-checklevel],
+                            [specify the sanity check level for project $1]),
+             [m4_tolower(coin_$1_checklevel)=$withval],
+             [m4_tolower(coin_$1_checklevel)=0])
+ AC_DEFINE_UNQUOTED(m4_toupper(COIN_$1_CHECKLEVEL),
+                    m4_tolower($coin_$1_checklevel),
+                    [Define to the debug sanity check level (0 is no test)])
+
+# We use the following variable to have a string with the upper case
+# version of the project name
+COIN_PRJCT=m4_toupper($1)
+
+]) # m4_ifvaln([$1],
+ 
 ]) # AC_COIN_DEBUG_COMPILE
 
 ###########################################################################
@@ -356,6 +398,9 @@ AC_DEFUN([AC_COIN_PROG_CXX],
 AC_LANG_PUSH(C++)
 
 AC_ARG_VAR(CXXDEFS,[Additional -D flags to be used when compiling C++ code.])
+AC_ARG_VAR(ADD_CXXFLAGS,[Additional C++ compiler options])
+AC_ARG_VAR(DBG_CXXFLAGS,[Debug C++ compiler options])
+AC_ARG_VAR(OPT_CXXFLAGS,[Optimize C++ compiler options])
 
 coin_has_cxx=yes
 
@@ -364,17 +409,24 @@ case $build in
   *-cygwin* | *-mingw*)
              comps="g++ cl" ;;
   *-darwin*) comps="g++ c++ CC" ;;
-          *) comps="xlC aCC CC g++ c++ pgCC icpc" ;;
+          *) comps="xlC aCC CC g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC" ;;
 esac
 
 # We delete the cached value, since the test might not have been
 # performed with out choise of compilers earlier
-ac_cv_prog_CXX=
+$as_unset ac_cv_prog_CXX || test "${ac_cv_prog_CXX+set}" != set || { ac_cv_prog_CXX=; export ac_cv_prog_CXX; }
 AC_PROG_CXX([$comps])
 CXXFLAGS="$save_cxxflags"
 
-AC_CACHE_CHECK([for C++ compiler options],[coin_cv_cxxflags],
-[if test x"$CXXFLAGS" = x; then
+# Check if a project specific CXXFLAGS variable has been set
+if test x$COIN_PRJCT != x; then
+  eval coin_tmp=\${${COIN_PRJCT}_CXXFLAGS+set}
+  if test x$coin_tmp = xset; then
+    eval CXXFLAGS=\${${COIN_PRJCT}_CXXFLAGS}
+  fi
+fi
+
+if test x"$CXXFLAGS" = x; then
 
 # ToDo decide whether we want -DNDEBUG for optimization
   coin_add_cxxflags=
@@ -462,37 +514,50 @@ AC_CACHE_CHECK([for C++ compiler options],[coin_cv_cxxflags],
     coin_dbg_cxxflags="-g"
   fi
 
+  if test -z "$coin_opt_cxxflags"; then
+    # Try if -O option works if nothing else is set
+    CXXFLAGS=-O
+    AC_TRY_LINK([],[int i=0; i++;],[coin_opt_cxxflags="-O"])
+  fi
+
+  if test x${DBG_CXXFLAGS+set} != xset; then
+    DBG_CXXFLAGS="$coin_dbg_cxxflags $coin_add_cxxflags $coin_warn_cxxflags"
+  fi
+  if test x${OPT_CXXFLAGS+set} != xset; then
+    OPT_CXXFLAGS="$coin_opt_cxxflags $coin_add_cxxflags -DNDEBUG $coin_warn_cxxflags"
+  fi
+
+  DBG_CXXFLAGS="$DBG_CXXFLAGS $ADD_CXXFLAGS $CXXDEFS"
+  OPT_CXXFLAGS="$OPT_CXXFLAGS $ADD_CXXFLAGS $CXXDEFS"
+
   if test "$coin_debug_compile" = "true"; then
-    CXXFLAGS="$coin_dbg_cxxflags $coin_add_cxxflags $CXXDEFS $coin_warn_cxxflags"
+    CXXFLAGS="$DBG_CXXFLAGS"
   else
-    if test -z "$coin_opt_cxxflags"; then
-      # Try if -O option works if nothing else is set
-      CXXFLAGS="-O"
-      AC_TRY_LINK([],[int i=0; i++;],[coin_opt_cxxflags="-O"])
-    fi
-    CXXFLAGS="$coin_opt_cxxflags $coin_add_cxxflags -DNDEBUG $CXXDEFS $coin_warn_cxxflags"
+    CXXFLAGS="$OPT_CXXFLAGS"
+  fi
+else
+  CXXFLAGS="$CXXFLAGS $ADD_CXXFLAGS $CXXDEFS"
+  if test x${DBG_CXXFLAGS+set} != xset; then
+    DBG_CXXFLAGS="$CXXFLAGS"
+  fi
+  if test x${OPT_CXXFLAGS+set} != xset; then
+    OPT_CXXFLAGS="$CXXFLAGS"
   fi
 fi
 
-# Check if user wants to have additional CXXFLAGS options
-AC_ARG_VAR(ADD_CXXFLAGS,[Additional C++ compiler options])
-if test x"$ADD_CXXFLAGS" != x; then
-  CXXFLAGS="$CXXFLAGS $ADD_CXXFLAGS"
-fi
-
 # Try if CXXFLAGS works
+save_CXXFLAGS="$CXXFLAGS"
 AC_TRY_LINK([],[int i=0; i++;],[],[CXXFLAGS=])
 if test -z "$CXXFLAGS"; then
-  AC_MSG_WARN([The flags CXXFLAGS="$CXXFLAGS" do not work.  I will now just try '-O', but you might want to set CXXFLAGS manually.])
+  AC_MSG_WARN([The flags CXXFLAGS="$save_CXXFLAGS" do not work.  I will now just try '-O', but you might want to set CXXFLAGS manually.])
   CXXFLAGS='-O'
   AC_TRY_LINK([],[int i=0; i++;],[],[CXXFLAGS=])
   if test -z "$CXXFLAGS"; then
     AC_MSG_WARN([This value for CXXFLAGS does not work.  I will continue with empty CXXFLAGS, but you might want to set CXXFLAGS manually.])
   fi
 fi
-coin_cv_cxxflags="$CXXFLAGS"
-]) # AC_CACHE_CHECK([for C++ compiler options CXXFLAGS]
-CXXFLAGS="$coin_cv_cxxflags"
+
+AC_MSG_NOTICE([C++ compiler options are: $CXXFLAGS])
 
 AC_ARG_VAR(MPICXX,[C++ MPI Compiler])
 if test x"$MPICXX" = x; then :; else
@@ -638,6 +703,9 @@ if test x"$CXX" != x; then
 fi
 
 AC_ARG_VAR(CDEFS,[Additional -D flags to be used when compiling C code.])
+AC_ARG_VAR(ADD_CFLAGS,[Additional C compiler options])
+AC_ARG_VAR(DBG_CFLAGS,[Debug C compiler options])
+AC_ARG_VAR(OPT_CFLAGS,[Optimize C compiler options])
 
 coin_has_cc=yes
 
@@ -646,17 +714,24 @@ case $build in
   *-cygwin* | *-mingw*)
              comps="gcc cl" ;;
   *-linux-*) comps="xlc gcc cc pgcc icc" ;;
-  *)         comps="xlc cc gcc pgcc icc" ;;
+  *)         comps="xlc_r xlc cc gcc pgcc icc" ;;
 esac
 
 # We delete the cached value, since the test might not have been
 # performed with out choise of compilers earlier
-ac_cv_prog_CC=
+$as_unset ac_cv_prog_CC || test "${ac_cv_prog_CC+set}" != set || { ac_cv_prog_CC=; export ac_cv_prog_CC; }
 AC_PROG_CC([$comps])
 CFLAGS="$save_cflags"
 
-AC_CACHE_CHECK([for C compiler options],[coin_cv_cflags],
-[if test x"$CFLAGS" = x; then
+# Check if a project specific CFLAGS variable has been set
+if test x$COIN_PRJCT != x; then
+  eval coin_tmp=\${${COIN_PRJCT}_CFLAGS+set}
+  if test x$coin_tmp = xset; then
+    eval CFLAGS=\${${COIN_PRJCT}_CFLAGS}
+  fi
+fi
+
+if test x"$CFLAGS" = x; then
 
   coin_add_cflags=
   coin_opt_cflags=
@@ -742,15 +817,34 @@ AC_CACHE_CHECK([for C compiler options],[coin_cv_cflags],
     coin_dbg_cflags="-g"
   fi
 
+  if test -z "$coin_opt_cflags"; then
+    # Try if -O option works if nothing else is set
+    CFLAGS="-O"
+    AC_TRY_LINK([],[int i=0; i++;],[coin_opt_cflags="-O"])
+  fi
+
+  if test x${DBG_CFLAGS+set} != xset; then
+    DBG_CFLAGS="$coin_dbg_cflags $coin_add_cflags $coin_warn_cflags"
+  fi
+  if test x${OPT_CFLAGS+set} != xset; then
+    OPT_CFLAGS="$coin_opt_cflags $coin_add_cflags -DNDEBUG $coin_warn_cflags"
+  fi
+
+  DBG_CFLAGS="$DBG_CFLAGS $ADD_CFLAGS $CDEFS"
+  OPT_CFLAGS="$OPT_CFLAGS $ADD_CFLAGS $CDEFS"
+
   if test "$coin_debug_compile" = "true"; then
-    CFLAGS="$coin_dbg_cflags $coin_add_cflags $CDEFS $coin_warn_cflags"
+    CFLAGS="$DBG_CFLAGS"
   else
-    if test -z "$coin_opt_cflags"; then
-      # Try if -O option works if nothing else is set
-      CFLAGS="-O"
-      AC_TRY_LINK([],[int i=0; i++;],[coin_opt_cflags="-O"],[])
-    fi
-    CFLAGS="$coin_opt_cflags $coin_add_cflags -DNDEBUG $CDEFS $coin_warn_cflags"
+    CFLAGS="$OPT_CFLAGS"
+  fi
+else
+  CFLAGS="$CFLAGS $ADD_CFLAGS $CDEFS"
+  if test x${DBG_CFLAGS+set} != xset; then
+    DBG_CFLAGS="$CFLAGS"
+  fi
+  if test x${OPT_CFLAGS+set} != xset; then
+    OPT_CFLAGS="$CFLAGS"
   fi
 fi
 
@@ -761,18 +855,18 @@ if test x"$ADD_CFLAGS" != x; then
 fi
 
 # Try if CFLAGS works
+save_CFLAGS="$CFLAGS"
 AC_TRY_LINK([],[int i=0; i++;],[],[CFLAGS=])
 if test -z "$CFLAGS"; then
-  AC_MSG_WARN([The value CFLAGS="$CFLAGS" do not work.  I will now just try '-O', but you might want to set CFLAGS manually.])
+  AC_MSG_WARN([The value CFLAGS="$save_CFLAGS" do not work.  I will now just try '-O', but you might want to set CFLAGS manually.])
   CFLAGS='-O'
   AC_TRY_LINK([],[int i=0; i++;],[],[CFLAGS=])
   if test -z "$CFLAGS"; then
     AC_MSG_WARN([This value for CFLAGS does not work.  I will continue with empty CFLAGS, but you might want to set CFLAGS manually.])
   fi
 fi
-coin_cv_cflags="$CFLAGS"
-]) # AC_CACHE_CHECK([for C compiler options CXXFLAGS]
-CFLAGS="$coin_cv_cflags"
+
+AC_MSG_NOTICE([C compiler options are: $CFLAGS])
 
 AC_ARG_VAR(MPICC,[C MPI Compiler])
 if test x"$MPICC" = x; then :; else
@@ -803,23 +897,34 @@ AC_DEFUN([AC_COIN_PROG_F77],
 [AC_REQUIRE([AC_COIN_MINGW_LD_FIX])
 AC_LANG_PUSH([Fortran 77])
 
+AC_ARG_VAR(ADD_FFLAGS,[Additional Fortran compiler options])
+AC_ARG_VAR(DBG_FFLAGS,[Debug Fortran compiler options])
+AC_ARG_VAR(OPT_FFLAGS,[Optimize Fortran compiler options])
+
 coin_has_f77=yes
 
 save_fflags="$FFLAGS"
 case $build in
   *-cygwin* | *-mingw*)
-             comps="gfortran g77 ifort" ;;
-  *)         comps="xlf fort77 gfortran f77 g77 pgf90 pgf77 ifort ifc" ;;
+             comps="gfortran g77 ifort fl32" ;;
+  *)         comps="xlf fort77 gfortran f77 g77 pgf90 pgf77 ifort ifc frt af77" ;;
 esac
 
 # We delete the cached value, since the test might not have been
 # performed with out choise of compilers earlier
-ac_cv_prog_F77=
+$as_unset ac_cv_prog_F77 || test "${ac_cv_prog_F77+set}" != set || { ac_cv_prog_F77=; export ac_cv_prog_F77; }
 AC_PROG_F77($comps)
 FFLAGS="$save_fflags"
 
-AC_CACHE_CHECK([for Fortran compiler options],[coin_cv_fflags],
-[if test x"$FFLAGS" = x; then
+# Check if a project specific FFLAGS variable has been set
+if test x$COIN_PRJCT != x; then
+  eval coin_tmp=\${${COIN_PRJCT}_FFLAGS+set}
+  if test x$coin_tmp = xset; then
+    eval FFLAGS=\${${COIN_PRJCT}_FFLAGS}
+  fi
+fi
+
+if test x"$FFLAGS" = x; then
 
   coin_add_fflags=
   coin_opt_fflags=
@@ -896,23 +1001,35 @@ AC_CACHE_CHECK([for Fortran compiler options],[coin_cv_fflags],
     coin_dbg_fflags="-g"
   fi
 
-  if test "$coin_debug_compile" = true; then
-    FFLAGS="$coin_dbg_fflags $coin_add_fflags $coin_warn_fflags"
-  else
-    if test -z "$coin_opt_fflags"; then
-      # Try if -O option works if nothing else is set
-      FFLAGS=-O
-      AC_TRY_LINK([],[      integer i],
-                  [coin_opt_fflags="-O"])
-    fi
-    FFLAGS="$coin_opt_fflags $coin_add_fflags $coin_warn_fflags"
+  if test -z "$coin_opt_fflags"; then
+    # Try if -O option works if nothing else is set
+    FFLAGS=-O
+    AC_TRY_LINK([],[      integer i], [coin_opt_fflags="-O"])
   fi
-fi
 
-# Check if user wants to have additional FFLAGS options
-AC_ARG_VAR(ADD_FFLAGS,[Additional Fortran compiler options])
-if test x"$ADD_FFLAGS" != x; then
+  if test x${DBG_FFLAGS+set} != xset; then
+    DBG_FFLAGS="$coin_dbg_fflags $coin_add_fflags $coin_warn_fflags"
+  fi
+  if test x${OPT_FFLAGS+set} != xset; then
+    OPT_FFLAGS="$coin_opt_fflags $coin_add_fflags -DNDEBUG $coin_warn_fflags"
+  fi
+
+  DBG_FFLAGS="$DBG_FFLAGS $ADD_FFLAGS"
+  OPT_FFLAGS="$OPT_FFLAGS $ADD_FFLAGS"
+
+  if test "$coin_debug_compile" = "true"; then
+    FFLAGS="$DBG_FFLAGS"
+  else
+    FFLAGS="$OPT_FFLAGS"
+  fi
+else
   FFLAGS="$FFLAGS $ADD_FFLAGS"
+  if test x${DBG_FFLAGS+set} != xset; then
+    DBG_FFLAGS="$FFLAGS"
+  fi
+  if test x${OPT_FFLAGS+set} != xset; then
+    OPT_FFLAGS="$FFLAGS"
+  fi
 fi
 
 # Try if FFLAGS works
@@ -925,9 +1042,8 @@ if test -z "$FFLAGS"; then
     AC_MSG_WARN([This value for FFLAGS does not work.  I will continue with empty FFLAGS, but you might want to set FFLAGS manually.])
   fi
 fi
-coin_cv_fflags="$FFLAGS"
-]) # AC_CACHE_CHECK([for Fortran compiler options FFLAGS]
-FFLAGS="$coin_cv_fflags"
+
+AC_MSG_NOTICE([Fortran compiler options are: $FFLAGS])
 
 AC_ARG_VAR(MPIF77,[Fortran MPI Compiler])
 if test x"$MPIF77" = x; then :; else
