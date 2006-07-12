@@ -1688,29 +1688,45 @@ fi
 ]) # AC_COIN_CHECK_GNU_READLINE
 
 ###########################################################################
-#                             COIN_HAS_DATA                               #
+#                             COIN_DATA_PATH                              #
 ###########################################################################
 
-# This macro makes sure that the data files in the Data subdirectory
-# are available.  The argument is the subdirectory name in the Data
-# COIN project.  This macro defines the preprocessor macro
-# COIN_HAS_DATA_SUBDIR (where SUBDIR is the name of the subdirectory
-# in capital letters) and the makefile conditional with the same name.
-# If this is the base project, it also adds the directory to the
-# recursive list.
+# This macro defines a preprocessor macro with the absolute path to a
+# subdirectory of Data.  The argument of this macro is the name of the
+# subdirectory (in correct case), and the name of the macro is
+# COIN_DATA_DIR_PATH, where dir is replaced by the capitalized name of
+# the directory.  The path ends with a separator ("/" for linux and
+# '\\' for Windows).  The default value for this path can be
+# overwritten with the input variable with the same name
+# (COIN_DATA_DIR_PATH).  At this point we chech only for the
+# $srcdir/../Data subdirectory.
 
-AC_DEFUN([AC_COIN_HAS_DATA],
-[AC_MSG_CHECKING([whether Data directory $1 is available])
-if test -r ../Data/$1; then
-  AC_DEFINE(m4_toupper(COIN_HAS_DATA_$1),[1],
-            [Define to 1 if Data subdirectory $1 is available])
-  AC_MSG_RESULT(yes)
-  have_data=yes
-else
-  have_data=no
+AC_DEFUN([AC_COIN_DATA_PATH],
+[AC_MSG_CHECKING([absolute path to data directory $1])
+
+AC_ARG_VAR(m4_toupper(COIN_DATA_$1_PATH),[Set to absolute path to Data/$1 subdirectory])
+
+if test x"$m4_toupper(COIN_DATA_$1_PATH)" = x; then
+  m4_toupper(COIN_DATA_$1_PATH)=`cd $srcdir/../Data/$1; pwd`
 fi
-AC_MSG_RESULT($have_data)
-AM_CONDITIONAL(m4_toupper(COIN_HAS_DATA_$1),test $have_data = yes)
+
+# Under Cygwin, use Windows path.  Add separator
+case $build in
+  *-cygwin*)
+    m4_toupper(COIN_DATA_$1_PATH)=`cygwin -w $m4_toupper(COIN_DATA_$1_PATH)`\\
+    ;;
+  *)
+    m4_toupper(COIN_DATA_$1_PATH)="$m4_toupper(COIN_DATA_$1_PATH)/"
+    ;;
+esac
+
+if test -r $m4_toupper(COIN_DATA_$1_PATH); then
+  AC_DEFINE_UNQUOTED(m4_toupper(COIN_DATA_$1_PATH),["$m4_toupper(COIN_DATA_$1_PATH)"],
+            [Define to absolute path for Data subdirectory $1])
+  AC_MSG_RESULT($m4_toupper(COIN_DATA_$1_PATH))
+else
+  AC_MSG_ERROR(Directory $m4_toupper(COIN_DATA_$1_PATH) does not exist)
+fi
 ]) # AC_COIN_HAS_DATA
 
 ###########################################################################
