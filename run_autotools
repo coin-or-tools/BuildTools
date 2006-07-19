@@ -84,18 +84,18 @@ for dir in $dirs; do
      cat $AUTOTOOLS_DIR/share/aclocal/libtool.m4 $toolsdir/coin.m4> acinclude.m4
      echo running aclocal in $dir
      if test -d m4; then
-       aclocal -I m4
+       aclocal -I m4 || exit -1
      else
-       aclocal
+       aclocal || exit -1
      fi
      if grep AC_CONFIG_HEADER configure.ac >/dev/null 2>&1; then
        echo running autoheader in $dir
-       autoheader
+       autoheader || exit -1
      fi
      echo running automake in $dir
-     automake
+     automake || exit -1
      echo running autoconf in $dir
-     autoconf
+     autoconf || exit -1
    else
      echo "*** No configure.ac file in $dir - SKIPPING! ***"
    fi
