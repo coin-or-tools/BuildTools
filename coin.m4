@@ -1011,7 +1011,7 @@ if test x"$FFLAGS" = x; then
     DBG_FFLAGS="$coin_dbg_fflags $coin_add_fflags $coin_warn_fflags"
   fi
   if test x${OPT_FFLAGS+set} != xset; then
-    OPT_FFLAGS="$coin_opt_fflags $coin_add_fflags -DNDEBUG $coin_warn_fflags"
+    OPT_FFLAGS="$coin_opt_fflags $coin_add_fflags $coin_warn_fflags"
   fi
 
   DBG_FFLAGS="$DBG_FFLAGS $ADD_FFLAGS"
