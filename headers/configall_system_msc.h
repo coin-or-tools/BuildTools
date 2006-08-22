@@ -116,3 +116,7 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
+
+
+#define MY_C_ISNAN  _isnan
+#define MY_C_FINITE _finite
