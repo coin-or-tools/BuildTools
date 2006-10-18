@@ -385,6 +385,29 @@ esac
 ])
 
 ###########################################################################
+#                        COIN_ENABLE_DOSCOMPILE                           #
+###########################################################################
+
+# This macro is included by any PROG_compiler macro, to enable the
+# --enable-doscompile options which is to be used when one wants to
+# compile an executable under Cygwin which also runs directly under
+# does (without requiring Cygwin1.dll).  Essentially, if enabled and
+# the GNU compilers are used, it switches the --mno-cygwin flag on.
+
+AC_DEFUN([AC_COIN_ENABLE_DOSCOMPILE],
+[AC_ARG_ENABLE([doscompile],
+[AC_HELP_STRING([--enable-doscompile],
+                [Under Cygwin, compile so that executables run under DOS (default: disabled)])],
+[if test "$enable_doscompile = yes"; then
+  case $build in
+    *-cygwin*) ;;
+    *) AC_MSG_ERROR([--enable-doscompile option makes only sense under Cygwin]) ;;
+  esac
+fi],
+[enable_doscompile=no])
+])
+
+###########################################################################
 #                             COIN_PROG_CXX                               #
 ###########################################################################
 
@@ -395,6 +418,7 @@ esac
 
 AC_DEFUN([AC_COIN_PROG_CXX],
 [AC_REQUIRE([AC_COIN_PROG_CC]) #Let's try if that overcomes configuration problem with VC++ 6.0
+AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
 AC_LANG_PUSH(C++)
 
 AC_ARG_VAR(CXXDEFS,[Additional -D flags to be used when compiling C++ code.])
@@ -444,16 +468,16 @@ if test x"$CXXFLAGS" = x; then
         coin_add_cxxflags="-pipe"
         coin_dbg_cxxflags="-g"
         coin_warn_cxxflags="-pedantic-errors -Wimplicit -Wparentheses -Wreturn-type -Wcast-qual -Wall -Wpointer-arith -Wwrite-strings -Wconversion"
-
-        case $build in
-          *-cygwin*)
-            CXXFLAGS="-mno-cygwin"
-            AC_TRY_LINK([],[int i=0; i++;],
-                        [coin_add_cxxflags="-mno-cygwin $coin_add_cxxflags"])
-            CXXFLAGS=
-            ;;
-        esac
-        ;;
+        if test "$enable_doscompile" = yes; then
+          case $build in
+            *-cygwin*)
+              CXXFLAGS="-mno-cygwin"
+              AC_TRY_LINK([],[int i=0; i++;],
+                          [coin_add_cxxflags="-mno-cygwin $coin_add_cxxflags"])
+              CXXFLAGS=
+              ;;
+          esac
+        fi
     esac
   fi
   if test -z "$coin_opt_cxxflags"; then
@@ -687,6 +711,7 @@ AC_LANG_POP(C++)
 
 AC_DEFUN([AC_COIN_PROG_CC],
 [AC_REQUIRE([AC_COIN_MINGW_LD_FIX])
+AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
 AC_LANG_PUSH(C)
 
 # For consistency, we set the C compiler to the same value of the C++
@@ -747,16 +772,16 @@ if test x"$CFLAGS" = x; then
         coin_add_cflags="-pipe"
         coin_dbg_cflags="-g"
         coin_warn_cflags="-pedantic-errors -Wimplicit -Wparentheses -Wsequence-point -Wreturn-type -Wcast-qual -Wall"
-
-        case $build in
-          *-cygwin*)
-            CFLAGS="-mno-cygwin"
-            AC_TRY_LINK([],[int i=0; i++;],
-                        [coin_add_cflags="-mno-cygwin $coin_add_cflags"])
-            CFLAGS=
-          ;;
-        esac
-        ;;
+        if test "$enable_doscompile" = yes; then
+          case $build in
+            *-cygwin*)
+              CFLAGS="-mno-cygwin"
+              AC_TRY_LINK([],[int i=0; i++;],
+                          [coin_add_cflags="-mno-cygwin $coin_add_cflags"])
+              CFLAGS=
+            ;;
+          esac
+        fi
     esac
   fi
   if test -z "$coin_opt_cflags"; then
@@ -895,6 +920,7 @@ AC_LANG_POP(C)
 
 AC_DEFUN([AC_COIN_PROG_F77],
 [AC_REQUIRE([AC_COIN_MINGW_LD_FIX])
+AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
 AC_LANG_PUSH([Fortran 77])
 
 AC_ARG_VAR(ADD_FFLAGS,[Additional Fortran compiler options])
@@ -935,14 +961,16 @@ if test x"$FFLAGS" = x; then
     coin_opt_fflags="-O3 -fomit-frame-pointer"
     coin_add_fflags="-pipe"
     coin_dbg_fflags="-g"
-    case $build in
-      *-cygwin*)
-        FFLAGS="-mno-cygwin"
-        AC_TRY_LINK([],[      write(*,*) 'Hello world'],
-                    [coin_add_fflags="-mno-cygwin $coin_add_fflags"])
-        FFLAGS=
-      ;;
-    esac
+    if test "$enable_doscompile" = yes; then
+      case $build in
+        *-cygwin*)
+          FFLAGS="-mno-cygwin"
+          AC_TRY_LINK([],[      write(*,*) 'Hello world'],
+                      [coin_add_fflags="-mno-cygwin $coin_add_fflags"])
+          FFLAGS=
+        ;;
+      esac
+    fi
   else
     case $build in
       *-cygwin* | *-mingw*)
@@ -1748,11 +1776,17 @@ for file in $files; do
   EXAMPLE_FILES="$EXAMPLE_FILES $file"
 done
 if test $coin_vpath_config = yes; then
-  AC_PROG_LN_S
-  AC_MSG_NOTICE([Creating links to the example files ($1)])
+  if test "$enable_doscompile" = yes; then
+    lnkcmd=cp
+    AC_MSG_NOTICE([Copying example files ($1)])
+  else
+    AC_PROG_LN_S
+    AC_MSG_NOTICE([Creating links to the example files ($1)])
+    lnkcmd="$LN_S"
+  fi
   for file in $EXAMPLE_FILES; do
     rm -f $file
-    $LN_S $srcdir/$file $file
+    $lnkcmd $srcdir/$file $file
   done
   EXAMPLE_CLEAN_FILES='$1'
 else
@@ -2116,24 +2150,21 @@ else
                          LIBS="$SAVE_LIBS"])
       ;;
   esac
-  # On cygwin, unless otherwise specified, recompile blas because it
+  # On cygwin, if enable_doscompile is used, recompile blas because it
   # otherwise links with the cygwin blas which doesn't run under DOS
-  case $build in
-    *-cygwin*) ;;
-    *)
-      if test -z "$use_blas"; then
-        SAVE_LIBS="$LIBS"
-        AC_MSG_CHECKING([whether -lblas has BLAS])
-        LIBS="-lblas $LIBS"
-        AC_COIN_TRY_FLINK([daxpy],
-                          [AC_MSG_RESULT([yes])
-                           ADDLIBS="-lblas $ADDLIBS"
-                           use_blas='-lblas'],
-                          [AC_MSG_RESULT([no])
-                           LIBS="$SAVE_LIBS"])
-      fi
-      ;;
-  esac
+  if test "$enable_doscompile" != yes; then
+    if test -z "$use_blas"; then
+      SAVE_LIBS="$LIBS"
+      AC_MSG_CHECKING([whether -lblas has BLAS])
+      LIBS="-lblas $LIBS"
+      AC_COIN_TRY_FLINK([daxpy],
+                        [AC_MSG_RESULT([yes])
+                         ADDLIBS="-lblas $ADDLIBS"
+                         use_blas='-lblas'],
+                        [AC_MSG_RESULT([no])
+                         LIBS="$SAVE_LIBS"])
+    fi
+  fi
   if test -z "$use_blas"; then
     AC_CHECK_FILE([$coin_blasobjdir/Makefile],[use_blas=BUILD])
   fi
@@ -2222,24 +2253,21 @@ else
         ;;
     esac
   fi
-  # On cygwin, unless otherwise specified, recompile lapack because it
+  # On cygwin, if enable_doscompile is used, recompile lapack because it
   # otherwise links with the cygwin lapack which doesn't run under DOS
-  case $build in
-    *-cygwin*) ;;
-    *)
-      if test -z "$use_lapack"; then
-        SAVE_LIBS="$LIBS"
-        AC_MSG_CHECKING([whether -llapack has LAPACK])
-        LIBS="-llapack $LIBS"
-        AC_COIN_TRY_FLINK([dsyev],
-                          [AC_MSG_RESULT([yes])
-                           ADDLIBS="-llapack $ADDLIBS"
-                           use_lapack='-llapack'],
-                          [AC_MSG_RESULT([no])
-                           LIBS="$SAVE_LIBS"])
-      fi
-      ;;
-  esac
+  if test "$enable_doscompile" != yes; then
+    if test -z "$use_lapack"; then
+      SAVE_LIBS="$LIBS"
+      AC_MSG_CHECKING([whether -llapack has LAPACK])
+      LIBS="-llapack $LIBS"
+      AC_COIN_TRY_FLINK([dsyev],
+                        [AC_MSG_RESULT([yes])
+                         ADDLIBS="-llapack $ADDLIBS"
+                         use_lapack='-llapack'],
+                        [AC_MSG_RESULT([no])
+                         LIBS="$SAVE_LIBS"])
+    fi
+  fi
   if test -z "$use_lapack"; then
     AC_CHECK_FILE([$coin_lapackobjdir/Makefile],[use_lapack=BUILD])
   fi
