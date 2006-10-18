@@ -1776,8 +1776,15 @@ for file in $files; do
   EXAMPLE_FILES="$EXAMPLE_FILES $file"
 done
 if test $coin_vpath_config = yes; then
+  lnkcmd=
   if test "$enable_doscompile" = yes; then
     lnkcmd=cp
+  fi
+  case "$CC" in
+    cl* | */cl*)
+      lnkcmd=cp ;;
+  esac
+  if test "$lnkcmd" = cp; then
     AC_MSG_NOTICE([Copying example files ($1)])
   else
     AC_PROG_LN_S
