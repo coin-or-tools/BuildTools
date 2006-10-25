@@ -1,6 +1,12 @@
 /* This is the header file for the Microsoft compiler, defining all
  * system and compiler dependent configuration macros */
 
+/* Define to 64bit integer type */
+#define COIN_INT64_T long long
+
+/* Define to integer type capturing pointer */
+#define COIN_INTPTR_T long
+
 /* Define to dummy `main' function (if any) required to link to the Fortran
    libraries. */
 /* #undef F77_DUMMY_MAIN */
@@ -102,6 +108,12 @@
 /* Define to 1 if va_copy is avaliable */
 /* #undef HAVE_VA_COPY */
 
+/* Define to be the name of C-function for Inf check */
+#define MY_C_FINITE _finite
+
+/* Define to be the name of C-function for NaN check */
+#define MY_C_ISNAN _isnan
+
 /* The size of a `double', as computed by sizeof. */
 #define SIZEOF_DOUBLE 8
 
@@ -116,7 +128,3 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
-
-
-#define MY_C_ISNAN  _isnan
-#define MY_C_FINITE _finite
