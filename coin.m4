@@ -1563,10 +1563,28 @@ VPATH_DISTCLEANFILES="$coin_vpath_link_files"
 AC_OUTPUT
 
 if test x"$coin_vpath_link_files" = x; then : ; else
-  AC_MSG_NOTICE(Creating VPATH links for data files)
+  lnkcmd=
+  if test "$enable_doscompile" = yes; then
+    lnkcmd=cp
+  fi
+  case "$CC" in
+    cl* | */cl*)
+      lnkcmd=cp ;;
+  esac
+  if test "$lnkcmd" = cp; then
+    AC_MSG_NOTICE(Copying data files for VPATH configuration)
+  else
+    AC_PROG_LN_S
+    AC_MSG_NOTICE(Creating VPATH links for data files)
+    lnkcmd="$LN_S"
+  fi
   for file in $coin_vpath_link_files; do
+    dir=`echo ./$file | sed -e 's|[^/]*$||'`
+    if test -d $dir; then : ; else
+      AS_MKDIR_P($dir)
+    fi
     rm -f $file
-    $LN_S $abs_source_dir/$file $file
+    $lnkcmd $abs_source_dir/$file $file
   done
 fi
 
