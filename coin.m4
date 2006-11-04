@@ -1579,7 +1579,7 @@ if test x"$coin_vpath_link_files" = x; then : ; else
     lnkcmd="$LN_S"
   fi
   for file in $coin_vpath_link_files; do
-    dir=`echo ./$file | sed -e 's|[^/]*$||'`
+    dir=`AS_DIRNAME(["./$file"])`
     if test -d $dir; then : ; else
       AS_MKDIR_P($dir)
     fi
