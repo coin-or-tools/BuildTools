@@ -2152,8 +2152,8 @@ else
       LIBS="-xlic_lib=sunperf $LIBS"
       AC_COIN_TRY_FLINK([daxpy],
                         [AC_MSG_RESULT([yes])
-                         use_blas='-xlic_lib=sunperf'],
-                         ADDLIBS="-xlic_lib=sunperf $ADDLIBS"
+                         use_blas='-xlic_lib=sunperf'
+                         ADDLIBS="-xlic_lib=sunperf $ADDLIBS"],
                         [AC_MSG_RESULT([no])
                          LIBS="$SAVE_LIBS"])
       ;;
@@ -2254,8 +2254,8 @@ else
         LIBS="-xlic_lib=sunperf $LIBS"
         AC_COIN_TRY_FLINK([dsyev],
                           [AC_MSG_RESULT([yes])
-                           use_lapack='-xlic_lib=sunperf'],
-                           ADDLIBS="-xlic_lib=sunperf $ADDLIBS"
+                           use_lapack='-xlic_lib=sunperf'
+                           ADDLIBS="-xlic_lib=sunperf $ADDLIBS"],
                           [AC_MSG_RESULT([no])
                            LIBS="$SAVE_LIBS"])
         ;;
