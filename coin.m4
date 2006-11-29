@@ -544,6 +544,11 @@ if test x"$CXXFLAGS" = x; then
     AC_TRY_LINK([],[int i=0; i++;],[coin_opt_cxxflags="-O"])
   fi
 
+  # if PM doesn't want the warning messages, take them out
+  if test x"$coin_skip_warn_cxxflags" = xyes; then
+    coin_warn_cxxflags=
+  fi
+
   if test x${DBG_CXXFLAGS+set} != xset; then
     DBG_CXXFLAGS="$coin_dbg_cxxflags $coin_add_cxxflags $coin_warn_cxxflags"
   fi
@@ -848,6 +853,11 @@ if test x"$CFLAGS" = x; then
     AC_TRY_LINK([],[int i=0; i++;],[coin_opt_cflags="-O"])
   fi
 
+  # if PM doesn't want the warning messages, take them out
+  if test x"$coin_skip_warn_cflags" = xyes; then
+    coin_warn_cflags=
+  fi
+
   if test x${DBG_CFLAGS+set} != xset; then
     DBG_CFLAGS="$coin_dbg_cflags $coin_add_cflags $coin_warn_cflags"
   fi
@@ -1034,6 +1044,11 @@ if test x"$FFLAGS" = x; then
     # Try if -O option works if nothing else is set
     FFLAGS=-O
     AC_TRY_LINK([],[      integer i], [coin_opt_fflags="-O"])
+  fi
+
+  # if PM doesn't want the warning messages, take them out
+  if test x"$coin_skip_warn_fflags" = xyes; then
+    coin_warn_fflags=
   fi
 
   if test x${DBG_FFLAGS+set} != xset; then
