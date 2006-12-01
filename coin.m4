@@ -266,12 +266,12 @@ AC_MSG_RESULT($coin_vpath_config)
 
 AC_DEFUN([AC_COIN_PROJECTDIR_INIT],
 [# Initialize the ADDLIBS variable
-ADDLIBS='-lm'
+ADDLIBS="-lm $LIBS"
 AC_SUBST(ADDLIBS)
 
 # Initialize the FADDLIBS variable (which is to be used with a fortran
 # compiler and will not include FLIBS)
-FADDLIBS=
+FADDLIBS="$LIBS"
 AC_SUBST(FADDLIBS)
 
 # A useful makefile conditional that is always false
@@ -372,7 +372,7 @@ COIN_PRJCT=m4_toupper($1)
 ###########################################################################
 
 # This macro is included by any PROG_compiler macro, to set the LD
-# environment variable on MinWG to the correct value (link)
+# environment variable on MinGW to the correct value (link).
 
 AC_DEFUN([AC_COIN_MINGW_LD_FIX],
 [case $build in
@@ -437,9 +437,21 @@ case $build in
 esac
 
 # We delete the cached value, since the test might not have been
-# performed with out choise of compilers earlier
+# performed with our choice of compilers earlier
 $as_unset ac_cv_prog_CXX || test "${ac_cv_prog_CXX+set}" != set || { ac_cv_prog_CXX=; export ac_cv_prog_CXX; }
 AC_PROG_CXX([$comps])
+if test -z "$CXX" ; then
+  AC_MSG_ERROR([Failed to find a C++ compiler!])
+fi
+
+# Autoconf incorrectly concludes that cl recognises -g. It doesn't.
+case "$CXX" in
+  cl* | */cl*)
+    if test "$ac_cv_prog_cxx_g" = yes ; then
+      ac_cv_prog_cxx_g=no
+      AC_MSG_NOTICE([Overruling autoconf; cl does not recognise -g.])
+    fi ;;
+esac
 CXXFLAGS="$save_cxxflags"
 
 # Check if a project specific CXXFLAGS variable has been set
@@ -480,6 +492,7 @@ if test x"$CXXFLAGS" = x; then
         fi
     esac
   fi
+
   if test -z "$coin_opt_cxxflags"; then
     case $build in
       *-cygwin* | *-mingw*)
@@ -595,7 +608,7 @@ if test x"$MPICXX" = x; then :; else
 fi
 
 case "$CXX" in
-  cl*)
+  cl* | */cl*)
     AC_COIN_MINGW_LD_FIX
     ;;
 esac
@@ -627,9 +640,9 @@ if test -z "$CXXLIBS"; then
     esac
   else
     case $build in
-     *-mingw32 | *-cygwin-* )
+     *-mingw32 | *-cygwin* )
       case "$CXX" in
-      cl*)
+      cl* | */cl*)
         CXXLIBS=nothing;;
       esac;;
      *-linux-*)
@@ -723,7 +736,7 @@ AC_LANG_PUSH(C)
 # compiler, if the C++ is set, but the C compiler isn't (only for CXX=cl)
 if test x"$CXX" != x; then
   case "$CXX" in
-    cl*)
+    cl* | */cl*)
       if test x"$CC" = x; then
         CC="$CXX"
         AC_MSG_WARN([C++ compiler name provided as $CXX, but CC is unset. Setting CC to $CXX])
@@ -748,9 +761,20 @@ case $build in
 esac
 
 # We delete the cached value, since the test might not have been
-# performed with out choise of compilers earlier
+# performed with our choice of compilers earlier
 $as_unset ac_cv_prog_CC || test "${ac_cv_prog_CC+set}" != set || { ac_cv_prog_CC=; export ac_cv_prog_CC; }
 AC_PROG_CC([$comps])
+if test -z "$CC" ; then
+  AC_MSG_ERROR([Failed to find a C compiler!])
+fi
+# Autoconf incorrectly concludes that cl recognises -g. It doesn't.
+case "$CC" in
+  cl* | */cl*)
+    if test "$ac_cv_prog_cc_g" = yes ; then
+      ac_cv_prog_cc_g=no
+      AC_MSG_NOTICE([Overruling autoconf; cl does not recognise -g.])
+    fi ;;
+esac
 CFLAGS="$save_cflags"
 
 # Check if a project specific CFLAGS variable has been set
@@ -911,7 +935,7 @@ fi
 
 # Correct ADDLIBS initialization if we are using the MS compiler
 case "$CC" in
-  cl*)
+  cl* | */cl*)
     ADDLIBS=
     AC_COIN_MINGW_LD_FIX
     ;;
@@ -932,6 +956,7 @@ AC_DEFUN([AC_COIN_PROG_F77],
 [AC_REQUIRE([AC_COIN_MINGW_LD_FIX])
 AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
 AC_REQUIRE([AC_COIN_PROG_CC])
+AC_REQUIRE([AC_COIN_F77_COMPS])
 AC_LANG_PUSH([Fortran 77])
 
 AC_ARG_VAR(ADD_FFLAGS,[Additional Fortran compiler options])
@@ -941,16 +966,15 @@ AC_ARG_VAR(OPT_FFLAGS,[Optimize Fortran compiler options])
 coin_has_f77=yes
 
 save_fflags="$FFLAGS"
-case $build in
-  *-cygwin* | *-mingw*)
-             comps="gfortran g77 ifort fl32" ;;
-  *)         comps="xlf fort77 gfortran f77 g77 pgf90 pgf77 ifort ifc frt af77" ;;
-esac
+comps="$coin_f77_comps" #This comes from AC_COIN_F77_COMPS
 
 # We delete the cached value, since the test might not have been
-# performed with out choise of compilers earlier
+# performed with our choice of compilers earlier
 $as_unset ac_cv_prog_F77 || test "${ac_cv_prog_F77+set}" != set || { ac_cv_prog_F77=; export ac_cv_prog_F77; }
 AC_PROG_F77($comps)
+if test -z "$F77" ; then
+  AC_MSG_WARN([Failed to find a Fortran compiler!])
+fi
 FFLAGS="$save_fflags"
 
 # Check if a project specific FFLAGS variable has been set
@@ -1152,6 +1176,30 @@ esac
 
 ]) # AC_COIN_F77_WRAPPERS
 
+###########################################################################
+#                             COIN_FIND_F77                               #
+###########################################################################
+
+# Attempt to preempt autoconf by locating an appropriate F77 program. This
+# macro will not trigger a fatal error if a suitable compiler cannot be
+# found. It should be called before COIN_PROG_F77 or COIN_TRY_FLINK.
+
+AC_DEFUN([AC_COIN_FIND_F77],
+[AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
+AC_REQUIRE([AC_COIN_F77_COMPS])
+AC_MSG_NOTICE([Trying to determine Fortran compiler name])
+AC_CHECK_PROGS([F77],[$coin_f77_comps],[unavailable])
+])
+
+# auxilliary macro to make sure both COIN_PROG_F77 and COIN_FIND_F77
+# use the same search lists for compiler names
+AC_DEFUN([AC_COIN_F77_COMPS],
+[case $build in
+  *-cygwin* | *-mingw*)
+     coin_f77_comps="gfortran g77 ifort fl32" ;;
+  *) coin_f77_comps="xlf fort77 gfortran f77 g77 pgf90 pgf77 ifort ifc frt af77" ;;
+esac
+])
 
 ###########################################################################
 #                          COIN_INIT_AUTOMAKE                             #
@@ -1181,11 +1229,13 @@ coin_have_externals=no
 if test "$enable_maintainer_mode" = yes; then
 
   # If maintainer mode is chosen, we make sure that the correct versions
-  # of the tools are used, and that we know where libtoo.m4 is (to
+  # of the tools are used, and that we know where libtool.m4 is (to
   # recreate acinclude.m4)
 
   AC_SUBST(LIBTOOLM4)
   LIBTOOLM4=
+  # Normally, $HOME
+  AUTOTOOLS_DFLT=$HOME
 
   # Check if we have autoconf
   AC_CHECK_PROG([have_autoconf],[autoconf],[yes],[no])
@@ -1212,7 +1262,7 @@ if test "$enable_maintainer_mode" = yes; then
   autoconf_dir=`which autoconf | sed -e 's=/autoconf=='`
   autoconf_dir=`cd $autoconf_dir; pwd`
   if test x$AUTOTOOLS_DIR = x; then
-    want_dir=$HOME/bin
+    want_dir=$AUTOTOOLS_DFLT/bin
   else
     want_dir=$AUTOTOOLS_DIR/bin
   fi
@@ -1221,7 +1271,7 @@ if test "$enable_maintainer_mode" = yes; then
   else
     rm -f confauto.out
     AC_MSG_RESULT([no])
-    AC_MSG_ERROR([The autoconf executable should be picked up from \$HOME/bin or \$AUTOTOOLS_DIR/bin.])
+    AC_MSG_ERROR([The autoconf executable should be picked up from \$AUTOTOOLS_DFLT/bin or \$AUTOTOOLS_DIR/bin.])
   fi
 
   # Check if we have automake
@@ -1249,7 +1299,7 @@ if test "$enable_maintainer_mode" = yes; then
   automake_dir=`which automake | sed -e 's=/automake=='`
   automake_dir=`cd $automake_dir; pwd`
   if test x$AUTOTOOLS_DIR = x; then
-    want_dir=$HOME/bin
+    want_dir=$AUTOTOOLS_DFLT/bin
   else
     want_dir=$AUTOTOOLS_DIR/bin
   fi
@@ -1258,12 +1308,12 @@ if test "$enable_maintainer_mode" = yes; then
   else
     rm -f confauto.out
     AC_MSG_RESULT([no])
-    AC_MSG_ERROR([The automake executable should be picked up from \$HOME/bin or \$AUTOTOOLS_DIR/bin.])
+    AC_MSG_ERROR([The automake executable should be picked up from \$AUTOTOOLS_DFLT/bin or \$AUTOTOOLS_DIR/bin.])
   fi
 
   # Check if we can find the libtool file
   if test x$AUTOTOOLS_DIR = x; then
-    want_dir=$HOME/share
+    want_dir=$AUTOTOOLS_DFLT/share
   else
     want_dir=$AUTOTOOLS_DIR/share
   fi
@@ -1566,7 +1616,8 @@ fi
 # library extension
 AC_SUBST(LIBEXT)
 case "$CC" in
-  cl*) LIBEXT=lib ;;
+  cl* | */cl*)
+       LIBEXT=lib ;;
     *) LIBEXT=a ;;
 esac
 
@@ -2102,7 +2153,7 @@ AC_DEFUN([AC_COIN_TRY_FLINK],
       fi
     fi
     ;;
-  cc)
+  cc|cpp)
     AC_F77_FUNC($1,cfunc$1)
     if test x"$coin_need_flibs" = xyes; then
       flink_try=no;
@@ -2135,7 +2186,7 @@ esac
 ###########################################################################
 
 # This macro checks for a library containing the BLAS library.  It
-# tried standard libraries, and if none is found to be working, it
+# tries standard libraries, and if none is found to be working, it
 # checks whether the BLAS ThirdParty/Blas directory has been configured.
 # It adds to ADDLIBS any flags required to link with an externally provided
 # BLAS.  It defines the makefile conditional and preprocessor macro
@@ -2156,7 +2207,7 @@ if test x"$use_blas" != x; then
   if test "$use_blas" = "BUILD"; then
     AC_CHECK_FILE([$coin_blasobjdir/Makefile],[],
                   [AC_MSG_ERROR([option \"BUILD\" specified for Blas, but $coin_blasobjdir directory is not configured])])
-  else
+  elif test "$use_blas" != no ; then
     AC_MSG_CHECKING([whether user supplied BLASLIB=\"$use_blas\" works])
     LIBS="$use_blas $LIBS"
     ADDLIBS="$use_blas $ADDLIBS"
@@ -2211,10 +2262,14 @@ else
   fi
 fi
 
+if test "$use_blas" = BUILD; then
+  coin_need_flibs=yes
+fi
+
 AM_CONDITIONAL([COIN_HAS_BLAS],[test x"$use_blas" != x])
 AM_CONDITIONAL([COIN_BUILD_BLAS],[test "$use_blas" = BUILD])
 
-if test x"$use_blas" = x; then
+if test x"$use_blas" = x || test "$use_blas" = no; then
   coin_has_blas=no
 else
   coin_has_blas=yes
@@ -2228,7 +2283,7 @@ fi
 ###########################################################################
 
 # This macro checks for a library containing the LAPACK library.  It
-# tried standard libraries, and if none is found to be working, it
+# tries standard libraries, and if none is found to be working, it
 # checks whether the LAPACK ThirdParty/Lapack directory has been
 # configured.  It adds to ADDLIBS any flags required to link with an
 # externally provided LAPACK.  It defines the makefile conditional and
@@ -2312,6 +2367,10 @@ else
   if test -z "$use_lapack"; then
     AC_CHECK_FILE([$coin_lapackobjdir/Makefile],[use_lapack=BUILD])
   fi
+fi
+
+if test "$use_lapack" = BUILD; then
+  coin_need_flibs=yes
 fi
 
 AM_CONDITIONAL([COIN_HAS_LAPACK],[test x"$use_lapack" != x])
