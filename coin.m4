@@ -484,7 +484,7 @@ if test x"$CXXFLAGS" = x; then
           case $build in
             *-cygwin*)
               CXXFLAGS="-mno-cygwin"
-              AC_TRY_LINK([],[int i=0; i++;],
+              AC_TRY_LINK(,[int i=0; i++;],
                           [coin_add_cxxflags="-mno-cygwin $coin_add_cxxflags"])
               CXXFLAGS=
               ;;
@@ -512,7 +512,7 @@ if test x"$CXXFLAGS" = x; then
             coin_dbg_cxxflags="-g"
             # Check if -i_dynamic is necessary (for new glibc library)
             CXXFLAGS=
-            AC_TRY_LINK([],[int i=0; i++;],[],
+            AC_TRY_LINK(,[int i=0; i++;],[],
                         [coin_add_cxxflags="-i_dynamic $coin_add_cxxflags"])
             ;;
           pgCC* | */pgCC*)
@@ -1000,7 +1000,7 @@ if test x"$FFLAGS" = x; then
       case $build in
         *-cygwin*)
           FFLAGS="-mno-cygwin"
-          AC_TRY_LINK([],[      write(*,*) 'Hello world'],
+          AC_TRY_LINK(,[      write(*,*) 'Hello world'],
                       [coin_add_fflags="-mno-cygwin $coin_add_fflags"])
           FFLAGS=
         ;;
@@ -1025,7 +1025,7 @@ if test x"$FFLAGS" = x; then
             coin_dbg_fflags="-g -CA -CB -CS"
             # Check if -i_dynamic is necessary (for new glibc library)
             FFLAGS=
-            AC_TRY_LINK([],[      write(*,*) 'Hello world'],[],
+            AC_TRY_LINK(,[      write(*,*) 'Hello world'],[],
                         [coin_add_fflags="-i_dynamic $coin_add_fflags"])
             ;;
           pgf77* | */pgf77* | pgf90* | */pgf90*)
@@ -1067,7 +1067,7 @@ if test x"$FFLAGS" = x; then
   if test -z "$coin_opt_fflags"; then
     # Try if -O option works if nothing else is set
     FFLAGS=-O
-    AC_TRY_LINK([],[      integer i], [coin_opt_fflags="-O"])
+    AC_TRY_LINK(,[      integer i], [coin_opt_fflags="-O"])
   fi
 
   # if PM doesn't want the warning messages, take them out
@@ -1101,11 +1101,11 @@ else
 fi
 
 # Try if FFLAGS works
-AC_TRY_LINK([],[      integer i],[],[FFLAGS=])
+AC_TRY_LINK(,[      integer i],[],[FFLAGS=])
 if test -z "$FFLAGS"; then
   AC_MSG_WARN([The flags FFLAGS="$FFLAGS" do not work.  I will now just try '-O', but you might want to set FFLAGS manually.])
   FFLAGS='-O'
-  AC_TRY_LINK([],[      integer i],[],[FFLAGS=])
+  AC_TRY_LINK(,[      integer i],[],[FFLAGS=])
   if test -z "$FFLAGS"; then
     AC_MSG_WARN([This value for FFLAGS does not work.  I will continue with empty FFLAGS, but you might want to set FFLAGS manually.])
   fi
@@ -1237,78 +1237,109 @@ if test "$enable_maintainer_mode" = yes; then
   # Normally, $HOME
   AUTOTOOLS_DFLT=$HOME
 
-  # Check if we have autoconf
-  AC_CHECK_PROG([have_autoconf],[autoconf],[yes],[no])
-  if test $have_autoconf = no; then
-    AC_MSG_ERROR([You specified you want to use maintainer mode, but I cannot find autoconf in your path.])
-  fi
+  AC_CACHE_CHECK([whether we are using the correct autotools],
+                 [ac_cv_use_correct_autotools],
+                 [ac_cv_use_correct_autotools=check])
 
-  # Check whether autoconf is the correct version
-  correct_version='2.59'
-  grep_version=`echo  $correct_version | sed -e 's/\\./\\\\\\./g'`
-  AC_MSG_CHECKING([whether we are using the correct version ($correct_version) of autoconf])
-  autoconf --version > confauto.out 2>&1
-  if $EGREP $grep_version confauto.out >/dev/null 2>&1; then
-    AC_MSG_RESULT([yes])
-  else
+  if test $ac_cv_use_correct_autotools = check; then
+    ac_cv_use_correct_autotools=yes
+    # Check if we have autoconf
+    AC_CHECK_PROG([have_autoconf],[autoconf],[yes],[no])
+    if test $have_autoconf = no; then
+      AC_MSG_ERROR([You specified you want to use maintainer mode, but I cannot find autoconf in your path.])
+    fi
+
+    # Check whether autoconf is the correct version
+    correct_version='2.59'
+    grep_version=`echo  $correct_version | sed -e 's/\\./\\\\\\./g'`
+    AC_MSG_CHECKING([whether we are using the correct version ($correct_version) of autoconf])
+    autoconf --version > confauto.out 2>&1
+    if $EGREP $grep_version confauto.out >/dev/null 2>&1; then
+      AC_MSG_RESULT([yes])
+    else
+      rm -f confauto.out
+      AC_MSG_RESULT([no])
+      AC_MSG_ERROR([You don't have the correct version of autoconf as the first one in your path.])
+    fi
     rm -f confauto.out
-    AC_MSG_RESULT([no])
-    AC_MSG_ERROR([You don't have the correct version of autoconf as the first one in your path.])
-  fi
-  rm -f confauto.out
 
-  # Check if the executable autoconf is picked up from the correct location
-  AC_MSG_CHECKING([whether autoconf is coming from the correct location])
-  autoconf_dir=`which autoconf | sed -e 's=/autoconf=='`
-  autoconf_dir=`cd $autoconf_dir; pwd`
-  if test x$AUTOTOOLS_DIR = x; then
-    want_dir=$AUTOTOOLS_DFLT/bin
-  else
-    want_dir=$AUTOTOOLS_DIR/bin
-  fi
-  if test $autoconf_dir = `cd $want_dir; pwd`; then
-    AC_MSG_RESULT([yes])
-  else
-    rm -f confauto.out
-    AC_MSG_RESULT([no])
-    AC_MSG_ERROR([The autoconf executable should be picked up from \$AUTOTOOLS_DFLT/bin or \$AUTOTOOLS_DIR/bin.])
-  fi
+    # Check if the executable autoconf is picked up from the correct location
+    AC_MSG_CHECKING([whether autoconf is coming from the correct location])
+    autoconf_dir=`which autoconf | sed -e 's=/autoconf=='`
+    autoconf_dir=`cd $autoconf_dir; pwd`
+    if test x$AUTOTOOLS_DIR = x; then
+      want_dir=$AUTOTOOLS_DFLT/bin
+    else
+      want_dir=$AUTOTOOLS_DIR/bin
+    fi
+    if test $autoconf_dir = `cd $want_dir; pwd`; then
+      AC_MSG_RESULT([yes])
+    else
+      rm -f confauto.out
+      AC_MSG_RESULT([no])
+      AC_MSG_ERROR([The autoconf executable should be picked up from \$AUTOTOOLS_DFLT/bin or \$AUTOTOOLS_DIR/bin.])
+    fi
 
-  # Check if we have automake
-  AC_CHECK_PROG([have_automake],[automake],[yes],[no])
-  if test $have_automake = no; then
-    AC_MSG_ERROR([You specified you want to use maintainer mode, but I cannot find automake in your path.])
-  fi
+    # Check if we have automake
+    AC_CHECK_PROG([have_automake],[automake],[yes],[no])
+    if test $have_automake = no; then
+      AC_MSG_ERROR([You specified you want to use maintainer mode, but I cannot find automake in your path.])
+    fi
   
-  # Check whether automake is the correct version
-  correct_version='1.9.6'
-  grep_version=`echo  $correct_version | sed -e 's/\\./\\\\\\./g'`
-  AC_MSG_CHECKING([whether we are using the correct version ($correct_version) of automake])
-  automake --version > confauto.out 2>&1
-  if $EGREP $grep_version confauto.out >/dev/null 2>&1; then
-    AC_MSG_RESULT([yes])
-  else
+    # Check whether automake is the correct version
+    correct_version='1.9.6'
+    grep_version=`echo  $correct_version | sed -e 's/\\./\\\\\\./g'`
+    AC_MSG_CHECKING([whether we are using the correct version ($correct_version) of automake])
+    automake --version > confauto.out 2>&1
+    if $EGREP $grep_version confauto.out >/dev/null 2>&1; then
+      AC_MSG_RESULT([yes])
+    else
+      rm -f confauto.out
+      AC_MSG_RESULT([no])
+      AC_MSG_ERROR([You don't have the correct version of automake as the first one in your path.])
+    fi
     rm -f confauto.out
-    AC_MSG_RESULT([no])
-    AC_MSG_ERROR([You don't have the correct version of automake as the first one in your path.])
-  fi
-  rm -f confauto.out
 
-  # Check if the executable automake is picked up from the correct location
-  AC_MSG_CHECKING([whether automake is coming from the correct location])
-  automake_dir=`which automake | sed -e 's=/automake=='`
-  automake_dir=`cd $automake_dir; pwd`
-  if test x$AUTOTOOLS_DIR = x; then
-    want_dir=$AUTOTOOLS_DFLT/bin
-  else
-    want_dir=$AUTOTOOLS_DIR/bin
-  fi
-  if test $automake_dir = `cd $want_dir; pwd`; then
-    AC_MSG_RESULT([yes])
-  else
-    rm -f confauto.out
-    AC_MSG_RESULT([no])
-    AC_MSG_ERROR([The automake executable should be picked up from \$AUTOTOOLS_DFLT/bin or \$AUTOTOOLS_DIR/bin.])
+    # Check if the executable automake is picked up from the correct location
+    AC_MSG_CHECKING([whether automake is coming from the correct location])
+    automake_dir=`which automake | sed -e 's=/automake=='`
+    automake_dir=`cd $automake_dir; pwd`
+    if test x$AUTOTOOLS_DIR = x; then
+      want_dir=$AUTOTOOLS_DFLT/bin
+    else
+      want_dir=$AUTOTOOLS_DIR/bin
+    fi
+    if test $automake_dir = `cd $want_dir; pwd`; then
+      AC_MSG_RESULT([yes])
+    else
+      rm -f confauto.out
+      AC_MSG_RESULT([no])
+      AC_MSG_ERROR([The automake executable should be picked up from \$AUTOTOOLS_DFLT/bin or \$AUTOTOOLS_DIR/bin.])
+    fi
+
+    # Check if this is the correct version of libtool (with escaped dots)
+    if test x$AUTOTOOLS_DIR = x; then
+      want_dir=$AUTOTOOLS_DFLT/share
+    else
+      want_dir=$AUTOTOOLS_DIR/share
+    fi
+    correct_version='1.5.22'
+    grep_version=`echo  $correct_version | sed -e 's/\\./\\\\\\./g'`
+    AC_CHECK_FILE([$want_dir/libtool/ltmain.sh],
+	          [have_ltmain=yes],
+                  [have_ltmain=no])
+    AC_MSG_CHECKING([whether we are using the correct version ($correct_version) of libtool.])
+    if test $have_ltmain = yes; then
+    if $EGREP $grep_version $want_dir/libtool/ltmain.sh >/dev/null 2>&1; then
+        AC_MSG_RESULT([yes])
+      else
+        AC_MSG_RESULT([no])
+        AC_MSG_ERROR([You don't have the correct version of libtool.])
+      fi
+    else
+      AC_MSG_RESULT([no])
+      AC_MSG_ERROR([I cannot find the ltmain.sh file.])
+    fi
   fi
 
   # Check if we can find the libtool file
@@ -1321,25 +1352,6 @@ if test "$enable_maintainer_mode" = yes; then
                 [LIBTOOLM4="$want_dir/aclocal/libtool.m4"],
                 [AC_MSG_ERROR([I cannot find the libtool.m4 file.])])
 
-  # Check if this is the correct version of libtool (with escaped dots)
-  correct_version='1.5.22'
-  grep_version=`echo  $correct_version | sed -e 's/\\./\\\\\\./g'`
-  AC_CHECK_FILE([$want_dir/libtool/ltmain.sh],
-	        [have_ltmain=yes],
-                [have_ltmain=no])
-  AC_MSG_CHECKING([whether we are using the correct version ($correct_version) of libtool.])
-  if test $have_ltmain = yes; then
-    if $EGREP $grep_version $want_dir/libtool/ltmain.sh >/dev/null 2>&1; then
-      AC_MSG_RESULT([yes])
-    else
-      AC_MSG_RESULT([no])
-      AC_MSG_ERROR([You don't have the correct version of libtool.])
-    fi
-  else
-    AC_MSG_RESULT([no])
-    AC_MSG_ERROR([I cannot find the ltmain.sh file.])
-  fi  
-
   # Check if we have an Externals file
   if test -r $srcdir/Externals; then
     coin_have_externals=yes
@@ -1347,15 +1359,17 @@ if test "$enable_maintainer_mode" = yes; then
   # Check if subversion is installed and understands https
   AC_CHECK_PROG([have_svn],[svn],[yes],[no])
   if test x$have_svn = xyes; then
-    AC_MSG_CHECKING([svn understands https])
-    svn --version > confauto.out 2>&1
-    if $EGREP https confauto.out >/dev/null 2>&1; then
-      AC_MSG_RESULT(yes)
-    else
-      AC_MSG_RESULT(no)
-      have_svn=no
-    fi
-    rm -f confauto.out
+    AC_CACHE_CHECK([whether svn understands https],
+                   [ac_cv_svn_understands_https],
+                   [svn --version > confauto.out 2>&1
+                    if $EGREP https confauto.out >/dev/null 2>&1; then
+                      ac_cv_svn_understands_https=yes
+                    else
+                      ac_cv_svn_understands_https=no
+                      have_svn=no
+                      ac_cv_prog_have_svn=no
+                    fi
+                    rm -f confauto.out])
   fi
 
   # Find the location of the BuildTools directory
@@ -1404,6 +1418,32 @@ AM_CONDITIONAL(HAVE_EXTERNALS,
 ]) # AC_COIN_INIT_AUTOMAKE
 
 ###########################################################################
+#                          COIN_CREATE_LIBTOOL                            #
+###########################################################################
+
+# This does all the tests necessary to create the libtool script in the
+# package base directory.  If this is used, then the COIN_INIT_AUTO_TOOLS
+# test in the subdirectories will be able to skip the libtool tests and
+# just use the one in the package base directory.
+
+m4_define([AC_COIN_CREATE_LIBTOOL],
+[# Check if user wants to produce debugging code
+AC_COIN_DEBUG_COMPILE
+
+# Get the name of the C compiler and appropriate compiler options
+AC_COIN_PROG_CC
+
+# Get the name of the C++ compiler and appropriate compiler options
+AC_COIN_PROG_CXX
+
+# Get the name of the Fortran compiler and appropriate compiler options
+AC_COIN_PROG_F77
+
+# Initialize automake and libtool
+AC_COIN_INIT_AUTO_TOOLS
+])
+
+###########################################################################
 #                         COIN_INIT_AUTO_TOOLS                            #
 ###########################################################################
 
@@ -1442,22 +1482,98 @@ fi
 AC_DISABLE_STATIC
 ])
 
-AC_DEFUN([AC_COIN_INIT_AUTO_TOOLS],
-[AC_BEFORE([AC_COIN_PROG_CXX],[$0])
+m4_define([AC_COIN_INIT_AUTO_TOOLS],
+[{AC_BEFORE([AC_COIN_PROG_CXX],[$0])
 AC_BEFORE([AC_COIN_PROG_CC],[$0])
 AC_BEFORE([AC_COIN_PROG_F77],[$0])
-AC_REQUIRE([AC_COIN_DISABLE_STATIC])
+
+# START
+AC_COIN_DISABLE_STATIC
 
 # Initialize automake
 AC_COIN_INIT_AUTOMAKE
 
-# Stuff for libtool
-AC_COIN_PROG_LIBTOOL
+unset ac_cv_file__________libtool
+unset ac_cv_file_______libtool
+unset ac_cv_file____libtool
+
+LIBTOOL=
+AC_CHECK_FILE([../libtool],
+              [coin_config_dir=..
+               LIBTOOL='$(SHELL) $(top_builddir)/../libtool'])
+if test "x$LIBTOOL" = x; then
+  AC_CHECK_FILE([../../libtool],
+                [coin_config_dir=../..
+                 LIBTOOL='$(SHELL) $(top_builddir)/../../libtool'])
+fi
+if test "x$LIBTOOL" = x; then
+  AC_CHECK_FILE([../../../libtool],
+                [coin_config_dir=../../..
+                 LIBTOOL='$(SHELL) $(top_builddir)/../../../libtool'])
+fi
+
+if test "x$LIBTOOL" = x; then
+
+  # Stuff for libtool
+  AC_COIN_PROG_LIBTOOL
+
+else
+
+  AC_MSG_NOTICE([Using libtool script in directory $coin_config_dir])
+  # get all missing information from the config.log file 
+
+  # output variables and defines
+  as_save_IFS=$IFS
+  IFS='
+'
+  for oneline in `cat $coin_config_dir/config.status`; do
+    case "$oneline" in
+         # First some automake conditionals
+      s,@am__fastdep* | s,@AR@* | s,@CPP@*  | s,@CPPFLAGS@* | s,@CXXCPP@*  | \
+      s,@RANLIB@* | s,@STRIP@* | s,@ac_ct_AR@* | s,@ac_ct_RANLIB@* | \
+      s,@ac_ct_STRIP@* | s,@host* | s,@LN_S@* ) 
+        command=`echo $oneline | sed -e 's/^s,@//' -e 's/@,/="/' -e 's/,;t t/"/'`
+#        echo "$command"
+        eval "$command"
+        ;;
+      s,@DEFS@* )
+        command=`echo $oneline | sed -e 's/^s,@DEFS@,/defsline="/' -e 's/,;t t/"/'`
+#        echo "$command"
+        eval "$command"
+        ;;
+    esac
+  done
+  IFS=$as_save_IFS
+
+  # And some defines (assuming here that the packages base dir
+  # doesn't have a config.h file
+  for word in $defsline; do
+#    echo word $word 
+    case $word in
+      -DHAVE_@<:@A-Z_@:>@*_H=1 | -DSTDC_HEADERS=1 )
+        i=`echo $word | sed -e 's/-D/#define /' -e 's/=/ /'`
+#        echo dd $i
+        echo $i >>confdefs.h
+        ;;
+    esac
+  done
+fi
+
+# ToDo
+# For now, don't use the -no-undefined flag, since the Makefiles are
+# not yet set up that way.  But we need to fix this, when we want
+# to comile DLLs under Windows.
+LT_LDFLAGS=
+AC_SUBST(LT_LDFLAGS)
 
 # set RPATH_FLAGS to the compiler link flags required to hardcode location
 # of the shared objects
 AC_COIN_RPATH_FLAGS($abs_lib_dir)
-]) # AC_COIN_INIT_AUTO_TOOLS
+
+
+#END
+}])
+
 
 ###########################################################################
 #                           COIN_PROG_LIBTOOL                             #
@@ -1466,12 +1582,22 @@ AC_COIN_RPATH_FLAGS($abs_lib_dir)
 # Setup the libtool stuff together with any modifications to make it
 # work on additional platforms
 
+AC_DEFUN([AC_COIN_LIBTOOL_WRAPPER],
+[AC_BEFORE([AC_COIN_BLA],[$0])
+AC_PROG_LIBTOOL])
+
+AC_DEFUN([AC_COIN_BLA],[echo bla])
+
 AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 [AC_REQUIRE([AC_COIN_DLFCN_H])
 
-# We check for this header here in a non-standard way to avoid warning
-# messages
-AC_PROG_LIBTOOL
+# NEW: If libtool exists in the directory higher up, we use that one
+#      instead of creating a new one
+
+if test "x$LIBTOOL" = x; then
+  # We check for this header here in a non-standard way to avoid warning
+  # messages
+  AC_PROG_LIBTOOL
 
 # Fix bugs in libtool script for Windows native compilation:
 # - cygpath is not correctly quoted in fix_srcfile_path
@@ -1491,52 +1617,47 @@ AC_PROG_LIBTOOL
 # The following was a hack for chaniing @BACKSLASH to \
 #          -e 'sYcompile_command=`\$echo "X\$compile_command" | \$Xsed -e '"'"'s%@OUTPUT@%'"'"'"\$output"'"'"'%g'"'"'`Ycompile_command=`\$echo "X\$compile_command" | \$Xsed -e '"'"'s%@OUTPUT@%'"'"'"\$output"'"'"'%g'"'"' | \$Xsed -e '"'"'s%@BACKSLASH@%\\\\\\\\\\\\\\\\%g'"'"'`Y' \
 
-# Correct cygpath for minGW (ToDo!)
-case $build in
-  *-mingw*)
-    CYGPATH_W=echo
-    ;;
-esac
-
-case $build in
-  *-cygwin* | *-mingw*)
-  case "$CXX" in
-    cl* | */cl*) 
-      AC_MSG_NOTICE(Applying patches to libtool for cl compiler)
-      sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
-          -e 's|fix_srcfile_path=\"\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
-          -e 's%compile_deplibs=\"\$dir/\$old_library \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$old_library | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
-          -e 's%compile_deplibs=\"\$dir/\$linklib \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$linklib | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
-	  -e 's%lib /OUT:%lib -OUT:%' \
-	  -e "s%cygpath -w%$CYGPATH_W%" \
-	  -e 's%$AR x \\$f_ex_an_ar_oldlib%bla=\\`lib -nologo -list \\$f_ex_an_ar_oldlib | xargs echo\\`; echo \\$bla; for i in \\$bla; do lib -nologo -extract:\\$i \\$f_ex_an_ar_oldlib; done%' \
-	  -e 's/$AR t/lib -nologo -list/' \
-	  -e 's%f_ex_an_ar_oldlib="\($?*1*\)"%f_ex_an_ar_oldlib='\`"$CYGPATH_W"' \1`%' \ 
-	  -e  's%^archive_cmds=.*%archive_cmds="\\$CC -o \\$lib \\$libobjs \\$compiler_flags \\\\\\`echo \\\\\\"\\$deplibs\\\\\\" | \\$SED -e '"\'"'s/ -lc\\$//'"\'"'\\\\\\` -link -dll~linknames="%' \
-      libtool > conftest.bla
-
-      mv conftest.bla libtool
-      chmod 755 libtool
-      ;;
-    *)
-      AC_MSG_NOTICE(Applying patches to libtool for GNU compiler)
-      sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
-          -e 's|"lib /OUT:\\$oldlib\\$oldobjs\\$old_deplibs"|"\\$AR \\$AR_FLAGS \\$oldlib\\$oldobjs\\$old_deplibs~\\$RANLIB \\$oldlib"|' \
-          -e 's|libext="lib"|libext="a"|' \
-      libtool > conftest.bla
-
-      mv conftest.bla libtool
-      chmod 755 libtool
+  # Correct cygpath for minGW (ToDo!)
+  case $build in
+    *-mingw*)
+      CYGPATH_W=echo
       ;;
   esac
-esac
 
-# ToDo
-# For now, don't use the -no-undefined flag, since the Makefiles are
-# not yet set up that way.  But we need to fix this, when we want
-# to comile DLLs under Windows.
-LT_LDFLAGS=
-AC_SUBST(LT_LDFLAGS)
+  case $build in
+    *-cygwin* | *-mingw*)
+    case "$CXX" in
+      cl* | */cl*) 
+        AC_MSG_NOTICE(Applying patches to libtool for cl compiler)
+        sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
+            -e 's|fix_srcfile_path=\"\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
+            -e 's%compile_deplibs=\"\$dir/\$old_library \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$old_library | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
+            -e 's%compile_deplibs=\"\$dir/\$linklib \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$linklib | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
+	    -e 's%lib /OUT:%lib -OUT:%' \
+	    -e "s%cygpath -w%$CYGPATH_W%" \
+  	    -e 's%$AR x \\$f_ex_an_ar_oldlib%bla=\\`lib -nologo -list \\$f_ex_an_ar_oldlib | xargs echo\\`; echo \\$bla; for i in \\$bla; do lib -nologo -extract:\\$i \\$f_ex_an_ar_oldlib; done%' \
+	    -e 's/$AR t/lib -nologo -list/' \
+	    -e 's%f_ex_an_ar_oldlib="\($?*1*\)"%f_ex_an_ar_oldlib='\`"$CYGPATH_W"' \1`%' \ 
+	    -e  's%^archive_cmds=.*%archive_cmds="\\$CC -o \\$lib \\$libobjs \\$compiler_flags \\\\\\`echo \\\\\\"\\$deplibs\\\\\\" | \\$SED -e '"\'"'s/ -lc\\$//'"\'"'\\\\\\` -link -dll~linknames="%' \
+        libtool > conftest.bla
+
+        mv conftest.bla libtool
+        chmod 755 libtool
+        ;;
+      *)
+        AC_MSG_NOTICE(Applying patches to libtool for GNU compiler)
+        sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
+            -e 's|"lib /OUT:\\$oldlib\\$oldobjs\\$old_deplibs"|"\\$AR \\$AR_FLAGS \\$oldlib\\$oldobjs\\$old_deplibs~\\$RANLIB \\$oldlib"|' \
+            -e 's|libext="lib"|libext="a"|' \
+        libtool > conftest.bla
+
+        mv conftest.bla libtool
+        chmod 755 libtool
+        ;;
+    esac
+  esac
+fi
+
 ]) # AC_COIN_PROG_LIBTOOL
 
 # This is a trick to force the check for the dlfcn header to be done before
@@ -2126,7 +2247,7 @@ AM_CONDITIONAL(COIN_HAS_ASL, test $coin_has_asl = yes)
 AC_DEFUN([AC_COIN_TRY_FLINK],
 [case $ac_ext in
   f)
-    AC_TRY_LINK([],[      call $1],[$2],[$3])
+    AC_TRY_LINK(,[      call $1],[$2],[$3])
     ;;
   c)
     AC_F77_FUNC($1,cfunc$1)
