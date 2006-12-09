@@ -1517,6 +1517,10 @@ if test "x$LIBTOOL" = x; then
   # Stuff for libtool
   AC_COIN_PROG_LIBTOOL
 
+  # set RPATH_FLAGS to the compiler link flags required to hardcode location
+  # of the shared objects
+  AC_COIN_RPATH_FLAGS($abs_lib_dir)
+
 else
 
   AC_MSG_NOTICE([Using libtool script in directory $coin_config_dir])
@@ -1531,7 +1535,7 @@ else
          # First some automake conditionals
       s,@am__fastdep* | s,@AR@* | s,@CPP@*  | s,@CPPFLAGS@* | s,@CXXCPP@*  | \
       s,@RANLIB@* | s,@STRIP@* | s,@ac_ct_AR@* | s,@ac_ct_RANLIB@* | \
-      s,@ac_ct_STRIP@* | s,@host* | s,@LN_S@* ) 
+      s,@ac_ct_STRIP@* | s,@host* | s,@LN_S@* | s,@RPATH_FLAGS@* ) 
         command=`echo $oneline | sed -e 's/^s,@//' -e 's/@,/="/' -e 's/,;t t/"/'`
 #        echo "$command"
         eval "$command"
@@ -1565,11 +1569,6 @@ fi
 # to comile DLLs under Windows.
 LT_LDFLAGS=
 AC_SUBST(LT_LDFLAGS)
-
-# set RPATH_FLAGS to the compiler link flags required to hardcode location
-# of the shared objects
-AC_COIN_RPATH_FLAGS($abs_lib_dir)
-
 
 #END
 }])
