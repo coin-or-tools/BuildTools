@@ -1427,7 +1427,9 @@ AM_CONDITIONAL(HAVE_EXTERNALS,
 # just use the one in the package base directory.
 
 m4_define([AC_COIN_CREATE_LIBTOOL],
-[# Check if user wants to produce debugging code
+[AC_CANONICAL_BUILD
+
+# Check if user wants to produce debugging code
 AC_COIN_DEBUG_COMPILE
 
 # Get the name of the C compiler and appropriate compiler options
