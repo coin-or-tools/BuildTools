@@ -2142,12 +2142,14 @@ if test $m4_tolower(coin_has_$2) = true; then
                     coin_save_LIBS="$LIBS"
                     LIBS="$$2LIB $ADDLIBS"
 		    AC_MSG_CHECKING([whether symbol $4 is available with $2])
+                    AC_LANG_PUSH(C)
 # ToDo find out what to do about extern "C"
 #                    AC_TRY_LINK([extern "C" {void $4();}],[$4()],
                     AC_TRY_LINK([void $4();],[$4()],
                                 [AC_MSG_RESULT(yes)],
 			        [AC_MSG_RESULT(no)
                                  AC_MSG_ERROR([Cannot find symbol $4 with $2])])
+                    AC_LANG_POP(C)
                     LIBS="$coin_save_LIBS"
                   fi])
   ADDLIBS="$$2LIB $ADDLIBS"
@@ -2222,10 +2224,12 @@ elif test "$use_asldir" != no; then
 fi
 
 if test "$use_asldir" != no; then
+  AC_LANG_PUSH(C)
   AC_CHECK_LIB(dl,[dlopen],[ASLLIB="$ASLLIB -ldl"],[])
   coin_has_asl=yes
   AC_DEFINE([COIN_HAS_ASL],[1],
             [If defined, the Ampl Solver Library is available.])
+  AC_LANG_POP(C)
 else
   coin_has_asl=no
 fi
