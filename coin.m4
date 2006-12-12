@@ -500,7 +500,7 @@ if test x"$CXXFLAGS" = x; then
           cl* | */cl*)
             coin_opt_cxxflags='-O2'
             coin_add_cxxflags='-nologo -EHsc -GR -MT'
-            coin_dbg_cxxflags='-Yd'
+            coin_dbg_cxxflags='-MTd'
             ;;
         esac
         ;;
@@ -820,7 +820,7 @@ if test x"$CFLAGS" = x; then
           cl* | */cl*)
             coin_opt_cflags='-O2'
             coin_add_cflags='-nologo'
-            coin_dbg_cflags='-Yd'
+            coin_dbg_cflags='-MTd'
             ;;
         esac
         ;;
