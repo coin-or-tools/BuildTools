@@ -907,12 +907,6 @@ else
   fi
 fi
 
-# Check if user wants to have additional CFLAGS options
-AC_ARG_VAR(ADD_CFLAGS,[Additional C compiler options])
-if test x"$ADD_CFLAGS" != x; then
-  CFLAGS="$CFLAGS $ADD_CFLAGS"
-fi
-
 # Try if CFLAGS works
 save_CFLAGS="$CFLAGS"
 AC_TRY_LINK([],[int i=0; i++;],[],[CFLAGS=])
