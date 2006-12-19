@@ -497,7 +497,7 @@ if test x"$CXXFLAGS" = x; then
     case $build in
       *-cygwin* | *-mingw*)
         case "$CXX" in
-          cl* | */cl*)
+          cl* | */cl* | CL* | */CL*)
             coin_opt_cxxflags='-O2'
             coin_add_cxxflags='-nologo -EHsc -GR -MT'
             coin_dbg_cxxflags='-MTd'
@@ -608,7 +608,7 @@ if test x"$MPICXX" = x; then :; else
 fi
 
 case "$CXX" in
-  cl* | */cl*)
+  cl* | */cl* | CL* | */CL* )
     AC_COIN_MINGW_LD_FIX
     ;;
 esac
@@ -642,7 +642,7 @@ if test -z "$CXXLIBS"; then
     case $build in
      *-mingw32 | *-cygwin* )
       case "$CXX" in
-      cl* | */cl*)
+      cl* | */cl* | CL* | */CL*)
         CXXLIBS=nothing;;
       esac;;
      *-linux-*)
@@ -736,7 +736,7 @@ AC_LANG_PUSH(C)
 # compiler, if the C++ is set, but the C compiler isn't (only for CXX=cl)
 if test x"$CXX" != x; then
   case "$CXX" in
-    cl* | */cl*)
+    cl* | */cl* | CL* | */CL*)
       if test x"$CC" = x; then
         CC="$CXX"
         AC_MSG_WARN([C++ compiler name provided as $CXX, but CC is unset. Setting CC to $CXX])
@@ -817,7 +817,7 @@ if test x"$CFLAGS" = x; then
     case $build in
       *-cygwin* | *-mingw*)
         case "$CC" in
-          cl* | */cl*)
+          cl* | */cl* | CL* | */CL*)
             coin_opt_cflags='-O2'
             coin_add_cflags='-nologo'
             coin_dbg_cflags='-MTd'
@@ -929,7 +929,7 @@ fi
 
 # Correct ADDLIBS initialization if we are using the MS compiler
 case "$CC" in
-  cl* | */cl*)
+  cl* | */cl* | CL* | */CL*)
     ADDLIBS=
     AC_COIN_MINGW_LD_FIX
     ;;
@@ -1622,7 +1622,7 @@ if test "x$LIBTOOL" = x; then
   case $build in
     *-cygwin* | *-mingw*)
     case "$CXX" in
-      cl* | */cl*) 
+      cl* | */cl* | CL* | */CL*) 
         AC_MSG_NOTICE(Applying patches to libtool for cl compiler)
         sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
             -e 's|fix_srcfile_path=\"\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
@@ -1732,7 +1732,7 @@ fi
 # library extension
 AC_SUBST(LIBEXT)
 case "$CC" in
-  cl* | */cl*)
+  cl* | */cl* | CL* | */CL*)
        LIBEXT=lib ;;
     *) LIBEXT=a ;;
 esac
@@ -1750,7 +1750,7 @@ if test x"$coin_vpath_link_files" = x; then : ; else
     lnkcmd=cp
   fi
   case "$CC" in
-    cl* | */cl*)
+    cl* | */cl* | CL* | */CL*)
       lnkcmd=cp ;;
   esac
   if test "$lnkcmd" = cp; then
@@ -1982,7 +1982,7 @@ if test $coin_vpath_config = yes; then
     lnkcmd=cp
   fi
   case "$CC" in
-    cl* | */cl*)
+    cl* | */cl* | CL* | */CL*)
       lnkcmd=cp ;;
   esac
   if test "$lnkcmd" = cp; then
@@ -2176,7 +2176,7 @@ coin_aslsrcdir=$srcdir/$coin_aslobjdir
 
 # Determine the name of the ASL library
 case "$CXX" in
-  cl* | */cl*)
+  cl* | */cl* | CL* | */CL*)
     ampllib=amplsolv.lib ;;
   *)
     ampllib=amplsolver.a ;;
