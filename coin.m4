@@ -1382,11 +1382,11 @@ if test "$enable_maintainer_mode" = yes; then
     if test -r $srcdir/../BuildTools/coin.m4; then
       BUILDTOOLSDIR=$srcdir/../BuildTools
     else
-#      if test -r $srcdir/../../BuildTools/coin.m4; then
-#        BUILDTOOLSDIR=$srcdir/../../BuildTools
-#      else
+      if test -r $srcdir/../../BuildTools/coin.m4; then
+        BUILDTOOLSDIR=$srcdir/../../BuildTools
+      else
         AC_MSG_ERROR(Cannot find the BuildTools directory)
-#      fi
+      fi
     fi
   fi
   AC_SUBST(BUILDTOOLSDIR)
@@ -1510,11 +1510,11 @@ if test "x$LIBTOOL" = x; then
                 [coin_config_dir=../..
                  LIBTOOL='$(SHELL) $(top_builddir)/../../libtool'])
 fi
-if test "x$LIBTOOL" = x; then
-  AC_CHECK_FILE([../../../libtool],
-                [coin_config_dir=../../..
-                 LIBTOOL='$(SHELL) $(top_builddir)/../../../libtool'])
-fi
+#if test "x$LIBTOOL" = x; then
+#  AC_CHECK_FILE([../../../libtool],
+#                [coin_config_dir=../../..
+#                 LIBTOOL='$(SHELL) $(top_builddir)/../../../libtool'])
+#fi
 
 if test "x$LIBTOOL" = x; then
 
