@@ -230,12 +230,20 @@ if test x"$COIN_SKIP_PROJECTS" != x; then
 fi
 if test $coin_skip = yes; then
   AC_MSG_RESULT(skipping)
-elif test -r $srcdir/$2/$3; then
-  coin_subdirs="$coin_subdirs $2"
-  AC_MSG_RESULT(yes)
-  AC_CONFIG_SUBDIRS($2)
 else
-  AC_MSG_RESULT(no)
+  coin_tmp=`echo $srcdir/$2/$3`
+  # There is probably a more elegant way to get the first thing out here...
+  for i in $coin_tmp; do
+    coin_tmp2=$i
+    #break 1
+  done
+  if test -r $coin_tmp2; then
+    coin_subdirs="$coin_subdirs $2"
+    AC_MSG_RESULT(yes)
+    AC_CONFIG_SUBDIRS($2)
+  else
+    AC_MSG_RESULT(no)
+  fi
 fi
 ]) # AC_COIN_THIRDPARTY_SUBDIRS
 
@@ -1374,11 +1382,11 @@ if test "$enable_maintainer_mode" = yes; then
     if test -r $srcdir/../BuildTools/coin.m4; then
       BUILDTOOLSDIR=$srcdir/../BuildTools
     else
-      if test -r $srcdir/../../BuildTools/coin.m4; then
-        BUILDTOOLSDIR=$srcdir/../../BuildTools
-      else
+#      if test -r $srcdir/../../BuildTools/coin.m4; then
+#        BUILDTOOLSDIR=$srcdir/../../BuildTools
+#      else
         AC_MSG_ERROR(Cannot find the BuildTools directory)
-      fi
+#      fi
     fi
   fi
   AC_SUBST(BUILDTOOLSDIR)
