@@ -777,7 +777,7 @@ if test -z "$CC" ; then
 fi
 # Autoconf incorrectly concludes that cl recognises -g. It doesn't.
 case "$CC" in
-  cl* | */cl*)
+  cl* | */cl* | CL* | */CL* )
     if test "$ac_cv_prog_cc_g" = yes ; then
       ac_cv_prog_cc_g=no
       AC_MSG_NOTICE([Overruling autoconf; cl does not recognise -g.])
