@@ -1012,7 +1012,7 @@ if test x"$FFLAGS" = x; then
     case $build in
       *-cygwin* | *-mingw*)
         case $F77 in
-          ifort* | */ifort*)
+          ifort* | */ifort* | IFORT* | */IFORT* )
             coin_opt_fflags='-O3'
             coin_add_fflags='-nologo -MT'
             coin_dbg_fflags='-debug'
@@ -1160,7 +1160,7 @@ case $build in
 # The following is a fix to define FLIBS for ifort on Windows
    *-cygwin* | *-mingw*)
      case "$F77" in
-       ifort* | */ifort*)
+       ifort* | */ifort* | IFORT* | */IFORT* )
            FLIBS="-link libifcorert.lib $LIBS /NODEFAULTLIB:libc.lib";;
      esac;;
    *-hp-*)
@@ -1594,73 +1594,53 @@ AC_DEFUN([AC_COIN_BLA],[echo bla])
 AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 [AC_REQUIRE([AC_COIN_DLFCN_H])
 
-# NEW: If libtool exists in the directory higher up, we use that one
-#      instead of creating a new one
-
-if test "x$LIBTOOL" = x; then
-  # We check for this header here in a non-standard way to avoid warning
-  # messages
-  AC_PROG_LIBTOOL
+# We check for this header here in a non-standard way to avoid warning
+# messages
+AC_PROG_LIBTOOL
 
 # Fix bugs in libtool script for Windows native compilation:
 # - cygpath is not correctly quoted in fix_srcfile_path
 # - paths generated for .lib files is not run through cygpath -w
 
+# Correct cygpath for minGW (ToDo!)
+case $build in
+  *-mingw*)
+    CYGPATH_W=echo
+    ;;
+esac
 
-# - lib includes subdirectory information; we want to replace
-#
-# old_archive_cmds="lib /OUT:\$oldlib\$oldobjs\$old_deplibs"
-#
-# by
-#
-# old_archive_cmds="echo \$oldlib | grep .libs >/dev/null; if test \$? = 0; then cd .libs; lib /OUT:\`echo \$oldlib\$oldobjs\$old_deplibs | sed -e s@\.libs/@@g\`; cd .. ; else lib /OUT:\$oldlib\$oldobjs\$old_deplibs ; fi"
-#
-#          -e 's%old_archive_cmds="lib /OUT:\\\$oldlib\\\$oldobjs\\\$old_deplibs"%old_archive_cmds="echo \\\$oldlib \| grep .libs >/dev/null; if test \\\$? = 0; then cd .libs; lib /OUT:\\\`echo \\\$oldlib\\\$oldobjs\\\$old_deplibs \| sed -e s@\\.libs/@@g\\\`; cd .. ; else lib /OUT:\\\$oldlib\\\$oldobjs\\\$old_deplibs; fi"%' \
+case $build in
+  *-cygwin* | *-mingw*)
+  case "$CXX" in
+    cl* | */cl* | CL* | */CL*) 
+      AC_MSG_NOTICE(Applying patches to libtool for cl compiler)
+      sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
+          -e 's|fix_srcfile_path=\"\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
+          -e 's%compile_deplibs=\"\$dir/\$old_library \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$old_library | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
+          -e 's%compile_deplibs=\"\$dir/\$linklib \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$linklib | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
+          -e 's%lib /OUT:%lib -OUT:%' \
+          -e "s%cygpath -w%$CYGPATH_W%" \
+          -e 's%$AR x \\$f_ex_an_ar_oldlib%bla=\\`lib -nologo -list \\$f_ex_an_ar_oldlib | xargs echo\\`; echo \\$bla; for i in \\$bla; do lib -nologo -extract:\\$i \\$f_ex_an_ar_oldlib; done%' \
+          -e 's/$AR t/lib -nologo -list/' \
+          -e 's%f_ex_an_ar_oldlib="\($?*1*\)"%f_ex_an_ar_oldlib='\`"$CYGPATH_W"' \1`%' \ 
+          -e  's%^archive_cmds=.*%archive_cmds="\\$CC -o \\$lib \\$libobjs \\$compiler_flags \\\\\\`echo \\\\\\"\\$deplibs\\\\\\" | \\$SED -e '"\'"'s/ -lc\\$//'"\'"'\\\\\\` -link -dll~linknames="%' \
+      libtool > conftest.bla
 
-# The following was a hack for chaniing @BACKSLASH to \
-#          -e 'sYcompile_command=`\$echo "X\$compile_command" | \$Xsed -e '"'"'s%@OUTPUT@%'"'"'"\$output"'"'"'%g'"'"'`Ycompile_command=`\$echo "X\$compile_command" | \$Xsed -e '"'"'s%@OUTPUT@%'"'"'"\$output"'"'"'%g'"'"' | \$Xsed -e '"'"'s%@BACKSLASH@%\\\\\\\\\\\\\\\\%g'"'"'`Y' \
+      mv conftest.bla libtool
+      chmod 755 libtool
+      ;;
+    *)
+      AC_MSG_NOTICE(Applying patches to libtool for GNU compiler)
+      sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
+          -e 's|"lib /OUT:\\$oldlib\\$oldobjs\\$old_deplibs"|"\\$AR \\$AR_FLAGS \\$oldlib\\$oldobjs\\$old_deplibs~\\$RANLIB \\$oldlib"|' \
+          -e 's|libext="lib"|libext="a"|' \
+      libtool > conftest.bla
 
-  # Correct cygpath for minGW (ToDo!)
-  case $build in
-    *-mingw*)
-      CYGPATH_W=echo
+      mv conftest.bla libtool
+      chmod 755 libtool
       ;;
   esac
-
-  case $build in
-    *-cygwin* | *-mingw*)
-    case "$CXX" in
-      cl* | */cl* | CL* | */CL*) 
-        AC_MSG_NOTICE(Applying patches to libtool for cl compiler)
-        sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
-            -e 's|fix_srcfile_path=\"\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
-            -e 's%compile_deplibs=\"\$dir/\$old_library \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$old_library | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
-            -e 's%compile_deplibs=\"\$dir/\$linklib \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$linklib | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
-	    -e 's%lib /OUT:%lib -OUT:%' \
-	    -e "s%cygpath -w%$CYGPATH_W%" \
-  	    -e 's%$AR x \\$f_ex_an_ar_oldlib%bla=\\`lib -nologo -list \\$f_ex_an_ar_oldlib | xargs echo\\`; echo \\$bla; for i in \\$bla; do lib -nologo -extract:\\$i \\$f_ex_an_ar_oldlib; done%' \
-	    -e 's/$AR t/lib -nologo -list/' \
-	    -e 's%f_ex_an_ar_oldlib="\($?*1*\)"%f_ex_an_ar_oldlib='\`"$CYGPATH_W"' \1`%' \ 
-	    -e  's%^archive_cmds=.*%archive_cmds="\\$CC -o \\$lib \\$libobjs \\$compiler_flags \\\\\\`echo \\\\\\"\\$deplibs\\\\\\" | \\$SED -e '"\'"'s/ -lc\\$//'"\'"'\\\\\\` -link -dll~linknames="%' \
-        libtool > conftest.bla
-
-        mv conftest.bla libtool
-        chmod 755 libtool
-        ;;
-      *)
-        AC_MSG_NOTICE(Applying patches to libtool for GNU compiler)
-        sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
-            -e 's|"lib /OUT:\\$oldlib\\$oldobjs\\$old_deplibs"|"\\$AR \\$AR_FLAGS \\$oldlib\\$oldobjs\\$old_deplibs~\\$RANLIB \\$oldlib"|' \
-            -e 's|libext="lib"|libext="a"|' \
-        libtool > conftest.bla
-
-        mv conftest.bla libtool
-        chmod 755 libtool
-        ;;
-    esac
-  esac
-fi
-
+esac
 ]) # AC_COIN_PROG_LIBTOOL
 
 # This is a trick to force the check for the dlfcn header to be done before
