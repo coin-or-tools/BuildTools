@@ -1148,7 +1148,7 @@ AC_F77_WRAPPERS
 if test x"$FLIBS" != x; then
   my_flibs=
   for flag in $FLIBS; do
-    case flag in
+    case $flag in
       -lcrt*.o) ;;
              *) my_flibs="$my_flibs $flag" ;;
     esac
