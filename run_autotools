@@ -49,6 +49,9 @@ if $EGREP $grep_version $ltfile >/dev/null 2>&1; then :; else
   echo You are not using the correct verion of libtool
 fi
 
+# Find directories which contain a file configure.ac. When all is said and
+# done, each entry in dirs will be of the form `./path/to/directory'
+
 if test $# != 0; then
   dirs="$*"
 else
@@ -57,9 +60,37 @@ else
   for dir in $pos_dirs; do
     if test -r $dir/configure.ac; then
       dirs="$dirs $dir"
+    else
+      echo "$dir/configure.ac doesn't appear to be a regular file; skipping."
     fi
   done
 fi
+
+# Now compare against the skip entries in COIN_SKIP_PROJECTS. To match the
+# entries we just collected, add `./' to the front of each skip entry.
+
+pos_dirs=$dirs
+if test x${COIN_SKIP_PROJECTS+set} = xset ; then
+  dirs=
+  for dir in $COIN_SKIP_PROJECTS ; do
+    skip_dirs="$skip_dirs ./$dir"
+  done
+  for dir in $pos_dirs ; do
+    skip=0
+    for skipdir in $skip_dirs ; do
+      if test $dir = $skipdir ; then
+	skip=1
+	break
+      fi
+    done
+    if test $skip = 0 ; then
+      dirs="$dirs $dir"
+    else
+      echo "$dir listed in COIN_SKIP_PROJECTS; skipping."
+    fi
+  done
+fi
+
 echo Running autotools in $dirs
 
 currdir=`pwd`
