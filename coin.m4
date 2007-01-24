@@ -380,7 +380,13 @@ COIN_PRJCT=m4_toupper($1)
 ###########################################################################
 
 # This macro is included by any PROG_compiler macro, to set the LD
-# environment variable on MinGW to the correct value (link).
+# environment variable on MinGW to the correct value (link). But note that
+# if we're building in cygwin with -mno-cygwin, we still want ld! If we're
+# building from cygwin with MSVC tools (cl/link), then we do want link and
+# you'd better have your PATH variable straight, else you'll be doing file
+# links instead of code links! Arguably, LDFLAGS should include -mno-cygwin
+# but in practice all linking seems to be handled through the compilers, so
+# CFLAGS and CXXFLAGS suffice.
 
 AC_DEFUN([AC_COIN_MINGW_LD_FIX],
 [case $build in
@@ -389,40 +395,75 @@ AC_DEFUN([AC_COIN_MINGW_LD_FIX],
       LD=link
     fi
     ;;
-esac
+ esac
+ case $enable_doscompile in
+   msvc)
+     if test "x${LD+set}" = xset; then :; else
+       LD=link
+     fi
+     ;;
+ esac
 ])
 
 ###########################################################################
 #                        COIN_ENABLE_DOSCOMPILE                           #
 ###########################################################################
 
-# This macro is included by any PROG_compiler macro, to enable the
-# --enable-doscompile options which is to be used when one wants to
-# compile an executable under Cygwin which also runs directly under
-# does (without requiring Cygwin1.dll).  Essentially, if enabled and
-# the GNU compilers are used, it switches the --mno-cygwin flag on.
+# This macro is invoked by any PROG_compiler macro to establish the
+# --enable-doscompile option, used when one wants to compile an executable
+# under Cygwin which also runs directly under DOS (without requiring
+# Cygwin1.dll). The job of this macro is to make sure the option is correct and
+# to set enable_doscompile. Legal values are mingw, msvc, and no (disabled).
+# mingw: Fake mingw under cygwin, using GCC tools and -mno-cygwin. The most
+#	 important thing here is that preprocess, compile, and link steps
+#	 *all* see -mno-cygwin.
+# msvc:  Assume the presence of cl/link. It's the user's responsibility to
+#        make sure their PATH is correct. In particular, that MSVC link is
+#	 found and not cygwin link (we want to do code linking, not file
+#	 linking).
+# It's the responsibility of individual PROG_compiler macros to ensure that
+# they correctly set the compiler search list and preprocess, compile, and
+# link flags. This is tied to compiler setup because in practice invocations
+# of the preprocessor and linker are made through the compiler.
 
 AC_DEFUN([AC_COIN_ENABLE_DOSCOMPILE],
-[AC_ARG_ENABLE([doscompile],
-[AC_HELP_STRING([--enable-doscompile],
-                [Under Cygwin, compile so that executables run under DOS (default: disabled)])],
-[if test "$enable_doscompile = yes"; then
-  case $build in
-    *-cygwin*) ;;
-    *) AC_MSG_ERROR([--enable-doscompile option makes only sense under Cygwin]) ;;
+[AC_REQUIRE([AC_CANONICAL_BUILD])
+ AC_ARG_ENABLE([doscompile],
+  [AC_HELP_STRING([--enable-doscompile],
+                  [Under Cygwin, compile so that executables run under DOS.
+		   Set to mingw to use gcc/g++/ld with -mno-cygwin.
+		   Set to msvc to use cl/link.
+		   Default when mentioned: mingw.
+		   Default when not mentioned: disabled.])],
+  [if test "$enable_doscompile" != no; then
+     case $build in
+       *-cygwin*) ;;
+       *) AC_MSG_ERROR([--enable-doscompile option makes sense only under Cygwin]) ;;
+     esac
+   fi],
+  [enable_doscompile=no])
+ case "$enable_doscompile" in
+   msvc|mingw|no) ;;
+   yes) enable_doscompile=mingw ;;
+   *) AC_MSG_ERROR([Invalid value $enable_doscompile for --enable-doscompile.
+		    Try configure --help=recursive.])
+      ;;
   esac
-fi],
-[enable_doscompile=no])
+  if test "$enable_doscompile" != no ; then
+    AC_MSG_NOTICE([DOS compile style is: $enable_doscompile])
+  fi
 ])
 
 ###########################################################################
 #                             COIN_PROG_CXX                               #
 ###########################################################################
 
-# Find the compile command by running AC_PROG_CXX (with compiler names
-# for different operating systems) and put it into CXX (unless it was
-# given my the user), and find an appropriate value for CXXFLAGS.  It is
-# possible to provide additional -D flags in the variable CXXDEFS.
+# Find the compile command by running AC_PROG_CXX (with compiler names for
+# different operating systems) and put it into CXX (unless it was given by the
+# user). Then find an appropriate value for CXXFLAGS. If either of CXXFLAGS or
+# PRJCT_CXXFLAGS is defined, that value is used (replace PRJCT with the upper
+# case name of this project).  It is possible to provide additional -D flags
+# in the variable CXXDEFS, and additional compilation flags with ADD_CXXFLAGS.
 
 AC_DEFUN([AC_COIN_PROG_CXX],
 [AC_REQUIRE([AC_COIN_PROG_CC]) #Let's try if that overcomes configuration problem with VC++ 6.0
@@ -437,9 +478,16 @@ AC_ARG_VAR(OPT_CXXFLAGS,[Optimize C++ compiler options])
 coin_has_cxx=yes
 
 save_cxxflags="$CXXFLAGS"
+# For sparc-sun-solaris, promote Studio/Workshop compiler to front of list.
 case $build in
   *-cygwin* | *-mingw*)
-             comps="g++ cl" ;;
+  	     if test "$enable_doscompile" = msvc ; then
+	       comps="cl"
+	     else
+	       comps="g++ cl"
+	     fi ;;
+  sparc-sun-solaris*)
+  	     comps="CC xlC aCC g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC" ;;
   *-darwin*) comps="g++ c++ CC" ;;
           *) comps="xlC aCC CC g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC" ;;
 esac
@@ -447,6 +495,7 @@ esac
 # We delete the cached value, since the test might not have been
 # performed with our choice of compilers earlier
 $as_unset ac_cv_prog_CXX || test "${ac_cv_prog_CXX+set}" != set || { ac_cv_prog_CXX=; export ac_cv_prog_CXX; }
+# AC_MSG_NOTICE([C++ compiler candidates: $comps])
 AC_PROG_CXX([$comps])
 if test -z "$CXX" ; then
   AC_MSG_ERROR([Failed to find a C++ compiler!])
@@ -454,7 +503,7 @@ fi
 
 # Autoconf incorrectly concludes that cl recognises -g. It doesn't.
 case "$CXX" in
-  cl* | */cl*)
+  cl* | */cl* | CL* | */CL* )
     if test "$ac_cv_prog_cxx_g" = yes ; then
       ac_cv_prog_cxx_g=no
       AC_MSG_NOTICE([Overruling autoconf; cl does not recognise -g.])
@@ -488,26 +537,27 @@ if test x"$CXXFLAGS" = x; then
         coin_add_cxxflags="-pipe"
         coin_dbg_cxxflags="-g"
         coin_warn_cxxflags="-pedantic-errors -Wimplicit -Wparentheses -Wreturn-type -Wcast-qual -Wall -Wpointer-arith -Wwrite-strings -Wconversion"
-        if test "$enable_doscompile" = yes; then
-          case $build in
-            *-cygwin*)
-              CXXFLAGS="-mno-cygwin"
-              AC_TRY_LINK(,[int i=0; i++;],
-                          [coin_add_cxxflags="-mno-cygwin $coin_add_cxxflags"])
-              CXXFLAGS=
-              ;;
-          esac
-        fi
+	case $enable_doscompile in
+	  mingw)
+	    CXXFLAGS="-mno-cygwin"
+	    AC_TRY_LINK(,[int i=0; i++;],
+			[coin_add_cxxflags="-mno-cygwin $coin_add_cxxflags"])
+	    CXXFLAGS=
+	    ;;
+	esac
     esac
   fi
+
+# Note that we do not need to cover GCC in the following tests.
 
   if test -z "$coin_opt_cxxflags"; then
     case $build in
       *-cygwin* | *-mingw*)
         case "$CXX" in
           cl* | */cl* | CL* | */CL*)
-            coin_opt_cxxflags='-O2'
-            coin_add_cxxflags='-nologo -EHsc -GR -MT'
+	    # The MT and MTd options are mutually exclusive
+            coin_opt_cxxflags='-MT -O2'
+            coin_add_cxxflags='-nologo -EHsc -GR -wd4996'
             coin_dbg_cxxflags='-MTd'
             ;;
         esac
@@ -555,6 +605,8 @@ if test x"$CXXFLAGS" = x; then
     esac
   fi
 
+# Generic flag settings. If these don't work, add a case above.
+
   if test "$ac_cv_prog_cxx_g" = yes && test -z "$coin_dbg_cxxflags" ; then
     coin_dbg_cxxflags="-g"
   fi
@@ -569,6 +621,8 @@ if test x"$CXXFLAGS" = x; then
   if test x"$coin_skip_warn_cxxflags" = xyes; then
     coin_warn_cxxflags=
   fi
+
+# Do final setup of flags based on values determined above.
 
   if test x${DBG_CXXFLAGS+set} != xset; then
     DBG_CXXFLAGS="$coin_dbg_cxxflags $coin_add_cxxflags $coin_warn_cxxflags"
@@ -585,6 +639,8 @@ if test x"$CXXFLAGS" = x; then
   else
     CXXFLAGS="$OPT_CXXFLAGS"
   fi
+
+# Handle the case where CXXFLAGS was set externally.
 else
   CXXFLAGS="$CXXFLAGS $ADD_CXXFLAGS $CXXDEFS"
   if test x${DBG_CXXFLAGS+set} != xset; then
@@ -594,6 +650,23 @@ else
     OPT_CXXFLAGS="$CXXFLAGS"
   fi
 fi
+
+# If CXXFLAGS contains -mno-cygwin, CPPFLAGS must also have it.
+
+case "$CXXFLAGS" in
+  *-mno-cygwin*)
+    if test x${CPPFLAGS+set} != xset ; then
+      CPPFLAGS="-mno-cygwin"
+    else
+      case "$CPPFLAGS" in
+        *-mno-cygwin*)
+	  ;;
+	*)
+	  CPPFLAGS="$CPPFLAGS -mno-cygwin"
+	  ;;
+      esac
+    fi ;;
+esac
 
 # Try if CXXFLAGS works
 save_CXXFLAGS="$CXXFLAGS"
@@ -674,7 +747,7 @@ if test -z "$CXXLIBS"; then
   fi
 fi
 if test -z "$CXXLIBS"; then
-  AC_MSG_WARN([Could not automatically determine CXXLIBS (C++ link libraries; necessary if main program is in Fortran of C).])
+  AC_MSG_WARN([Could not automatically determine CXXLIBS (C++ link libraries; necessary if main program is in Fortran or C).])
 else
   AC_MSG_NOTICE([Assuming that CXXLIBS is \"$CXXLIBS\".])
 fi
@@ -698,13 +771,17 @@ AC_LANG_POP(C++)
 # configure: WARNING: dlfcn.h: proceeding with the preprocessor's result
 # configure: WARNING: dlfcn.h: in the future, the compiler will take precedence
 
+# My guess that the problem lay with CPPFLAGS seems to be correct. With this
+# macro reduced to a direct call to AC_CHECK_HEADERS, there are no warnings
+# now that CPPFLAGS contains -mno-cygwin when it needs it. -- lh, 061214 --
+
 AC_DEFUN([AC_COIN_CHECK_HEADER],
-[if test x"$4" = x; then
-  hdr="#include <$1>"
-else
-  hdr="$4"
-fi
-AC_CHECK_HEADERS([$1],[$2],[$3],[$hdr])
+[# if test x"$4" = x; then
+ #  hdr="#include <$1>"
+ # else
+ #   hdr="$4"
+ # fi
+AC_CHECK_HEADERS([$1],[$2],[$3],[$4])
 ]) # AC_COIN_CHECK_HEADER
 
 ###########################################################################
@@ -761,9 +838,19 @@ AC_ARG_VAR(OPT_CFLAGS,[Optimize C compiler options])
 coin_has_cc=yes
 
 save_cflags="$CFLAGS"
+# For sparc-sun-solaris, promote Studio/Workshop compiler to front of list.
+# ToDo: If Studio/Workshop cc is not present, we may find /usr/ucb/cc, which
+# is likely to be a non-functional shell. But many installations will have
+# both cc and gcc, so promoting gcc isn't good either. How to test reliably?
 case $build in
   *-cygwin* | *-mingw*)
-             comps="gcc cl" ;;
+  	     if test "$enable_doscompile" = msvc ; then
+	       comps="cl"
+	     else
+	       comps="gcc cl"
+	     fi ;;
+  sparc-sun-solaris*)
+  	     comps="cc xlc gcc pgcc icc" ;;
   *-linux-*) comps="xlc gcc cc pgcc icc" ;;
   *)         comps="xlc_r xlc cc gcc pgcc icc" ;;
 esac
@@ -771,6 +858,7 @@ esac
 # We delete the cached value, since the test might not have been
 # performed with our choice of compilers earlier
 $as_unset ac_cv_prog_CC || test "${ac_cv_prog_CC+set}" != set || { ac_cv_prog_CC=; export ac_cv_prog_CC; }
+# AC_MSG_NOTICE([C compiler candidates: $comps])
 AC_PROG_CC([$comps])
 if test -z "$CC" ; then
   AC_MSG_ERROR([Failed to find a C compiler!])
@@ -809,16 +897,14 @@ if test x"$CFLAGS" = x; then
         coin_add_cflags="-pipe"
         coin_dbg_cflags="-g"
         coin_warn_cflags="-pedantic-errors -Wimplicit -Wparentheses -Wsequence-point -Wreturn-type -Wcast-qual -Wall"
-        if test "$enable_doscompile" = yes; then
-          case $build in
-            *-cygwin*)
-              CFLAGS="-mno-cygwin"
-              AC_TRY_LINK([],[int i=0; i++;],
-                          [coin_add_cflags="-mno-cygwin $coin_add_cflags"])
-              CFLAGS=
-            ;;
-          esac
-        fi
+	case $enable_doscompile in
+	  mingw)
+	    CFLAGS="-mno-cygwin"
+	    AC_TRY_LINK([],[int i=0; i++;],
+			[coin_add_cflags="-mno-cygwin $coin_add_cflags"])
+	    CFLAGS=
+	  ;;
+	esac
     esac
   fi
   if test -z "$coin_opt_cflags"; then
@@ -826,8 +912,8 @@ if test x"$CFLAGS" = x; then
       *-cygwin* | *-mingw*)
         case "$CC" in
           cl* | */cl* | CL* | */CL*)
-            coin_opt_cflags='-O2'
-            coin_add_cflags='-nologo'
+            coin_opt_cflags='-MT -O2'
+            coin_add_cflags='-nologo -wd4996'
             coin_dbg_cflags='-MTd'
             ;;
         esac
@@ -915,6 +1001,23 @@ else
   fi
 fi
 
+# If CFLAGS contains -mno-cygwin, CPPFLAGS must also have it.
+
+case "$CFLAGS" in
+  *-mno-cygwin*)
+    if test x${CPPFLAGS+set} != xset ; then
+      CPPFLAGS="-mno-cygwin"
+    else
+      case "$CPPFLAGS" in
+        *-mno-cygwin*)
+	  ;;
+	*)
+	  CPPFLAGS="$CPPFLAGS -mno-cygwin"
+	  ;;
+      esac
+    fi ;;
+esac
+
 # Try if CFLAGS works
 save_CFLAGS="$CFLAGS"
 AC_TRY_LINK([],[int i=0; i++;],[],[CFLAGS=])
@@ -952,7 +1055,7 @@ AC_LANG_POP(C)
 
 # Find the compile command by running AC_PROG_F77 (with compiler names
 # for different operating systems) and put it into F77 (unless it was
-# given my the user), and find an appropriate value for FFLAGS
+# given by the user), and find an appropriate value for FFLAGS
 
 AC_DEFUN([AC_COIN_PROG_F77],
 [AC_REQUIRE([AC_COIN_MINGW_LD_FIX])
@@ -968,15 +1071,24 @@ AC_ARG_VAR(OPT_FFLAGS,[Optimize Fortran compiler options])
 coin_has_f77=yes
 
 save_fflags="$FFLAGS"
-comps="$coin_f77_comps" #This comes from AC_COIN_F77_COMPS
 
 # We delete the cached value, since the test might not have been
 # performed with our choice of compilers earlier
 $as_unset ac_cv_prog_F77 || test "${ac_cv_prog_F77+set}" != set || { ac_cv_prog_F77=; export ac_cv_prog_F77; }
-AC_PROG_F77($comps)
-if test -z "$F77" ; then
+
+# This is a real belt-and-suspenders approach. AC_COIN_FIND_F77 will use
+# coin_f77_comps to see if there's a program that matches one of the names.
+# If there's no such program, F77 = unavailable. If we match the name,
+# feed AC_PROG_F77 the same search list, just to be sure it's a functioning
+# compiler.
+# AC_MSG_NOTICE([Fortran compiler candidates: $coin_f77_comps])
+AC_COIN_FIND_F77
+if test "$F77" != "unavailable" ; then
+  AC_PROG_F77($coin_f77_comps)
+else
   AC_MSG_WARN([Failed to find a Fortran compiler!])
 fi
+
 FFLAGS="$save_fflags"
 
 # Check if a project specific FFLAGS variable has been set
@@ -987,7 +1099,7 @@ if test x$COIN_PRJCT != x; then
   fi
 fi
 
-if test x"$FFLAGS" = x; then
+if test "$F77" != "unavailable" && test x"$FFLAGS" = x ; then
 
   coin_add_fflags=
   coin_opt_fflags=
@@ -998,16 +1110,14 @@ if test x"$FFLAGS" = x; then
     coin_opt_fflags="-O3 -fomit-frame-pointer"
     coin_add_fflags="-pipe"
     coin_dbg_fflags="-g"
-    if test "$enable_doscompile" = yes; then
-      case $build in
-        *-cygwin*)
-          FFLAGS="-mno-cygwin"
-          AC_TRY_LINK(,[      write(*,*) 'Hello world'],
-                      [coin_add_fflags="-mno-cygwin $coin_add_fflags"])
-          FFLAGS=
-        ;;
-      esac
-    fi
+    case $enable_doscompile in
+      mingw)
+	FFLAGS="-mno-cygwin"
+	AC_TRY_LINK(,[      write(*,*) 'Hello world'],
+		    [coin_add_fflags="-mno-cygwin $coin_add_fflags"])
+	FFLAGS=
+      ;;
+    esac
   else
     case $build in
       *-cygwin* | *-mingw*)
@@ -1102,14 +1212,32 @@ else
   fi
 fi
 
+# If FFLAGS contains -mno-cygwin, CPPFLAGS must have it.
+case "$FFLAGS" in
+  *-mno-cygwin*)
+    if test x${CPPFLAGS+set} != xset ; then
+      CPPFLAGS="-mno-cygwin"
+    else
+      case "$CPPFLAGS" in
+        *-mno-cygwin*)
+	  ;;
+	*)
+	  CPPFLAGS="$CPPFLAGS -mno-cygwin"
+	  ;;
+      esac
+    fi ;;
+esac
+
 # Try if FFLAGS works
-AC_TRY_LINK(,[      integer i],[],[FFLAGS=])
-if test -z "$FFLAGS"; then
-  AC_MSG_WARN([The flags FFLAGS="$FFLAGS" do not work.  I will now just try '-O', but you might want to set FFLAGS manually.])
-  FFLAGS='-O'
+if test "$F77" != "unavailable" ; then
   AC_TRY_LINK(,[      integer i],[],[FFLAGS=])
   if test -z "$FFLAGS"; then
-    AC_MSG_WARN([This value for FFLAGS does not work.  I will continue with empty FFLAGS, but you might want to set FFLAGS manually.])
+    AC_MSG_WARN([The flags FFLAGS="$FFLAGS" do not work.  I will now just try '-O', but you might want to set FFLAGS manually.])
+    FFLAGS='-O'
+    AC_TRY_LINK(,[      integer i],[],[FFLAGS=])
+    if test -z "$FFLAGS"; then
+      AC_MSG_WARN([This value for FFLAGS does not work.  I will continue with empty FFLAGS, but you might want to set FFLAGS manually.])
+    fi
   fi
 fi
 
@@ -1122,7 +1250,7 @@ if test x"$MPIF77" = x; then :; else
 fi
 
 case "$F77" in
-  ifort*)
+  ifort* | */ifort* | IFORT* | */IFORT*)
     AC_COIN_MINGW_LD_FIX
     ;;
 esac
@@ -1160,7 +1288,7 @@ case $build in
 # The following is a fix to define FLIBS for ifort on Windows
    *-cygwin* | *-mingw*)
      case "$F77" in
-       ifort* | */ifort* | IFORT* | */IFORT* )
+       ifort* | */ifort* | IFORT* | */IFORT*)
            FLIBS="-link libifcorert.lib $LIBS /NODEFAULTLIB:libc.lib";;
      esac;;
    *-hp-*)
@@ -1193,14 +1321,21 @@ AC_MSG_NOTICE([Trying to determine Fortran compiler name])
 AC_CHECK_PROGS([F77],[$coin_f77_comps],[unavailable])
 ])
 
-# auxilliary macro to make sure both COIN_PROG_F77 and COIN_FIND_F77
-# use the same search lists for compiler names
+# Auxilliary macro to make sure both COIN_PROG_F77 and COIN_FIND_F77 use
+# the same search lists for compiler names.
+# For sparc-sun-solaris, promote Studio/Workshop compilers to front of list.
 AC_DEFUN([AC_COIN_F77_COMPS],
 [case $build in
   *-cygwin* | *-mingw*)
-     coin_f77_comps="gfortran g77 ifort fl32" ;;
+     if test "$enable_doscompile" = msvc ; then
+       coin_f77_comps="ifort fl32"
+     else
+       coin_f77_comps="gfortran g77 ifort fl32"
+     fi ;;
+  sparc-sun-solaris*)
+     coin_f77_comps="f95 f90 f77 xlf fort77 gfortran g77 pgf90 pgf77 ifort ifc frt af77" ;;
   *) coin_f77_comps="xlf fort77 gfortran f77 g77 pgf90 pgf77 ifort ifc frt af77" ;;
-esac
+ esac
 ])
 
 ###########################################################################
@@ -1223,6 +1358,8 @@ esac
 
 AC_DEFUN([AC_COIN_INIT_AUTOMAKE],
 [AC_REQUIRE([AC_PROG_EGREP])
+
+# AC_MSG_NOTICE([Beginning automake initialisation.])
 # Stuff for automake
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
@@ -1417,6 +1554,9 @@ abs_bin_dir=$full_prefix/bin
 
 AM_CONDITIONAL(HAVE_EXTERNALS,
                test $coin_have_externals = yes && test x$have_svn = xyes)
+
+# AC_MSG_NOTICE([End automake initialisation.])
+
 ]) # AC_COIN_INIT_AUTOMAKE
 
 ###########################################################################
@@ -1444,7 +1584,9 @@ AC_COIN_PROG_CXX
 AC_COIN_PROG_F77
 
 # Initialize automake and libtool
+# AC_MSG_NOTICE([Calling INIT_AUTO_TOOLS from CREATE_LIBTOOL.])
 AC_COIN_INIT_AUTO_TOOLS
+# AC_MSG_NOTICE([Finished INIT_AUTO_TOOLS from CREATE_LIBTOOL.])
 ])
 
 ###########################################################################
@@ -1510,17 +1652,17 @@ if test "x$LIBTOOL" = x; then
                 [coin_config_dir=../..
                  LIBTOOL='$(SHELL) $(top_builddir)/../../libtool'])
 fi
-#if test "x$LIBTOOL" = x; then
-#  AC_CHECK_FILE([../../../libtool],
-#                [coin_config_dir=../../..
-#                 LIBTOOL='$(SHELL) $(top_builddir)/../../../libtool'])
-#fi
+# if test "x$LIBTOOL" = x; then
+#   AC_CHECK_FILE([../../../libtool],
+#                 [coin_config_dir=../../..
+#                  LIBTOOL='$(SHELL) $(top_builddir)/../../../libtool'])
+# fi
 
 if test "x$LIBTOOL" = x; then
-
+# AC_MSG_NOTICE([Creating libtool script (calling COIN_PROG_LIBTOOL).])
   # Stuff for libtool
   AC_COIN_PROG_LIBTOOL
-
+# AC_MSG_NOTICE([Finished COIN_PROG_LIBTOOL.])
   # set RPATH_FLAGS to the compiler link flags required to hardcode location
   # of the shared objects
   AC_COIN_RPATH_FLAGS($abs_lib_dir)
@@ -1539,7 +1681,8 @@ else
          # First some automake conditionals
       s,@am__fastdep* | s,@AR@* | s,@CPP@*  | s,@CPPFLAGS@* | s,@CXXCPP@*  | \
       s,@RANLIB@* | s,@STRIP@* | s,@ac_ct_AR@* | s,@ac_ct_RANLIB@* | \
-      s,@ac_ct_STRIP@* | s,@host* | s,@LN_S@* | s,@RPATH_FLAGS@* ) 
+      s,@ac_ct_STRIP@* | s,@host* | s,@LN_S@* | s,@RPATH_FLAGS@* | \
+      s,@ac_c_preproc_warn_flag@* |  s,@ac_cxx_preproc_warn_flag@* ) 
         command=`echo $oneline | sed -e 's/^s,@//' -e 's/@,/="/' -e 's/,;t t/"/'`
 #        echo "$command"
         eval "$command"
@@ -1567,6 +1710,8 @@ else
   done
 fi
 
+# AC_MSG_NOTICE([End of INIT_AUTO_TOOLS.])
+
 # ToDo
 # For now, don't use the -no-undefined flag, since the Makefiles are
 # not yet set up that way.  But we need to fix this, when we want
@@ -1592,64 +1737,99 @@ AC_PROG_LIBTOOL])
 AC_DEFUN([AC_COIN_BLA],[echo bla])
 
 AC_DEFUN([AC_COIN_PROG_LIBTOOL],
-[AC_REQUIRE([AC_COIN_DLFCN_H])
+[# No longer needed now that CPPFLAGS is correctly set -- lh, 061214 --
+ # AC_REQUIRE([AC_COIN_DLFCN_H])
 
-# We check for this header here in a non-standard way to avoid warning
-# messages
-AC_PROG_LIBTOOL
+# NEW: If libtool exists in the directory higher up, we use that one
+#      instead of creating a new one
+
+# It turns out that the code for AC_PROG_LIBTOOL is somehow AC_REQUIRED
+# out in front of this macro body. You'll notice that LIBTOOL is already
+# defined here.  We'll have to count on this macro not being called if libtool
+# already exists, or at least move the libtool fixes outside the conditional.
+# AC_MSG_NOTICE([Entering coin_prog_libtool, LIBTOOL = "$LIBTOOL".])
+# This test is therefore removed.  -- lh, 061214 --
+# if test "x$LIBTOOL" = x; then
+
+# AC_MSG_NOTICE([Calling PROG_LIBTOOL.])
+  AC_PROG_LIBTOOL
+# AC_MSG_NOTICE([Finished PROG_LIBTOOL.])
+  AC_SUBST(ac_c_preproc_warn_flag)
+  AC_SUBST(ac_cxx_preproc_warn_flag)
 
 # Fix bugs in libtool script for Windows native compilation:
 # - cygpath is not correctly quoted in fix_srcfile_path
 # - paths generated for .lib files is not run through cygpath -w
 
-# Correct cygpath for minGW (ToDo!)
-case $build in
-  *-mingw*)
-    CYGPATH_W=echo
-    ;;
-esac
 
-case $build in
-  *-cygwin* | *-mingw*)
-  case "$CXX" in
-    cl* | */cl* | CL* | */CL*) 
-      AC_MSG_NOTICE(Applying patches to libtool for cl compiler)
-      sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
-          -e 's|fix_srcfile_path=\"\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
-          -e 's%compile_deplibs=\"\$dir/\$old_library \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$old_library | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
-          -e 's%compile_deplibs=\"\$dir/\$linklib \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$linklib | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
-          -e 's%lib /OUT:%lib -OUT:%' \
-          -e "s%cygpath -w%$CYGPATH_W%" \
-          -e 's%$AR x \\$f_ex_an_ar_oldlib%bla=\\`lib -nologo -list \\$f_ex_an_ar_oldlib | xargs echo\\`; echo \\$bla; for i in \\$bla; do lib -nologo -extract:\\$i \\$f_ex_an_ar_oldlib; done%' \
-          -e 's/$AR t/lib -nologo -list/' \
-          -e 's%f_ex_an_ar_oldlib="\($?*1*\)"%f_ex_an_ar_oldlib='\`"$CYGPATH_W"' \1`%' \ 
-          -e  's%^archive_cmds=.*%archive_cmds="\\$CC -o \\$lib \\$libobjs \\$compiler_flags \\\\\\`echo \\\\\\"\\$deplibs\\\\\\" | \\$SED -e '"\'"'s/ -lc\\$//'"\'"'\\\\\\` -link -dll~linknames="%' \
-      libtool > conftest.bla
+# - lib includes subdirectory information; we want to replace
+#
+# old_archive_cmds="lib /OUT:\$oldlib\$oldobjs\$old_deplibs"
+#
+# by
+#
+# old_archive_cmds="echo \$oldlib | grep .libs >/dev/null; if test \$? = 0; then cd .libs; lib /OUT:\`echo \$oldlib\$oldobjs\$old_deplibs | sed -e s@\.libs/@@g\`; cd .. ; else lib /OUT:\$oldlib\$oldobjs\$old_deplibs ; fi"
+#
+#          -e 's%old_archive_cmds="lib /OUT:\\\$oldlib\\\$oldobjs\\\$old_deplibs"%old_archive_cmds="echo \\\$oldlib \| grep .libs >/dev/null; if test \\\$? = 0; then cd .libs; lib /OUT:\\\`echo \\\$oldlib\\\$oldobjs\\\$old_deplibs \| sed -e s@\\.libs/@@g\\\`; cd .. ; else lib /OUT:\\\$oldlib\\\$oldobjs\\\$old_deplibs; fi"%' \
 
-      mv conftest.bla libtool
-      chmod 755 libtool
-      ;;
-    *)
-      AC_MSG_NOTICE(Applying patches to libtool for GNU compiler)
-      sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
-          -e 's|"lib /OUT:\\$oldlib\\$oldobjs\\$old_deplibs"|"\\$AR \\$AR_FLAGS \\$oldlib\\$oldobjs\\$old_deplibs~\\$RANLIB \\$oldlib"|' \
-          -e 's|libext="lib"|libext="a"|' \
-      libtool > conftest.bla
+# The following was a hack for chaniing @BACKSLASH to \
+#          -e 'sYcompile_command=`\$echo "X\$compile_command" | \$Xsed -e '"'"'s%@OUTPUT@%'"'"'"\$output"'"'"'%g'"'"'`Ycompile_command=`\$echo "X\$compile_command" | \$Xsed -e '"'"'s%@OUTPUT@%'"'"'"\$output"'"'"'%g'"'"' | \$Xsed -e '"'"'s%@BACKSLASH@%\\\\\\\\\\\\\\\\%g'"'"'`Y' \
 
-      mv conftest.bla libtool
-      chmod 755 libtool
+  # Correct cygpath for minGW (ToDo!)
+  AC_MSG_NOTICE([Build is "$build".])
+  case $build in
+    *-mingw*)
+      CYGPATH_W=echo
       ;;
   esac
-esac
+
+  case $build in
+    *-cygwin* | *-mingw*)
+    case "$CXX" in
+      cl* | */cl* | CL* | */CL*) 
+        AC_MSG_NOTICE(Applying patches to libtool for cl compiler)
+        sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
+            -e 's|fix_srcfile_path=\"\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
+            -e 's%compile_deplibs=\"\$dir/\$old_library \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$old_library | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
+            -e 's%compile_deplibs=\"\$dir/\$linklib \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$linklib | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
+	    -e 's%lib /OUT:%lib -OUT:%' \
+	    -e "s%cygpath -w%$CYGPATH_W%" \
+  	    -e 's%$AR x \\$f_ex_an_ar_oldlib%bla=\\`lib -nologo -list \\$f_ex_an_ar_oldlib | xargs echo\\`; echo \\$bla; for i in \\$bla; do lib -nologo -extract:\\$i \\$f_ex_an_ar_oldlib; done%' \
+	    -e 's/$AR t/lib -nologo -list/' \
+	    -e 's%f_ex_an_ar_oldlib="\($?*1*\)"%f_ex_an_ar_oldlib='\`"$CYGPATH_W"' \1`%' \ 
+	    -e  's%^archive_cmds=.*%archive_cmds="\\$CC -o \\$lib \\$libobjs \\$compiler_flags \\\\\\`echo \\\\\\"\\$deplibs\\\\\\" | \\$SED -e '"\'"'s/ -lc\\$//'"\'"'\\\\\\` -link -dll~linknames="%' \
+        libtool > conftest.bla
+
+        mv conftest.bla libtool
+        chmod 755 libtool
+        ;;
+      *)
+        AC_MSG_NOTICE(Applying patches to libtool for GNU compiler)
+        sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
+            -e 's|"lib /OUT:\\$oldlib\\$oldobjs\\$old_deplibs"|"\\$AR \\$AR_FLAGS \\$oldlib\\$oldobjs\\$old_deplibs~\\$RANLIB \\$oldlib"|' \
+            -e 's|libext="lib"|libext="a"|' \
+        libtool > conftest.bla
+
+        mv conftest.bla libtool
+        chmod 755 libtool
+        ;;
+    esac
+  esac
+# This fi matches the commented `if test "x$LIBTOOL" = x;' up at the head of
+# the macro. -- lh, 061214 --
+# fi
+
+# AC_MSG_NOTICE([End libtool initialisation.])
 ]) # AC_COIN_PROG_LIBTOOL
 
 # This is a trick to force the check for the dlfcn header to be done before
 # the checks for libtool
-AC_DEFUN([AC_COIN_DLFCN_H],
-[AC_LANG_PUSH(C)
-AC_COIN_CHECK_HEADER([dlfcn.h])
-AC_LANG_POP(C)
-]) # AC_COIN_DLFCN_H
+# No longer needed now that CPPFLAGS is correctly set.  -- lh, 061214 --
+# ACDEFUN([AC_COIN_DLFCN_H],
+# [AC_LANG_PUSH(C)
+# AC_COIN_CHECK_HEADER([dlfcn.h])
+# AC_LANG_POP(C)
+# ]) # AC_COIN_DLFCN_H
 
 ###########################################################################
 #                            COIN_RPATH_FLAGS                             #
@@ -1966,7 +2146,7 @@ for file in $files; do
 done
 if test $coin_vpath_config = yes; then
   lnkcmd=
-  if test "$enable_doscompile" = yes; then
+  if test "$enable_doscompile" != no; then
     lnkcmd=cp
   fi
   case "$CC" in
@@ -2326,6 +2506,7 @@ if test x"$use_blas" != x; then
   fi
 else
 # Try to autodetect the library for blas based on build system
+  AC_MSG_CHECKING([default locations for BLAS])
   case $build in
     *-sgi-*) 
       SAVE_LIBS="$LIBS"
@@ -2349,23 +2530,28 @@ else
                         [AC_MSG_RESULT([no])
                          LIBS="$SAVE_LIBS"])
       ;;
-  esac
-  # On cygwin, if enable_doscompile is used, recompile blas because it
-  # otherwise links with the cygwin blas which doesn't run under DOS
-  if test "$enable_doscompile" != yes; then
-    if test -z "$use_blas"; then
-      SAVE_LIBS="$LIBS"
-      AC_MSG_CHECKING([whether -lblas has BLAS])
-      LIBS="-lblas $LIBS"
-      AC_COIN_TRY_FLINK([daxpy],
-                        [AC_MSG_RESULT([yes])
-                         ADDLIBS="-lblas $ADDLIBS"
-                         use_blas='-lblas'],
-                        [AC_MSG_RESULT([no])
-                         LIBS="$SAVE_LIBS"])
-    fi
-  fi
+# On cygwin, consider -lblas only if doscompile is disabled. The prebuilt
+# library will want to link with cygwin, hence won't run standalone in DOS.
+    *-cygwin*)
+      if test "$enable_doscompile" = no; then
+	if test -z "$use_blas"; then
+	  SAVE_LIBS="$LIBS"
+	  AC_MSG_CHECKING([whether -lblas has BLAS])
+	  LIBS="-lblas $LIBS"
+	  AC_COIN_TRY_FLINK([daxpy],
+			    [AC_MSG_RESULT([yes])
+			     ADDLIBS="-lblas $ADDLIBS"
+			     use_blas='-lblas'],
+			    [AC_MSG_RESULT([no])
+			     LIBS="$SAVE_LIBS"])
+	fi
+      fi
+      ;;
+    esac
+
+# If we have no other ideas, consider building BLAS.
   if test -z "$use_blas"; then
+    AC_MSG_CHECKING([if BLAS can be built.])
     AC_CHECK_FILE([$coin_blasobjdir/Makefile],[use_blas=BUILD])
   fi
 fi
@@ -2412,7 +2598,7 @@ AC_ARG_WITH([lapack],
 if test x"$use_lapack" != x; then
   if test "$use_lapack" = "BUILD"; then
     AC_CHECK_FILE([$coin_lapackobjdir/Makefile],[],
-                  [AC_MSG_ERROR([option \"BUILD\" specified for Lapack, but $coin_lapackobjdir directory is not configured])])
+                  [AC_MSG_ERROR([option \"BUILD\" specified for LAPACK, but $coin_lapackobjdir directory is not configured])])
   else
     AC_MSG_CHECKING([whether user supplied LAPACKLIB=\"$use_lapack\" works])
     LIBS="$use_lapack $LIBS"
@@ -2455,23 +2641,26 @@ else
                           [AC_MSG_RESULT([no])
                            LIBS="$SAVE_LIBS"])
         ;;
+# On cygwin, do this check only if doscompile is disabled. The prebuilt library
+# will want to link with cygwin, hence won't run standalone in DOS.
+      *-cygwin*)
+	if test "$enable_doscompile" = no; then
+	  if test -z "$use_lapack"; then
+	    SAVE_LIBS="$LIBS"
+	    AC_MSG_CHECKING([whether -llapack has LAPACK])
+	    LIBS="-llapack $LIBS"
+	    AC_COIN_TRY_FLINK([dsyev],
+			      [AC_MSG_RESULT([yes])
+			       ADDLIBS="-llapack $ADDLIBS"
+			       use_lapack='-llapack'],
+			      [AC_MSG_RESULT([no])
+			       LIBS="$SAVE_LIBS"])
+	  fi
+	fi
+	;;
     esac
   fi
-  # On cygwin, if enable_doscompile is used, recompile lapack because it
-  # otherwise links with the cygwin lapack which doesn't run under DOS
-  if test "$enable_doscompile" != yes; then
-    if test -z "$use_lapack"; then
-      SAVE_LIBS="$LIBS"
-      AC_MSG_CHECKING([whether -llapack has LAPACK])
-      LIBS="-llapack $LIBS"
-      AC_COIN_TRY_FLINK([dsyev],
-                        [AC_MSG_RESULT([yes])
-                         ADDLIBS="-llapack $ADDLIBS"
-                         use_lapack='-llapack'],
-                        [AC_MSG_RESULT([no])
-                         LIBS="$SAVE_LIBS"])
-    fi
-  fi
+# If we have no other ideas, consider building LAPACK.
   if test -z "$use_lapack"; then
     AC_CHECK_FILE([$coin_lapackobjdir/Makefile],[use_lapack=BUILD])
   fi
