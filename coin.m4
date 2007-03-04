@@ -2515,7 +2515,11 @@ esac
 # COIN_BUILD_BLAS, if blas is compiled within COIN.
 
 AC_DEFUN([AC_COIN_HAS_BLAS],
-[coin_blasobjdir=../ThirdParty/Blas
+[if test "$PACKAGE_NAME" = ThirdPartyBlas || test "$PACKAGE_NAME" = ThirdPartyLapack; then
+  coin_blasobjdir=../Blas
+else
+  coin_blasobjdir=../ThirdParty/Blas
+fi
 coin_blassrcdir=$srcdir/$coin_blasobjdir
 
 AC_ARG_WITH([blas],
@@ -2571,7 +2575,7 @@ else
 # On cygwin, consider -lblas only if doscompile is disabled. The prebuilt
 # library will want to link with cygwin, hence won't run standalone in DOS.
     *-cygwin*)
-      if test "$enable_doscompile" = no; then
+      if test "$enable_doscompile" = mingw; then
 	skip_lblas_check=yes
       fi
       ;;
@@ -2690,7 +2694,7 @@ else
 # On cygwin, do this check only if doscompile is disabled. The prebuilt library
 # will want to link with cygwin, hence won't run standalone in DOS.
       *-cygwin*)
-	if test "$enable_doscompile" = no; then
+	if test "$enable_doscompile" = mingw; then
 	  skip_llapack_check=yes
 	fi
 	;;
