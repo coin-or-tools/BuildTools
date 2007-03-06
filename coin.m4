@@ -1639,24 +1639,17 @@ AC_COIN_DISABLE_STATIC
 # Initialize automake
 AC_COIN_INIT_AUTOMAKE
 
-unset ac_cv_file__________libtool
-unset ac_cv_file_______libtool
-unset ac_cv_file____libtool
-
 LIBTOOL=
-AC_CHECK_FILE([../libtool],
-              [coin_config_dir=..
-               LIBTOOL='$(SHELL) $(top_builddir)/../libtool'])
-if test "x$LIBTOOL" = x; then
-  AC_CHECK_FILE([../../libtool],
-                [coin_config_dir=../..
-                 LIBTOOL='$(SHELL) $(top_builddir)/../../libtool'])
+if test -r ../libtool; then
+  coin_config_dir=..
+  LIBTOOL='$(SHELL) $(top_builddir)/../libtool'
 fi
-# if test "x$LIBTOOL" = x; then
-#   AC_CHECK_FILE([../../../libtool],
-#                 [coin_config_dir=../../..
-#                  LIBTOOL='$(SHELL) $(top_builddir)/../../../libtool'])
-# fi
+if test "x$LIBTOOL" = x; then
+  if test -r ../../libtool; then
+    coin_config_dir=../..
+    LIBTOOL='$(SHELL) $(top_builddir)/../../libtool'
+  fi
+fi
 
 if test "x$LIBTOOL" = x; then
 # AC_MSG_NOTICE([Creating libtool script (calling COIN_PROG_LIBTOOL).])
