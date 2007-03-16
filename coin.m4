@@ -2787,6 +2787,10 @@ if test "$use_mumps" != "no"; then
   mumps_dir=`cd $use_mumps; pwd`
 
   # library extension
+  AC_LANG_PUSH(C)
+  AC_CHECK_LIB([pthread],[pthread_create],[LIBS="-lpthread $LIBS"; ADDLIBS="-lpthread $ADDLIBS"],[])
+  AC_LANG_POP(C)
+
   case "$CC" in
     cl* | */cl* | CL* | */CL*)
          libe=lib ;;
@@ -2815,6 +2819,10 @@ else
   if test "$PACKAGE_NAME" != ThirdPartyMumps; then
     if test -r $coin_mumpsobjdir/.MakeOk; then
       use_mumps=BUILD
+      # Mumps needs pthreads
+      AC_LANG_PUSH(C)
+      AC_CHECK_LIB([pthread],[pthread_create],[LIBS="-lpthread $LIBS"; ADDLIBS="-lpthread $ADDLIBS"],[])
+      AC_LANG_POP(C)
     else
       use_mumps=
     fi
@@ -2822,10 +2830,6 @@ else
 fi
 
 if test x"$use_mumps" != x; then
-  # Mumps needs pthreads
-  AC_LANG_PUSH(C)
-  AC_CHECK_LIB([pthread],[pthread_create],[LIBS="-lpthread $LIBS"; ADDLIBS="-lpthread $ADDLIBS"],[])
-  AC_LANG_POP(C)
 
   # and we need the Fortran runtime libraries if we want to link with C/C++
   coin_need_flibs=yes
