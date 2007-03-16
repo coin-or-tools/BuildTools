@@ -2788,7 +2788,9 @@ if test "$use_mumps" != "no"; then
 
   # library extension
   AC_LANG_PUSH(C)
-  AC_CHECK_LIB([pthread],[pthread_create],[LIBS="-lpthread $LIBS"; ADDLIBS="-lpthread $ADDLIBS"],[])
+  save_LIBS="$LIBS"
+  LIBS="$LIBS $FLIBS"
+  AC_CHECK_LIB([pthread],[pthread_create],[LIBS="-lpthread $save_LIBS"; ADDLIBS="-lpthread $ADDLIBS"],[LIBS="$save_LIBS"])
   AC_LANG_POP(C)
 
   case "$CC" in
@@ -2821,7 +2823,9 @@ else
       use_mumps=BUILD
       # Mumps needs pthreads
       AC_LANG_PUSH(C)
-      AC_CHECK_LIB([pthread],[pthread_create],[LIBS="-lpthread $LIBS"; ADDLIBS="-lpthread $ADDLIBS"],[])
+      save_LIBS="$LIBS"
+      LIBS="$LIBS $FLIBS"
+      AC_CHECK_LIB([pthread],[pthread_create],[LIBS="-lpthread $save_LIBS"; ADDLIBS="-lpthread $ADDLIBS"],[LIBS="save_LIBS"])
       AC_LANG_POP(C)
     else
       use_mumps=
