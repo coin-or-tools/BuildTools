@@ -1,4 +1,4 @@
-# Copyright (C) 2006 International Business Machines..
+# Copyright (C) 2006, 2007 International Business Machines..
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 #
@@ -1330,7 +1330,7 @@ AC_DEFUN([AC_COIN_F77_COMPS],
      if test "$enable_doscompile" = msvc ; then
        coin_f77_comps="ifort fl32"
      else
-       coin_f77_comps="gfortran g77 ifort fl32"
+       coin_f77_comps="gfortran ifort g77 fl32"
      fi ;;
   sparc-sun-solaris*)
      coin_f77_comps="f95 f90 f77 xlf fort77 gfortran g77 pgf90 pgf77 ifort ifc frt af77" ;;
@@ -1777,6 +1777,15 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
   esac
 
   case $build in
+    *x86_64-*)
+# Here we need to check if -m32 is specified.  If so, we need to correct sys_lib_search_path_spec
+      if test "$GCC" = yes && (echo $CXXFLAGS $CFLAGS $FFLAGS | $EGREP 'm32' >& /dev/null); then 
+        AC_MSG_NOTICE(Applying patches to libtool for 32bit compilation)
+        sed -e 's|sys_lib_search_path_spec=".*"|sys_lib_search_path_spec="/lib /usr/lib"|' libtool > conftest.bla
+        mv conftest.bla libtool
+        chmod 755 libtool  
+      fi
+      ;;
     *-cygwin* | *-mingw*)
     case "$CXX" in
       cl* | */cl* | CL* | */CL*) 
@@ -1882,60 +1891,86 @@ AC_SUBST(RPATH_FLAGS)
 # It creates the output files (by using AC_OUTPUT), and might do some other
 # things (such as generating links to data files in a VPATH configuration).
 # It also prints the "success" message.
+# Note: If the variable coin_skip_ac_output is set to yes, then no output
+# files are written.
 
 AC_DEFUN([AC_COIN_FINALIZE],
 [
-FADDLIBS="$ADDLIBS"
-if test x"$coin_need_flibs" = xyes; then
-  ADDLIBS="$ADDLIBS $FLIBS"
-fi
+if test x$coin_skip_ac_output != xyes; then
 
-# library extension
-AC_SUBST(LIBEXT)
-case "$CC" in
-  cl* | */cl* | CL* | */CL*)
-       LIBEXT=lib ;;
-    *) LIBEXT=a ;;
-esac
-
-# Define VPATH_DISTCLEANFILES to be everything that needs to be
-# cleaned for distclean in a vpath configuration
-AC_SUBST(VPATH_DISTCLEANFILES)
-VPATH_DISTCLEANFILES="$coin_vpath_link_files"
-
-AC_OUTPUT
-
-if test x"$coin_vpath_link_files" = x; then : ; else
-  lnkcmd=
-  if test "$enable_doscompile" = yes; then
-    lnkcmd=cp
+  FADDLIBS="$ADDLIBS"
+  if test x"$coin_need_flibs" = xyes; then
+    ADDLIBS="$ADDLIBS $FLIBS"
   fi
+
+  # library extension
+  AC_SUBST(LIBEXT)
   case "$CC" in
     cl* | */cl* | CL* | */CL*)
-      lnkcmd=cp ;;
+         LIBEXT=lib ;;
+      *) LIBEXT=a ;;
   esac
-  if test "$lnkcmd" = cp; then
-    AC_MSG_NOTICE(Copying data files for VPATH configuration)
-  else
-    AC_PROG_LN_S
-    AC_MSG_NOTICE(Creating VPATH links for data files)
-    lnkcmd="$LN_S"
+
+  # Define VPATH_DISTCLEANFILES to be everything that needs to be
+  # cleaned for distclean in a vpath configuration
+  AC_SUBST(VPATH_DISTCLEANFILES)
+  VPATH_DISTCLEANFILES="$coin_vpath_link_files"
+
+  # Take out subdirectories if their configuration concluded that they
+  # don't need to be compiled
+  if test x"$coin_ac_skip_subdirs" != x; then
+    new_subdirs=
+    for i in $subdirs; do
+      skipme=no
+      for j in $coin_ac_skip_subdirs; do
+        if test $i = $j; then
+          skipme=yes;
+        fi
+      done
+      if test $skipme = no; then
+        new_subdirs="$new_subdirs $i"
+      fi
+    done
+    subdirs="$new_subdirs"
   fi
-  for file in $coin_vpath_link_files; do
-    dir=`AS_DIRNAME(["./$file"])`
-    if test -d $dir; then : ; else
-      AS_MKDIR_P($dir)
+
+  AC_OUTPUT
+
+  if test x"$coin_vpath_link_files" = x; then : ; else
+    lnkcmd=
+    if test "$enable_doscompile" = yes; then
+      lnkcmd=cp
     fi
-    rm -f $file
-    $lnkcmd $abs_source_dir/$file $file
-  done
+    case "$CC" in
+      cl* | */cl* | CL* | */CL*)
+        lnkcmd=cp ;;
+    esac
+    if test "$lnkcmd" = cp; then
+      AC_MSG_NOTICE(Copying data files for VPATH configuration)
+    else
+      AC_PROG_LN_S
+      AC_MSG_NOTICE(Creating VPATH links for data files)
+      lnkcmd="$LN_S"
+    fi
+    for file in $coin_vpath_link_files; do
+      dir=`AS_DIRNAME(["./$file"])`
+      if test -d $dir; then : ; else
+        AS_MKDIR_P($dir)
+      fi
+      rm -f $file
+      $lnkcmd $abs_source_dir/$file $file
+    done
+  fi
+
+  if test x$coin_projectdir = xyes; then
+    AC_MSG_NOTICE([Configuration of $PACKAGE_NAME successful])
+  else
+    AC_MSG_NOTICE([Main configuration of $PACKAGE_NAME successful])
+  fi
+else
+  AC_MSG_NOTICE([No configuration of $PACKAGE_NAME necessary])
 fi
 
-if test x$coin_projectdir = xyes; then
-  AC_MSG_NOTICE([Configuration of $PACKAGE_NAME successful])
-else
-  AC_MSG_NOTICE([Main configuration of $PACKAGE_NAME successful])
-fi
 ]) #AC_COIN_FINALIZE
 
 ###########################################################################
@@ -2349,11 +2384,23 @@ AC_ARG_WITH([asldir],
             [use_asldir=$withval], [use_asldir=])
 
 if test "$use_asldir" = BUILD; then
-  AC_CHECK_FILE([$coin_aslobjdir/Makefile],[],
-                [AC_MSG_ERROR([option \"BUILD\" specified for asldir, but directory is not configure (sources missing?)])])
+  if test "$PACKAGE_NAME" != ThirdPartyASL; then
+    # If we are configuring ThirdParty/ASL, don't check
+    if test -r $coin_aslobjdir/.MakeOk; then :; else
+      AC_MSG_ERROR([option \"BUILD\" specified for asldir, but directory is not configure (sources missing?)])
+    fi
+  fi
 elif test -z "$use_asldir"; then
  # try to find sources - if not given don't compile
-  AC_CHECK_FILE([$coin_aslobjdir/Makefile],[use_asldir=BUILD],[use_asldir=no])
+  if test "$PACKAGE_NAME" != ThirdPartyASL; then
+    if test -r $coin_aslobjdir/.MakeOk; then
+      use_asldir=BUILD
+    else
+      use_asldir=no
+    fi
+  else
+    use_asldir=no
+  fi
 elif test "$use_asldir" != "no"; then
   AC_CHECK_FILE([$use_asldir/$ampllib],[],
                 [AC_MSG_ERROR([ASL directory \"$use_asldir\" specified, but library missing])])
@@ -2475,7 +2522,11 @@ esac
 # COIN_BUILD_BLAS, if blas is compiled within COIN.
 
 AC_DEFUN([AC_COIN_HAS_BLAS],
-[coin_blasobjdir=../ThirdParty/Blas
+[if test "$PACKAGE_NAME" = ThirdPartyBlas || test "$PACKAGE_NAME" = ThirdPartyLapack; then
+  coin_blasobjdir=../Blas
+else
+  coin_blasobjdir=../ThirdParty/Blas
+fi
 coin_blassrcdir=$srcdir/$coin_blasobjdir
 
 AC_ARG_WITH([blas],
@@ -2483,11 +2534,16 @@ AC_ARG_WITH([blas],
                            [specify BLAS library (or BUILD for compilation)]),
             [use_blas=$withval], [use_blas=])
 
+MAKEOKFILE=.MakeOk
 # Check if user supplied option makes sense
 if test x"$use_blas" != x; then
   if test "$use_blas" = "BUILD"; then
-    AC_CHECK_FILE([$coin_blasobjdir/Makefile],[],
-                  [AC_MSG_ERROR([option \"BUILD\" specified for Blas, but $coin_blasobjdir directory is not configured])])
+    # Don't check for course code if this is executed in ThirdParty/Blas
+    if test "$PACKAGE_NAME" != ThirdPartyBlas; then
+      if test -r $coin_blasobjdir/.MakeOk; then :; else
+        AC_MSG_ERROR([option \"BUILD\" specified for Blas, but $coin_blasobjdir directory is not properly configured])
+      fi
+    fi
   elif test "$use_blas" != no ; then
     AC_MSG_CHECKING([whether user supplied BLASLIB=\"$use_blas\" works])
     LIBS="$use_blas $LIBS"
@@ -2499,7 +2555,8 @@ if test x"$use_blas" != x; then
   fi
 else
 # Try to autodetect the library for blas based on build system
-  AC_MSG_CHECKING([default locations for BLAS])
+  #AC_MSG_CHECKING([default locations for BLAS])
+  skip_lblas_check=no
   case $build in
     *-sgi-*) 
       SAVE_LIBS="$LIBS"
@@ -2526,26 +2583,31 @@ else
 # On cygwin, consider -lblas only if doscompile is disabled. The prebuilt
 # library will want to link with cygwin, hence won't run standalone in DOS.
     *-cygwin*)
-      if test "$enable_doscompile" = no; then
-	if test -z "$use_blas"; then
-	  SAVE_LIBS="$LIBS"
-	  AC_MSG_CHECKING([whether -lblas has BLAS])
-	  LIBS="-lblas $LIBS"
-	  AC_COIN_TRY_FLINK([daxpy],
-			    [AC_MSG_RESULT([yes])
-			     ADDLIBS="-lblas $ADDLIBS"
-			     use_blas='-lblas'],
-			    [AC_MSG_RESULT([no])
-			     LIBS="$SAVE_LIBS"])
-	fi
+      if test "$enable_doscompile" = mingw; then
+	skip_lblas_check=yes
       fi
       ;;
-    esac
+  esac
+
+  if test -z "$use_blas" && test $skip_lblas_check = no; then
+    SAVE_LIBS="$LIBS"
+    AC_MSG_CHECKING([whether -lblas has BLAS])
+    LIBS="-lblas $LIBS"
+    AC_COIN_TRY_FLINK([daxpy],
+		      [AC_MSG_RESULT([yes])
+		       ADDLIBS="-lblas $ADDLIBS"
+		       use_blas='-lblas'],
+		      [AC_MSG_RESULT([no])
+	               LIBS="$SAVE_LIBS"])
+  fi
 
 # If we have no other ideas, consider building BLAS.
   if test -z "$use_blas"; then
-    AC_MSG_CHECKING([if BLAS can be built.])
-    AC_CHECK_FILE([$coin_blasobjdir/Makefile],[use_blas=BUILD])
+    if test "$PACKAGE_NAME" != ThirdPartyBlas; then
+      if test -r $coin_blasobjdir/.MakeOk; then
+        use_blas=BUILD
+      fi
+    fi
   fi
 fi
 
@@ -2590,8 +2652,12 @@ AC_ARG_WITH([lapack],
 # Check if user supplied option makes sense
 if test x"$use_lapack" != x; then
   if test "$use_lapack" = "BUILD"; then
-    AC_CHECK_FILE([$coin_lapackobjdir/Makefile],[],
-                  [AC_MSG_ERROR([option \"BUILD\" specified for LAPACK, but $coin_lapackobjdir directory is not configured])])
+    # Don't check for course code if this is executed in ThirdParty/Blas
+    if test "$PACKAGE_NAME" != ThirdPartyLapack; then
+      if test -r $coin_lapackobjdir/.MakeOk; then :; else
+        AC_MSG_ERROR([option \"BUILD\" specified for LAPACK, but $coin_lapackobjdir directory is not configured])
+      fi
+    fi
   else
     AC_MSG_CHECKING([whether user supplied LAPACKLIB=\"$use_lapack\" works])
     LIBS="$use_lapack $LIBS"
@@ -2609,6 +2675,7 @@ else
                       [AC_MSG_RESULT([yes]); use_lapack=ok],
                       [AC_MSG_RESULT([no])])
   fi
+  skip_llapack_check=no
   if test -z "$use_lapack"; then
     # Try to autodetect the library for lapack based on build system
     case $build in
@@ -2637,25 +2704,32 @@ else
 # On cygwin, do this check only if doscompile is disabled. The prebuilt library
 # will want to link with cygwin, hence won't run standalone in DOS.
       *-cygwin*)
-	if test "$enable_doscompile" = no; then
-	  if test -z "$use_lapack"; then
-	    SAVE_LIBS="$LIBS"
-	    AC_MSG_CHECKING([whether -llapack has LAPACK])
-	    LIBS="-llapack $LIBS"
-	    AC_COIN_TRY_FLINK([dsyev],
-			      [AC_MSG_RESULT([yes])
-			       ADDLIBS="-llapack $ADDLIBS"
-			       use_lapack='-llapack'],
-			      [AC_MSG_RESULT([no])
-			       LIBS="$SAVE_LIBS"])
-	  fi
+	if test "$enable_doscompile" = mingw; then
+	  skip_llapack_check=yes
 	fi
 	;;
     esac
   fi
+
+  if test -z "$use_lapack" && test $skip_llapack_check = no; then
+    SAVE_LIBS="$LIBS"
+    AC_MSG_CHECKING([whether -llapack has LAPACK])
+    LIBS="-llapack $LIBS"
+    AC_COIN_TRY_FLINK([dsyev],
+		      [AC_MSG_RESULT([yes])
+		       ADDLIBS="-llapack $ADDLIBS"
+		       use_lapack='-llapack'],
+		      [AC_MSG_RESULT([no])
+		       LIBS="$SAVE_LIBS"])
+  fi
+
 # If we have no other ideas, consider building LAPACK.
   if test -z "$use_lapack"; then
-    AC_CHECK_FILE([$coin_lapackobjdir/Makefile],[use_lapack=BUILD])
+    if test "$PACKAGE_NAME" != ThirdPartyLapack; then
+      if test -r $coin_lapackobjdir/.MakeOk; then
+        use_lapack=BUILD
+      fi
+    fi
   fi
 fi
 
@@ -2674,3 +2748,109 @@ else
             [If defined, the LAPACK Library is available.])
 fi
 ]) # AC_COIN_HAS_LAPACK
+
+###########################################################################
+#                            COIN_HAS_MUMPS                               #
+###########################################################################
+
+# This macro checks for a library containing the MUMPS library.  It
+# checks if the user has provided an argument for the MUMPS library,
+# and if not, it checks whether the MUMPS ThirdParty/Mumps directory has
+# been configured.  It adds to ADDLIBS any flags required to link with
+# an externally provided MUMPS.  It defines the makefile conditional
+# and preprocessor macro COIN_HAS_MUMPS, if MUMPS is available, and it
+# defines the makefile conditional COIN_BUILD_MUMPS, if MUMPS is
+# compiled within COIN.
+
+AC_DEFUN([AC_COIN_HAS_MUMPS],
+[
+if test "$PACKAGE_NAME" = ThirdPartyMumps; then
+  coin_mumpsobjdir=../Mumps
+else
+  coin_mumpsobjdir=../ThirdParty/Mumps
+fi
+coin_mumpssrcdir=$abs_source_dir/$coin_mumpsobjdir
+
+mumps_ver=4.6.4
+
+MAKEOKFILE=.MakeOk
+
+AC_ARG_WITH([mumps-dir],
+            AC_HELP_STRING([--with-mumps-dir],
+                           [specify directory where MUMPS is installed]),
+            [use_mumps="$withval"], [use_mumps=no])
+
+if test "$use_mumps" != "no"; then
+  if test -d $use_mumps; then :; else
+    AC_MSG_ERROR([User provided MUMPS directory $use_mumps does not exist.])
+  fi
+  mumps_dir=`cd $use_mumps; pwd`
+
+  # library extension
+  AC_LANG_PUSH(C)
+  save_LIBS="$LIBS"
+  LIBS="$LIBS $FLIBS"
+  AC_CHECK_LIB([pthread],[pthread_create],[LIBS="-lpthread $save_LIBS"; ADDLIBS="-lpthread $ADDLIBS"],[LIBS="$save_LIBS"])
+  AC_LANG_POP(C)
+
+  case "$CC" in
+    cl* | */cl* | CL* | */CL*)
+         libe=lib ;;
+      *) libe=a ;;
+  esac
+
+  # Check if hearders are there
+  AC_CHECK_FILE([$mumps_dir/include/dmumps_c.h],
+                [],
+                [AC_MSG_ERROR([I cannot find headers for MUMPS])])
+  LIBS="$mumps_dir/lib/libdmumps.$libe $mumps_dir/lib/libpord.$libe $mumps_dir/libseq/libmpiseq.$libe $LIBS"
+  ADDLIBS="$mumps_dir/lib/libdmumps.$libe $mumps_dir/lib/libpord.$libe $mumps_dir/libseq/libmpiseq.$libe $ADDLIBS"
+  # Check if MUMPS actually works
+  AC_LANG_PUSH(C)
+  save_LIBS="$LIBS"
+  LIBS="$LIBS $FLIBS"
+  AC_TRY_LINK([void dmumps_c();],[dmumps_c()],[],
+              [AC_MSG_ERROR([User provided MUMPS library doesn't work])])
+  LIBS="$save_LIBS"
+  AC_LANG_POP(C)
+
+else
+  use_mumps=BUILD
+
+  # Check if the MUMPS' ThirdParty project has been configured
+  if test "$PACKAGE_NAME" != ThirdPartyMumps; then
+    if test -r $coin_mumpsobjdir/.MakeOk; then
+      use_mumps=BUILD
+      # Mumps needs pthreads
+      AC_LANG_PUSH(C)
+      save_LIBS="$LIBS"
+      LIBS="$LIBS $FLIBS"
+      AC_CHECK_LIB([pthread],[pthread_create],[LIBS="-lpthread $save_LIBS"; ADDLIBS="-lpthread $ADDLIBS"],[LIBS="save_LIBS"])
+      AC_LANG_POP(C)
+    else
+      use_mumps=
+    fi
+  fi
+fi
+
+if test x"$use_mumps" != x; then
+
+  # and we need the Fortran runtime libraries if we want to link with C/C++
+  coin_need_flibs=yes
+
+  MUMPS_INCFLAGS="-I`$CYGPATH_W $coin_mumpssrcdir/MUMPS_${mumps_ver}/libseq` -I`$CYGPATH_W $coin_mumpssrcdir/MUMPS_${mumps_ver}/include`"
+  AC_SUBST(MUMPS_INCFLAGS)
+fi
+
+AM_CONDITIONAL([COIN_HAS_MUMPS],[test x"$use_mumps" != x])
+AM_CONDITIONAL([COIN_BUILD_MUMPS],[test "$use_mumps" = BUILD])
+
+if test x"$use_mumps" = x || test "$use_mumps" = no; then
+  coin_has_mumps=no
+else
+  coin_has_mumps=yes
+  AC_DEFINE([COIN_HAS_MUMPS],[1],
+            [If defined, the MUMPS Library is available.])
+fi
+]) # AC_COIN_HAS_MUMPS
+
