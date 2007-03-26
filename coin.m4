@@ -2771,8 +2771,6 @@ else
 fi
 coin_mumpssrcdir=$abs_source_dir/$coin_mumpsobjdir
 
-mumps_ver=4.6.4
-
 MAKEOKFILE=.MakeOk
 
 AC_ARG_WITH([mumps-dir],
@@ -2838,7 +2836,7 @@ if test x"$use_mumps" != x; then
   # and we need the Fortran runtime libraries if we want to link with C/C++
   coin_need_flibs=yes
 
-  MUMPS_INCFLAGS="-I`$CYGPATH_W $coin_mumpssrcdir/MUMPS_${mumps_ver}/libseq` -I`$CYGPATH_W $coin_mumpssrcdir/MUMPS_${mumps_ver}/include`"
+  MUMPS_INCFLAGS="-I`$CYGPATH_W $coin_mumpssrcdir/MUMPS/libseq` -I`$CYGPATH_W $coin_mumpssrcdir/MUMPS/include`"
   AC_SUBST(MUMPS_INCFLAGS)
 fi
 
