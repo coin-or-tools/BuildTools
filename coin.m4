@@ -1124,7 +1124,7 @@ if test "$F77" != "unavailable" && test x"$FFLAGS" = x ; then
         case $F77 in
           ifort* | */ifort* | IFORT* | */IFORT* )
             coin_opt_fflags='-O3'
-            coin_add_fflags='-nologo -MT'
+            coin_add_fflags='-fpp -nologo -MT'
             coin_dbg_fflags='-debug'
           ;;
         esac
@@ -1799,7 +1799,8 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
   	    -e 's%$AR x \\$f_ex_an_ar_oldlib%bla=\\`lib -nologo -list \\$f_ex_an_ar_oldlib | xargs echo\\`; echo \\$bla; for i in \\$bla; do lib -nologo -extract:\\$i \\$f_ex_an_ar_oldlib; done%' \
 	    -e 's/$AR t/lib -nologo -list/' \
 	    -e 's%f_ex_an_ar_oldlib="\($?*1*\)"%f_ex_an_ar_oldlib='\`"$CYGPATH_W"' \1`%' \ 
-	    -e  's%^archive_cmds=.*%archive_cmds="\\$CC -o \\$lib \\$libobjs \\$compiler_flags \\\\\\`echo \\\\\\"\\$deplibs\\\\\\" | \\$SED -e '"\'"'s/ -lc\\$//'"\'"'\\\\\\` -link -dll~linknames="%' \
+	    -e 's%^archive_cmds=.*%archive_cmds="\\$CC -o \\$lib \\$libobjs \\$compiler_flags \\\\\\`echo \\\\\\"\\$deplibs\\\\\\" | \\$SED -e '"\'"'s/ -lc\\$//'"\'"'\\\\\\` -link -dll~linknames="%' \\
+	    -e 's%old_archive_cmds="lib -OUT:\\$oldlib\\$oldobjs\\$old_deplibs"%old_archive_cmds="if test -r \\$oldlib; then bla=\\"\\$oldlib\\"; else bla=; fi; lib -OUT:\\$oldlib \\\\\\$bla\\$oldobjs\\$old_deplibs"%' \
         libtool > conftest.bla
 
         mv conftest.bla libtool
@@ -2371,7 +2372,7 @@ AC_DEFUN([AC_COIN_HAS_ASL],
 coin_aslsrcdir=$srcdir/$coin_aslobjdir
 
 # Determine the name of the ASL library
-case "$CXX" in
+case "$CC" in
   cl* | */cl* | CL* | */CL*)
     ampllib=amplsolv.lib ;;
   *)
@@ -2836,12 +2837,14 @@ if test x"$use_mumps" != x; then
   # and we need the Fortran runtime libraries if we want to link with C/C++
   coin_need_flibs=yes
 
-  MUMPS_INCFLAGS="-I`$CYGPATH_W $coin_mumpssrcdir/MUMPS/libseq` -I`$CYGPATH_W $coin_mumpssrcdir/MUMPS/include`"
+  MUMPS_INCFLAGS="-I\`\$(CYGPATH_W) $coin_mumpssrcdir/MUMPS/libseq\` -I\`\$(CYGPATH_W) $coin_mumpssrcdir/MUMPS/include\`"
   AC_SUBST(MUMPS_INCFLAGS)
 fi
 
 AM_CONDITIONAL([COIN_HAS_MUMPS],[test x"$use_mumps" != x])
 AM_CONDITIONAL([COIN_BUILD_MUMPS],[test "$use_mumps" = BUILD])
+
+AC_MSG_CHECKING([whether MUMPS is available])
 
 if test x"$use_mumps" = x || test "$use_mumps" = no; then
   coin_has_mumps=no
@@ -2850,5 +2853,6 @@ else
   AC_DEFINE([COIN_HAS_MUMPS],[1],
             [If defined, the MUMPS Library is available.])
 fi
+AC_MSG_RESULT([$coin_has_mumps])
 ]) # AC_COIN_HAS_MUMPS
 
