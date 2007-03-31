@@ -1817,6 +1817,15 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
         chmod 755 libtool
         ;;
     esac
+    ;;
+    *-darwin*)
+      AC_MSG_NOTICE(Applying patches to libtool for Darwin)
+      sed -e 's/verstring="${wl}-compatibility_version ${wl}$minor_current ${wl}-current_version ${wl}$minor_current.$revision"/verstring="-compatibility_version $minor_current -current_version $minor_current.$revision"/' \
+      libtool > conftest.bla
+
+      mv conftest.bla libtool
+      chmod 755 libtool
+      ;;
   esac
 # This fi matches the commented `if test "x$LIBTOOL" = x;' up at the head of
 # the macro. -- lh, 061214 --
