@@ -2,7 +2,11 @@
  * system and compiler dependent configuration macros */
 
 /* Define to 64bit integer type */
+#if _MSC_VER==1200
+#define COIN_INT64_T __int64
+#else
 #define COIN_INT64_T long long
+#endif
 
 /* Define to integer type capturing pointer */
 #define COIN_INTPTR_T long
