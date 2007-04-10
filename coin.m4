@@ -352,7 +352,10 @@ m4_ifvaln([$1],
 [AC_ARG_WITH(m4_tolower($1)-verbosity,
              AC_HELP_STRING([--with-m4_tolower($1)-verbosity],
                             [specify the debug verbosity level for project $1]),
-             [m4_tolower(coin_$1_verbosity)=$withval],
+             [if test "$withval" = yes; then
+                withval=1
+              fi
+              m4_tolower(coin_$1_verbosity)=$withval],
              [m4_tolower(coin_$1_verbosity)=0])
  AC_DEFINE_UNQUOTED(m4_toupper(COIN_$1_VERBOSITY),
                     m4_tolower($coin_$1_verbosity),
@@ -361,7 +364,10 @@ m4_ifvaln([$1],
  AC_ARG_WITH(m4_tolower($1)-checklevel,
              AC_HELP_STRING([--with-m4_tolower($1)-checklevel],
                             [specify the sanity check level for project $1]),
-             [m4_tolower(coin_$1_checklevel)=$withval],
+             [if test "$withval" = yes; then
+                withval=1
+              fi
+              m4_tolower(coin_$1_checklevel)=$withval],
              [m4_tolower(coin_$1_checklevel)=0])
  AC_DEFINE_UNQUOTED(m4_toupper(COIN_$1_CHECKLEVEL),
                     m4_tolower($coin_$1_checklevel),
