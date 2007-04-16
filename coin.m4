@@ -2282,95 +2282,144 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
                [test $m4_tolower(coin_has_$1) != unavailable &&
                 test $m4_tolower(coin_has_$1) != skipping])
 AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
-]) # AC_COIN_HAS
+]) # AC_COIN_HAS_PROJECT
 
 ###########################################################################
 #                        COIN_HAS_USER_LIBRARY                            #
 ###########################################################################
-
-# This macro sets up usage of a library with header files.  It defines
-# the LBRYINCDIR variable, and it defines COIN_HAS_LBRY preprocessor
-# macro and makefile conditional.  The first argument should be the
-# full name (LibraryName) of the library, and the second argument (in
-# upper case letters) the abbreviation (LBRY).  This macro also
-# introduces the configure arguments --with-libraryname-incdir and
-# --with-libraryname-lib which have to be both given by a user to use
-# this solver to tell the configure script where the include files and
-# the library are located.  Those arguments can also be given as
-# environement variables LBRYINCDIR and LBRYLIB, but a --with-*
-# argument overwrites an environment variable.  If a third argument is
-# given, it is assumed that this is the name of a header file that can
-# be checked for in the given include directory, and if a fourth
-# argument is given, it is assumed to be the name of a C function
-# which is given and defined in the library, and a test is done to
-# check if that symbol is defined in the library.
-# If it possible to disable the check, by specifying
-# --disable-libraryname-libcheck - this is a workaround for platforms
-# where checks don't work (yet) properly.
+# This macro sets up usage of a user library with header files. The assumption
+# is that the header file(s) and library do not reside in standard system
+# directories, hence both the include directory and link flags must be
+# specified. There are two mandatory arguments and two optional arguments.
+#
+# The first argument (mandatory) should be a name (LibraryName) for the
+# library.  The second argument (mandatory) should be an abbreviation in
+# upper case letters (LBRY) for the library. Ultimately, the macro will
+# specify two variables, LBRYINCDIR and LBRYLIB, to be substituted in files
+# generated during configuration; a preprocessor symbol COIN_HAS_LBRY; and a
+# matching automake conditional COIN_HAS_LBRY. LBRYINCDIR should specify the
+# directory containing include files for the library. LBRYLIB should specify
+# the flags necessary to link to the library.
+#
+# The macro defines three configure arguments, --with-libraryname-incdir,
+# --with-libraryname-lib, and --disable-libraryname-libcheck, by converting
+# LibraryName to lower case.
+#
+# LBRYINCDIR and LBRYLIB can be specified as environment variables or as
+# part of the configure command using --with-libraryname-incdir and
+# --with-libraryname-lib, respectively. Command line arguments override
+# environment variables.
+#
+# If a third argument is given, it should specify a file in LBRYINCDIR.  The
+# macro will check for the presence of the file. If a fourth argument is given,
+# it should specify a function name, `fname'.  The macro will attempt to link a
+# trivial program containing a parameterless call to the function, `fname()',
+# using the LBRYLIB flags. The link check uses C as the language; this has been
+# adequate to date but has limitations. It is possible to disable the link
+# check by specifying --disable-libraryname-libcheck. This is a workaround for
+# instances where the link check does not work properly, for whatever reason.
+# If you're trying to link to a Fortran library, consider using F77_FUNC or
+# FC_FUNC to obtain a mangled fname appropriate for use from C code. For a C++
+# library, you're on your own unless the library declares some function with
+# extern "C" linkage. Otherwise, you'll have to somehow find the mangled C++
+# name.
 
 AC_DEFUN([AC_COIN_HAS_USER_LIBRARY],
-[AC_REQUIRE([AC_COIN_PROJECTDIR_INIT])
-AC_MSG_CHECKING(if user provides library for $1)
+[ AC_REQUIRE([AC_COIN_PROJECTDIR_INIT])
+  AC_MSG_CHECKING(if user provides library for $1)
 
 # Check for header file directory
-AC_ARG_WITH(m4_tolower($1)-incdir,
-            AC_HELP_STRING([--with-m4_tolower($1)-incdir],
-                           [specify the directory with the header files for library $1]),
-                           [$2INCDIR=`cd $withval; pwd`])
+
+  AC_ARG_WITH(m4_tolower($1)-incdir,
+      AS_HELP_STRING([--with-m4_tolower($1)-incdir],
+		     [specify the header file directory for library $1]),
+      [$2INCDIR=`cd $withval; pwd`])
+
 # Check for library directory
-AC_ARG_WITH(m4_tolower($1)-lib,
-            AC_HELP_STRING([--with-m4_tolower($1)-lib],
-                           [specify the flags to link with the library $1]),
-                           [$2LIB=$withval])
+
+  AC_ARG_WITH(m4_tolower($1)-lib,
+      AS_HELP_STRING([--with-m4_tolower($1)-lib],
+		     [specify the flags used to link with the library $1]),
+      [$2LIB=$withval])
+
 # Switch to disable library check if requested
-AC_ARG_ENABLE(m4_tolower($1)-libcheck,
-              AC_HELP_STRING([--enable-m4_tolower($1)-libcheck],
-                             [use disable-m4_tolower($1)-libcheck to skip the link check at configuration time]),
-              [m4_tolower($1)_libcheck=$enableval],
-              [m4_tolower($1)_libcheck=yes])
 
-if test x"$$2INCDIR" != x || test x"$$2LIB" != x; then
-  m4_tolower(coin_has_$2)=true
-else
-  m4_tolower(coin_has_$2)=false
-fi
+  AC_ARG_ENABLE(m4_tolower($1)-libcheck,
+      AS_HELP_STRING([--enable-m4_tolower($1)-libcheck],
+		     [use disable-m4_tolower($1)-libcheck to skip the link
+		      check at configuration time]),
+      [m4_tolower($1)_libcheck=$enableval],
+      [m4_tolower($1)_libcheck=yes])
 
-if test $m4_tolower(coin_has_$2) = true; then
-# Check either both arguments or none are given
-  if test x"$$2INCDIR" = x || test x"$$2LIB" = x; then
-    AC_MSG_ERROR([You need to specify both --with-m4_tolower($1)-incdir and --with-m4_tolower($1)-lib if you want to use library $1])
+# At this point, if we're going to use the library, both LBRYINCDIR and
+# LBRYLIB must be defined and not empty.
+
+  if test x"$$2INCDIR" != x || test x"$$2LIB" != x; then
+    if test x"$$2INCDIR" = x || test x"$$2LIB" = x; then
+      AC_MSG_ERROR([You need to specify both an include directory and link flags to use library $1. Use --with-m4_tolower($1)-incdir of environment variable $$2INCDIR to specify the include directory. Use --with-m4_tolower($1)-lib or environment variable $$2LIB to specify link flags.])
+    fi
+    m4_tolower(coin_has_$2)=true
+    AC_MSG_RESULT(yes)
+  else
+    m4_tolower(coin_has_$2)=false
+    AC_MSG_RESULT(no)
   fi
-  AC_MSG_RESULT(yes)
-  # Check if the given header file is there
-  m4_ifvaln([$3],[AC_CHECK_FILE([$$2INCDIR/$3],[],
-                 [AC_MSG_ERROR([Cannot find file $3 in $$2INCDIR])])])
-  # Check if the symbol is provided in the library
-  # ToDo: FOR NOW WE ASSUME THAT WE ARE USING THE C++ COMPILER
-  m4_ifvaln([$4],[if test x"$m4_tolower($1)_libcheck" != xno; then
-                    coin_save_LIBS="$LIBS"
-                    LIBS="$$2LIB $ADDLIBS"
-		    AC_MSG_CHECKING([whether symbol $4 is available with $2])
-                    AC_LANG_PUSH(C)
-# ToDo find out what to do about extern "C"
-#                    AC_TRY_LINK([extern "C" {void $4();}],[$4()],
-                    AC_TRY_LINK([void $4();],[$4()],
-                                [AC_MSG_RESULT(yes)],
-			        [AC_MSG_RESULT(no)
-                                 AC_MSG_ERROR([Cannot find symbol $4 with $2])])
-                    AC_LANG_POP(C)
-                    LIBS="$coin_save_LIBS"
-                  fi])
-  ADDLIBS="$$2LIB $ADDLIBS"
-  AC_DEFINE(COIN_HAS_$2,[1],[Define to 1 if the $1 package is used])
-else
-  AC_MSG_RESULT(no)
-fi
 
-AC_SUBST($2INCDIR)
-AC_SUBST($2LIB)
-AM_CONDITIONAL(COIN_HAS_$2,
-               test $m4_tolower(coin_has_$2) = true)
-]) #AC_COIN_HAS_SOLVER 
+# If we have instructions for use, consider header and link checks.
+
+  if test $m4_tolower(coin_has_$2) = true; then
+
+# If argument 3 (file) is given, check for the file. Typically this will be a
+# header file, but that's not assumed.
+
+    m4_ifval([$3],
+        [AC_CHECK_FILE([$$2INCDIR/$3],[],
+	     [AC_MSG_ERROR([Cannot find file $3 in $$2INCDIR])])])
+
+# Now see if we can link the function. There are arguments for and against
+# assuming argument 3 is a header file declaring the function. A correct
+# function declaration is the main argument in favour. Having to cope with
+# possible dependencies or other oddities are the main arguments against.
+# Force the use of C as the best single choice amongst C++, C, and Fortran.
+# Obviously, this has limits.
+
+    m4_ifvaln([$4],
+        [if test x"$m4_tolower($1)_libcheck" != xno; then
+	   coin_save_LIBS="$LIBS"
+	   LIBS="$$2LIB $ADDLIBS"
+	   coin_$2_link=no
+	   AC_LANG_PUSH(C)
+	   for fnm in $4 ; do
+	     AC_MSG_CHECKING([whether symbol $fnm is available with $2])
+	     AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],[[$fnm()]])],
+		 [AC_MSG_RESULT(yes)
+		  coin_$2_link=yes
+		  break],
+		 [AC_MSG_RESULT(no)])
+	   done
+	   AC_LANG_POP(C)
+	   if test x"$coin_$2_link" = xyes ; then
+	     LIBS="$coin_save_LIBS"
+	   else
+	     AC_MSG_ERROR([Cannot find symbol(s) $4 with $2])
+	   fi
+	 fi])
+
+# If we make it this far, we've verified the file and linked the function. Add
+# the necessary link flags to ADDLIBS and define the preprocessor symbol
+# COIN_HAS_LBRY.
+
+    ADDLIBS="$$2LIB $ADDLIBS"
+    AC_DEFINE(COIN_HAS_$2,[1],[Define to 1 if the $1 package is used])
+  fi
+
+# Arrange for configure to substitute LBRYINCDIR and LBRYLIB and create the
+# automake conditional. These actions must occur unconditionally.
+
+  AC_SUBST($2INCDIR)
+  AC_SUBST($2LIB)
+  AM_CONDITIONAL(COIN_HAS_$2, test $m4_tolower(coin_has_$2) = true)
+]) #AC_COIN_HAS_USER_LIBRARY 
 
 ###########################################################################
 #                               COIN_HAS_ASL                              #
