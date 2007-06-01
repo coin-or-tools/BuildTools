@@ -2717,7 +2717,7 @@ AC_ARG_WITH([lapack],
 # Check if user supplied option makes sense
 if test x"$use_lapack" != x; then
   if test "$use_lapack" = "BUILD"; then
-    # Don't check for course code if this is executed in ThirdParty/Blas
+    # Don't check for course code if this is executed in ThirdParty/Lapack
     if test "$PACKAGE_NAME" != ThirdPartyLapack; then
       if test -r $coin_lapackobjdir/.MakeOk; then :; else
         AC_MSG_ERROR([option \"BUILD\" specified for LAPACK, but $coin_lapackobjdir directory is not configured])
