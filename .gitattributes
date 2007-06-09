@@ -1,6 +1,9 @@
 * text=auto !eol
 /Makemain.inc -text
 /coin.m4 -text
+compile_f2c/INSTALL -text
+compile_f2c/README -text
+compile_f2c/compile_f2c -text
 /config.guess -text
 /config.sub -text
 /depcomp -text
