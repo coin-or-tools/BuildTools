@@ -19,24 +19,31 @@ f2clibdir=/usr/local/lib/libf2c
 #You should not have to change anything below this line
 ########################################################################
 
+#Find out what the 
+if test `which cygpath | wc -l` -eq 0; then
+  CYGPATH_W=echo
+else
+  CYGPATH_W='cygpath -w'
+fi
 
-f2clib=`cygpath -w $f2clibdir/vcf2c.lib`
-mainobj=`cygpath -w $f2clibdir/main.obj`
+if test "$F2C_CC" = ""; then
+  F2C_CC=cl
+fi
+
+f2clib=`$CYGPATH_W $f2clibdir/vcf2c.lib`
+mainobj=`$CYGPATH_W $f2clibdir/main.obj`
 
 # Get rid of the \
 f2clib=`echo $f2clib | sed -e s'!\\\\!/!g'`
 mainobj=`echo $mainobj | sed -e s'!\\\\!/!g'`
 
-if test "$CC" = ""; then
-  CC=cl
-fi
 
 if test "$#" -eq 1 && test "$1" = "-FLIBS"; then
   echo $f2clib
   exit 0
 fi
 
-cincs=-I`cygpath -w $f2clibdir`
+cincs="-I`$CYGPATH_W $f2clibdir`"
 
 options=
 incs=
@@ -88,10 +95,11 @@ fi
 csrc=
 if test "$fsrc" != ""; then
   for f in $fsrc; do
-    cf=`echo $f | sed -e 's|.[fF]$|.c|'`
+    cf=`echo $f | sed -e 's|.[fF]$|.c|' -e 's|.*/||'`
     csrc="$csrc $cf"
   done
 
+  echo f2c $incs $fsrc
   f2c $incs $fsrc
   f2c_status=$?
   if test $f2c_status != 0; then
@@ -100,13 +108,14 @@ if test "$fsrc" != ""; then
   fi
 fi
 
+
 if test "$outfile"; then
-  cout="-o `cygpath -w $outfile`"
+  cout="-o `$CYGPATH_W $outfile`"
 fi
 
-echo $CC $options $cincs $csrc $objs $cout $mainobj $f2clib
+echo $F2C_CC $options $cincs $csrc $objs $cout $mainobj $f2clib
 
-$CC $options $cincs $csrc $objs $cout $mainobj $f2clib
+$F2C_CC $options $cincs $csrc $objs $cout $mainobj $f2clib
 cl_status=$?
 
 rm -f $csrc
