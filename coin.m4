@@ -1975,7 +1975,7 @@ if test x$coin_skip_ac_output != xyes; then
 
   if test x"$coin_vpath_link_files" = x; then : ; else
     lnkcmd=
-    if test "$enable_doscompile" = yes; then
+    if test "$enable_doscompile" = mingw; then
       lnkcmd=cp
     fi
     case "$CC" in
