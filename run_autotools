@@ -1,5 +1,15 @@
 #!/bin/sh
 
+# Copyright (C) 2006, 2007  International Business Machines.
+# All Rights Reserved.
+# This file is distributed under the Common Public License.
+# It is part of the BuildTools project in COIN-OR (www.coin-or.org)
+#
+## $Id$
+#
+# Author: Andreas Waechter     IBM      2006-04-14
+
+
 ver_autoconf='2.59'
 ver_automake='1.9.6'
 ver_libtool='1.5.22'
