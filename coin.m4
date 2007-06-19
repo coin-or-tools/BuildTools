@@ -507,6 +507,14 @@ if test -z "$CXX" ; then
   AC_MSG_ERROR([Failed to find a C++ compiler!])
 fi
 
+# It seems that we need to cleanup something here for the Windows 
+case "$CXX" in
+  cl* | */cl* | CL* | */CL* )
+    sed -e 's/^void exit (int);//' confdefs.h >> confdefs.hh
+    mv confdefs.hh confdefs.h
+    ;;
+esac
+
 # Autoconf incorrectly concludes that cl recognises -g. It doesn't.
 case "$CXX" in
   cl* | */cl* | CL* | */CL* )
