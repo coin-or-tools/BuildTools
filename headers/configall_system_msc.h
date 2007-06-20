@@ -62,7 +62,10 @@
 #define HAVE_CSTDIO 1
 
 /* Define to 1 if you have the <cstdlib> header file. */
-/* #undef HAVE_CSTDLIB */
+#define HAVE_CSTDLIB 1
+
+/* Define to 1 if you have the <cstring> header file. */
+#define HAVE_CSTRING 1
 
 /* Define to 1 if you have the <ctime> header file. */
 #define HAVE_CTIME 1
@@ -71,7 +74,10 @@
 /* #undef HAVE_CTYPE_H */
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
-/* #define HAVE_DLFCN_H */
+/* #undef HAVE_DLFCN_H */
+
+/* Define to 1 if function drand48 is available */
+/* #undef HAVE_DRAND48 */
 
 /* Define to 1 if you have the <float.h> header file. */
 /* #undef HAVE_FLOAT_H */
@@ -88,17 +94,23 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
 
+/* Define to 1 if function rand is available */
+#define HAVE_RAND 1
+
 /* Define to 1 if you have the <stdarg.h> header file. */
 /* #undef HAVE_STDARG_H */
 
 /* Define to 1 if you have the <stdint.h> header file. */
-/* #define HAVE_STDINT_H */
+/* #undef HAVE_STDINT_H */
 
 /* Define to 1 if you have the <stdio.h> header file. */
 /* #undef HAVE_STDIO_H */
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #define HAVE_STDLIB_H 1
+
+/* Define to 1 if function std::rand is available */
+#define HAVE_STD__RAND 1
 
 /* Define to 1 if you have the <strings.h> header file. */
 /* #define HAVE_STRINGS_H */
