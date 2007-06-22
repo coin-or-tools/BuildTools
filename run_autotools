@@ -142,5 +142,8 @@ for dir in $dirs; do
    else
      echo "*** No configure.ac file in $dir - SKIPPING! ***"
    fi
-   )
+  )
+  if test $? -ne 0; then
+    exit -2;
+  fi
 done
