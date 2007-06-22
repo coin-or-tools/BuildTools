@@ -233,7 +233,7 @@ if test -r Externals; then
       done
       if test $ext_latest = -10000; then
         echo ''
-        echo 'Error: No release for $ext_name for its stable defined in External'
+        echo "Error: No release for $ext_name for its stable defined in External"
         echo ''
         exit -5
       fi
