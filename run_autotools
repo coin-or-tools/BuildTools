@@ -9,8 +9,6 @@
 #
 # Author: Andreas Waechter     IBM      2006-04-14
 
-# Make sure we bail out if there is an error
-set -e
 
 ver_autoconf='2.59'
 ver_automake='1.9.6'
@@ -27,14 +25,14 @@ autoconf --version > confauto.out 2>&1
 if $EGREP $grep_version confauto.out >/dev/null 2>&1; then :; else
   echo You are not using the correct version of autoconf
   rm -f confauto.out
-  exit -2
+  exit
 fi
 rm -f confauto.out
 autoconf_dir=`which autoconf | sed -e 's=/autoconf=='`
 autoconf_dir=`cd $autoconf_dir; pwd`
 if test $autoconf_dir = `cd $AUTOTOOLS_DIR/bin; pwd`; then :; else
   echo autoconf is not picked up from the correct location
-  exit -2
+  exit
 fi
 
 grep_version=`echo  $ver_automake | sed -e 's/\\./\\\\\\./g'`
@@ -42,14 +40,14 @@ automake --version > confauto.out 2>&1
 if $EGREP $grep_version confauto.out >/dev/null 2>&1; then :; else
   echo You are not using the correct version of automake
   rm -f confauto.out
-  exit -2
+  exit
 fi
 rm -f confauto.out
 autoconf_dir=`which automake | sed -e 's=/automake=='`
 autoconf_dir=`cd $autoconf_dir; pwd`
 if test $autoconf_dir = `cd $AUTOTOOLS_DIR/bin; pwd`; then :; else
   echo automake is not picked up from the correct location
-  exit -2
+  exit
 fi
 
 grep_version=`echo  $ver_libtool | sed -e 's/\\./\\\\\\./g'`
@@ -110,7 +108,7 @@ if test -r $currdir/BuildTools/coin.m4; then
   toolsdir=$currdir/BuildTools
 else
   echo Cannot find BuildTools directory.
-  exit -2
+  exit
 fi
 
 echo Copying autotools scripts into this directory
@@ -143,7 +141,4 @@ for dir in $dirs; do
      echo "*** No configure.ac file in $dir - SKIPPING! ***"
    fi
    )
-   if test $? != 0; then
-     exit -1
-   fi
 done
