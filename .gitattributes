@@ -1,6 +1,7 @@
 * text=auto !eol
 /Makemain.inc -text
 /coin.m4 -text
+/commit_new_release -text
 compile_f2c/INSTALL -text
 compile_f2c/README -text
 compile_f2c/compile_f2c -text
@@ -11,5 +12,6 @@ headers/configall_system.h -text
 headers/configall_system_msc.h -text
 /install-sh -text
 /missing -text
+/prepare_new_release -text
 /run_autotools -text
 share/config.site -text

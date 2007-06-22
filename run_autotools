@@ -9,6 +9,8 @@
 #
 # Author: Andreas Waechter     IBM      2006-04-14
 
+# Make sure we bail out if there is an error
+set -e
 
 ver_autoconf='2.59'
 ver_automake='1.9.6'
@@ -140,5 +142,8 @@ for dir in $dirs; do
    else
      echo "*** No configure.ac file in $dir - SKIPPING! ***"
    fi
-   )
+  )
+  if test $? -ne 0; then
+    exit -2;
+  fi
 done
