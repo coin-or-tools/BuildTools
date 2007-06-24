@@ -101,7 +101,7 @@ for i in $release_vers; do
 done
 
 if test $new_rel = -10000; then
-  new_rel=1
+  new_rel=0
 else
   let new_rel++
 fi
@@ -184,7 +184,7 @@ done
 echo ''
 echo "===> Updating version number ($new_ver) in configure.ac files"
 for i in $conf_ac_files; do
-  sed -e "s|AC_INIT\(.*\)\[[0-9\.]*\],\(.*\)|AC_INIT\1[$new_ver]\2|" $i > bla
+  sed -e "s|AC_INIT\(.*\)\[[0-9\.]*\],\(.*\)|AC_INIT\1[$new_ver],\2|" $i > bla
   mv bla $i
   svn di $i
 done
@@ -421,7 +421,7 @@ echo 'the directory'
 echo ''
 echo "          $tmpcodir"
 echo ''
-echo "and run the $tmpbas/BuildTools/commit_new_release script"
+echo "and run the commit_new_release script"
 
 cat >.new_release_data <<EOF
 tmpcodir=$tmpcodir
@@ -431,4 +431,3 @@ stable_url=$stable_url
 new_ver=$new_ver
 stable_branch=$stable_branch
 EOF
-
