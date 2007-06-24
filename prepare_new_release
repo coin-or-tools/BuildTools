@@ -101,7 +101,7 @@ for i in $release_vers; do
 done
 
 if test $new_rel = -10000; then
-  new_rel=1
+  new_rel=0
 else
   let new_rel++
 fi
@@ -115,27 +115,21 @@ echo "===> Checking out stable release $stable_branch without externals..."
 echo ''
 
 case $base_url in
-  *ThirdParty*)
+  *ThirdParty/* )
     is_thirdparty=yes
+    is_data=no
+    ;;
+  *Data )
+    is_thirdparty=no
+    is_data=yes
     ;;
   *)
     is_thirdparty=no
+    is_data=no
     ;;
 esac
 
-tmpbas=tmp_checkout
-if test $is_thirdparty = yes; then
-  tmpcodir=$tmpbas/a/b
-else
-  tmpcodir=$tmpbas
-fi
-
-rm -rf $tmpbas
-cmd="svn co --ignore-externals $stable_url $tmpcodir"
-echo $cmd
-eval $cmd
-
-if test $is_thirdparty = yes; then
+if test $is_thirdparty = yes || test $is_data = yes; then
   buildtoolsurl=$2
   if test "$buildtoolsurl" == ""; then
     echo ''
@@ -150,6 +144,23 @@ if test $is_thirdparty = yes; then
       buildtoolsurl=https://projects.coin-or.org/svn/$buildtoolsurl
       ;;
   esac
+fi
+
+tmpbas=tmp_checkout
+if test $is_thirdparty = yes; then
+  tmpcodir=$tmpbas/a/b
+elif test $is_data = yes; then
+  tmpcodir=$tmpbas/a
+else
+  tmpcodir=$tmpbas
+fi
+
+rm -rf $tmpbas
+cmd="svn co --ignore-externals $stable_url $tmpcodir"
+echo $cmd
+eval $cmd
+
+if test $is_thirdparty = yes || test $is_data = yes; then
   echo ''
   echo '===> Checking out BuildTools for ThirdParty project...'
   echo ''
@@ -173,7 +184,7 @@ done
 echo ''
 echo "===> Updating version number ($new_ver) in configure.ac files"
 for i in $conf_ac_files; do
-  sed -e "s|AC_INIT\(.*\)\[[0-9\.]*\]\(.*\)|AC_INIT\1[$new_ver]\2|" $i > bla
+  sed -e "s|AC_INIT\(.*\)\[[0-9\.]*\],\(.*\)|AC_INIT\1[$new_ver],\2|" $i > bla
   mv bla $i
   svn di $i
 done
@@ -222,7 +233,7 @@ if test -r Externals; then
       done
       if test $ext_latest = -10000; then
         echo ''
-        echo 'Error: No release for $ext_name for its stable defined in External'
+        echo "Error: No release for $ext_name for its stable defined in External"
         echo ''
         exit -5
       fi
@@ -298,6 +309,10 @@ if test $is_thirdparty = yes; then
   cd ../..
   BuildTools/run_autotools
   cd - > /dev/null
+elif test $is_data = yes; then
+  cd ..
+  BuildTools/run_autotools
+  cd - > /dev/null
 else
   BuildTools/run_autotools
 fi
@@ -345,7 +360,7 @@ if test -r Externals; then
   rm -f problems.ext
 fi # if test -r Externals
 
-if test $is_thirdparty != yes; then
+if test $is_thirdparty != yes && test $is_data != yes; then
   (set -e
    echo ''
    echo '===> Creating build directory and running the configuration script...'
@@ -390,7 +405,7 @@ fi
 
 echo ''
 echo '===> ALL TESTS PASSED'
-if test $is_thirdparty != yes; then
+if test $is_thirdparty != yes && test $is_data != yes; then
   echo ''
   echo 'Please review the output above, particularly the one of make test'
 fi
@@ -406,7 +421,7 @@ echo 'the directory'
 echo ''
 echo "          $tmpcodir"
 echo ''
-echo "and run the $tmpbas/BuildTools/commit_new_release script"
+echo "and run the commit_new_release script"
 
 cat >.new_release_data <<EOF
 tmpcodir=$tmpcodir
@@ -416,4 +431,3 @@ stable_url=$stable_url
 new_ver=$new_ver
 stable_branch=$stable_branch
 EOF
-

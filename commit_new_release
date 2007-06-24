@@ -63,7 +63,7 @@ conf_ac_files=`find . -name 'configure.ac'`
 echo ''
 echo "===> Restoring version number (${stable_branch}stable) in configure.ac files"
 for i in $conf_ac_files; do
-  sed -e "s|AC_INIT\(.*\)\[[0-9\.]*\]\(.*\)|AC_INIT\1[${stable_branch}stable]\2|" $i > bla
+  sed -e "s|AC_INIT\(.*\)\[[0-9\.]*\],\(.*\)|AC_INIT\1[${stable_branch}stable],\2|" $i > bla
   mv bla $i
   svn di $i
 done
@@ -88,3 +88,4 @@ echo "Done, new release $new_rel_url created"
 echo ''
 echo "You can now delete the directory $tmpbas including subdirectories"
 
+rm .new_release_data
