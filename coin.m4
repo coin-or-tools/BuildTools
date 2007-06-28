@@ -793,12 +793,13 @@ AC_LANG_POP(C++)
 # still pop up for the cl compiler
 
 AC_DEFUN([AC_COIN_CHECK_HEADER],
-[if test x"$4" = x; then
-  hdr="#include <$1>"
-else
-  hdr="$4"
-fi
-AC_CHECK_HEADERS([$1],[$2],[$3],[$hdr])
+[#if test x"$4" = x; then
+#  hdr="#include <$1>"
+#else
+#  hdr="$4"
+#fi
+#AC_CHECK_HEADERS([$1],[$2],[$3],[$hdr])
+AC_CHECK_HEADERS([$1],[$2],[$3],[$4])
 ]) # AC_COIN_CHECK_HEADER
 
 ###########################################################################
