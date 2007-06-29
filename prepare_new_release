@@ -102,6 +102,8 @@ done
 
 if test $new_rel = -10000; then
   new_rel=0
+elif test $new_rel = 0; then
+  new_rel=1
 else
   let new_rel++
 fi
