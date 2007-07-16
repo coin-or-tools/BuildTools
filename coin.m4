@@ -318,7 +318,9 @@ AC_ARG_ENABLE([debug],
                 [compile all projects with debug options tests])],
 [case "${enableval}" in
    yes) coin_debug_compile=true
-        enable_shared=no
+        if test "${enable_shared+set}" = set; then :; else
+          enable_shared=no
+        fi 
         ;;
    no)  coin_debug_compile=false
         ;;
@@ -1930,6 +1932,33 @@ AC_SUBST(RPATH_FLAGS)
 ]) # AC_COIN_RPATH_FLAGS
 
 ###########################################################################
+#                        COIN_LINK_INPUT_CMD                              #
+###########################################################################
+
+# This macro determines which command should be used to "link" files
+# that are input to the generated executables.  On Windows, the codes
+# using the native Windows system libraries, cannot understand symbolic
+# links, and a copy should be used instead of 'ln -s'.
+# The result is stored in coin_link_input_cmd
+
+AC_DEFUN([AC_COIN_LINK_INPUT_CMD],
+[AC_REQUIRE([AC_PROG_LN_S])
+AC_BEFORE([AC_COIN_PROG_CC], [$0])
+AC_BEFORE([AC_COIN_ENABLE_DOSCOMPILE], [$0])
+
+AC_MSG_CHECKING([which command should be used to link input files])
+coin_link_input_cmd="$LN_S"
+if test "$enable_doscompile" = mingw; then
+  coin_link_input_cmd=cp
+fi
+case "$CC" in
+  cl* | */cl* | CL* | */CL*)
+    coin_link_input_cmd=cp ;;
+esac
+AC_MSG_RESULT($coin_link_input_cmd)
+])
+
+###########################################################################
 #                              COIN_FINALIZE                              #
 ###########################################################################
 
@@ -1942,6 +1971,7 @@ AC_SUBST(RPATH_FLAGS)
 
 AC_DEFUN([AC_COIN_FINALIZE],
 [
+AC_REQUIRE([AC_COIN_LINK_INPUT_CMD])
 if test x$coin_skip_ac_output != xyes; then
 
   FADDLIBS="$ADDLIBS"
@@ -1983,20 +2013,11 @@ if test x$coin_skip_ac_output != xyes; then
   AC_OUTPUT
 
   if test x"$coin_vpath_link_files" = x; then : ; else
-    lnkcmd=
-    if test "$enable_doscompile" = mingw; then
-      lnkcmd=cp
-    fi
-    case "$CC" in
-      cl* | */cl* | CL* | */CL*)
-        lnkcmd=cp ;;
-    esac
+    lnkcmd="$coin_link_input_cmd"
     if test "$lnkcmd" = cp; then
       AC_MSG_NOTICE(Copying data files for VPATH configuration)
     else
-      AC_PROG_LN_S
       AC_MSG_NOTICE(Creating VPATH links for data files)
-      lnkcmd="$LN_S"
     fi
     for file in $coin_vpath_link_files; do
       dir=`AS_DIRNAME(["./$file"])`
