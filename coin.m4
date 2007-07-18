@@ -207,6 +207,22 @@ m4_ifvaln([$10],[AC_MSG_CHECKING(whether directory $10 is available)
 ]) # AC_COIN_MAIN_SUBDIRS
 
 ###########################################################################
+#                            COIN_CHECK_FILE                              #
+###########################################################################
+
+# A simple replacement for AC_CHECK_FILE that works for cross compilation
+
+AC_DEFUN([AC_COIN_CHECK_FILE],
+[if test -r $1; then
+  $2
+  :
+else
+  $3
+  :
+fi
+])
+
+###########################################################################
 #                        COIN_THIRDPARTY_SUBDIRS                          #
 ###########################################################################
 
@@ -1500,9 +1516,9 @@ if test "$enable_maintainer_mode" = yes; then
     fi
     correct_version='1.5.22'
     grep_version=`echo  $correct_version | sed -e 's/\\./\\\\\\./g'`
-    AC_CHECK_FILE([$want_dir/libtool/ltmain.sh],
-	          [have_ltmain=yes],
-                  [have_ltmain=no])
+    AC_COIN_CHECK_FILE([$want_dir/libtool/ltmain.sh],
+	               [have_ltmain=yes],
+                       [have_ltmain=no])
     AC_MSG_CHECKING([whether we are using the correct version ($correct_version) of libtool.])
     if test $have_ltmain = yes; then
     if $EGREP $grep_version $want_dir/libtool/ltmain.sh >/dev/null 2>&1; then
@@ -1523,9 +1539,9 @@ if test "$enable_maintainer_mode" = yes; then
   else
     want_dir=$AUTOTOOLS_DIR/share
   fi
-  AC_CHECK_FILE([$want_dir/aclocal/libtool.m4],
-                [LIBTOOLM4="$want_dir/aclocal/libtool.m4"],
-                [AC_MSG_ERROR([I cannot find the libtool.m4 file.])])
+  AC_COIN_CHECK_FILE([$want_dir/aclocal/libtool.m4],
+                     [LIBTOOLM4="$want_dir/aclocal/libtool.m4"],
+                     [AC_MSG_ERROR([I cannot find the libtool.m4 file.])])
 
   # Check if we have an Externals file
   if test -r $srcdir/Externals; then
@@ -2424,7 +2440,7 @@ AC_DEFUN([AC_COIN_HAS_USER_LIBRARY],
 # header file, but that's not assumed.
 
     m4_ifval([$3],
-        [AC_CHECK_FILE([$$2INCDIR/$3],[],
+        [AC_COIN_CHECK_FILE([$$2INCDIR/$3],[],
 	     [AC_MSG_ERROR([Cannot find file $3 in $$2INCDIR])])])
 
 # Now see if we can link the function. There are arguments for and against
@@ -2518,10 +2534,10 @@ elif test -z "$use_asldir"; then
     use_asldir=no
   fi
 elif test "$use_asldir" != "no"; then
-  AC_CHECK_FILE([$use_asldir/$ampllib],[],
-                [AC_MSG_ERROR([ASL directory \"$use_asldir\" specified, but library missing])])
-  AC_CHECK_FILE([$use_asldir/asl.h],[],
-                [AC_MSG_ERROR([ASL directory \"$use_asldir\" specified, but header files are missing])])
+  AC_COIN_CHECK_FILE([$use_asldir/$ampllib],[],
+                     [AC_MSG_ERROR([ASL directory \"$use_asldir\" specified, but library missing])])
+  AC_COIN_CHECK_FILE([$use_asldir/asl.h],[],
+                     [AC_MSG_ERROR([ASL directory \"$use_asldir\" specified, but header files are missing])])
   use_asldir=`cd $use_asldir; pwd`
   case $build in
     *-cygwin*) use_asldir=`cygpath -w $use_asldir | sed -e sX\\\\\\\\X/Xg` ;;
@@ -2914,9 +2930,9 @@ if test "$use_mumps" != "no"; then
   esac
 
   # Check if hearders are there
-  AC_CHECK_FILE([$mumps_dir/include/dmumps_c.h],
-                [],
-                [AC_MSG_ERROR([I cannot find headers for MUMPS])])
+  AC_COIN_CHECK_FILE([$mumps_dir/include/dmumps_c.h],
+                     [],
+                     [AC_MSG_ERROR([I cannot find headers for MUMPS])])
   LIBS="$mumps_dir/lib/libdmumps.$libe $mumps_dir/lib/libpord.$libe $mumps_dir/libseq/libmpiseq.$libe $LIBS"
   ADDLIBS="$mumps_dir/lib/libdmumps.$libe $mumps_dir/lib/libpord.$libe $mumps_dir/libseq/libmpiseq.$libe $ADDLIBS"
   # Check if MUMPS actually works
