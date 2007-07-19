@@ -2987,3 +2987,55 @@ fi
 AC_MSG_RESULT([$coin_has_mumps])
 ]) # AC_COIN_HAS_MUMPS
 
+###########################################################################
+#                             COIN_HAS_GLPK                               #
+###########################################################################
+
+# This macro checks for a library containing the GLPK library.  It
+# checks if the user has provided --with-glpk-lib and --with-glpk-incdir
+# flags, and it not, it checks if the ThirdParty/Glpk project is available.
+
+AC_DEFUN([AC_COIN_HAS_GLPK],
+[
+if test "$PACKAGE_NAME" = ThirdPartyGlpk; then
+  coin_glpkobjdir=../Glpk
+else
+  coin_glpkobjdir=../ThirdParty/Glpk
+fi
+coin_glpksrcdir=$abs_source_dir/$coin_glpkobjdir
+
+AC_COIN_HAS_USER_LIBRARY([Glpk],[GLPK],[glpk.h],
+    [_glp_lpx_simplex glp_lpx_simplex])
+
+MAKEOKFILE=.MakeOk
+use_glpk="$GLPKLIB"
+if test "$GLPKLIB" == ""; then
+
+  # Check if the Glpk's ThirdParty project has been configured
+  if test "$PACKAGE_NAME" != ThirdPartyGlpk; then
+    if test -r $coin_glpkobjdir/.MakeOk; then
+      use_glpk=BUILD
+    fi
+  fi
+fi
+
+if test x"$use_glpk" == xBUILD; then
+
+  GLPKCOINLIB=`cd $coin_glpkobjdir; pwd`/libcoinglpk.la
+  AC_SUBST(GLPKCOINLIB)
+
+  GLPKINCDIR="$coin_glpksrcdir/glpk/include"
+  AC_DEFINE(COIN_HAS_GLPK,[1],[Define to 1 if the Glpk package is used])
+
+  # This is a "true" for AM_CONDITIONAL(COIN_HAS_GLPK)
+  COIN_HAS_GLPK_TRUE=
+  COIN_HAS_GLPK_FALSE='#'
+
+  coin_has_glpk=yes
+
+  AC_MSG_NOTICE([Using Glpk in ThirdParty])
+fi
+
+AM_CONDITIONAL([COIN_BUILD_GLPK],[test x"$use_glpk" = xBUILD])
+
+]) # AC_COIN_HAS_GLPK
