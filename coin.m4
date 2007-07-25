@@ -3039,7 +3039,6 @@ m4_if([$1],[Glpk],
 m4_if([$1],[Gmpl],
 [AC_COIN_HAS_USER_LIBRARY([Gmpl],[GMPL],[glpmpl.h],
     [_glp_mpl_initialize glp_mpl_initialize])
- AC_MSG_NOTICE([Result of Gmpl check is $coin_has_gmpl])
  if test x"$coin_has_gmpl" = xfalse && test x"$GMPLLIB" = x ; then
    use_thirdpartyglpk=try
  fi])
