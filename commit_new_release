@@ -71,9 +71,10 @@ done
 echo ''
 echo '===> Running the autotools'
 echo ''
+curdir=`pwd`
 cd $tmpbas
 BuildTools/run_autotools
-cd - >/dev/null
+cd "$curdir"
 
 echo ''
 echo '===> Committing restored stable...'

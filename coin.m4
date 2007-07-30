@@ -3064,7 +3064,7 @@ if test x"$use_thirdpartyglpk" = xtry ; then
 # another to indicate a link check is a bad idea (hard to do before the library
 # exists).
 
-  if test x"$use_thirdpartyglpk" == xbuild ; then
+  if test x"$use_thirdpartyglpk" = xbuild ; then
     m4_toupper($1LIB)=`cd $coin_glpkobjdir; pwd`/libcoinglpk.la
     AC_SUBST(m4_toupper($1LIB))
     ADDLIBS="$m4_toupper($1LIB) $ADDLIBS"
