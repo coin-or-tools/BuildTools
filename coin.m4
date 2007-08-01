@@ -2945,6 +2945,7 @@ if test "$use_mumps" != "no"; then
               [AC_MSG_ERROR([User provided MUMPS library doesn't work])])
   LIBS="$save_LIBS"
   AC_LANG_POP(C)
+  coin_mumpssrcdir="$mumps_dir"
 
 else
   use_mumps=BUILD
