@@ -3006,8 +3006,7 @@ AC_MSG_RESULT([$coin_has_mumps])
 #
 # This macro will define the following variables for Glpk:
 #   coin_has_glpk	true or false
-#   GLPKLIB		location of the glpk library at build time; this is
-#			added to ADDLIBS
+#   GLPKLIB		link flags for GLPK (if user supplied)
 #   GLPKINCDIR		location of glpk include files
 #   COIN_HAS_GLPK	Preprocessor symbol, defined to 1
 #   COIN_HAS_GLPK	Automake conditional
@@ -3066,9 +3065,6 @@ if test x"$use_thirdpartyglpk" = xtry ; then
 # exists).
 
   if test x"$use_thirdpartyglpk" = xbuild ; then
-    m4_toupper($1LIB)=`cd $coin_glpkobjdir; pwd`/libcoinglpk.la
-    AC_SUBST(m4_toupper($1LIB))
-    ADDLIBS="$m4_toupper($1LIB) $ADDLIBS"
     m4_toupper($1INCDIR)="$coin_glpksrcdir/glpk/include"
     AC_SUBST(m4_toupper($1INCDIR))
     AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],
