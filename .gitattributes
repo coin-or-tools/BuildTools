@@ -1,4 +1,20 @@
 * text=auto !eol
+stable/0.5/Makemain.inc -text
+stable/0.5/coin.m4 -text
+stable/0.5/commit_new_release -text
+stable/0.5/compile_f2c/INSTALL -text
+stable/0.5/compile_f2c/README -text
+stable/0.5/compile_f2c/compile_f2c -text
+stable/0.5/config.guess -text
+stable/0.5/config.sub -text
+stable/0.5/depcomp -text
+stable/0.5/headers/configall_system.h -text
+stable/0.5/headers/configall_system_msc.h -text
+stable/0.5/install-sh -text
+stable/0.5/missing -text
+stable/0.5/prepare_new_release -text
+stable/0.5/run_autotools -text
+stable/0.5/share/config.site -text
 trunk/Makemain.inc -text
 trunk/coin.m4 -text
 trunk/commit_new_release -text
