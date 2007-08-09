@@ -1,1 +1,17 @@
 * text=auto !eol
+trunk/Makemain.inc -text
+trunk/coin.m4 -text
+trunk/commit_new_release -text
+trunk/compile_f2c/INSTALL -text
+trunk/compile_f2c/README -text
+trunk/compile_f2c/compile_f2c -text
+trunk/config.guess -text
+trunk/config.sub -text
+trunk/depcomp -text
+trunk/headers/configall_system.h -text
+trunk/headers/configall_system_msc.h -text
+trunk/install-sh -text
+trunk/missing -text
+trunk/prepare_new_release -text
+trunk/run_autotools -text
+trunk/share/config.site -text
