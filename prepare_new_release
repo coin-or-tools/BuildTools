@@ -281,10 +281,11 @@ if test -r Externals; then
           pkg=`echo $ext_name | sed -e 's|ThirdParty/||' -e 's|/||g'`
           getfile=get.$pkg
           if test -r $ext_name/$getfile; then
+	    curdir=`pwd`
             cd $ext_name
             echo "Running $getfile in `pwd`"
             eval ./$getfile
-            cd - > /dev/null
+            cd "$curdir"
           fi
           ;;
       esac
@@ -308,13 +309,15 @@ echo '===> Running the autotools...'
 echo ''
 
 if test $is_thirdparty = yes; then
+  curdir=`pwd`
   cd ../..
   BuildTools/run_autotools
-  cd - > /dev/null
+  cd "$curdir"
 elif test $is_data = yes; then
+  curdir=`pwd`
   cd ..
   BuildTools/run_autotools
-  cd - > /dev/null
+  cd "$curdir"
 else
   BuildTools/run_autotools
 fi
