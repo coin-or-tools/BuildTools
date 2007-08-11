@@ -616,7 +616,7 @@ if test x"$CXXFLAGS" = x; then
         case "$CXX" in
           xlC* | */xlC* | mpxlC* | */mpxlC*)
             coin_opt_cxxflags="-O3 -qarch=auto -qcache=auto -qtune=auto -qmaxmem=-1"
-            coin_add_cxxflags="-bmaxdata:0x80000000 -qrtti=dyna"
+            coin_add_cxxflags="-bmaxdata:0x80000000 -qrtti=dyna -qsuppress=1500-036,1500-029"
             coin_dbg_cxxflags="-g"
             ;;
         esac
@@ -976,7 +976,7 @@ if test x"$CFLAGS" = x; then
         case "$CC" in
           xlc* | */xlc* | mpxlc* | */mpxlc*)
             coin_opt_cflags="-O3 -qarch=auto -qcache=auto -qtune=auto -qmaxmem=-1"
-            coin_add_cflags="-bmaxdata:0x80000000"
+            coin_add_cflags="-bmaxdata:0x80000000 -qsuppress=1500-036,1500-029"
             coin_dbg_cflags="-g"
           ;;
         esac
@@ -1192,7 +1192,7 @@ if test "$F77" != "unavailable" && test x"$FFLAGS" = x ; then
         case "$F77" in
           xlf* | */xlf* | mpxlf* | */mpxlf* )
             coin_opt_fflags="-O3 -qarch=auto -qcache=auto -qtune=auto -qmaxmem=-1"
-            coin_add_fflags="-bmaxdata:0x80000000"
+            coin_add_fflags="-bmaxdata:0x80000000 -qsuppress=1500-036,1500-029"
             coin_dbg_fflags="-g -C"
             ;;
         esac
