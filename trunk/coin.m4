@@ -461,13 +461,18 @@ AC_DEFUN([AC_COIN_ENABLE_DOSCOMPILE],
 		   Default when not mentioned: disabled.])],
   [if test "$enable_doscompile" != no; then
      case $build in
-       *-cygwin*) ;;
-       *) AC_MSG_ERROR([--enable-doscompile option makes sense only under Cygwin]) ;;
+       *-cygwin* | *-mingw*) ;;
+       *) AC_MSG_ERROR([--enable-doscompile option makes sense only under Cygwin or MinGW]) ;;
      esac
    fi],
   [enable_doscompile=no])
  case "$enable_doscompile" in
-   msvc|mingw|no) ;;
+   mingw)
+     case $build in
+       *-mingw*) enable_doscompile=no ;;
+     esac
+     ;;
+   msvc|no) ;;
    yes) enable_doscompile=mingw ;;
    *) AC_MSG_ERROR([Invalid value $enable_doscompile for --enable-doscompile.
 		    Try configure --help=recursive.])
