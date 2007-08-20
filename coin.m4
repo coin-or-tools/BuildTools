@@ -461,13 +461,18 @@ AC_DEFUN([AC_COIN_ENABLE_DOSCOMPILE],
 		   Default when not mentioned: disabled.])],
   [if test "$enable_doscompile" != no; then
      case $build in
-       *-cygwin*) ;;
-       *) AC_MSG_ERROR([--enable-doscompile option makes sense only under Cygwin]) ;;
+       *-cygwin* | *-mingw*) ;;
+       *) AC_MSG_ERROR([--enable-doscompile option makes sense only under Cygwin or MinGW]) ;;
      esac
    fi],
   [enable_doscompile=no])
  case "$enable_doscompile" in
-   msvc|mingw|no) ;;
+   mingw)
+     case $build in
+       *-mingw*) enable_doscompile=no ;;
+     esac
+     ;;
+   msvc|no) ;;
    yes) enable_doscompile=mingw ;;
    *) AC_MSG_ERROR([Invalid value $enable_doscompile for --enable-doscompile.
 		    Try configure --help=recursive.])
@@ -616,7 +621,7 @@ if test x"$CXXFLAGS" = x; then
         case "$CXX" in
           xlC* | */xlC* | mpxlC* | */mpxlC*)
             coin_opt_cxxflags="-O3 -qarch=auto -qcache=auto -qtune=auto -qmaxmem=-1"
-            coin_add_cxxflags="-bmaxdata:0x80000000 -qrtti=dyna"
+            coin_add_cxxflags="-bmaxdata:0x80000000 -qrtti=dyna -qsuppress=1500-036 -qsuppress=1500-029"
             coin_dbg_cxxflags="-g"
             ;;
         esac
@@ -976,7 +981,7 @@ if test x"$CFLAGS" = x; then
         case "$CC" in
           xlc* | */xlc* | mpxlc* | */mpxlc*)
             coin_opt_cflags="-O3 -qarch=auto -qcache=auto -qtune=auto -qmaxmem=-1"
-            coin_add_cflags="-bmaxdata:0x80000000"
+            coin_add_cflags="-bmaxdata:0x80000000 -qsuppress=1500-036 -qsuppress=1500-029"
             coin_dbg_cflags="-g"
           ;;
         esac
@@ -1192,7 +1197,7 @@ if test "$F77" != "unavailable" && test x"$FFLAGS" = x ; then
         case "$F77" in
           xlf* | */xlf* | mpxlf* | */mpxlf* )
             coin_opt_fflags="-O3 -qarch=auto -qcache=auto -qtune=auto -qmaxmem=-1"
-            coin_add_fflags="-bmaxdata:0x80000000"
+            coin_add_fflags="-bmaxdata:0x80000000 -qsuppress=1500-036 -qsuppress=1500-029"
             coin_dbg_fflags="-g -C"
             ;;
         esac
@@ -2099,7 +2104,7 @@ AC_DEFUN([AC_COIN_CHECK_GNU_ZLIB],
 AC_BEFORE([AC_COIN_PROG_CXX],[$0])
 AC_BEFORE([AC_COIN_PROG_CC],[$0])
 AC_BEFORE([AC_COIN_PROG_F77],[$0])
-AC_BEFORE([$0],[AC_COIN_FINISH])
+AC_BEFORE([$0],[AC_COIN_FINALIZE])
 
 coin_has_zlib=no
 if test $coin_enable_gnu = yes; then
@@ -2131,7 +2136,7 @@ AC_DEFUN([AC_COIN_CHECK_GNU_BZLIB],
 AC_BEFORE([AC_COIN_PROG_CXX],[$0])
 AC_BEFORE([AC_COIN_PROG_CC],[$0])
 AC_BEFORE([AC_COIN_PROG_F77],[$0])
-AC_BEFORE([$0],[AC_COIN_FINISH])
+AC_BEFORE([$0],[AC_COIN_FINALIZE])
 
 coin_has_bzlib=no
 if test $coin_enable_gnu = yes; then
@@ -2164,7 +2169,7 @@ AC_DEFUN([AC_COIN_CHECK_GNU_READLINE],
 AC_BEFORE([AC_COIN_PROG_CXX],[$0])
 AC_BEFORE([AC_COIN_PROG_CC],[$0])
 AC_BEFORE([AC_COIN_PROG_F77],[$0])
-AC_BEFORE([$0],[AC_COIN_FINISH])
+AC_BEFORE([$0],[AC_COIN_FINALIZE])
 
 coin_has_readline=no
 if test $coin_enable_gnu = yes; then
@@ -2236,6 +2241,58 @@ else
   AC_MSG_ERROR(Directory $m4_toupper(COIN_DATA_$1_PATH) does not exist)
 fi
 ]) # AC_COIN_HAS_DATA
+
+###########################################################################
+#                       COIN_LINK_FROM_FILELIST                           #
+###########################################################################
+
+# This macro creates links (or copies, if necessary) to files listed
+# as content in a text file (second argument) into a target directory
+# (first argument), which is created if it doesn't exist yet.  If s link
+# already exists, nothing happens.
+
+AC_DEFUN([AC_COIN_LINKCOPY_FROM_FILELIST],
+[cmd="$3"
+if test -e $srcdir/$2 ; then
+  my_target_dir="$1"
+  my_link_files=`cat $srcdir/$2`
+  my_dirname=`AS_DIRNAME($2)`
+#  if test -e $my_target_dir; then : ; else
+#    AS_MKDIR_P($my_target_dir)
+#  fi
+  for i in $my_link_files; do
+    #rm -rf $my_target_dir/$i
+    if test -e $my_target_dir/$i; then : ; else
+      dirn2=`AS_DIRNAME($my_target_dir/$i)`
+      if test -e $dirn2; then : ; else
+        AS_MKDIR_P($dirn2)
+      fi
+      $cmd $abs_source_dir/$my_dirname/$i $my_target_dir/$i
+    fi
+  done
+else
+  AC_MSG_WARN([File list file $2 missing!])
+fi
+])
+
+AC_DEFUN([AC_COIN_LINK_FROM_FILELIST], 
+[
+AC_REQUIRE([AC_COIN_LINK_INPUT_CMD])
+echo Creating links in $1 ...
+AC_COIN_LINKCOPY_FROM_FILELIST($1, $2, $coin_link_input_cmd)
+])
+
+###########################################################################
+#                       COIN_COPY_FROM_FILELIST                           #
+###########################################################################
+
+# Like COIN_LINK_FROM_FILELIST, but copies the files.
+
+AC_DEFUN([AC_COIN_COPY_FROM_FILELIST], 
+[
+echo Creating copies in $1 ...
+AC_COIN_LINKCOPY_FROM_FILELIST($1, $2, [cp])
+])
 
 ###########################################################################
 #                          COIN_EXAMPLE_FILES                             #
