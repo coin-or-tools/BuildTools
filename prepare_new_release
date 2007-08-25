@@ -186,7 +186,7 @@ done
 echo ''
 echo "===> Updating version number ($new_ver) in configure.ac files"
 for i in $conf_ac_files; do
-  sed -e "s|AC_INIT\(.*\)\[[0-9\.]*\],\(.*\)|AC_INIT\1[$new_ver],\2|" $i > bla
+  sed -e "s|AC_INIT\(.*\)\[[0-9A-Za-z\.]*\],\(.*\)|AC_INIT\1[$new_ver],\2|" $i > bla
   mv bla $i
   svn di $i
 done
