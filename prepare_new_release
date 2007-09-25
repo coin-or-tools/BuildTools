@@ -207,7 +207,7 @@ if test -r Externals; then
       ext_url=$i
       if (echo $ext_url | grep -E 'stable/' >/dev/null); then :; else
         echo ''
-        echo "The external URL $ex_url is not for a stable release. Exiting."
+        echo "The external URL $ext_url is not for a stable branch. Exiting."
         echo ''
         exit -2
       fi
