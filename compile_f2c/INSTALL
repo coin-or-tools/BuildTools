@@ -25,6 +25,11 @@ to know about the Microsoft 'cl' compiler and 'nmake'.
    (involving the "comptry.bat" file), edit the makefile.vc file and
    delete the word "comptry.bat" in the 4th from last line.
 
+   NOTE: If you want to generate debug code (using --enable-debug with
+   configure), you need to change the makefile.vc file:  Change the
+   definition of CFLAGS so that it no longer contains '-Ot1' but
+   '-MTd' instead.
+
 4. Edit the script "compile_f2c" in this directory so that the
    variable "f2clibdir" at the beginning is set to the directory
    containing the libf2c runtime library.  (If you installed it in
