@@ -507,7 +507,7 @@ AC_ARG_VAR(OPT_CXXFLAGS,[Optimize C++ compiler options])
 coin_has_cxx=yes
 
 save_cxxflags="$CXXFLAGS"
-# For sparc-sun-solaris, promote Studio/Workshop compiler to front of list.
+# For *-*-solaris*, promote Studio/Workshop compiler to front of list.
 case $build in
   *-cygwin* | *-mingw*)
   	     if test "$enable_doscompile" = msvc ; then
@@ -515,7 +515,7 @@ case $build in
 	     else
 	       comps="g++ cl"
 	     fi ;;
-  sparc-sun-solaris*)
+  *-*-solaris*)
   	     comps="CC xlC aCC g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC" ;;
   *-darwin*) comps="g++ c++ CC" ;;
           *) comps="xlC aCC CC g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC" ;;
@@ -635,7 +635,7 @@ if test x"$CXXFLAGS" = x; then
             ;;
         esac
         ;;
-      *-sun-*)
+      *-*-solaris*)
           coin_opt_cxxflags="-O4"
           coin_dbg_cxxflags="-g"
         ;;
@@ -778,7 +778,7 @@ if test -z "$CXXLIBS"; then
     *-hp-*)
       CXXLIBS="-L/opt/aCC/lib -l++ -lstd_v2 -lCsup_v2 -lm -lcl -lc"
       ;;
-    *-sun-*)
+    *-*-solaris*)
       CXXLIBS="-lCstd -lCrun"
     esac
   fi
@@ -879,7 +879,7 @@ AC_ARG_VAR(OPT_CFLAGS,[Optimize C compiler options])
 coin_has_cc=yes
 
 save_cflags="$CFLAGS"
-# For sparc-sun-solaris, promote Studio/Workshop compiler to front of list.
+# For *-*-solaris*, promote Studio/Workshop compiler to front of list.
 # ToDo: If Studio/Workshop cc is not present, we may find /usr/ucb/cc, which
 # is likely to be a non-functional shell. But many installations will have
 # both cc and gcc, so promoting gcc isn't good either. How to test reliably?
@@ -890,7 +890,7 @@ case $build in
 	     else
 	       comps="gcc cl"
 	     fi ;;
-  sparc-sun-solaris*)
+  *-*-solaris*)
   	     comps="cc xlc gcc pgcc icc" ;;
   *-linux-*) comps="xlc gcc cc pgcc icc" ;;
   *)         comps="xlc_r xlc cc gcc pgcc icc" ;;
@@ -991,7 +991,7 @@ if test x"$CFLAGS" = x; then
         coin_add_cflags="-Ae"
         coin_dbg_cflags="-g"
         ;;
-      *-sun-*)
+      *-*-solaris*)
         coin_opt_cflags="-xO4"
         coin_dbg_cflags="-g"
         ;;
@@ -1207,7 +1207,7 @@ if test "$F77" != "unavailable" && test x"$FFLAGS" = x ; then
         coin_add_fflags="+U77"
         coin_dbg_fflags="-C -g"
         ;;
-      *-sun-*)
+      *-*-solaris*)
         coin_opt_fflags="-O4"
         coin_dbg_fflags="-g"
         ;;
@@ -1380,7 +1380,7 @@ AC_CHECK_PROGS([F77],[$coin_f77_comps],[unavailable])
 
 # Auxilliary macro to make sure both COIN_PROG_F77 and COIN_FIND_F77 use
 # the same search lists for compiler names.
-# For sparc-sun-solaris, promote Studio/Workshop compilers to front of list.
+# For *-*-solaris*, promote Studio/Workshop compilers to front of list.
 AC_DEFUN([AC_COIN_F77_COMPS],
 [case $build in
   *-cygwin* | *-mingw*)
@@ -1389,7 +1389,7 @@ AC_DEFUN([AC_COIN_F77_COMPS],
      else
        coin_f77_comps="gfortran g77 ifort fl32 compile_f2c"
      fi ;;
-  sparc-sun-solaris*)
+  *-*-solaris*)
      coin_f77_comps="f95 f90 f77 xlf fort77 gfortran g77 pgf90 pgf77 ifort ifc frt af77" ;;
   *) coin_f77_comps="xlf fort77 gfortran f77 g77 pgf90 pgf77 ifort ifc frt af77" ;;
  esac
@@ -1934,7 +1934,7 @@ if test $enable_shared = yes; then
         RPATH_FLAGS=nothing ;;
     *-mingw32)
         RPATH_FLAGS=nothing ;;
-    *-sun-*)
+    *-*-solaris*)
         RPATH_FLAGS=
         for dir in $1; do
           RPATH_FLAGS="$RPATH_FLAGS -R$dir"
@@ -2760,14 +2760,22 @@ else
                         [AC_MSG_RESULT([no])
                          SAVE_LIBS="$LIBS"])
       ;;
-    *-sun-*)
+
+# Ideally, we'd use -library=sunperf, but it's an imperfect world. Studio
+# cc doesn't recognise -library, it wants -xlic_lib. Studio 12 CC doesn't
+# recognise -xlic_lib. Libtool doesn't like -xlic_lib anyway. Sun claims
+# that CC and cc will understand -library in Studio 13. The main extra
+# function of -xlic_lib and -library is to arrange for the Fortran run-time
+# libraries to be linked for C++ and C. We can arrange that explicitly.
+    *-*-solaris*)
       SAVE_LIBS="$LIBS"
-      AC_MSG_CHECKING([whether -xlic_lib=sunperf has BLAS])
-      LIBS="-xlic_lib=sunperf $LIBS"
+      AC_MSG_CHECKING([for BLAS in libsunperf])
+      LIBS="-lsunperf $FLIBS $LIBS"
       AC_COIN_TRY_FLINK([daxpy],
                         [AC_MSG_RESULT([yes])
-                         use_blas='-xlic_lib=sunperf'
-                         ADDLIBS="-xlic_lib=sunperf $ADDLIBS"],
+                         use_blas='-lsunperf'
+                         ADDLIBS="-lsunperf $ADDLIBS"
+			 coin_need_flibs=yes],
                         [AC_MSG_RESULT([no])
                          LIBS="$SAVE_LIBS"])
       ;;
@@ -2881,16 +2889,19 @@ else
                           [AC_MSG_RESULT([no])
                            SAVE_LIBS="$LIBS"])
         ;;
-      *-sun-*)
-        SAVE_LIBS="$LIBS"
-        AC_MSG_CHECKING([whether -xlic_lib=sunperf has LAPACK])
-        LIBS="-xlic_lib=sunperf $LIBS"
-        AC_COIN_TRY_FLINK([dsyev],
-                          [AC_MSG_RESULT([yes])
-                           use_lapack='-xlic_lib=sunperf'
-                           ADDLIBS="-xlic_lib=sunperf $ADDLIBS"],
-                          [AC_MSG_RESULT([no])
-                           LIBS="$SAVE_LIBS"])
+
+# See comments in COIN_HAS_BLAS.
+      *-*-solaris*)
+      SAVE_LIBS="$LIBS"
+      AC_MSG_CHECKING([for LAPACK in libsunperf])
+      LIBS="-lsunperf $FLIBS $LIBS"
+      AC_COIN_TRY_FLINK([dsyev],
+                        [AC_MSG_RESULT([yes])
+                         use_blas='-lsunperf'
+                         ADDLIBS="-lsunperf $ADDLIBS"
+			 coin_need_flibs=yes],
+                        [AC_MSG_RESULT([no])
+                         LIBS="$SAVE_LIBS"])
         ;;
 # On cygwin, do this check only if doscompile is disabled. The prebuilt library
 # will want to link with cygwin, hence won't run standalone in DOS.
