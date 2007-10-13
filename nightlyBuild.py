@@ -47,12 +47,12 @@ ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS['CoinUtils'] = ['make test']
 
 #PROJECT_EMAIL_ADDRS['DyLP'] = 'lou _AT_ cs _DOT_ sfu _DOT_ ca'
 UNITTEST_DIR['DyLP'] = os.path.join('Osi','test')
-UNITTEST_CMD['DyLP'] = './unitTest -testOsiSolverInterface' 
+UNITTEST_CMD['DyLP'] = './unitTest -testOsiSolverInterface -netlibDir=_NETLIBDIR_ -cerr2cout' 
 ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS['DyLP'] = ['make test']
 
 #PROJECT_EMAIL_ADDRS['Clp'] = 'jjforre _AT_ us _DOT_ ibm _DOT_ com'
 UNITTEST_DIR['Clp'] = os.path.join('Clp','src')
-UNITTEST_CMD['Clp'] = './clp -unitTest -netlib' 
+UNITTEST_CMD['Clp'] = './clp -unitTest -netlib dirNetlib=_NETLIBDIR_' 
 ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS['Clp'] = ['make test',UNITTEST_CMD['Clp']]
 
 #PROJECT_EMAIL_ADDRS['SYMPHONY'] = 'tkr2 _AT_ lehigh _DOT_ edu'
@@ -63,6 +63,7 @@ ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS['SYMPHONY'] = ['make test']
 #PROJECT_EMAIL_ADDRS['Osi'] = 'mjs _AT_ ces _DOT_ clemson _DOT_ edu'
 UNITTEST_DIR['Osi'] = os.path.join('Osi','test')
 UNITTEST_CMD['Osi'] = './unitTest -testOsiSolverInterface' 
+UNITTEST_CMD['Osi'] = './unitTest -testOsiSolverInterface -netlibDir=_NETLIBDIR_ -cerr2cout' 
 ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS['Osi'] = ['make test',UNITTEST_CMD['Osi']]
 
 #PROJECT_EMAIL_ADDRS['Cgl'] = 'robinlh _AT_ us _DOT_ ibm _DOT_ com'
@@ -199,6 +200,8 @@ for d in dataDirs :
     if issueSvnCmd(svnCmd,dataBaseDir,'Data')!='OK' :
       sys.exit(1)
     rc=commands.getstatusoutput('find '+d+' -name \*.gz -print | xargs gzip -d')
+netlibDir=os.path.join(dataBaseDir,'Netlib')
+miplib3Dir=os.path.join(dataBaseDir,'miplib3')
 
 #------------------------------------------------------------------------
 # Loop once for each project
@@ -279,11 +282,15 @@ for p in PROJECTS:
     unitTestPath = os.path.join(projectCheckOutDir,UNITTEST_DIR[p])
     os.chdir(unitTestPath)
 
-    writeLogMessage( '  '+UNITTEST_CMD[p] )
-    rc=commands.getstatusoutput(UNITTEST_CMD[p])
+    unitTestCmd=UNITTEST_CMD[p]
+    unitTestCmd=unitTestCmd.replace('_NETLIBDIR_',netlibDir)
+    unitTestCmd=unitTestCmd.replace('_MIPLIB3DIR_',miplib3Dir)
+
+    writeLogMessage( '  '+unitTestCmd )
+    rc=commands.getstatusoutput(unitTestCmd)
   
-    if didTestFail(rc,p,UNITTEST_CMD[p]) :
-      sendmail(p,rc[1],UNITTEST_CMD[p])
+    if didTestFail(rc,p,unitTestCmd) :
+      sendmail(p,rc[1],unitTestCmd)
       continue
 
   # For testing purposes only do first successful project
