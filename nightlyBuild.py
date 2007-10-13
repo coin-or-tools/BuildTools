@@ -19,7 +19,7 @@ import time
 #   Allow pw file to be in same directory as script or other locations.
 #   Add server and login name to pw file?
 #   Build both trunk and latest stable 
-#   Build both optimized and debug
+#   Build both optimized and debug (or have a set of config-site scripts to test?)
 #   Implement "cbc -miplib" test for successful run.  JohnF sent JP the criteria
 #     to test on in an email dated 10/12/2007 12:01pm
 
