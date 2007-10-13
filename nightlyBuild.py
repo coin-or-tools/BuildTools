@@ -8,18 +8,15 @@ import re
 import time
 
 # TODO:
-#   If project does not exist, then "svn co".
-#   If did "svn co" then get all 3rd party packages.
-#   Get some information about the platform and put this in email failure message.
-#   Implement Kipp's vpath (delete vpath instead of 'make distclean').
-#   Get miplib3 and netlib files with seperate checkout.
+#   -After "svn co" then get all 3rd party packages.
+#   -Get some information about the platform and put this in email failure message.
+#   -Implement Kipp's vpath (delete vpath instead of 'make distclean').
 #   Break this file up into multiple files so it is manageable.
-#   Don't do build if 'svn update' does change anything and prior test was OK.
+#   Don't do build if 'svn update' doesn't change anything and prior test was OK.
 #     (no need to re-run if nothing has changed since prior run)
-#   Allow pw file to be in same directory as script or other locations.
-#   Add server and login name to pw file?
 #   Build both trunk and latest stable 
 #   Build both optimized and debug (or have a set of config-site scripts to test?)
+#   Check the testing of the success criteria of each projects "make test" 
 #   Implement "cbc -miplib" test for successful run.  JohnF sent JP the criteria
 #     to test on in an email dated 10/12/2007 12:01pm
 
@@ -31,73 +28,106 @@ import time
 NIGHTLY_BUILD_ROOT_DIR = '/home/jp/COIN'
 
 #----------------------------------------------------------------------
-# PASSWORD_FILENAME: name of file containing smtp password
+# Values for sending mail:
+#  SMTP_SERVER_NAME: name of smtp server
+#  SMTP_USER_NAME: name of authorized user on server
+#  SMTP_PASSWORD_FILENAME: name of file containing smtp user's password
+#  SENDER_EMAIL_ADDR: email sent by this script will be from this address
+#  MY_EMAIL_ADDR: All problems detected by the script will be sent to
+#                 this email address. The intention is for this to be
+#                 the email address of the person running this script
+#  SEND_MAIL_TO_PROJECT_MANAGER: 0 or 1. If 1 then any problems
+#                 detected are sent to MY_EMAIL_ADDRESS and the
+#                 project manager.
 #----------------------------------------------------------------------
-PASSWORD_FILENAME = '/home/jp/bin/smtpPwFile'
+SMTP_SERVER_NAME = 'outgoing.verizon.net'
+SMTP_USER_NAME = 'jpfasano'
+SMTP_PASSWORD_FILENAME = '/home/jp/bin/smtpPwFile'
+SENDER_EMAIL_ADDR='jpfasano _AT_ verizon _DOT_ net'
+MY_EMAIL_ADDR='jpfasano _AT_ us _DOT_ ibm _DOT_ com'
+SEND_MAIL_TO_PROJECT_MANAGER=0
+#SMTP_SERVER_NAME = 'gsbims.chicagogsb.edu'
 
+
+#----------------------------------------------------------------------
+# List of Projects to be processed by script
+#----------------------------------------------------------------------
 PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc','Ipopt','OS','CppAD']
 
+#----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS = {}
 UNITTEST_DIR = {}
 UNITTEST_CMD = {}
 ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS = {} 
 
-#PROJECT_EMAIL_ADDRS['CoinUtils'] = 'ladanyi _AT_ us _DOT_ ibm _DOT_ com'
+#----------------------------------------------------------------------
+PROJECT_EMAIL_ADDRS['CoinUtils'] = 'ladanyi _AT_ us _DOT_ ibm _DOT_ com'
 ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS['CoinUtils'] = ['make test']
 
-#PROJECT_EMAIL_ADDRS['DyLP'] = 'lou _AT_ cs _DOT_ sfu _DOT_ ca'
+#----------------------------------------------------------------------
+PROJECT_EMAIL_ADDRS['DyLP'] = 'lou _AT_ cs _DOT_ sfu _DOT_ ca'
 UNITTEST_DIR['DyLP'] = os.path.join('Osi','test')
 UNITTEST_CMD['DyLP'] = './unitTest -testOsiSolverInterface -netlibDir=_NETLIBDIR_ -cerr2cout' 
 ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS['DyLP'] = ['make test']
 
-#PROJECT_EMAIL_ADDRS['Clp'] = 'jjforre _AT_ us _DOT_ ibm _DOT_ com'
+#----------------------------------------------------------------------
+PROJECT_EMAIL_ADDRS['Clp'] = 'jjforre _AT_ us _DOT_ ibm _DOT_ com'
 UNITTEST_DIR['Clp'] = os.path.join('Clp','src')
 UNITTEST_CMD['Clp'] = './clp -unitTest -netlib dirNetlib=_NETLIBDIR_' 
 ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS['Clp'] = ['make test',UNITTEST_CMD['Clp']]
 
-#PROJECT_EMAIL_ADDRS['SYMPHONY'] = 'tkr2 _AT_ lehigh _DOT_ edu'
+#----------------------------------------------------------------------
+PROJECT_EMAIL_ADDRS['SYMPHONY'] = 'tkr2 _AT_ lehigh _DOT_ edu'
 ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS['SYMPHONY'] = ['make test']
 
-#PROJECT_EMAIL_ADDRS['Vol'] = 'barahon _AT_ us _DOT_ ibm _DOT_ com'
+#----------------------------------------------------------------------
+PROJECT_EMAIL_ADDRS['Vol'] = 'barahon _AT_ us _DOT_ ibm _DOT_ com'
 
-#PROJECT_EMAIL_ADDRS['Osi'] = 'mjs _AT_ ces _DOT_ clemson _DOT_ edu'
+#----------------------------------------------------------------------
+PROJECT_EMAIL_ADDRS['Osi'] = 'mjs _AT_ ces _DOT_ clemson _DOT_ edu'
 UNITTEST_DIR['Osi'] = os.path.join('Osi','test')
 UNITTEST_CMD['Osi'] = './unitTest -testOsiSolverInterface' 
 UNITTEST_CMD['Osi'] = './unitTest -testOsiSolverInterface -netlibDir=_NETLIBDIR_ -cerr2cout' 
 ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS['Osi'] = ['make test',UNITTEST_CMD['Osi']]
 
-#PROJECT_EMAIL_ADDRS['Cgl'] = 'robinlh _AT_ us _DOT_ ibm _DOT_ com'
+#----------------------------------------------------------------------
+PROJECT_EMAIL_ADDRS['Cgl'] = 'robinlh _AT_ us _DOT_ ibm _DOT_ com'
 ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS['Cgl'] = ['make test']
 
-#PROJECT_EMAIL_ADDRS['Cbc'] = 'jjforre _AT_ us _DOT_ ibm _DOT_ com'
+#----------------------------------------------------------------------
+PROJECT_EMAIL_ADDRS['Cbc'] = 'jjforre _AT_ us _DOT_ ibm _DOT_ com'
 ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS['Cbc'] = ['make test']
 
-#PROJECT_EMAIL_ADDRS['Ipopt'] = 'andreasw _AT_ us _DOT_ ibm _DOT_ com'
-#PROJECT_EMAIL_ADDRS['OS'] = 'kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
-#PROJECT_EMAIL_ADDRS['CppAD'] = 'bradbell _AT_ washington _DOT_ edu'
+#----------------------------------------------------------------------
+PROJECT_EMAIL_ADDRS['Ipopt'] = 'andreasw _AT_ us _DOT_ ibm _DOT_ com'
+
+#----------------------------------------------------------------------
+PROJECT_EMAIL_ADDRS['OS'] = 'kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
+
+#----------------------------------------------------------------------
+PROJECT_EMAIL_ADDRS['CppAD'] = 'bradbell _AT_ washington _DOT_ edu'
 
 #------------------------------------------------------------------------
 # Function to send an email message
 #------------------------------------------------------------------------
 def sendmail(project,cmdMsgs,cmd):
   curDir = os.getcwd()
-  smtpserver = 'outgoing.verizon.net'
-  #smtpserver = 'gsbims.chicagogsb.edu'
-  smtpuser = 'jpfasano'
   
   # Get smpt server password
-  if os.path.isfile(PASSWORD_FILENAME) :
-    pwFilePtr = open(PASSWORD_FILENAME,'r')
+  if os.path.isfile(SMTP_PASSWORD_FILENAME) :
+    pwFilePtr = open(SMTP_PASSWORD_FILENAME,'r')
     smtppass  = pwFilePtr.read().strip()
     pwFilePtr.close()
   else :
-    writeLogMessage( "Failure reading pwFileName=" + pwFileName )
-  sender = unscrambleEmailAddress('jpfasano _AT_ verizon _DOT_ net')
-  toAddrs = [unscrambleEmailAddress('jpfasano _AT_ us _DOT_ ibm _DOT_ com')]
-  if PROJECT_EMAIL_ADDRS.has_key(project) :
+    writeLogMessage( "Failure reading pwFileName=" + SMTP_PASSWORD_FILENAME )
+    print cmdMsgs
+    sys.exit(1)
+  sender = unscrambleEmailAddress(SENDER_EMAIL_ADDR)
+  toAddrs = [unscrambleEmailAddress(MY_EMAIL_ADDR)]
+  if PROJECT_EMAIL_ADDRS.has_key(project) and SEND_MAIL_TO_PROJECT_MANAGER:
     toAddrs.append(unscrambleEmailAddress(PROJECT_EMAIL_ADDRS[project]))
-  session = smtplib.SMTP(smtpserver)
-  session.login(smtpuser,smtppass)
+  session = smtplib.SMTP(SMTP_SERVER_NAME)
+  session.login(SMTP_USER_NAME,smtppass)
   subject = project + " build problem when running '" + cmd +"'"
   msgWHeader = ("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n"
        % (sender, ", ".join(toAddrs), subject))
@@ -162,7 +192,7 @@ def issueSvnCmd(svnCmd,dir,project) :
   writeLogMessage('  '+svnCmd)
   rc=commands.getstatusoutput(svnCmd)
   if rc[0] != 0 :
-    sendmail(p,rc[1],svnCmd)
+    sendmail(project,rc[1],svnCmd)
     retVal='Error'
   return retVal
 
