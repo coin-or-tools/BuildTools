@@ -24,10 +24,11 @@ import time
 #     to test on in an email dated 10/12/2007 12:01pm
 
 #----------------------------------------------------------------------
-# COIN_ROOT_DIR: directory where code will be checked out and builds
-#                done. If the directory does not exist, it will be created.
+# NIGHTLY_BUILD_ROOT_DIR: 
+#   directory where code will be checked out and builds
+#   done. If the directory does not exist, it will be created.
 #----------------------------------------------------------------------
-COIN_ROOT_DIR = '/home/jp/COIN'
+NIGHTLY_BUILD_ROOT_DIR = '/home/jp/COIN'
 
 #----------------------------------------------------------------------
 # PASSWORD_FILENAME: name of file containing smtp password
@@ -179,15 +180,15 @@ def writeLogMessage( msg ) :
 #------------------------------------------------------------------------
 #  If needed create the top level directory
 #------------------------------------------------------------------------
-# rc=commands.getstatusoutput(COIN_ROOT_DIR)
-if not os.path.isdir(COIN_ROOT_DIR) :
-  os.makedirs(COIN_ROOT_DIR)
-os.chdir(COIN_ROOT_DIR)
+# rc=commands.getstatusoutput(NIGHTLY_BUILD_ROOT_DIR)
+if not os.path.isdir(NIGHTLY_BUILD_ROOT_DIR) :
+  os.makedirs(NIGHTLY_BUILD_ROOT_DIR)
+os.chdir(NIGHTLY_BUILD_ROOT_DIR)
 
 #------------------------------------------------------------------------
 #  Get the data directories if they don't already exist
 #------------------------------------------------------------------------
-dataBaseDir=os.path.join(COIN_ROOT_DIR,'Data')
+dataBaseDir=os.path.join(NIGHTLY_BUILD_ROOT_DIR,'Data')
 if not os.path.isdir(dataBaseDir) :
   os.makedirs(dataBaseDir)
 dataDirs=['Netlib','miplib3']
@@ -209,7 +210,7 @@ for p in PROJECTS:
   #---------------------------------------------------------------------
   # svn checkout or update the project
   #---------------------------------------------------------------------
-  projectBaseDir=os.path.join(COIN_ROOT_DIR,p)
+  projectBaseDir=os.path.join(NIGHTLY_BUILD_ROOT_DIR,p)
   projectCheckOutDir=os.path.join(projectBaseDir,'trunk')
   if not os.path.isdir(projectBaseDir) :
     os.makedirs(projectBaseDir)
