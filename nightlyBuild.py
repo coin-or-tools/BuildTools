@@ -29,8 +29,15 @@ NIGHTLY_BUILD_ROOT_DIR = '/home/jp/COIN'
 
 #----------------------------------------------------------------------
 # Values for sending mail:
-#  SMTP_SERVER_NAME: name of smtp server
-#  SMTP_USER_NAME: name of authorized user on server
+#  SMTP_SERVER_NAME: name of smtp server. For gmail server 
+#                 this is smtp.gmail.com
+#  SMTP_SERVER_PORT: port number of the smtp server. This is typically 25,
+#                 but for gmail server it is 587.
+#  SMTP_SSL_SERVER: 0 or 1. If 1 then SMTP uses SSL (sometimes called startltls).
+#                 For gmail this is 1.
+#  SMTP_USER_NAME: name of authorized user on server. If using gmail server
+#                 this is gmail_userid@gmail.com which is coded as
+#                 'gmail_userid _AT_ gmail _DOT_ com.  
 #  SMTP_PASSWORD_FILENAME: name of file containing smtp user's password
 #  SENDER_EMAIL_ADDR: email sent by this script will be from this address
 #  MY_EMAIL_ADDR: All problems detected by the script will be sent to
@@ -41,9 +48,18 @@ NIGHTLY_BUILD_ROOT_DIR = '/home/jp/COIN'
 #                 project manager.
 #----------------------------------------------------------------------
 SMTP_SERVER_NAME = 'outgoing.verizon.net'
+SMTP_SERVER_PORT = 25
+SMTP_SSL_SERVER = 0
 SMTP_USER_NAME = 'jpfasano'
+
+#SMTP_SERVER_NAME = 'smtp.gmail.com'
+#SMTP_SERVER_PORT = 587
+#SMTP_SSL_SERVER = 1
+#SMTP_USER_NAME = 'jpfasano _AT_ gmail _DOT_ com'
 SMTP_PASSWORD_FILENAME = '/home/jp/bin/smtpPwFile'
+
 SENDER_EMAIL_ADDR='jpfasano _AT_ verizon _DOT_ net'
+#SENDER_EMAIL_ADDR='jpfasano _AT_ gmail _DOT_ com'
 MY_EMAIL_ADDR='jpfasano _AT_ us _DOT_ ibm _DOT_ com'
 SEND_MAIL_TO_PROJECT_MANAGER=0
 #SMTP_SERVER_NAME = 'gsbims.chicagogsb.edu'
@@ -53,6 +69,7 @@ SEND_MAIL_TO_PROJECT_MANAGER=0
 # List of Projects to be processed by script
 #----------------------------------------------------------------------
 PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc','Ipopt','OS','CppAD']
+PROJECTS = ['CppAD']
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS = {}
@@ -126,15 +143,22 @@ def sendmail(project,cmdMsgs,cmd):
   toAddrs = [unscrambleEmailAddress(MY_EMAIL_ADDR)]
   if PROJECT_EMAIL_ADDRS.has_key(project) and SEND_MAIL_TO_PROJECT_MANAGER:
     toAddrs.append(unscrambleEmailAddress(PROJECT_EMAIL_ADDRS[project]))
-  session = smtplib.SMTP(SMTP_SERVER_NAME)
-  session.login(SMTP_USER_NAME,smtppass)
+  session = smtplib.SMTP(SMTP_SERVER_NAME,SMTP_SERVER_PORT)
+  #session.set_debuglevel(1)
+  if SMTP_SSL_SERVER==1 :
+    session.ehlo('x')
+    session.starttls()
+    session.ehlo('x')
+  
+  session.login(unscrambleEmailAddress(SMTP_USER_NAME),smtppass)
+
   subject = project + " build problem when running '" + cmd +"'"
   msgWHeader = ("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n"
        % (sender, ", ".join(toAddrs), subject))
   msgWHeader += "'" + cmd + "' from directory " + curDir + " failed.\n\n"
   msgWHeader += "'" + cmd + "' messages are:\n" 
   msgWHeader += cmdMsgs
-  #session.set_debuglevel(1)
+
   rc = session.sendmail(sender,toAddrs,msgWHeader)
   if rc!={} :
     writeLogMessage( 'session.sendmail rc='  )
