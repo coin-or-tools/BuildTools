@@ -74,27 +74,27 @@ PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc','Ipopt',
 PROJECT_EMAIL_ADDRS = {}
 UNITTEST_DIR = {}
 UNITTEST_CMD = {}
-ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS = {} 
+ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS = {} 
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['CoinUtils'] = 'ladanyi _AT_ us _DOT_ ibm _DOT_ com'
-ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS['CoinUtils'] = ['make test']
+ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['CoinUtils'] = ['make test']
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['DyLP'] = 'lou _AT_ cs _DOT_ sfu _DOT_ ca'
 UNITTEST_DIR['DyLP'] = os.path.join('Osi','test')
 UNITTEST_CMD['DyLP'] = './unitTest -testOsiSolverInterface -netlibDir=_NETLIBDIR_ -cerr2cout' 
-ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS['DyLP'] = ['make test']
+ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['DyLP'] = ['make test']
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['Clp'] = 'jjforre _AT_ us _DOT_ ibm _DOT_ com'
 UNITTEST_DIR['Clp'] = os.path.join('Clp','src')
 UNITTEST_CMD['Clp'] = './clp -unitTest -netlib dirNetlib=_NETLIBDIR_' 
-ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS['Clp'] = ['make test',UNITTEST_CMD['Clp']]
+ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['Clp'] = ['make test',UNITTEST_CMD['Clp']]
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['SYMPHONY'] = 'tkr2 _AT_ lehigh _DOT_ edu'
-ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS['SYMPHONY'] = ['make test']
+ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['SYMPHONY'] = ['make test']
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['Vol'] = 'barahon _AT_ us _DOT_ ibm _DOT_ com'
@@ -104,15 +104,15 @@ PROJECT_EMAIL_ADDRS['Osi'] = 'mjs _AT_ ces _DOT_ clemson _DOT_ edu'
 UNITTEST_DIR['Osi'] = os.path.join('Osi','test')
 UNITTEST_CMD['Osi'] = './unitTest -testOsiSolverInterface' 
 UNITTEST_CMD['Osi'] = './unitTest -testOsiSolverInterface -netlibDir=_NETLIBDIR_ -cerr2cout' 
-ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS['Osi'] = ['make test',UNITTEST_CMD['Osi']]
+ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['Osi'] = ['make test',UNITTEST_CMD['Osi']]
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['Cgl'] = 'robinlh _AT_ us _DOT_ ibm _DOT_ com'
-ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS['Cgl'] = ['make test']
+ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['Cgl'] = ['make test']
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['Cbc'] = 'jjforre _AT_ us _DOT_ ibm _DOT_ com'
-ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS['Cbc'] = ['make test']
+ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['Cbc'] = ['make test']
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['Ipopt'] = 'andreasw _AT_ us _DOT_ ibm _DOT_ com'
@@ -201,8 +201,8 @@ def didTestFail( rc, project, buildStep ) :
 
   # Many tests write a "Success" message.
   # For test that do this, check for the success message
-  if ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS.has_key(project) : 
-    if buildStep in ALL_TEST_COMPLETED_SUCCESSFULLY_CMDS[project] :
+  if ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS.has_key(project) : 
+    if buildStep in ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS[project] :
       # Is the success message contained in the output?
       if rc[1].rfind("All tests completed successfully") == -1 :
         # Success message not found, assume test failed
