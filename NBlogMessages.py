@@ -6,7 +6,7 @@ import time
 #------------------------------------------------------------------------
 # Function to write log messages
 #------------------------------------------------------------------------
-def writeLogMessage( msg ) :
+def writeMessage( msg ) :
   logMsg = time.ctime(time.time())+': '
   logMsg += msg
   print logMsg
