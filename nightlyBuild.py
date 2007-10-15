@@ -5,10 +5,10 @@ import sys
 import commands
 import smtplib
 import re 
-import time
 
 import NBuserConfig
 import NBprojectConfig
+import NBlogMessages
 
 # TODO:
 #   -After "svn co" then get all 3rd party packages.
@@ -46,7 +46,7 @@ def sendEmailCmdMsgs(project,cmdMsgs,cmd):
   emailMsg += "'" + cmd + "' messages are:\n" 
   emailMsg += cmdMsgs
   sendEmail(toAddrs,subject,emailMsg)
-  writeLogMessage( "  email sent regarding "+project+" running '"+cmd+"'" )
+  NBlogMessages.writeMessage( "  email sent regarding "+project+" running '"+cmd+"'" )
 
 #------------------------------------------------------------------------
 # Send email 
@@ -64,7 +64,7 @@ def sendEmail(toAddrs,subject,message):
     smtppass  = pwFilePtr.read().strip()
     pwFilePtr.close()
   else :
-    writeLogMessage( "Failure reading pwFileName=" + NBuserConfig.SMTP_PASSWORD_FILENAME )
+    NBlogMessages.writeMessage( "Failure reading pwFileName=" + NBuserConfig.SMTP_PASSWORD_FILENAME )
     sys.exit(1)
     
   session = smtplib.SMTP(NBuserConfig.SMTP_SERVER_NAME,NBuserConfig.SMTP_SERVER_PORT)
@@ -77,8 +77,8 @@ def sendEmail(toAddrs,subject,message):
 
   rc = session.sendmail(sender,toAddrs,msgWHeader)
   if rc!={} :
-    writeLogMessage( 'session.sendmail rc='  )
-    writeLogMessage( rc )
+    NBlogMessages.writeMessage( 'session.sendmail rc='  )
+    NBlogMessages.writeMessage( rc )
   session.quit()
 
 #------------------------------------------------------------------------
@@ -139,20 +139,12 @@ def didTestFail( rc, project, buildStep ) :
 def issueSvnCmd(svnCmd,dir,project) :
   retVal='OK'
   os.chdir(dir)
-  writeLogMessage('  '+svnCmd)
+  NBlogMessages.writeMessage('  '+svnCmd)
   rc=commands.getstatusoutput(svnCmd)
   if rc[0] != 0 :
     sendEmailCmdMsgs(project,rc[1],svnCmd)
     retVal='Error'
   return retVal
-
-#------------------------------------------------------------------------
-# Function to write log messages
-#------------------------------------------------------------------------
-def writeLogMessage( msg ) :
-  logMsg = time.ctime(time.time())+': '
-  logMsg += msg
-  print logMsg
 
 #------------------------------------------------------------------------
 #  Main Program Starts Here  
@@ -187,7 +179,7 @@ miplib3Dir=os.path.join(dataBaseDir,'miplib3')
 # Loop once for each project
 #------------------------------------------------------------------------
 for p in NBuserConfig.PROJECTS:
-  writeLogMessage( p )
+  NBlogMessages.writeMessage( p )
   rc = [0]
 
   #---------------------------------------------------------------------
@@ -217,7 +209,7 @@ for p in NBuserConfig.PROJECTS:
   #---------------------------------------------------------------------
   os.chdir(projectCheckOutDir)
   configCmd = os.path.join('.','configure -C')
-  writeLogMessage('  '+configCmd)
+  NBlogMessages.writeMessage('  '+configCmd)
   rc=commands.getstatusoutput(configCmd)
   
   # Check if configure worked
@@ -236,7 +228,7 @@ for p in NBuserConfig.PROJECTS:
   #---------------------------------------------------------------------
   # Run make part of buid
   #---------------------------------------------------------------------
-  writeLogMessage( '  make' )
+  NBlogMessages.writeMessage( '  make' )
   rc=commands.getstatusoutput('make')
   
   # Check if make worked
@@ -247,7 +239,7 @@ for p in NBuserConfig.PROJECTS:
   #---------------------------------------------------------------------
   # Run 'make test' part of buid
   #---------------------------------------------------------------------
-  writeLogMessage( '  make test' )
+  NBlogMessages.writeMessage( '  make test' )
   rc=commands.getstatusoutput('make test')
   
   # Check if 'make test' worked
@@ -266,7 +258,7 @@ for p in NBuserConfig.PROJECTS:
     unitTestCmd=unitTestCmd.replace('_NETLIBDIR_',netlibDir)
     unitTestCmd=unitTestCmd.replace('_MIPLIB3DIR_',miplib3Dir)
 
-    writeLogMessage( '  '+unitTestCmd )
+    NBlogMessages.writeMessage( '  '+unitTestCmd )
     rc=commands.getstatusoutput(unitTestCmd)
   
     if didTestFail(rc,p,unitTestCmd) :
@@ -277,7 +269,7 @@ for p in NBuserConfig.PROJECTS:
   #break
 
 
-writeLogMessage( "nightlyBuild.py Finished" )
+NBlogMessages.writeMessage( "nightlyBuild.py Finished" )
 
 sys.exit(0)
 
@@ -321,7 +313,7 @@ if os.path.isfile(  configFile) :
   #smtppass  = pwFilePtr.read().strip()
   pwFilePtr.close()
 else :
-  #writeLogMessage( "Failure reading pwFileName=" + CONFIG_FILENAME )
+  #NBlogMessages.writeMessage( "Failure reading pwFileName=" + CONFIG_FILENAME )
   #print cmdMsgs
   sys.exit( 1)
 sys.exit( 0)
@@ -366,7 +358,7 @@ if os.path.isfile(  configFile) :
   #smtppass  = pwFilePtr.read().strip()
   pwFilePtr.close()
 else :
-  #writeLogMessage( "Failure reading pwFileName=" + CONFIG_FILENAME )
+  #NBlogMessages.writeMessage( "Failure reading pwFileName=" + CONFIG_FILENAME )
   #print cmdMsgs
   sys.exit( 1)
 sys.exit( 0)

@@ -1,4 +1,4 @@
 * text=auto !eol
+/NBlogMessages.py -text
 /NBprojectConfig.py -text
 /NBuserConfig.py -text
-/nightlyBuild.py -text
