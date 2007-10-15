@@ -1,2 +1,4 @@
 * text=auto !eol
+/NBprojectConfig.py -text
+/NBuserConfig.py -text
 /nightlyBuild.py -text

@@ -7,6 +7,9 @@ import smtplib
 import re 
 import time
 
+import NBuserConfig
+import NBprojectConfig
+
 # TODO:
 #   -After "svn co" then get all 3rd party packages.
 #   -Get some information about the platform and put this in email failure message.
@@ -20,107 +23,6 @@ import time
 #   Implement "cbc -miplib" test for successful run.  JohnF sent JP the criteria
 #     to test on in an email dated 10/12/2007 12:01pm
 
-#----------------------------------------------------------------------
-# NIGHTLY_BUILD_ROOT_DIR: 
-#   directory where code will be checked out and builds
-#   done. If the directory does not exist, it will be created.
-#----------------------------------------------------------------------
-NIGHTLY_BUILD_ROOT_DIR = '/home/jp/COIN'
-
-#----------------------------------------------------------------------
-# Values for sending mail:
-#  SMTP_SERVER_NAME: name of smtp server. For gmail server 
-#                 this is smtp.gmail.com
-#  SMTP_SERVER_PORT: port number of the smtp server. This is typically 25,
-#                 but for gmail server it is 587.
-#  SMTP_SSL_SERVER: 0 or 1. If 1 then SMTP uses SSL (sometimes called startltls).
-#                 For gmail this is 1.
-#  SMTP_USER_NAME: name of authorized user on server. If using gmail server
-#                 this is gmail_userid@gmail.com which is coded as
-#                 'gmail_userid _AT_ gmail _DOT_ com.  
-#  SMTP_PASSWORD_FILENAME: name of file containing smtp user's password
-#  SENDER_EMAIL_ADDR: email sent by this script will be from this address
-#  MY_EMAIL_ADDR: All problems detected by the script will be sent to
-#                 this email address. The intention is for this to be
-#                 the email address of the person running this script
-#  SEND_MAIL_TO_PROJECT_MANAGER: 0 or 1. If 1 then any problems
-#                 detected are sent to MY_EMAIL_ADDRESS and the
-#                 project manager.
-#----------------------------------------------------------------------
-#SMTP_SERVER_NAME = 'outgoing.verizon.net'
-#SMTP_SERVER_PORT = 25
-#SMTP_SSL_SERVER = 0
-#SMTP_USER_NAME = 'jpfasano'
-
-SMTP_SERVER_NAME = 'smtp.gmail.com'
-SMTP_SERVER_PORT = 587
-SMTP_SSL_SERVER = 1
-SMTP_USER_NAME = 'jpfasano _AT_ gmail _DOT_ com'
-SMTP_PASSWORD_FILENAME = '/home/jp/bin/smtpPwFile'
-
-SENDER_EMAIL_ADDR='jpfasano _AT_ verizon _DOT_ net'
-MY_EMAIL_ADDR='jpfasano _AT_ us _DOT_ ibm _DOT_ com'
-SEND_MAIL_TO_PROJECT_MANAGER=0
-#SMTP_SERVER_NAME = 'gsbims.chicagogsb.edu'
-
-
-#----------------------------------------------------------------------
-# List of Projects to be processed by script
-#----------------------------------------------------------------------
-PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc','Ipopt','OS','CppAD']
-#PROJECTS = ['CppAD']
-
-#----------------------------------------------------------------------
-PROJECT_EMAIL_ADDRS = {}
-UNITTEST_DIR = {}
-UNITTEST_CMD = {}
-ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS = {} 
-
-#----------------------------------------------------------------------
-PROJECT_EMAIL_ADDRS['CoinUtils'] = 'ladanyi _AT_ us _DOT_ ibm _DOT_ com'
-ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['CoinUtils'] = ['make test']
-
-#----------------------------------------------------------------------
-PROJECT_EMAIL_ADDRS['DyLP'] = 'lou _AT_ cs _DOT_ sfu _DOT_ ca'
-UNITTEST_DIR['DyLP'] = os.path.join('Osi','test')
-UNITTEST_CMD['DyLP'] = './unitTest -testOsiSolverInterface -netlibDir=_NETLIBDIR_ -cerr2cout' 
-ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['DyLP'] = ['make test']
-
-#----------------------------------------------------------------------
-PROJECT_EMAIL_ADDRS['Clp'] = 'jjforre _AT_ us _DOT_ ibm _DOT_ com'
-UNITTEST_DIR['Clp'] = os.path.join('Clp','src')
-UNITTEST_CMD['Clp'] = './clp -unitTest -netlib dirNetlib=_NETLIBDIR_' 
-ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['Clp'] = ['make test',UNITTEST_CMD['Clp']]
-
-#----------------------------------------------------------------------
-PROJECT_EMAIL_ADDRS['SYMPHONY'] = 'tkr2 _AT_ lehigh _DOT_ edu'
-ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['SYMPHONY'] = ['make test']
-
-#----------------------------------------------------------------------
-PROJECT_EMAIL_ADDRS['Vol'] = 'barahon _AT_ us _DOT_ ibm _DOT_ com'
-
-#----------------------------------------------------------------------
-PROJECT_EMAIL_ADDRS['Osi'] = 'mjs _AT_ ces _DOT_ clemson _DOT_ edu'
-UNITTEST_DIR['Osi'] = os.path.join('Osi','test')
-UNITTEST_CMD['Osi'] = './unitTest -testOsiSolverInterface' 
-UNITTEST_CMD['Osi'] = './unitTest -testOsiSolverInterface -netlibDir=_NETLIBDIR_ -cerr2cout' 
-ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['Osi'] = ['make test',UNITTEST_CMD['Osi']]
-
-#----------------------------------------------------------------------
-PROJECT_EMAIL_ADDRS['Cgl'] = 'robinlh _AT_ us _DOT_ ibm _DOT_ com'
-ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['Cgl'] = ['make test']
-
-#----------------------------------------------------------------------
-PROJECT_EMAIL_ADDRS['Cbc'] = 'jjforre _AT_ us _DOT_ ibm _DOT_ com'
-
-#----------------------------------------------------------------------
-PROJECT_EMAIL_ADDRS['Ipopt'] = 'andreasw _AT_ us _DOT_ ibm _DOT_ com'
-
-#----------------------------------------------------------------------
-PROJECT_EMAIL_ADDRS['OS'] = 'kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
-
-#----------------------------------------------------------------------
-PROJECT_EMAIL_ADDRS['CppAD'] = 'bradbell _AT_ washington _DOT_ edu'
 
 #------------------------------------------------------------------------
 # Send email typically about an error.
@@ -133,9 +35,9 @@ PROJECT_EMAIL_ADDRS['CppAD'] = 'bradbell _AT_ washington _DOT_ edu'
 def sendEmailCmdMsgs(project,cmdMsgs,cmd):
   curDir = os.getcwd()
   
-  toAddrs = [unscrambleEmailAddress(MY_EMAIL_ADDR)]
-  if PROJECT_EMAIL_ADDRS.has_key(project) and SEND_MAIL_TO_PROJECT_MANAGER:
-    toAddrs.append(unscrambleEmailAddress(PROJECT_EMAIL_ADDRS[project]))
+  toAddrs = [unscrambleEmailAddress(NBuserConfig.MY_EMAIL_ADDR)]
+  if NBprojectConfig.PROJECT_EMAIL_ADDRS.has_key(project) and NBuserConfig.SEND_MAIL_TO_PROJECT_MANAGER:
+    toAddrs.append(unscrambleEmailAddress(NBprojectConfig.PROJECT_EMAIL_ADDRS[project]))
 
   subject = project + " build problem when running '" + cmd +"'"
 
@@ -151,27 +53,27 @@ def sendEmailCmdMsgs(project,cmdMsgs,cmd):
 #------------------------------------------------------------------------
 def sendEmail(toAddrs,subject,message):
 
-  sender = unscrambleEmailAddress(SENDER_EMAIL_ADDR)  
+  sender = unscrambleEmailAddress(NBuserConfig.SENDER_EMAIL_ADDR)  
   msgWHeader = ("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n"
        % (sender, ", ".join(toAddrs), subject))
   msgWHeader += message
   
   # Get smpt server password
-  if os.path.isfile(SMTP_PASSWORD_FILENAME) :
-    pwFilePtr = open(SMTP_PASSWORD_FILENAME,'r')
+  if os.path.isfile(NBuserConfig.SMTP_PASSWORD_FILENAME) :
+    pwFilePtr = open(NBuserConfig.SMTP_PASSWORD_FILENAME,'r')
     smtppass  = pwFilePtr.read().strip()
     pwFilePtr.close()
   else :
-    writeLogMessage( "Failure reading pwFileName=" + SMTP_PASSWORD_FILENAME )
+    writeLogMessage( "Failure reading pwFileName=" + NBuserConfig.SMTP_PASSWORD_FILENAME )
     sys.exit(1)
     
-  session = smtplib.SMTP(SMTP_SERVER_NAME,SMTP_SERVER_PORT)
+  session = smtplib.SMTP(NBuserConfig.SMTP_SERVER_NAME,NBuserConfig.SMTP_SERVER_PORT)
   #session.set_debuglevel(1)
-  if SMTP_SSL_SERVER==1 :
+  if NBuserConfig.SMTP_SSL_SERVER==1 :
     session.ehlo('x')
     session.starttls()
     session.ehlo('x')  
-  session.login(unscrambleEmailAddress(SMTP_USER_NAME),smtppass)
+  session.login(unscrambleEmailAddress(NBuserConfig.SMTP_USER_NAME),smtppass)
 
   rc = session.sendmail(sender,toAddrs,msgWHeader)
   if rc!={} :
@@ -200,8 +102,8 @@ def didTestFail( rc, project, buildStep ) :
 
   # Many tests write a "Success" message.
   # For test that do this, check for the success message
-  if ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS.has_key(project) : 
-    if buildStep in ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS[project] :
+  if NBprojectConfig.ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS.has_key(project) : 
+    if buildStep in NBprojectConfig.ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS[project] :
       # Is the success message contained in the output?
       if rc[1].rfind("All tests completed successfully") == -1 :
         # Success message not found, assume test failed
@@ -212,7 +114,7 @@ def didTestFail( rc, project, buildStep ) :
   # to determine if they were successful
   #---------------------------------------------------------------------
   # Clp's "./clp -unitTest -netlib dirNetlib=_NETLIBDIR_"
-  if project=='Clp' and buildStep==UNITTEST_CMD['Clp'] :
+  if project=='Clp' and buildStep==NBprojectConfig.UNITTEST_CMD['Clp'] :
     # Check that last netlib test case ran by looking for message of form
     # '../../Data/Netlib/woodw took 0.47 seconds using algorithm either'
     reexp = r"(.|\n)*\.\.(\\|/)\.\.(\\|/)Data(\\|/)Netlib(\\|/)woodw took (\d*\.\d*) seconds using algorithm either(.|\n)*"
@@ -259,15 +161,15 @@ def writeLogMessage( msg ) :
 #------------------------------------------------------------------------
 #  If needed create the top level directory
 #------------------------------------------------------------------------
-# rc=commands.getstatusoutput(NIGHTLY_BUILD_ROOT_DIR)
-if not os.path.isdir(NIGHTLY_BUILD_ROOT_DIR) :
-  os.makedirs(NIGHTLY_BUILD_ROOT_DIR)
-os.chdir(NIGHTLY_BUILD_ROOT_DIR)
+# rc=commands.getstatusoutput(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR)
+if not os.path.isdir(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR) :
+  os.makedirs(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR)
+os.chdir(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR)
 
 #------------------------------------------------------------------------
 #  Get the data directories if they don't already exist
 #------------------------------------------------------------------------
-dataBaseDir=os.path.join(NIGHTLY_BUILD_ROOT_DIR,'Data')
+dataBaseDir=os.path.join(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR,'Data')
 if not os.path.isdir(dataBaseDir) :
   os.makedirs(dataBaseDir)
 dataDirs=['Netlib','miplib3']
@@ -284,14 +186,14 @@ miplib3Dir=os.path.join(dataBaseDir,'miplib3')
 #------------------------------------------------------------------------
 # Loop once for each project
 #------------------------------------------------------------------------
-for p in PROJECTS:
+for p in NBuserConfig.PROJECTS:
   writeLogMessage( p )
   rc = [0]
 
   #---------------------------------------------------------------------
   # svn checkout or update the project
   #---------------------------------------------------------------------
-  projectBaseDir=os.path.join(NIGHTLY_BUILD_ROOT_DIR,p)
+  projectBaseDir=os.path.join(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR,p)
   projectCheckOutDir=os.path.join(projectBaseDir,'trunk')
   if not os.path.isdir(projectBaseDir) :
     os.makedirs(projectBaseDir)
@@ -356,11 +258,11 @@ for p in PROJECTS:
   #---------------------------------------------------------------------
   # Run unitTest if available and different from 'make test'
   #---------------------------------------------------------------------
-  if UNITTEST_CMD.has_key(p) :
-    unitTestPath = os.path.join(projectCheckOutDir,UNITTEST_DIR[p])
+  if NBprojectConfig.UNITTEST_CMD.has_key(p) :
+    unitTestPath = os.path.join(projectCheckOutDir,NBprojectConfig.UNITTEST_DIR[p])
     os.chdir(unitTestPath)
 
-    unitTestCmd=UNITTEST_CMD[p]
+    unitTestCmd=NBprojectConfig.UNITTEST_CMD[p]
     unitTestCmd=unitTestCmd.replace('_NETLIBDIR_',netlibDir)
     unitTestCmd=unitTestCmd.replace('_MIPLIB3DIR_',miplib3Dir)
 
@@ -388,13 +290,13 @@ sys.exit(0)
 #   this should have all of the user specific data
 #   it should have values for
 #   NIGHTLY_BUILD_ROOT
-#   SMTP_SERVER_NAME
-#   SMTP_SERVER_PORT 
-#   SMTP_SSL_SERVER 
-#   SMTP_USER_NAME
-#   SMTP_PASSWORD_FILENAME = '/home/jp/bin/smtpPwFile'
-#   SENDER_EMAIL_ADDR='jpfasano _AT_ verizon _DOT_ net'
-#   MY_EMAIL_ADDR='jpfasano _AT_ us _DOT_ ibm _DOT_ com'
+#   NBuserConfig.SMTP_SERVER_NAME
+#   NBuserConfig.SMTP_SERVER_PORT 
+#   NBuserConfig.SMTP_SSL_SERVER 
+#   NBuserConfig.SMTP_USER_NAME
+#   NBuserConfig.SMTP_PASSWORD_FILENAME = '/home/jp/bin/smtpPwFile'
+#   NBuserConfig.SENDER_EMAIL_ADDR='jpfasano _AT_ verizon _DOT_ net'
+#   NBuserConfig.MY_EMAIL_ADDR='jpfasano _AT_ us _DOT_ ibm _DOT_ com'
 #   
 #----------------------------------------------------------------------
 
@@ -433,13 +335,13 @@ sys.exit( 0)
 # CONFIG FILE PATH: 
 #   it should have values for
 #   NIGHTLY_BUILD_ROOT
-#   SMTP_SERVER_NAME
-#   SMTP_SERVER_PORT 
-#   SMTP_SSL_SERVER 
-#   SMTP_USER_NAME
-#   SMTP_PASSWORD_FILENAME 
-#   SENDER_EMAIL_ADDR
-#   MY_EMAIL_ADDR
+#   NBuserConfig.SMTP_SERVER_NAME
+#   NBuserConfig.SMTP_SERVER_PORT 
+#   NBuserConfig.SMTP_SSL_SERVER 
+#   NBuserConfig.SMTP_USER_NAME
+#   NBuserConfig.SMTP_PASSWORD_FILENAME 
+#   NBuserConfig.SENDER_EMAIL_ADDR
+#   NBuserConfig.MY_EMAIL_ADDR
 #   
 #----------------------------------------------------------------------
 
