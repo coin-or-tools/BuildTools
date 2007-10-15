@@ -54,7 +54,7 @@ if gethostname()=='ubuntu' or gethostname()=='math01.watson.ibm.com':
   if gethostname()=='ubuntu' :
     SMTP_PASSWORD_FILENAME = '/home/jp/bin/smtpPwFile'
   else :
-    SMTP_PASSWORD_FILENAME = '/u/jpfasan/COIN/bin/smtpPwFile'
+    SMTP_PASSWORD_FILENAME = '/u/jpfasano/COIN/bin/smtpPwFile'
 
   SENDER_EMAIL_ADDR='jpfasano _AT_ verizon _DOT_ net'
   MY_EMAIL_ADDR='jpfasano _AT_ us _DOT_ ibm _DOT_ com'
