@@ -141,6 +141,7 @@ def sendEmailCmdMsgs(project,cmdMsgs,cmd):
   subject = project + " build problem when running '" + cmd +"'"
 
   emailMsg  = "'" + cmd + "' from directory " + curDir + " failed.\n\n"
+  emailMsg += "Operating System: "+os.name
   emailMsg += "'" + cmd + "' messages are:\n" 
   emailMsg += cmdMsgs
   sendEmail(toAddrs,subject,emailMsg)
@@ -163,7 +164,6 @@ def sendEmail(toAddrs,subject,message):
     pwFilePtr.close()
   else :
     writeLogMessage( "Failure reading pwFileName=" + SMTP_PASSWORD_FILENAME )
-    print cmdMsgs
     sys.exit(1)
     
   session = smtplib.SMTP(SMTP_SERVER_NAME,SMTP_SERVER_PORT)
@@ -208,13 +208,24 @@ def didTestFail( rc, project, buildStep ) :
         # Success message not found, assume test failed
         retVal = 1
 
+  #---------------------------------------------------------------------
   # Some (project,buildStep) pairs require further checking
+  # to determine if they were successful
+  #---------------------------------------------------------------------
+  # Clp's "./clp -unitTest -netlib dirNetlib=_NETLIBDIR_"
   if project=='Clp' and buildStep==UNITTEST_CMD['Clp'] :
-    # Build Step is './clp -unitTest -netlib' 
     # Check that last netlib test case ran by looking for message of form
     # '../../Data/Netlib/woodw took 0.47 seconds using algorithm either'
     reexp = r"(.|\n)*\.\.(\\|/)\.\.(\\|/)Data(\\|/)Netlib(\\|/)woodw took (\d*\.\d*) seconds using algorithm either(.|\n)*"
-    msgTail = rc[1][len(rc[1])-200:]
+    msgTail = rc[1][-200:]
+    if not re.compile(reexp).match(msgTail,1) :
+      # message not found, assume test failed
+      retVal = 1
+  elif project=='Cbc' and buildStep=='make test' :
+    # Check that last the last few lines are of the form
+    # 'cbc_clp solved 2 out of 2 and took XX.XX seconds.'
+    reexp=r"(.|\n)*cbc_clp solved 2 out of 2 and took (\d*\.\d*) seconds."
+    msgTail = rc[1][-300:]
     if not re.compile(reexp).match(msgTail,1) :
       # message not found, assume test failed
       retVal = 1
