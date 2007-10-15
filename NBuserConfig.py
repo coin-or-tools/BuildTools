@@ -54,6 +54,6 @@ SEND_MAIL_TO_PROJECT_MANAGER=0
 # List of Projects to be processed by script
 #----------------------------------------------------------------------
 PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc','Ipopt','OS','CppAD']
-PROJECTS = ['Clp','CppAD']
+PROJECTS = ['CoinUtils','CppAD']
 
 
