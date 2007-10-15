@@ -368,3 +368,96 @@ for p in PROJECTS:
 writeLogMessage( "nightlyBuild.py Finished" )
 
 sys.exit(0)
+
+
+# START KIPP
+#----------------------------------------------------------------------
+# CONFIG FILE PATH: 
+#   path to the config file for the build
+#   done. If the directory does not exist, it will be created.
+#   this should have all of the user specific data
+#   it should have values for
+#   NIGHTLY_BUILD_ROOT
+#   SMTP_SERVER_NAME
+#   SMTP_SERVER_PORT 
+#   SMTP_SSL_SERVER 
+#   SMTP_USER_NAME
+#   SMTP_PASSWORD_FILENAME = '/home/jp/bin/smtpPwFile'
+#   SENDER_EMAIL_ADDR='jpfasano _AT_ verizon _DOT_ net'
+#   MY_EMAIL_ADDR='jpfasano _AT_ us _DOT_ ibm _DOT_ com'
+#   
+#----------------------------------------------------------------------
+
+CONFIG_FILE_PATH = '/Users/kmartin/Documents/files/configDir/'
+CONFIG_FILENAME = 'config.txt'
+
+
+# Get configFile data
+
+configFile = os.path.join(os.path.dirname( CONFIG_FILE_PATH),
+                                 os.path.basename(CONFIG_FILENAME ))
+if os.path.isfile(  configFile) :
+  pwFilePtr = open(configFile ,'r')
+  d = pwFilePtr.readlines()
+  # do pwFilePtr.read() to get a string object
+  # we have a list object
+  print d[0]
+  print d[1]
+  # make a dictionary
+  config_dic = {}
+
+  #smtppass  = pwFilePtr.read().strip()
+  pwFilePtr.close()
+else :
+  #writeLogMessage( "Failure reading pwFileName=" + CONFIG_FILENAME )
+  #print cmdMsgs
+  sys.exit( 1)
+sys.exit( 0)
+
+# END KIPP
+
+# START KIPP
+#----------------------------------------------------------------------
+# CONFIG FILE PATH: 
+#   path to the config file for the build
+#   done. If the directory does not exist, it will be created.
+#   this should have all of the user specific data
+#   it should have values for
+#   NIGHTLY_BUILD_ROOT
+#   SMTP_SERVER_NAME
+#   SMTP_SERVER_PORT 
+#   SMTP_SSL_SERVER 
+#   SMTP_USER_NAME
+#   SMTP_PASSWORD_FILENAME = '/home/jp/bin/smtpPwFile'
+#   SENDER_EMAIL_ADDR='jpfasano _AT_ verizon _DOT_ net'
+#   MY_EMAIL_ADDR='jpfasano _AT_ us _DOT_ ibm _DOT_ com'
+#   
+#----------------------------------------------------------------------
+
+CONFIG_FILE_PATH = '/Users/kmartin/Documents/files/configDir/'
+CONFIG_FILENAME = 'config.txt'
+
+
+# Get configFile data
+
+configFile = os.path.join(os.path.dirname( CONFIG_FILE_PATH),
+                                 os.path.basename(CONFIG_FILENAME ))
+if os.path.isfile(  configFile) :
+  pwFilePtr = open(configFile ,'r')
+  d = pwFilePtr.readlines()
+  # do pwFilePtr.read() to get a string object
+  # we have a list object
+  print d[0]
+  print d[1]
+  # make a dictionary
+  config_dic = {}
+
+  #smtppass  = pwFilePtr.read().strip()
+  pwFilePtr.close()
+else :
+  #writeLogMessage( "Failure reading pwFileName=" + CONFIG_FILENAME )
+  #print cmdMsgs
+  sys.exit( 1)
+sys.exit( 0)
+
+# END KIPP
