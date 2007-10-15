@@ -2,6 +2,7 @@
 
 import os
 import sys
+from socket import gethostname 
 import smtplib
 
 import NBuserConfig
@@ -36,7 +37,10 @@ def sendCmdMsgs(project,cmdMsgs,cmd):
   subject = project + " build problem when running '" + cmd +"'"
 
   emailMsg  = "'" + cmd + "' from directory " + curDir + " failed.\n\n"
-  emailMsg += "Operating System: "+os.name+"\n"
+
+  emailMsg += "Operating System: "+sys.platform+" "+os.name+"\n"
+  emailMsg += "Host name: "+gethostname()+"\n\n"
+
   emailMsg += "'" + cmd + "' messages are:\n" 
   emailMsg += cmdMsgs
   send(toAddrs,subject,emailMsg)
