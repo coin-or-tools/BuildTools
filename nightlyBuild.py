@@ -418,19 +418,18 @@ sys.exit( 0)
 
 # START KIPP
 #----------------------------------------------------------------------
-# CONFIG FILE PATH: 
 #   path to the config file for the build
-#   done. If the directory does not exist, it will be created.
-#   this should have all of the user specific data
+#   get the user dependent variables
+# CONFIG FILE PATH: 
 #   it should have values for
 #   NIGHTLY_BUILD_ROOT
 #   SMTP_SERVER_NAME
 #   SMTP_SERVER_PORT 
 #   SMTP_SSL_SERVER 
 #   SMTP_USER_NAME
-#   SMTP_PASSWORD_FILENAME = '/home/jp/bin/smtpPwFile'
-#   SENDER_EMAIL_ADDR='jpfasano _AT_ verizon _DOT_ net'
-#   MY_EMAIL_ADDR='jpfasano _AT_ us _DOT_ ibm _DOT_ com'
+#   SMTP_PASSWORD_FILENAME 
+#   SENDER_EMAIL_ADDR
+#   MY_EMAIL_ADDR
 #   
 #----------------------------------------------------------------------
 
