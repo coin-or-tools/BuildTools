@@ -112,7 +112,6 @@ ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['Cgl'] = ['make test']
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['Cbc'] = 'jjforre _AT_ us _DOT_ ibm _DOT_ com'
-ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['Cbc'] = ['make test']
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['Ipopt'] = 'andreasw _AT_ us _DOT_ ibm _DOT_ com'
