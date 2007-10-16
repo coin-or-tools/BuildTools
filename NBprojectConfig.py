@@ -26,7 +26,7 @@ ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['DyLP'] = ['make test']
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['Clp'] = 'jjforre _AT_ us _DOT_ ibm _DOT_ com'
 UNITTEST_DIR['Clp'] = os.path.join('Clp','src')
-UNITTEST_CMD['Clp'] = './clp -unitTest -netlib dirNetlib=_NETLIBDIR_' 
+UNITTEST_CMD['Clp'] = './clp -unitTest dirNetlib=_NETLIBDIR_ -netlib' 
 ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['Clp'] = ['make test',UNITTEST_CMD['Clp']]
 
 #----------------------------------------------------------------------
@@ -49,7 +49,7 @@ ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['Cgl'] = ['make test']
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['Cbc'] = 'jjforre _AT_ us _DOT_ ibm _DOT_ com'
 UNITTEST_DIR['Cbc'] = os.path.join('Cbc','src')
-UNITTEST_CMD['Cbc'] = './cbc -unitTest -miplib -dirMiplib=_MIPLIB3DIR_' 
+UNITTEST_CMD['Cbc'] = './cbc -unitTest -dirMiplib=_MIPLIB3DIR_ -miplib' 
 
 
 #----------------------------------------------------------------------
