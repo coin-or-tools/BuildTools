@@ -34,7 +34,7 @@ def sendCmdMsgs(project,cmdMsgs,cmd):
     unscrambledEmailAddress=unscrambleAddress(scrambledEmailAddress)
     toAddrs.append(unscrambledEmailAddress)
 
-  subject = project + " build problem when running '" + cmd +"'"
+  subject = project + " problem when running '" + cmd +"'"
 
   emailMsg  = "'" + cmd + "' from directory " + curDir + " failed.\n\n"
 
