@@ -7,6 +7,7 @@ from socket import gethostname
 # might need to change. 
 #----------------------------------------------------------------------
 
+print gethostname()
 
 #----------------------------------------------------------------------
 # NIGHTLY_BUILD_ROOT_DIR: 
@@ -18,7 +19,7 @@ if gethostname()=='ubuntu' :
 elif gethostname()=='math01.watson.ibm.com' :
   NIGHTLY_BUILD_ROOT_DIR = '/u/jpfasano/COIN/nbTest'
 else :
-  NIGHTLY_BUILD_ROOT_DIR = 'xxxxx'
+  NIGHTLY_BUILD_ROOT_DIR = '/Users/kmartin/COIN'
   
 
 #----------------------------------------------------------------------
@@ -60,14 +61,14 @@ if gethostname()=='ubuntu' or gethostname()=='math01.watson.ibm.com':
   MY_EMAIL_ADDR='jpfasano _AT_ us _DOT_ ibm _DOT_ com'
   SEND_MAIL_TO_PROJECT_MANAGER=0
 else :
-  SMTP_SERVER_NAME = 'xxxxx'
-  SMTP_SERVER_PORT = 25
+  SMTP_SERVER_NAME = 'gsbims.uchicago.edu'
+  SMTP_SERVER_PORT =587
   SMTP_SSL_SERVER = 0
-  SMTP_USER_NAME = 'xxxx _AT_ xxxx _DOT_ com'
-  SMTP_PASSWORD_FILENAME = '/home/userid/xxxxx'
+  SMTP_USER_NAME = 'kmartin'
+  SMTP_PASSWORD_FILENAME = '/Users/kmartin/passwd'
 
-  SENDER_EMAIL_ADDR='xxxxx _AT_ xxxxx _DOT_ net'
-  MY_EMAIL_ADDR='xxxxx _AT_ xxxxx _DOT_ xxxxx _DOT_ com'
+  SENDER_EMAIL_ADDR='kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
+  MY_EMAIL_ADDR='kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
   SEND_MAIL_TO_PROJECT_MANAGER=0
 
 
@@ -75,6 +76,6 @@ else :
 # List of Projects to be processed by script
 #----------------------------------------------------------------------
 PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc','Ipopt','OS','CppAD']
-PROJECTS = ['CoinUtils','CppAD']
+PROJECTS = ['CppAD']
 
 

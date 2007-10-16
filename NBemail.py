@@ -60,6 +60,7 @@ def send(toAddrs,subject,message):
   if os.path.isfile(NBuserConfig.SMTP_PASSWORD_FILENAME) :
     pwFilePtr = open(NBuserConfig.SMTP_PASSWORD_FILENAME,'r')
     smtppass  = pwFilePtr.read().strip()
+    #print smtppass
     pwFilePtr.close()
   else :
     NBlogMessages.writeMessage( "Failure reading pwFileName=" + NBuserConfig.SMTP_PASSWORD_FILENAME )
