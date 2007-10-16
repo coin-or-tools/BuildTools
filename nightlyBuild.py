@@ -26,6 +26,17 @@ import NBemail
 
 
 #------------------------------------------------------------------------
+# Run command in another process.
+# Return: command's return code, stdout messages, & stderr messages
+#------------------------------------------------------------------------
+def runCommand(cmd) :
+  p=subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+  p.wait
+  cmdRc=p.returncode
+  cmdStdout=p.stdout.read()
+  cmdStderr=p.stderr.read() 
+
+#------------------------------------------------------------------------
 # Function to Check Return Code from unitTest
 #------------------------------------------------------------------------
 def didTestFail( rc, project, buildStep ) :
@@ -48,7 +59,7 @@ def didTestFail( rc, project, buildStep ) :
   # Some (project,buildStep) pairs require further checking
   # to determine if they were successful
   #---------------------------------------------------------------------
-  # Clp's "./clp -unitTest -netlib dirNetlib=_NETLIBDIR_"
+  # Clp's "./clp -unitTest dirNetlib=_NETLIBDIR_ -netlib"
   if project=='Clp' and buildStep==NBprojectConfig.UNITTEST_CMD['Clp'] :
     # Check that last netlib test case ran by looking for message of form
     # '../../Data/Netlib/woodw took 0.47 seconds using algorithm either'
@@ -68,7 +79,7 @@ def didTestFail( rc, project, buildStep ) :
       # message not found, assume test failed
       retVal = 1
 
-  # Cbc's "./cbc -unitTest -miplib dirNetlib=_MIPLIB3DIR_"
+  # Cbc's "./cbc -unitTest dirNetlib=_MIPLIB3DIR_ -miplib"
   elif project=='Cbc' and buildStep==NBprojectConfig.UNITTEST_CMD['Cbc'] :
     if rc[0]>=0 and rc[0]<=2 :
       # return code is between 0 and 2.
@@ -202,14 +213,14 @@ for p in NBuserConfig.PROJECTS:
     unitTestPath = os.path.join(projectCheckOutDir,NBprojectConfig.UNITTEST_DIR[p])
     os.chdir(unitTestPath)
 
-    unitTestCmd=NBprojectConfig.UNITTEST_CMD[p]
-    unitTestCmd=unitTestCmd.replace('_NETLIBDIR_',netlibDir)
+    unitTestCmdTemplate=NBprojectConfig.UNITTEST_CMD[p]
+    unitTestCmd=unitTestCmdTemplate.replace('_NETLIBDIR_',netlibDir)
     unitTestCmd=unitTestCmd.replace('_MIPLIB3DIR_',miplib3Dir)
 
     NBlogMessages.writeMessage( '  '+unitTestCmd )
     rc=commands.getstatusoutput(unitTestCmd)
   
-    if didTestFail(rc,p,unitTestCmd) :
+    if didTestFail(rc,p,unitTestCmdTemplate) :
       NBemail.sendCmdMsgs(p,rc[1],unitTestCmd)
       continue
 
