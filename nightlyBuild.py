@@ -57,6 +57,8 @@ def didTestFail( rc, project, buildStep ) :
     if not re.compile(reexp).match(msgTail,1) :
       # message not found, assume test failed
       retVal = 1
+      
+  # Cbc's "make test"
   elif project=='Cbc' and buildStep=='make test' :
     # Check that last the last few lines are of the form
     # 'cbc_clp solved 2 out of 2 and took XX.XX seconds.'
@@ -65,6 +67,17 @@ def didTestFail( rc, project, buildStep ) :
     if not re.compile(reexp).match(msgTail,1) :
       # message not found, assume test failed
       retVal = 1
+
+  # Cbc's "./cbc -unitTest -miplib dirNetlib=_MIPLIB3DIR_"
+  elif project=='Cbc' and buildStep==NBprojectConfig.UNITTEST_CMD['Cbc'] :
+    if rc[0]>=0 and rc[0]<=2 :
+      # return code is between 0 and 2.
+      # Return code between 1 and 44 is the number of test cases that
+      # ended because maxnodes limit reached.  John Forrest says if this
+      # is less than 3, the OK.
+      retVal=0
+    else :
+      retVal=1
 
   return retVal
 

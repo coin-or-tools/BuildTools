@@ -39,7 +39,6 @@ PROJECT_EMAIL_ADDRS['Vol'] = 'barahon _AT_ us _DOT_ ibm _DOT_ com'
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['Osi'] = 'mjs _AT_ ces _DOT_ clemson _DOT_ edu'
 UNITTEST_DIR['Osi'] = os.path.join('Osi','test')
-UNITTEST_CMD['Osi'] = './unitTest -testOsiSolverInterface' 
 UNITTEST_CMD['Osi'] = './unitTest -testOsiSolverInterface -netlibDir=_NETLIBDIR_ -cerr2cout' 
 ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['Osi'] = ['make test',UNITTEST_CMD['Osi']]
 
@@ -49,6 +48,9 @@ ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['Cgl'] = ['make test']
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['Cbc'] = 'jjforre _AT_ us _DOT_ ibm _DOT_ com'
+UNITTEST_DIR['Cbc'] = os.path.join('Cbc','src')
+UNITTEST_CMD['Cbc'] = './cbc -unitTest -miplib -dirMiplib=_MIPLIB3DIR_' 
+
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['Ipopt'] = 'andreasw _AT_ us _DOT_ ibm _DOT_ com'
