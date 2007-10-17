@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 from socket import gethostname
+import sys
 
 #------------------------------------------------------------------------
 # Run a an OS command in another process.
@@ -9,7 +10,7 @@ from socket import gethostname
 #------------------------------------------------------------------------
 def run(cmd) :
 
-  if gethostname()=='math01.watson.ibm.com' :
+  if sys.version[:6]<'2.4.0' :
 
     # this machine has a back level of python, so must use an older
     # techniques to implement this function.  This implementation
