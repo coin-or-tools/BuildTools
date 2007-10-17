@@ -127,7 +127,7 @@ dataDirs=['Netlib','miplib3']
 for d in dataDirs :
   dataDir=os.path.join(dataBaseDir,d)
   if not os.path.isdir(dataDir) :
-    svnCmd='svn checkout https://projects.coin-or.org/svn/Data/releases/1.0.0/'+d+' '+d
+    svnCmd=os.path.join(NBuserConfig.SVNPATH_PREFIX,'svn') + ' checkout https://projects.coin-or.org/svn/Data/releases/1.0.0/'+d+' '+d
     if issueSvnCmd(svnCmd,dataBaseDir,'Data')!='OK' :
       sys.exit(1)
     rc=commands.getstatusoutput('find '+d+' -name \*.gz -print | xargs gzip -d')
@@ -149,11 +149,11 @@ for p in NBuserConfig.PROJECTS:
   if not os.path.isdir(projectBaseDir) :
     os.makedirs(projectBaseDir)
   if not os.path.isdir(projectCheckOutDir) :
-    svnCmd='svn checkout https://projects.coin-or.org/svn/'+p+'/trunk trunk'
+    svnCmd=os.path.join(NBuserConfig.SVNPATH_PREFIX,'svn') + ' checkout https://projects.coin-or.org/svn/'+p+'/trunk trunk'
     if issueSvnCmd(svnCmd,projectBaseDir,p)!='OK' :
       continue
   else :
-    svnCmd='svn update'
+    svnCmd=os.path.join(NBuserConfig.SVNPATH_PREFIX,'svn') + ' update'
     if issueSvnCmd(svnCmd,projectCheckOutDir,p)!='OK' :
       continue
 

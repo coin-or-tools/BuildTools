@@ -7,7 +7,7 @@ from socket import gethostname
 # might need to change. 
 #----------------------------------------------------------------------
 
-print gethostname()
+
 
 #----------------------------------------------------------------------
 # NIGHTLY_BUILD_ROOT_DIR: 
@@ -20,6 +20,8 @@ elif gethostname()=='math01.watson.ibm.com' :
   NIGHTLY_BUILD_ROOT_DIR = '/u/jpfasano/COIN/nbTest'
 else :
   NIGHTLY_BUILD_ROOT_DIR = '/Users/kmartin/COIN'
+
+SVNPATH_PREFIX=''
   
 
 #----------------------------------------------------------------------
@@ -70,12 +72,13 @@ else :
   SENDER_EMAIL_ADDR='kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
   MY_EMAIL_ADDR='kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
   SEND_MAIL_TO_PROJECT_MANAGER=0
+  SVNPATH_PREFIX='/usr/local/bin/'
 
 
 #----------------------------------------------------------------------
 # List of Projects to be processed by script
 #----------------------------------------------------------------------
 PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc','Ipopt','OS','CppAD']
-PROJECTS = ['CppAD']
+PROJECTS = ['CoinUtils']
 
 
