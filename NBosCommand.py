@@ -11,8 +11,6 @@ def run(cmd) :
   p=subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
   cmdStdout,cmdStderr=p.communicate()
   cmdRc=p.returncode
-  print "run rc="
-  print cmdRc
   retVal = { 'returnCode':cmdRc, 'stdout':cmdStdout, 'stderr':cmdStderr }
   return retVal 
 
