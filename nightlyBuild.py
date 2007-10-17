@@ -2,7 +2,6 @@
 
 import os
 import sys
-import commands
 import smtplib
 import re 
 
@@ -10,6 +9,7 @@ import NBuserConfig
 import NBprojectConfig
 import NBlogMessages
 import NBemail
+import NBosCommand
 
 # TODO:
 #   -After "svn co" then get all 3rd party packages.
@@ -25,25 +25,15 @@ import NBemail
 #     to test on in an email dated 10/12/2007 12:01pm
 
 
-#------------------------------------------------------------------------
-# Run command in another process.
-# Return: command's return code, stdout messages, & stderr messages
-#------------------------------------------------------------------------
-def runCommand(cmd) :
-  p=subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-  p.wait
-  cmdRc=p.returncode
-  cmdStdout=p.stdout.read()
-  cmdStderr=p.stderr.read() 
 
 #------------------------------------------------------------------------
 # Function to Check Return Code from unitTest
 #------------------------------------------------------------------------
-def didTestFail( rc, project, buildStep ) :
+def didTestFail( result, project, buildStep ) :
   retVal = 0
 
   # If the return code is not 0, then failure
-  if rc[0] != 0 :
+  if result['returnCode'] != 0 :
     retVal = 1
 
   # Many tests write a "Success" message.
@@ -51,7 +41,8 @@ def didTestFail( rc, project, buildStep ) :
   if NBprojectConfig.ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS.has_key(project) : 
     if buildStep in NBprojectConfig.ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS[project] :
       # Is the success message contained in the output?
-      if rc[1].rfind("All tests completed successfully") == -1 :
+      if result['stderr'].rfind("All tests completed successfully") == -1 and \
+         result['stdout'].rfind("All tests completed successfully") == -1 :
         # Success message not found, assume test failed
         retVal = 1
 
@@ -63,8 +54,8 @@ def didTestFail( rc, project, buildStep ) :
   if project=='Clp' and buildStep==NBprojectConfig.UNITTEST_CMD['Clp'] :
     # Check that last netlib test case ran by looking for message of form
     # '../../Data/Netlib/woodw took 0.47 seconds using algorithm either'
-    reexp = r"(.|\n)*\.\.(\\|/)\.\.(\\|/)Data(\\|/)Netlib(\\|/)woodw took (\d*\.\d*) seconds using algorithm either(.|\n)*"
-    msgTail = rc[1][-200:]
+    reexp = r"(.|\n)*(\\|/)Data(\\|/)Netlib(\\|/)woodw took (\d*\.\d*) seconds using algorithm either(.|\n)*"
+    msgTail = result['stdout'][-200:]
     if not re.compile(reexp).match(msgTail,1) :
       # message not found, assume test failed
       retVal = 1
@@ -74,14 +65,14 @@ def didTestFail( rc, project, buildStep ) :
     # Check that last the last few lines are of the form
     # 'cbc_clp solved 2 out of 2 and took XX.XX seconds.'
     reexp=r"(.|\n)*cbc_clp solved 2 out of 2 and took (\d*\.\d*) seconds."
-    msgTail = rc[1][-300:]
+    msgTail = result['stdout'][-300:]
     if not re.compile(reexp).match(msgTail,1) :
       # message not found, assume test failed
       retVal = 1
 
   # Cbc's "./cbc -unitTest dirNetlib=_MIPLIB3DIR_ -miplib"
   elif project=='Cbc' and buildStep==NBprojectConfig.UNITTEST_CMD['Cbc'] :
-    if rc[0]>=0 and rc[0]<=2 :
+    if result['returnCode']>=0 and result['returnCode']<=2 :
       # return code is between 0 and 2.
       # Return code between 1 and 44 is the number of test cases that
       # ended because maxnodes limit reached.  John Forrest says if this
@@ -99,9 +90,9 @@ def issueSvnCmd(svnCmd,dir,project) :
   retVal='OK'
   os.chdir(dir)
   NBlogMessages.writeMessage('  '+svnCmd)
-  rc=commands.getstatusoutput(svnCmd)
-  if rc[0] != 0 :
-    NBemail.sendCmdMsgs(project,rc[1],svnCmd)
+  result = NBosCommand.run(svnCmd)
+  if result['returnCode'] != 0 :
+    NBemail.sendCmdMsgs(project,result,svnCmd)
     retVal='Error'
   return retVal
 
@@ -112,7 +103,6 @@ def issueSvnCmd(svnCmd,dir,project) :
 #------------------------------------------------------------------------
 #  If needed create the top level directory
 #------------------------------------------------------------------------
-# rc=commands.getstatusoutput(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR)
 if not os.path.isdir(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR) :
   os.makedirs(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR)
 os.chdir(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR)
@@ -130,7 +120,7 @@ for d in dataDirs :
     svnCmd=os.path.join(NBuserConfig.SVNPATH_PREFIX,'svn') + ' checkout https://projects.coin-or.org/svn/Data/releases/1.0.0/'+d+' '+d
     if issueSvnCmd(svnCmd,dataBaseDir,'Data')!='OK' :
       sys.exit(1)
-    rc=commands.getstatusoutput('find '+d+' -name \*.gz -print | xargs gzip -d')
+    result=NBosCommand.run('find '+d+' -name \*.gz -print | xargs gzip -d')
 netlibDir=os.path.join(dataBaseDir,'Netlib')
 miplib3Dir=os.path.join(dataBaseDir,'miplib3')
 
@@ -139,7 +129,6 @@ miplib3Dir=os.path.join(dataBaseDir,'miplib3')
 #------------------------------------------------------------------------
 for p in NBuserConfig.PROJECTS:
   NBlogMessages.writeMessage( p )
-  rc = [0]
 
   #---------------------------------------------------------------------
   # svn checkout or update the project
@@ -169,41 +158,41 @@ for p in NBuserConfig.PROJECTS:
   os.chdir(projectCheckOutDir)
   configCmd = os.path.join('.','configure -C')
   NBlogMessages.writeMessage('  '+configCmd)
-  rc=commands.getstatusoutput(configCmd)
+  result=NBosCommand.run(configCmd)
   
   # Check if configure worked
-  if rc[0] != 0 :
-    error_msg = rc[1] + '\n\n'
+  if result['returnCode'] != 0 :
+    error_msg = result
     # Add contents of log file to message
     logFileName = 'config.log'
     if os.path.isfile(logFileName) :
       logFilePtr = open(logFileName,'r')
-      error_msg += "config.log contains: \n" 
-      error_msg += logFilePtr.read()
+      error_msg['config.log']  = "config.log contains: \n" 
+      error_msg['config.log'] += logFilePtr.read()
       logFilePtr.close()
     NBemail.sendCmdMsgs(p,error_msg,configCmd)
     continue
 
   #---------------------------------------------------------------------
-  # Run make part of buid
+  # Run make part of build
   #---------------------------------------------------------------------
   NBlogMessages.writeMessage( '  make' )
-  rc=commands.getstatusoutput('make')
+  result=NBosCommand.run('make')
   
   # Check if make worked
-  if rc[0] != 0 :
-    NBemail.sendCmdMsgs(p,rc[1],'make')
+  if result['returnCode'] != 0 :
+    NBemail.sendCmdMsgs(p,result,'make')
     continue
 
   #---------------------------------------------------------------------
-  # Run 'make test' part of buid
+  # Run 'make test' part of build
   #---------------------------------------------------------------------
   NBlogMessages.writeMessage( '  make test' )
-  rc=commands.getstatusoutput('make test')
+  result=NBosCommand.run('make test')
   
   # Check if 'make test' worked
-  if didTestFail(rc,p,"make test") :
-    NBemail.sendCmdMsgs(p,rc[1],"make test")
+  if didTestFail(result,p,"make test") :
+    NBemail.sendCmdMsgs(p,result,"make test")
     continue
 
   #---------------------------------------------------------------------
@@ -218,10 +207,10 @@ for p in NBuserConfig.PROJECTS:
     unitTestCmd=unitTestCmd.replace('_MIPLIB3DIR_',miplib3Dir)
 
     NBlogMessages.writeMessage( '  '+unitTestCmd )
-    rc=commands.getstatusoutput(unitTestCmd)
+    result=NBosCommand.run(unitTestCmd)
   
-    if didTestFail(rc,p,unitTestCmdTemplate) :
-      NBemail.sendCmdMsgs(p,rc[1],unitTestCmd)
+    if didTestFail(result,p,unitTestCmdTemplate) :
+      NBemail.sendCmdMsgs(p,result,unitTestCmd)
       continue
 
   # For testing purposes only do first successful project

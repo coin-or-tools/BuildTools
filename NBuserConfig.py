@@ -78,7 +78,7 @@ else :
 #----------------------------------------------------------------------
 # List of Projects to be processed by script
 #----------------------------------------------------------------------
-PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc','Ipopt','OS','CppAD']
-PROJECTS = ['CoinUtils']
+PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc',\
+            'FlopC++','Ipopt','OS','CppAD']
 
 

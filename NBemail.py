@@ -41,8 +41,13 @@ def sendCmdMsgs(project,cmdMsgs,cmd):
   emailMsg += "Operating System: "+sys.platform+" "+os.name+"\n"
   emailMsg += "Host name: "+gethostname()+"\n\n"
 
-  emailMsg += "'" + cmd + "' messages are:\n" 
-  emailMsg += cmdMsgs
+  emailMsg += "stderr messages are:\n" 
+  emailMsg += cmdMsgs['stderr']
+  emailMsg += "\n\nstdout messages are:\n"
+  emailMsg += cmdMsgs['stdout']
+  if cmdMsgs.has_key('config.log') :
+    emailMsg += "\n\nconfig.log messages are:\n"
+    emailMsg += cmdMsgs['config.log']
   send(toAddrs,subject,emailMsg)
   NBlogMessages.writeMessage( "  email sent regarding "+project+" running '"+cmd+"'" )
 

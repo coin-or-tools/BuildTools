@@ -1,5 +1,6 @@
 * text=auto !eol
 /NBemail.py -text
 /NBlogMessages.py -text
+/NBosCommand.py -text
 /NBprojectConfig.py -text
 /NBuserConfig.py -text
