@@ -3,4 +3,5 @@
 /NBlogMessages.py -text
 /NBosCommand.py -text
 /NBprojectConfig.py -text
+/NBsvnCommand.py -text
 /NBuserConfig.py -text

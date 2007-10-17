@@ -2,7 +2,6 @@
 
 import os
 import sys
-import smtplib
 import re 
 
 import NBuserConfig
@@ -10,6 +9,7 @@ import NBprojectConfig
 import NBlogMessages
 import NBemail
 import NBosCommand
+import NBsvnCommand
 
 # TODO:
 #   -After "svn co" then get all 3rd party packages.
@@ -84,19 +84,6 @@ def didTestFail( result, project, buildStep ) :
   return retVal
 
 #------------------------------------------------------------------------
-# Function for executing svn commands
-#------------------------------------------------------------------------
-def issueSvnCmd(svnCmd,dir,project) :
-  retVal='OK'
-  os.chdir(dir)
-  NBlogMessages.writeMessage('  '+svnCmd)
-  result = NBosCommand.run(svnCmd)
-  if result['returnCode'] != 0 :
-    NBemail.sendCmdMsgs(project,result,svnCmd)
-    retVal='Error'
-  return retVal
-
-#------------------------------------------------------------------------
 #  Main Program Starts Here  
 #------------------------------------------------------------------------
 
@@ -118,7 +105,7 @@ for d in dataDirs :
   dataDir=os.path.join(dataBaseDir,d)
   if not os.path.isdir(dataDir) :
     svnCmd=os.path.join(NBuserConfig.SVNPATH_PREFIX,'svn') + ' checkout https://projects.coin-or.org/svn/Data/releases/1.0.0/'+d+' '+d
-    if issueSvnCmd(svnCmd,dataBaseDir,'Data')!='OK' :
+    if NBsvnCommand.run(svnCmd,dataBaseDir,'Data')!='OK' :
       sys.exit(1)
     result=NBosCommand.run('find '+d+' -name \*.gz -print | xargs gzip -d')
 netlibDir=os.path.join(dataBaseDir,'Netlib')
@@ -139,11 +126,11 @@ for p in NBuserConfig.PROJECTS:
     os.makedirs(projectBaseDir)
   if not os.path.isdir(projectCheckOutDir) :
     svnCmd=os.path.join(NBuserConfig.SVNPATH_PREFIX,'svn') + ' checkout https://projects.coin-or.org/svn/'+p+'/trunk trunk'
-    if issueSvnCmd(svnCmd,projectBaseDir,p)!='OK' :
+    if NBsvnCommand.run(svnCmd,projectBaseDir,p)!='OK' :
       continue
   else :
     svnCmd=os.path.join(NBuserConfig.SVNPATH_PREFIX,'svn') + ' update'
-    if issueSvnCmd(svnCmd,projectCheckOutDir,p)!='OK' :
+    if NBsvnCommand.run(svnCmd,projectCheckOutDir,p)!='OK' :
       continue
 
   #---------------------------------------------------------------------

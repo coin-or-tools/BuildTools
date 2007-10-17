@@ -81,4 +81,5 @@ else :
 PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc',\
             'FlopC++','Ipopt','OS','CppAD']
 
+PROJECTS = ['FlopC++','Ipopt','OS','CppAD']
 
