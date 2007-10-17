@@ -18,11 +18,22 @@ if gethostname()=='ubuntu' :
   NIGHTLY_BUILD_ROOT_DIR = '/home/jp/COIN'
 elif gethostname()=='math01.watson.ibm.com' :
   NIGHTLY_BUILD_ROOT_DIR = '/u/jpfasano/COIN/nbTest'
-else :
+elif gethostname()=='kmartin-maclt.local' :
   NIGHTLY_BUILD_ROOT_DIR = '/Users/kmartin/COIN'
+else :
+  NIGHTLY_BUILD_ROOT_DIR = 'xxx'
 
-SVNPATH_PREFIX=''
-  
+#----------------------------------------------------------------------
+# Define directory where svn is located.
+# If svn is in the default path, then this can be set to an empty string
+#----------------------------------------------------------------------
+if gethostname()=='math01.watson.ibm.com' :
+  SVNPATH_PREFIX='/gsa/yktgsa/projects/o/oslos/local/bin'
+elif gethostname()=='kmartin-maclt.local' :
+  SVNPATH_PREFIX='/usr/local/bin/'
+else :
+  SVNPATH_PREFIX=''
+
 
 #----------------------------------------------------------------------
 # Values for sending mail:
@@ -62,7 +73,7 @@ if gethostname()=='ubuntu' or gethostname()=='math01.watson.ibm.com':
   SENDER_EMAIL_ADDR='jpfasano _AT_ verizon _DOT_ net'
   MY_EMAIL_ADDR='jpfasano _AT_ us _DOT_ ibm _DOT_ com'
   SEND_MAIL_TO_PROJECT_MANAGER=0
-else :
+elif gethostname()=='kmartin-maclt.local' :
   SMTP_SERVER_NAME = 'gsbims.uchicago.edu'
   SMTP_SERVER_PORT =587
   SMTP_SSL_SERVER = 0
@@ -72,7 +83,16 @@ else :
   SENDER_EMAIL_ADDR='kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
   MY_EMAIL_ADDR='kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
   SEND_MAIL_TO_PROJECT_MANAGER=0
-  SVNPATH_PREFIX='/usr/local/bin/'
+else :
+  SMTP_SERVER_NAME = 'xxx.smtp.server.name'
+  SMTP_SERVER_PORT =25
+  SMTP_SSL_SERVER = 0
+  SMTP_USER_NAME = 'xxxx'
+  SMTP_PASSWORD_FILENAME = '/xxx/yyy/smtpPassWordFile'
+
+  SENDER_EMAIL_ADDR='xxx _AT_ yyyy _DOT_ edu'
+  MY_EMAIL_ADDR='xxx _AT_ yyyy _DOT_ edu'
+  SEND_MAIL_TO_PROJECT_MANAGER=0
 
 
 #----------------------------------------------------------------------

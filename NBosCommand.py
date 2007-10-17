@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import subprocess
+from socket import gethostname
 
 #------------------------------------------------------------------------
 # Run a an OS command in another process.
@@ -8,11 +8,32 @@ import subprocess
 # Return: command's return code, stdout messages, & stderr messages
 #------------------------------------------------------------------------
 def run(cmd) :
-  p=subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-  cmdStdout,cmdStderr=p.communicate()
-  cmdRc=p.returncode
-  retVal = { 'returnCode':cmdRc, 'stdout':cmdStdout, 'stderr':cmdStderr }
-  return retVal 
+
+  if gethostname()=='math01.watson.ibm.com' :
+
+    # this machine has a back level of python, so must use an older
+    # techniques to implement this function.  This implementation
+    # runs the command in the same process as the script.
+    # This has the problem that if the command crashes, it will bring
+    # down the script. Another problem is that stderr and stdout are
+    # mingled together
+
+    import commands
+    result = commands.getstatusoutput(cmd)
+    retVal = { 'returnCode':result[0], 'stdout':result[1], 'stderr':'' }
+    return retVal
+
+  else :
+
+    import subprocess
+ 
+    p=subprocess.Popen(cmd,shell=True,\
+                       stdout=subprocess.PIPE,\
+                       stderr=subprocess.PIPE)
+    cmdStdout,cmdStderr=p.communicate()
+    cmdRc=p.returncode
+    retVal = { 'returnCode':cmdRc, 'stdout':cmdStdout, 'stderr':cmdStderr }
+    return retVal 
 
 
 #  run = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
