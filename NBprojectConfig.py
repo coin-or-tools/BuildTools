@@ -51,6 +51,10 @@ PROJECT_EMAIL_ADDRS['Cbc'] = 'jjforre _AT_ us _DOT_ ibm _DOT_ com'
 UNITTEST_DIR['Cbc'] = os.path.join('Cbc','src')
 UNITTEST_CMD['Cbc'] = './cbc -unitTest -dirMiplib=_MIPLIB3DIR_ -miplib' 
 
+#----------------------------------------------------------------------
+PROJECT_EMAIL_ADDRS['FlopC++'] = 'Tim _DOT_ Hultberg _AT_ eumetsat _DOT_ int'
+ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['FlopC++'] = ['make test']
+
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['Ipopt'] = 'andreasw _AT_ us _DOT_ ibm _DOT_ com'
