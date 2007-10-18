@@ -15,14 +15,11 @@ import NBcheckResult
 #   -After "svn co" then get all 3rd party packages.
 #   -Get some information about the platform and put this in email failure message.
 #   -Implement Kipp's vpath (delete vpath instead of 'make distclean').
-#   Break this file up into multiple files so it is manageable.
-#   Don't do build if 'svn update' doesn't change anything and prior test was OK.
+#   -Don't do build if 'svn update' doesn't change anything and prior test was OK.
 #     (no need to re-run if nothing has changed since prior run)
-#   Build both trunk and latest stable 
-#   Build both optimized and debug (or have a set of config-site scripts to test?)
-#   Check the testing of the success criteria of each projects "make test" 
-#   Implement "cbc -miplib" test for successful run.  JohnF sent JP the criteria
-#     to test on in an email dated 10/12/2007 12:01pm
+#   -Build both trunk and latest stable 
+#   -Build both optimized and debug (or have a set of config-site scripts to test?)
+
 
 
 
@@ -76,6 +73,21 @@ for p in NBuserConfig.PROJECTS:
     if NBsvnCommand.run(svnCmd,projectCheckOutDir,p)!='OK' :
       continue
 
+  #---------------------------------------------------------------------
+  # If there is are third part apps, then get these apps
+  #---------------------------------------------------------------------
+  thirdPartyBaseDir=os.path.join(projectCheckOutDir,'ThirdParty')
+  if os.path.isdir(thirdPartyBaseDir) :
+    thirdPartyDirs = os.listdir(thirdPartyBaseDir)
+    for d in thirdPartyDirs :
+      thirdPartyDir=os.path.join(thirdPartyBaseDir,d)
+      install3rdPartyCmd=os.path.join(".",thirdPartyDir,"get."+d)
+      print install3rdPartyCmd
+      os.chdir(thirdPartyDir)
+      # NBosCommand.run(install3rdPartyCmd)
+    
+
+  
   #---------------------------------------------------------------------
   # Should probably run make 'distclean' to do a build from scrath
   # or delete the VPATH directory when there is one
