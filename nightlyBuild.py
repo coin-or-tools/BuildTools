@@ -2,7 +2,6 @@
 
 import os
 import sys
-import re 
 
 import NBuserConfig
 import NBprojectConfig
@@ -10,6 +9,7 @@ import NBlogMessages
 import NBemail
 import NBosCommand
 import NBsvnCommand
+import NBcheckResult
 
 # TODO:
 #   -After "svn co" then get all 3rd party packages.
@@ -25,63 +25,6 @@ import NBsvnCommand
 #     to test on in an email dated 10/12/2007 12:01pm
 
 
-
-#------------------------------------------------------------------------
-# Function to Check Return Code from unitTest
-#------------------------------------------------------------------------
-def didTestFail( result, project, buildStep ) :
-  retVal = 0
-
-  # If the return code is not 0, then failure
-  if result['returnCode'] != 0 :
-    retVal = 1
-
-  # Many tests write a "Success" message.
-  # For test that do this, check for the success message
-  if NBprojectConfig.ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS.has_key(project) : 
-    if buildStep in NBprojectConfig.ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS[project] :
-      # Is the success message contained in the output?
-      if result['stderr'].rfind("All tests completed successfully") == -1 and \
-         result['stdout'].rfind("All tests completed successfully") == -1 :
-        # Success message not found, assume test failed
-        retVal = 1
-
-  #---------------------------------------------------------------------
-  # Some (project,buildStep) pairs require further checking
-  # to determine if they were successful
-  #---------------------------------------------------------------------
-  # Clp's "./clp -unitTest dirNetlib=_NETLIBDIR_ -netlib"
-  if project=='Clp' and buildStep==NBprojectConfig.UNITTEST_CMD['Clp'] :
-    # Check that last netlib test case ran by looking for message of form
-    # '../../Data/Netlib/woodw took 0.47 seconds using algorithm either'
-    reexp = r"(.|\n)*(\\|/)Data(\\|/)Netlib(\\|/)woodw took (\d*\.\d*) seconds using algorithm either(.|\n)*"
-    msgTail = result['stdout'][-200:]
-    if not re.compile(reexp).match(msgTail,1) :
-      # message not found, assume test failed
-      retVal = 1
-      
-  # Cbc's "make test"
-  elif project=='Cbc' and buildStep=='make test' :
-    # Check that last the last few lines are of the form
-    # 'cbc_clp solved 2 out of 2 and took XX.XX seconds.'
-    reexp=r"(.|\n)*cbc_clp solved 2 out of 2 and took (\d*\.\d*) seconds."
-    msgTail = result['stdout'][-300:]
-    if not re.compile(reexp).match(msgTail,1) :
-      # message not found, assume test failed
-      retVal = 1
-
-  # Cbc's "./cbc -unitTest dirNetlib=_MIPLIB3DIR_ -miplib"
-  elif project=='Cbc' and buildStep==NBprojectConfig.UNITTEST_CMD['Cbc'] :
-    if result['returnCode']>=0 and result['returnCode']<=2 :
-      # return code is between 0 and 2.
-      # Return code between 1 and 44 is the number of test cases that
-      # ended because maxnodes limit reached.  John Forrest says if this
-      # is less than 3, the OK.
-      retVal=0
-    else :
-      retVal=1
-
-  return retVal
 
 #------------------------------------------------------------------------
 #  Main Program Starts Here  
@@ -144,21 +87,24 @@ for p in NBuserConfig.PROJECTS:
   #---------------------------------------------------------------------
   os.chdir(projectCheckOutDir)
   configCmd = os.path.join('.','configure -C')
-  NBlogMessages.writeMessage('  '+configCmd)
-  result=NBosCommand.run(configCmd)
+  if NBcheckResult.didConfigRunOK() :
+    NBlogMessages.writeMessage("  '"+configCmd+"' previously ran. Not rerunning")
+  else :
+    NBlogMessages.writeMessage('  '+configCmd)
+    result=NBosCommand.run(configCmd)
   
-  # Check if configure worked
-  if result['returnCode'] != 0 :
-    error_msg = result
-    # Add contents of log file to message
-    logFileName = 'config.log'
-    if os.path.isfile(logFileName) :
-      logFilePtr = open(logFileName,'r')
-      error_msg['config.log']  = "config.log contains: \n" 
-      error_msg['config.log'] += logFilePtr.read()
-      logFilePtr.close()
-    NBemail.sendCmdMsgs(p,error_msg,configCmd)
-    continue
+    # Check if configure worked
+    if result['returnCode'] != 0 :
+      error_msg = result
+      # Add contents of log file to message
+      logFileName = 'config.log'
+      if os.path.isfile(logFileName) :
+        logFilePtr = open(logFileName,'r')
+        error_msg['config.log']  = "config.log contains: \n" 
+        error_msg['config.log'] += logFilePtr.read()
+        logFilePtr.close()
+      NBemail.sendCmdMsgs(p,error_msg,configCmd)
+      continue
 
   #---------------------------------------------------------------------
   # Run make part of build
@@ -178,7 +124,7 @@ for p in NBuserConfig.PROJECTS:
   result=NBosCommand.run('make test')
   
   # Check if 'make test' worked
-  if didTestFail(result,p,"make test") :
+  if NBcheckResult.didTestFail(result,p,"make test") :
     NBemail.sendCmdMsgs(p,result,"make test")
     continue
 
@@ -196,7 +142,7 @@ for p in NBuserConfig.PROJECTS:
     NBlogMessages.writeMessage( '  '+unitTestCmd )
     result=NBosCommand.run(unitTestCmd)
   
-    if didTestFail(result,p,unitTestCmdTemplate) :
+    if NBcheckResult.didTestFail(result,p,unitTestCmdTemplate) :
       NBemail.sendCmdMsgs(p,result,unitTestCmd)
       continue
 
