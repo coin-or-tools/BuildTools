@@ -39,7 +39,18 @@ def sendCmdMsgs(project,cmdMsgs,cmd):
   emailMsg  = "'" + cmd + "' from directory " + curDir + " failed.\n\n"
 
   emailMsg += "Operating System: "+sys.platform+" "+os.name+"\n"
-  emailMsg += "Host name: "+gethostname()+"\n\n"
+  emailMsg += "Host name: "+gethostname()+"\n"
+
+  if os.environ.has_key("PROCESSOR_IDENTIFIER") :
+    emailMsg += "Processor: "+os.environ["PROCESSOR_IDENTIFIER"]+"\n"
+                                         
+  if os.environ.has_key("NUMBER_OF_PROCESSORS") :
+    emailMsg += "Number of processors: "+os.environ["NUMBER_OF_PROCESSORS"]+"\n"
+    
+  if os.environ.has_key("PATH") :
+    emailMsg += "PATH: "+os.environ["PATH"]+"\n"
+
+  emailMsg +="\n"
 
   emailMsg += "stderr messages are:\n" 
   emailMsg += cmdMsgs['stderr']
