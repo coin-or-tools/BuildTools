@@ -14,25 +14,29 @@ from socket import gethostname
 #   directory where code will be checked out and builds
 #   done. If the directory does not exist, it will be created.
 #----------------------------------------------------------------------
+NIGHTLY_BUILD_ROOT_DIR = 'xxx'
 if gethostname()=='ubuntu' :
   NIGHTLY_BUILD_ROOT_DIR = '/home/jp/COIN'
 elif gethostname()=='math01.watson.ibm.com' :
   NIGHTLY_BUILD_ROOT_DIR = '/u/jpfasano/COIN/nbTest'
+elif gethostname()=='JPF4' :
+  NIGHTLY_BUILD_ROOT_DIR = 'd:/nbTest'
 elif gethostname()=='kmartin-maclt.local' :
   NIGHTLY_BUILD_ROOT_DIR = '/Users/kmartin/COIN'
-else :
-  NIGHTLY_BUILD_ROOT_DIR = 'xxx'
+  
 
 #----------------------------------------------------------------------
 # Define directory where svn is located.
 # If svn is in the default path, then this can be set to an empty string
 #----------------------------------------------------------------------
+SVNPATH_PREFIX=''
 if gethostname()=='math01.watson.ibm.com' :
   SVNPATH_PREFIX='/gsa/yktgsa/projects/o/oslos/local/bin'
+elif gethostname()=='JPF4' :
+  SVNPATH_PREFIX = r'e:\cygwin\bin'
 elif gethostname()=='kmartin-maclt.local' :
-  SVNPATH_PREFIX='/usr/local/bin/'
-else :
-  SVNPATH_PREFIX=''
+  SVNPATH_PREFIX='/usr/local/bin'
+  
 
 
 #----------------------------------------------------------------------
@@ -55,7 +59,18 @@ else :
 #                 detected are sent to MY_EMAIL_ADDRESS and the
 #                 project manager.
 #----------------------------------------------------------------------
-if gethostname()=='ubuntu' or gethostname()=='math01.watson.ibm.com':
+SMTP_SERVER_NAME = 'xxx.smtp.server.name'
+SMTP_SERVER_PORT =25
+SMTP_SSL_SERVER = 0
+SMTP_USER_NAME = 'xxxx'
+SMTP_PASSWORD_FILENAME = '/xxx/yyy/smtpPassWordFile'
+
+SENDER_EMAIL_ADDR='xxx _AT_ yyyy _DOT_ edu'
+MY_EMAIL_ADDR='xxx _AT_ yyyy _DOT_ edu'
+SEND_MAIL_TO_PROJECT_MANAGER=0
+if gethostname()=='ubuntu' or \
+   gethostname()=='math01.watson.ibm.com' or\
+   gethostname()=='JPF4' :
   #SMTP_SERVER_NAME = 'outgoing.verizon.net'
   #SMTP_SERVER_PORT = 25
   #SMTP_SSL_SERVER = 0
@@ -67,8 +82,10 @@ if gethostname()=='ubuntu' or gethostname()=='math01.watson.ibm.com':
   SMTP_USER_NAME = 'jpfasano _AT_ gmail _DOT_ com'
   if gethostname()=='ubuntu' :
     SMTP_PASSWORD_FILENAME = '/home/jp/bin/smtpPwFile'
-  else :
+  elif gethostname()=='math01.watson.ibm.com' :
     SMTP_PASSWORD_FILENAME = '/u/jpfasano/COIN/bin/smtpPwFile'
+  else :
+    SMTP_PASSWORD_FILENAME = 'c:\smtpPwFile.txt'
 
   SENDER_EMAIL_ADDR='jpfasano _AT_ verizon _DOT_ net'
   MY_EMAIL_ADDR='jpfasano _AT_ us _DOT_ ibm _DOT_ com'
@@ -83,16 +100,7 @@ elif gethostname()=='kmartin-maclt.local' :
   SENDER_EMAIL_ADDR='kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
   MY_EMAIL_ADDR='kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
   SEND_MAIL_TO_PROJECT_MANAGER=0
-else :
-  SMTP_SERVER_NAME = 'xxx.smtp.server.name'
-  SMTP_SERVER_PORT =25
-  SMTP_SSL_SERVER = 0
-  SMTP_USER_NAME = 'xxxx'
-  SMTP_PASSWORD_FILENAME = '/xxx/yyy/smtpPassWordFile'
 
-  SENDER_EMAIL_ADDR='xxx _AT_ yyyy _DOT_ edu'
-  MY_EMAIL_ADDR='xxx _AT_ yyyy _DOT_ edu'
-  SEND_MAIL_TO_PROJECT_MANAGER=0
 
 
 #----------------------------------------------------------------------
