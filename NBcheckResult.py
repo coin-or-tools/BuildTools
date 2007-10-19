@@ -80,19 +80,17 @@ def didTestFail( result, project, buildStep ) :
     if re.compile(reexp).match(result['stdout'],1) :
       # message found, assume test failed
       retVal = 1
-    # Stdout should contain "Coin0008I WOODW read with 0 errors" in the last few lines
-    if not result['stdout'][-800:].find("Coin0008I WOODW read with 0 errors") :
-      retVal = 1
-    # Look for pattern "<solver> solved NN out of 90 and took nnn seconds"
-    r=r'(solved \d+ out of 90 and took nnn seconds)'
-    osisSummaryResult=re.findall(r,result['stdout'][-800:])
-    print 'JP0'
-    for osi in osisSummaryResult :
-      print osi
-                       
-    
-    
-    
+
+    if project=='DyLP' and buildStep==NBprojectConfig.UNITTEST_CMD['Osi'] or \
+       project=='Osi'  and buildStep==NBprojectConfig.UNITTEST_CMD['Osi'] :
+
+      # Look for pattern "<solver> solved NN out of 90 and took nnn.xx seconds"
+      r=r'((.+) solved (\d+) out of 90 and took (\d*\.\d*) seconds)'
+      osisSummaryResult=re.findall(r,result['stdout'][-800:])
+      for osi in osisSummaryResult :
+        if int(osi[2])<90 :
+          #print osi[1]+" ran "+osi[2]+" out of 90 in "+osi[3]+" seconds"
+          retVal=1
 
   return retVal
 

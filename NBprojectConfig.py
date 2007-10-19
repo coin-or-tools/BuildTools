@@ -61,6 +61,7 @@ PROJECT_EMAIL_ADDRS['Ipopt'] = 'andreasw _AT_ us _DOT_ ibm _DOT_ com'
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['OS'] = 'kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
+ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['OS'] = ['make test']
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['CppAD'] = 'bradbell _AT_ washington _DOT_ edu'

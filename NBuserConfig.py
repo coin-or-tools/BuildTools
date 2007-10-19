@@ -109,5 +109,3 @@ elif gethostname()=='kmartin-maclt.local' :
 PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc',\
             'FlopC++','Ipopt','OS','CppAD']
 
-PROJECTS = ['FlopC++','Ipopt','OS','CppAD']
-
