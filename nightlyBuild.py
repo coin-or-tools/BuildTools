@@ -81,12 +81,11 @@ for p in NBuserConfig.PROJECTS:
     thirdPartyDirs = os.listdir(thirdPartyBaseDir)
     for d in thirdPartyDirs :
       thirdPartyDir=os.path.join(thirdPartyBaseDir,d)
-      install3rdPartyCmd=os.path.join(".",thirdPartyDir,"get."+d)
-      print install3rdPartyCmd
+      install3rdPartyCmd=os.path.join(".","get."+d)
       os.chdir(thirdPartyDir)
-      # NBosCommand.run(install3rdPartyCmd)
-    
-
+      if os.path.isfile(install3rdPartyCmd) :
+        NBlogMessages.writeMessage('  '+install3rdPartyCmd)
+        NBosCommand.run(install3rdPartyCmd)
   
   #---------------------------------------------------------------------
   # Should probably run make 'distclean' to do a build from scrath
