@@ -73,20 +73,26 @@ def didTestFail( result, project, buildStep ) :
        project=='Osi'  and buildStep==NBprojectConfig.UNITTEST_CMD['Osi'] :
     # Messages should not contain:
     # "*** xxxSolverInterface testing issue: whatever the problem is"
-    print "jp0"
     reexp=r'.*\*\*.+SolverInterface testing issue:.*'
     if re.compile(reexp).match(result['stderr'],1) :
       # message found, assume test failed
-      print "jp1"
       retVal = 1
     if re.compile(reexp).match(result['stdout'],1) :
       # message found, assume test failed
-      print "jp2"
       retVal = 1
     # Stdout should contain "Coin0008I WOODW read with 0 errors" in the last few lines
     if not result['stdout'][-800:].find("Coin0008I WOODW read with 0 errors") :
-      print "jp3"
       retVal = 1
+    # Look for pattern "<solver> solved NN out of 90 and took nnn seconds"
+    r=r'(solved \d+ out of 90 and took nnn seconds)'
+    osisSummaryResult=re.findall(r,result['stdout'][-800:])
+    print 'JP0'
+    for osi in osisSummaryResult :
+      print osi
+                       
+    
+    
+    
 
   return retVal
 
