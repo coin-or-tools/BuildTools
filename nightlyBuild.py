@@ -12,7 +12,6 @@ import NBsvnCommand
 import NBcheckResult
 
 # TODO:
-#   -After "svn co" then get all 3rd party packages.
 #   -Get some information about the platform and put this in email failure message.
 #   -Implement Kipp's vpath (delete vpath instead of 'make distclean').
 #   -Don't do build if 'svn update' doesn't change anything and prior test was OK.
@@ -76,16 +75,17 @@ for p in NBuserConfig.PROJECTS:
   #---------------------------------------------------------------------
   # If there is are third part apps, then get these apps
   #---------------------------------------------------------------------
-  thirdPartyBaseDir=os.path.join(projectCheckOutDir,'ThirdParty')
-  if os.path.isdir(thirdPartyBaseDir) :
-    thirdPartyDirs = os.listdir(thirdPartyBaseDir)
-    for d in thirdPartyDirs :
-      thirdPartyDir=os.path.join(thirdPartyBaseDir,d)
-      install3rdPartyCmd=os.path.join(".","get."+d)
-      os.chdir(thirdPartyDir)
-      if os.path.isfile(install3rdPartyCmd) :
-        NBlogMessages.writeMessage('  '+install3rdPartyCmd)
-        NBosCommand.run(install3rdPartyCmd)
+  if NBuserConfig.DOWNLOAD_3RD_PARTY :
+    thirdPartyBaseDir=os.path.join(projectCheckOutDir,'ThirdParty')
+    if os.path.isdir(thirdPartyBaseDir) :
+      thirdPartyDirs = os.listdir(thirdPartyBaseDir)
+      for d in thirdPartyDirs :
+        thirdPartyDir=os.path.join(thirdPartyBaseDir,d)
+        install3rdPartyCmd=os.path.join(".","get."+d)
+        os.chdir(thirdPartyDir)
+        if os.path.isfile(install3rdPartyCmd) :
+          NBlogMessages.writeMessage('  '+install3rdPartyCmd)
+          NBosCommand.run(install3rdPartyCmd)
   
   #---------------------------------------------------------------------
   # Should probably run make 'distclean' to do a build from scrath

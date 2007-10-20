@@ -33,7 +33,7 @@ SVNPATH_PREFIX=''
 if gethostname()=='math01.watson.ibm.com' :
   SVNPATH_PREFIX='/gsa/yktgsa/projects/o/oslos/local/bin'
 elif gethostname()=='JPF4' :
-  SVNPATH_PREFIX = r'e:\cygwin\bin'
+  SVNPATH_PREFIX = ''
 elif gethostname()=='kmartin-maclt.local' :
   SVNPATH_PREFIX='/usr/local/bin'
   
@@ -101,6 +101,23 @@ elif gethostname()=='kmartin-maclt.local' :
   MY_EMAIL_ADDR='kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
   SEND_MAIL_TO_PROJECT_MANAGER=0
 
+
+#----------------------------------------------------------------------
+# DOWNLOAD_3RD_PARTY: 0 or 1.
+# Several COIN-OR projects provide scripts for downloading 3rd party
+# code that the project will use if it is available.  Some of
+# the this 3rd party code is distributed under various different
+# licenses. A 1 indicates that the script will download 3rd party
+# code if the COIN-OR project provides the script
+# ThirdParty/xxx/get.xxx where xxx is the name of the third party code
+#----------------------------------------------------------------------
+DOWNLOAD_3RD_PARTY=0
+if gethostname()=='ubuntu' :
+  DOWNLOAD_3RD_PARTY=1
+elif gethostname()=='math01.watson.ibm.com' :
+  DOWNLOAD_3RD_PARTY=1
+elif gethostname()=='JPF4' :
+  DOWNLOAD_3RD_PARTY=1
 
 
 #----------------------------------------------------------------------
