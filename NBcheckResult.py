@@ -81,8 +81,7 @@ def didTestFail( result, project, buildStep ) :
       # message found, assume test failed
       retVal = "Issued message: 'SolverInterface tessting issue:'"
 
-    if project=='DyLP' and buildStep==NBprojectConfig.UNITTEST_CMD['Osi'] or \
-       project=='Osi'  and buildStep==NBprojectConfig.UNITTEST_CMD['Osi'] :
+    if project=='Osi'  and buildStep==NBprojectConfig.UNITTEST_CMD['Osi'] :
 
       # Look for pattern "<solver> solved NN out of 90 and took nnn.xx seconds"
       r=r'((.+) solved (\d+) out of 90 and took (\d*\.\d*) seconds)'
