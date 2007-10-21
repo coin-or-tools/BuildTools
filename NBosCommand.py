@@ -4,7 +4,7 @@ from socket import gethostname
 import sys
 
 #------------------------------------------------------------------------
-# Run a an OS command in another process.
+# Run an OS command in another process.
 # Examples might be 'svn checkout', 'make test'.
 # Return: command's return code, stdout messages, & stderr messages
 #------------------------------------------------------------------------

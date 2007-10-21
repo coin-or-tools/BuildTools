@@ -50,7 +50,7 @@ def didTestFail( result, project, buildStep ) :
     msgTail = result['stdout'][-300:]
     if not re.compile(reexp).match(msgTail,1) :
       # message not found, assume test failed
-      retVal = "Did not dispaly message 'cbc_clp solved 2 out of 2 and took XX.XX seconds.'" 
+      retVal = "Did not display message 'cbc_clp solved 2 out of 2 and took XX.XX seconds.'" 
 
   # Cbc's "./cbc -unitTest dirNetlib=_MIPLIB3DIR_ -miplib"
   elif project=='Cbc' and buildStep==NBprojectConfig.UNITTEST_CMD['Cbc'] :

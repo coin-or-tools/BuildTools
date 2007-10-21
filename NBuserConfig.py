@@ -3,7 +3,7 @@
 from socket import gethostname
 
 #----------------------------------------------------------------------
-# This file contains variables that person running this scirpt
+# This file contains variables that person running this script
 # might need to change. 
 #----------------------------------------------------------------------
 
@@ -23,6 +23,8 @@ elif gethostname()=='JPF4' :
   NIGHTLY_BUILD_ROOT_DIR = 'd:/nbTest'
 elif gethostname()=='kmartin-maclt.local' :
   NIGHTLY_BUILD_ROOT_DIR = '/Users/kmartin/COIN'
+elif gethostname()=='fitzgeralds' :
+  NIGHTLY_BUILD_ROOT_DIR = '/home/stefan/globopt/nightlyBuild'
   
 
 #----------------------------------------------------------------------
@@ -100,6 +102,15 @@ elif gethostname()=='kmartin-maclt.local' :
   SENDER_EMAIL_ADDR='kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
   MY_EMAIL_ADDR='kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
   SEND_MAIL_TO_PROJECT_MANAGER=0
+elif gethostname()=='fitzgeralds' :
+	SMTP_SERVER_NAME = 'smtp.1und1.de'
+	SMTP_SERVER_PORT = 25
+	SMTP_SSL_SERVER = 0
+	SMTP_USER_NAME = 'm40378980-stef'
+	SMTP_PASSWORD_FILENAME = '/home/stefan/globopt/testScripts/smtpPwFile'
+	SENDER_EMAIL_ADDR='stefan _AT_ vigerske _DOT_ de'
+	MY_EMAIL_ADDR='stefan _AT_ vigerske _DOT_ de'
+	SEND_MAIL_TO_PROJECT_MANAGER=0
 
 
 #----------------------------------------------------------------------
@@ -118,7 +129,8 @@ elif gethostname()=='math01.watson.ibm.com' :
   DOWNLOAD_3RD_PARTY=1
 elif gethostname()=='JPF4' :
   DOWNLOAD_3RD_PARTY=1
-
+elif gethostname()=='fitzgeralds' :
+  DOWNLOAD_3RD_PARTY=1
 
 #----------------------------------------------------------------------
 # List of Projects to be processed by script

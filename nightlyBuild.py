@@ -2,7 +2,7 @@
 
 import os
 import sys
-import distutils.dir_util
+#import distutils.dir_util
 
 import NBuserConfig
 import NBprojectConfig
@@ -82,7 +82,7 @@ for p in NBuserConfig.PROJECTS:
         continue
 
     #---------------------------------------------------------------------
-    # If there is are third part apps, then get these apps
+    # If there are third party apps, then get these apps
     #---------------------------------------------------------------------
     if NBuserConfig.DOWNLOAD_3RD_PARTY :
       thirdPartyBaseDir=os.path.join(projectCheckOutDir,'ThirdParty')
