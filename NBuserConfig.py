@@ -136,7 +136,7 @@ elif gethostname()=='fitzgeralds' :
 # List of Projects to be processed by script
 #----------------------------------------------------------------------
 PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc',\
-            'Ipopt','Bonmin','FlopC++',,'OS','CppAD']
+            'Ipopt','Bonmin','FlopC++','OS','CppAD']
 
 
 #----------------------------------------------------------------------
