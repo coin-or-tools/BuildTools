@@ -104,36 +104,32 @@ for p in NBuserConfig.PROJECTS:
     # Debug, use third party code, ...
     # vpath and options to configure must be set for the buildType
     #---------------------------------------------------------------------
-    for buildType in NBuserConfig.BUILD_TYPES :    
+    buildtypes=NBprojectConfig.PROJECT_CONFIG_LINES[p]
+    for buildType, configLine in buildtypes.iteritems() :
     
       #---------------------------------------------------------------------
       # Setup the directory where the build will be done and the configure
       # command options
       #---------------------------------------------------------------------
-      vpathDir=projectVersion[0]
-      configOptions='-C'
+      vpathDir=projectVersion[0]+'-'+buildType
+      configOptions='-C '+configLine
 
-      if "Debug" in buildType :
-        vpathDir += "Debug"
-        configOptions += " --enable-debug"
-      else :
-        vpathDir += "Default"
-
-      if "ThirdParty" in buildType :
-        vpathDir += "ThirdParty"
-      else :
-        vpathDir += "NoThirdParty"
-        thirdPartyBaseDir=os.path.join(projectCheckOutDir,'ThirdParty')
-        if os.path.isdir(thirdPartyBaseDir) :
-          thirdPartyDirs = os.listdir(thirdPartyBaseDir)
-          skipOptions=''
-          for d in thirdPartyDirs :
-            skipOptions+=' ThirdParty/'+d
-          configOptions+=' COIN_SKIP_PROJECTS="'+skipOptions+'"'
+#      if "ThirdParty" in buildType :
+#        vpathDir += "ThirdParty"
+#      else :
+#        vpathDir += "NoThirdParty"
+#        thirdPartyBaseDir=os.path.join(projectCheckOutDir,'ThirdParty')
+#        if os.path.isdir(thirdPartyBaseDir) :
+#          thirdPartyDirs = os.listdir(thirdPartyBaseDir)
+#          skipOptions=''
+#          for d in thirdPartyDirs :
+#            skipOptions+=' ThirdParty/'+d
+#          configOptions+=' COIN_SKIP_PROJECTS="'+skipOptions+'"'
      
       fullVpathDir = os.path.join(projectBaseDir,vpathDir)
       #TODO: if (MAKE_CLEAN) : distutils.dir_util.remove_tree(fullVpathDir)
       if not os.path.isdir(fullVpathDir) : os.mkdir(fullVpathDir)
+      NBlogMessages.writeMessage("  build "+buildType+" in "+fullVpathDir)
 
       #---------------------------------------------------------------------
       # Run configure part of build (only if config has not previously 
