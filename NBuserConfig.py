@@ -125,4 +125,17 @@ elif gethostname()=='JPF4' :
 #----------------------------------------------------------------------
 PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc',\
             'FlopC++','Ipopt','OS','CppAD']
+PROJECTS =['CoinUtils']
 
+#----------------------------------------------------------------------
+# List of vpath directories and corresponding configure options
+# Setup as a dictionary
+#----------------------------------------------------------------------
+
+VPATH_DIRS = ['vpath', 'vpath-no_third_party']
+VPATH_CONFIG_ARGS = ['configure -C' ,\
+                     'configure COIN_SKIP_PROJECTS="Ipopt ThirdParty/ASL ThirdParty/Blas ThirdParty/Glpk ThirdParty/HSL ThirdParty/Lapack ThirdParty/Mumps"']
+
+# Perhaps use dictionaries
+VPATH_BUILD = ['vpath': 'configure -C' ,\
+               'vpath-no_third_party': 'configure COIN_SKIP_PROJECTS="Ipopt ThirdParty/ASL ThirdParty/Blas ThirdParty/Glpk ThirdParty/HSL ThirdParty/Lapack ThirdParty/Mumps"']
