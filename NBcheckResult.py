@@ -16,7 +16,7 @@ def didTestFail( result, project, buildStep ) :
 
   # If the return code is not 0, then failure
   if result['returnCode'] != 0 :
-    retVal = "Non-zero return code of "+result['returnCode']
+    retVal = "Non-zero return code of "+str(result['returnCode'])
 
   # Many tests write a "Success" message.
   # For test that do this, check for the success message
@@ -61,7 +61,7 @@ def didTestFail( result, project, buildStep ) :
       # is less than 3, the OK.
       retVal=None
     else :
-      retVal = "Return code of "+result['returnCode']+" which is > 2."
+      retVal = "Return code of "+str(result['returnCode'])+" which is > 2."
 
   # DyLP's "make test"
   # DyLP's "./unitTest -testOsiSolverInterface -netlibDir=_NETLIBDIR_"

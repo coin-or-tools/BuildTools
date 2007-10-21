@@ -137,7 +137,26 @@ elif gethostname()=='fitzgeralds' :
 #----------------------------------------------------------------------
 PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc',\
             'FlopC++','Ipopt','OS','CppAD']
-PROJECTS =['CoinUtils']
+
+
+#----------------------------------------------------------------------
+# For every project, indicate which svn versions are to be used.
+# Supported versions are: trunk & latestStable
+#----------------------------------------------------------------------
+PROJECT_VERSIONS = ['trunk','latestStable']
+
+#----------------------------------------------------------------------
+# For every project version, indicate all the ways the code is to 
+# be built.
+# Presently, NoThirdParty is not yet working
+#----------------------------------------------------------------------
+BUILD_TYPES = [\
+              ['Default','ThirdParty'   ],\
+              ['Debug',  'ThirdParthy'  ]\
+              #['Debug',  'NoThirdParthy']\
+              ]
+
+               
 
 #----------------------------------------------------------------------
 # List of vpath directories and corresponding configure options

@@ -14,11 +14,10 @@ import NBcheckResult
 
 # TODO:
 #   -Get some information about the platform and put this in email failure message.
-#   -Implement Kipp's vpath (delete vpath instead of 'make distclean').
+#   -In userConfig allow one to optionally do a clean checkout and/or config
 #   -Don't do build if 'svn update' doesn't change anything and prior test was OK.
 #     (no need to re-run if nothing has changed since prior run)
-#   -Build both trunk and latest stable 
-#   -Build both optimized and debug (or have a set of config-site scripts to test?)
+#   -Figure out how to run configure with no third party code
 
 
 
@@ -59,21 +58,25 @@ for p in NBuserConfig.PROJECTS:
 
   #---------------------------------------------------------------------
   # Loop once for each version of the project to be checked out.
-  # Presently this is only trunk, but it should optionally be
-  # latest stable and trunk
+  # The supported types are trunk & latestStable
   #---------------------------------------------------------------------
-  projectVersions=['trunk']
+  projectVersions=[]
+  if 'latestStable' in NBuserConfig.PROJECT_VERSIONS :
+    lsv = NBsvnCommand.latestStableVersion(p)
+    projectVersions.append(['stable'+lsv,'stable/'+lsv])
+  if 'trunk' in NBuserConfig.PROJECT_VERSIONS :
+    projectVersions.append(['trunk','trunk'])
   for projectVersion in projectVersions :
     #---------------------------------------------------------------------
     # svn checkout or update the project
     #---------------------------------------------------------------------
     projectBaseDir=os.path.join(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR,p)
-    projectCheckOutDir=os.path.join(projectBaseDir,projectVersion)
+    projectCheckOutDir=os.path.join(projectBaseDir,projectVersion[0])
     if not os.path.isdir(projectBaseDir) :
       os.makedirs(projectBaseDir)
     if not os.path.isdir(projectCheckOutDir) :
       svnCmd=os.path.join(NBuserConfig.SVNPATH_PREFIX,'svn') +\
-             ' checkout https://projects.coin-or.org/svn/'+p+'/'+projectVersion+' '+projectVersion
+             ' checkout https://projects.coin-or.org/svn/'+p+'/'+projectVersion[1]+' '+projectVersion[0]
       if NBsvnCommand.run(svnCmd,projectBaseDir,p)!='OK' :
         continue
     else :
@@ -101,27 +104,43 @@ for p in NBuserConfig.PROJECTS:
     # Debug, use third party code, ...
     # vpath and options to configure must be set for the buildType
     #---------------------------------------------------------------------
-    buildTypes=['Default','Debug']
-    for buildType in buildTypes :    
+    for buildType in NBuserConfig.BUILD_TYPES :    
     
       #---------------------------------------------------------------------
-      # Setup the directory where the build will be done
+      # Setup the directory where the build will be done and the configure
+      # command options
       #---------------------------------------------------------------------
-      vpathDir = projectVersion+buildType
+      vpathDir=projectVersion[0]
+      configOptions='-C'
+
+      if "Debug" in buildType :
+        vpathDir += "Debug"
+        configOptions += " --enable-debug"
+      else :
+        vpathDir += "Default"
+
+      if "ThirdParty" in buildType :
+        vpathDir += "ThirdParty"
+      else :
+        vpathDir += "NoThirdParty"
+        thirdPartyBaseDir=os.path.join(projectCheckOutDir,'ThirdParty')
+        if os.path.isdir(thirdPartyBaseDir) :
+          thirdPartyDirs = os.listdir(thirdPartyBaseDir)
+          skipOptions=''
+          for d in thirdPartyDirs :
+            skipOptions+=' ThirdParty/'+d
+          configOptions+=' COIN_SKIP_PROJECTS="'+skipOptions+'"'
+     
       fullVpathDir = os.path.join(projectBaseDir,vpathDir)
       #TODO: if (MAKE_CLEAN) : distutils.dir_util.remove_tree(fullVpathDir)
       if not os.path.isdir(fullVpathDir) : os.mkdir(fullVpathDir)
-      print fullVpathDir
 
       #---------------------------------------------------------------------
       # Run configure part of build (only if config has not previously 
       # ran successfully).
       #---------------------------------------------------------------------
       os.chdir(fullVpathDir)
-      #configCmd = os.path.join('.','configure -C')
-      configCmd = os.path.join('.',projectCheckOutDir,"configure -C")
-      if buildType=='Debug' : configCmd += " --enable-debug"
-      print configCmd
+      configCmd = os.path.join('.',projectCheckOutDir,"configure "+configOptions)
       if NBcheckResult.didConfigRunOK() :
         NBlogMessages.writeMessage("  '"+configCmd+"' previously ran. Not rerunning")
       else :
@@ -171,7 +190,6 @@ for p in NBuserConfig.PROJECTS:
       if NBprojectConfig.UNITTEST_CMD.has_key(p) :
         unitTestPath = os.path.join(fullVpathDir,NBprojectConfig.UNITTEST_DIR[p])
         os.chdir(unitTestPath)
-        print unitTestPath
 
         unitTestCmdTemplate=NBprojectConfig.UNITTEST_CMD[p]
         unitTestCmd=unitTestCmdTemplate.replace('_NETLIBDIR_',netlibDir)
