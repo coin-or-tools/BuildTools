@@ -133,6 +133,12 @@ elif gethostname()=='fitzgeralds' :
   DOWNLOAD_3RD_PARTY=1
 
 #----------------------------------------------------------------------
+#On some systems the user might want to set extra options for the
+#configure script like compilers...
+#----------------------------------------------------------------------
+CONFIGURE_FLAGS = ''
+
+#----------------------------------------------------------------------
 # List of Projects to be processed by script
 #----------------------------------------------------------------------
 PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc',\

@@ -118,7 +118,7 @@ for p in NBuserConfig.PROJECTS:
       # command options
       #---------------------------------------------------------------------
       vpathDir=projectVersion[0]+'-'+buildType
-      configOptions='-C '+configLine
+      configOptions='-C '+NBuserConfig.CONFIGURE_FLAGS+' '+configLine
 
 #      if "ThirdParty" in buildType :
 #        vpathDir += "ThirdParty"
