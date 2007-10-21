@@ -25,7 +25,8 @@ elif gethostname()=='kmartin-maclt.local' :
   NIGHTLY_BUILD_ROOT_DIR = '/Users/kmartin/COIN'
 elif gethostname()=='fitzgeralds' :
   NIGHTLY_BUILD_ROOT_DIR = '/home/stefan/globopt/nightlyBuild'
-  
+elif gethostname()=='sol10vm' :
+  NIGHTLY_BUILD_ROOT_DIR = '/export/home/gams/stefan/nightlyBuild'  
 
 #----------------------------------------------------------------------
 # Define directory where svn is located.
@@ -111,6 +112,15 @@ elif gethostname()=='fitzgeralds' :
 	SENDER_EMAIL_ADDR='stefan _AT_ vigerske _DOT_ de'
 	MY_EMAIL_ADDR='stefan _AT_ vigerske _DOT_ de'
 	SEND_MAIL_TO_PROJECT_MANAGER=0
+elif gethostname()=='sol10vm' :
+	SMTP_SERVER_NAME = 'smtp.1und1.de'
+	SMTP_SERVER_PORT = 25
+	SMTP_SSL_SERVER = 0
+	SMTP_USER_NAME = 'm40378980-stef'
+	SMTP_PASSWORD_FILENAME = '/export/home/gams/stefan/.smtpPwFile'
+	SENDER_EMAIL_ADDR='stefan _AT_ vigerske _DOT_ de'
+	MY_EMAIL_ADDR='stefan _AT_ vigerske _DOT_ de'
+	SEND_MAIL_TO_PROJECT_MANAGER=0
 
 
 #----------------------------------------------------------------------
@@ -131,12 +141,16 @@ elif gethostname()=='JPF4' :
   DOWNLOAD_3RD_PARTY=1
 elif gethostname()=='fitzgeralds' :
   DOWNLOAD_3RD_PARTY=1
+elif gethostname()=='sol10vm' :
+  DOWNLOAD_3RD_PARTY=1
 
 #----------------------------------------------------------------------
 #On some systems the user might want to set extra options for the
 #configure script like compilers...
 #----------------------------------------------------------------------
 CONFIGURE_FLAGS = ''
+if gethostname()=='sol10vm' :
+  CONFIGURE_FLAGS = 'CC="gcc -m64" CXX="g++ -m64" F77="gfortran -m64" LDFLAGS="-lstdc++" ADD_CXXFLAGS="-Wno-conversion"'
 
 #----------------------------------------------------------------------
 # List of Projects to be processed by script
