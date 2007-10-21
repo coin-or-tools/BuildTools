@@ -12,11 +12,11 @@ import NBprojectConfig
 # this function has specialized code for some projects.
 #------------------------------------------------------------------------
 def didTestFail( result, project, buildStep ) :
-  retVal = 0
+  retVal = None
 
   # If the return code is not 0, then failure
   if result['returnCode'] != 0 :
-    retVal = 1
+    retVal = "Non-zero return code of "+result['returnCode']
 
   # Many tests write a "Success" message.
   # For test that do this, check for the success message
@@ -26,7 +26,7 @@ def didTestFail( result, project, buildStep ) :
       if result['stderr'].rfind("All tests completed successfully") == -1 and \
          result['stdout'].rfind("All tests completed successfully") == -1 :
         # Success message not found, assume test failed
-        retVal = 1
+        retVal = "The output does not contain the messages: 'All tests completed successfully'"
 
   #---------------------------------------------------------------------
   # Some (project,buildStep) pairs require further checking
@@ -40,7 +40,7 @@ def didTestFail( result, project, buildStep ) :
     msgTail = result['stdout'][-200:]
     if not re.compile(reexp).match(msgTail,1) :
       # message not found, assume test failed
-      retVal = 1
+      retVal = "Did not complete the woodw testcase"
       
   # Cbc's "make test"
   elif project=='Cbc' and buildStep=='make test' :
@@ -50,7 +50,7 @@ def didTestFail( result, project, buildStep ) :
     msgTail = result['stdout'][-300:]
     if not re.compile(reexp).match(msgTail,1) :
       # message not found, assume test failed
-      retVal = 1
+      retVal = "Did not dispaly message 'cbc_clp solved 2 out of 2 and took XX.XX seconds.'" 
 
   # Cbc's "./cbc -unitTest dirNetlib=_MIPLIB3DIR_ -miplib"
   elif project=='Cbc' and buildStep==NBprojectConfig.UNITTEST_CMD['Cbc'] :
@@ -59,9 +59,9 @@ def didTestFail( result, project, buildStep ) :
       # Return code between 1 and 44 is the number of test cases that
       # ended because maxnodes limit reached.  John Forrest says if this
       # is less than 3, the OK.
-      retVal=0
+      retVal=None
     else :
-      retVal=1
+      retVal = "Return code of "+result['returnCode']+" which is > 2."
 
   # DyLP's "make test"
   # DyLP's "./unitTest -testOsiSolverInterface -netlibDir=_NETLIBDIR_"
@@ -76,10 +76,10 @@ def didTestFail( result, project, buildStep ) :
     reexp=r'.*\*\*.+SolverInterface testing issue:.*'
     if re.compile(reexp).match(result['stderr'],1) :
       # message found, assume test failed
-      retVal = 1
+      retVal = "Issued message: 'SolverInterface tessting issue:'"
     if re.compile(reexp).match(result['stdout'],1) :
       # message found, assume test failed
-      retVal = 1
+      retVal = "Issued message: 'SolverInterface tessting issue:'"
 
     if project=='DyLP' and buildStep==NBprojectConfig.UNITTEST_CMD['Osi'] or \
        project=='Osi'  and buildStep==NBprojectConfig.UNITTEST_CMD['Osi'] :
@@ -87,10 +87,26 @@ def didTestFail( result, project, buildStep ) :
       # Look for pattern "<solver> solved NN out of 90 and took nnn.xx seconds"
       r=r'((.+) solved (\d+) out of 90 and took (\d*\.\d*) seconds)'
       osisSummaryResult=re.findall(r,result['stdout'][-800:])
+      expectedOsis=['clp','sym','dylp','cbcclp']
       for osi in osisSummaryResult :
-        if int(osi[2])<90 :
-          #print osi[1]+" ran "+osi[2]+" out of 90 in "+osi[3]+" seconds"
-          retVal=1
+        if osi[1] in expectedOsis: expectedOsis.remove(osi[1])
+        numSolved = int(osi[2])
+        # Sym only solves 89 of the 90
+        if osi[1]=='sym':
+          if numSolved<89 :
+            retVal=osi[1]+\
+                 " only solved "\
+                 +osi[2]\
+                 +" out of 90 in "\
+                 +osi[3]+" seconds"
+        elif numSolved<90 :
+          retVal=osi[1]+\
+                 " only solved "\
+                 +osi[2]+\
+                 " out of 90 in "\
+                 +osi[3]+" seconds"
+      if len(expectedOsis)!=0 :
+        retVal="Osi "+expectedOsis[0]+" did not report number solved"
 
   return retVal
 

@@ -50,6 +50,15 @@ def sendCmdMsgs(project,cmdMsgs,cmd):
   if os.environ.has_key("PATH") :
     emailMsg += "PATH: "+os.environ["PATH"]+"\n"
 
+  if cmdMsgs.has_key('make test') :
+    emailMsg += "\n\n'make test' problem:\n"
+    emailMsg += cmdMsgs['make test']
+    emailMsg += "\n" 
+  if cmdMsgs.has_key('unitTest') :
+    emailMsg += "\n\nDetected problem:\n"
+    emailMsg += cmdMsgs['unitTest']
+    emailMsg += "\n" 
+
   emailMsg +="\n"
 
   emailMsg += "stderr messages are:\n" 
@@ -59,6 +68,7 @@ def sendCmdMsgs(project,cmdMsgs,cmd):
   if cmdMsgs.has_key('config.log') :
     emailMsg += "\n\nconfig.log messages are:\n"
     emailMsg += cmdMsgs['config.log']
+
   send(toAddrs,subject,emailMsg)
   NBlogMessages.writeMessage( "  email sent regarding "+project+" running '"+cmd+"'" )
 

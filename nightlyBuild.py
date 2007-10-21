@@ -135,7 +135,9 @@ for p in NBuserConfig.PROJECTS:
   result=NBosCommand.run('make test')
   
   # Check if 'make test' worked
-  if NBcheckResult.didTestFail(result,p,"make test") :
+  didMakeTestFail=NBcheckResult.didTestFail(result,p,"make test")
+  if didMakeTestFail :
+    result['make test']=didMakeTestFail
     NBemail.sendCmdMsgs(p,result,"make test")
     continue
 
@@ -153,7 +155,9 @@ for p in NBuserConfig.PROJECTS:
     NBlogMessages.writeMessage( '  '+unitTestCmd )
     result=NBosCommand.run(unitTestCmd)
   
-    if NBcheckResult.didTestFail(result,p,unitTestCmdTemplate) :
+    didUnitTestFail=NBcheckResult.didTestFail(result,p,unitTestCmdTemplate)
+    if didUnitTestFail :
+      result['unitTest']=didUnitTestFail
       NBemail.sendCmdMsgs(p,result,unitTestCmd)
       continue
 
