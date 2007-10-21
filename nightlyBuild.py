@@ -58,126 +58,133 @@ for p in NBuserConfig.PROJECTS:
   NBlogMessages.writeMessage( p )
 
   #---------------------------------------------------------------------
-  # svn checkout or update the project
+  # Loop once for each version of the project to be checked out.
+  # Presently this is only trunk, but it should optionally be
+  # latest stable and trunk
   #---------------------------------------------------------------------
-  projectBaseDir=os.path.join(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR,p)
-  projectCheckOutDir=os.path.join(projectBaseDir,'trunk')
-  if not os.path.isdir(projectBaseDir) :
-    os.makedirs(projectBaseDir)
-  if not os.path.isdir(projectCheckOutDir) :
-    svnCmd=os.path.join(NBuserConfig.SVNPATH_PREFIX,'svn') + ' checkout https://projects.coin-or.org/svn/'+p+'/trunk trunk'
-    if NBsvnCommand.run(svnCmd,projectBaseDir,p)!='OK' :
-      continue
-  else :
-    svnCmd=os.path.join(NBuserConfig.SVNPATH_PREFIX,'svn') + ' update'
-    if NBsvnCommand.run(svnCmd,projectCheckOutDir,p)!='OK' :
-      continue
+  projectVersions=['trunk']
+  for projectVersion in projectVersions :
+    #---------------------------------------------------------------------
+    # svn checkout or update the project
+    #---------------------------------------------------------------------
+    projectBaseDir=os.path.join(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR,p)
+    projectCheckOutDir=os.path.join(projectBaseDir,projectVersion)
+    if not os.path.isdir(projectBaseDir) :
+      os.makedirs(projectBaseDir)
+    if not os.path.isdir(projectCheckOutDir) :
+      svnCmd=os.path.join(NBuserConfig.SVNPATH_PREFIX,'svn') +\
+             ' checkout https://projects.coin-or.org/svn/'+p+'/'+projectVersion+' '+projectVersion
+      if NBsvnCommand.run(svnCmd,projectBaseDir,p)!='OK' :
+        continue
+    else :
+      svnCmd=os.path.join(NBuserConfig.SVNPATH_PREFIX,'svn') + ' update'
+      if NBsvnCommand.run(svnCmd,projectCheckOutDir,p)!='OK' :
+        continue
 
-  #---------------------------------------------------------------------
-  # If there is are third part apps, then get these apps
-  #---------------------------------------------------------------------
-  if NBuserConfig.DOWNLOAD_3RD_PARTY :
-    thirdPartyBaseDir=os.path.join(projectCheckOutDir,'ThirdParty')
-    if os.path.isdir(thirdPartyBaseDir) :
-      thirdPartyDirs = os.listdir(thirdPartyBaseDir)
-      for d in thirdPartyDirs :
-        thirdPartyDir=os.path.join(thirdPartyBaseDir,d)
-        install3rdPartyCmd=os.path.join(".","get."+d)
-        os.chdir(thirdPartyDir)
-        if os.path.isfile(install3rdPartyCmd) :
-          NBlogMessages.writeMessage('  '+install3rdPartyCmd)
-          NBosCommand.run(install3rdPartyCmd)
-  
-  #---------------------------------------------------------------------
-  # Should probably run make 'distclean' to do a build from scrath
-  # or delete the VPATH directory when there is one
-  #---------------------------------------------------------------------
+    #---------------------------------------------------------------------
+    # If there is are third part apps, then get these apps
+    #---------------------------------------------------------------------
+    if NBuserConfig.DOWNLOAD_3RD_PARTY :
+      thirdPartyBaseDir=os.path.join(projectCheckOutDir,'ThirdParty')
+      if os.path.isdir(thirdPartyBaseDir) :
+        thirdPartyDirs = os.listdir(thirdPartyBaseDir)
+        for d in thirdPartyDirs :
+          thirdPartyDir=os.path.join(thirdPartyBaseDir,d)
+          install3rdPartyCmd=os.path.join(".","get."+d)
+          os.chdir(thirdPartyDir)
+          if os.path.isfile(install3rdPartyCmd) :
+            NBlogMessages.writeMessage('  '+install3rdPartyCmd)
+            NBosCommand.run(install3rdPartyCmd)
+    
+    #---------------------------------------------------------------------
+    # Loop once for each type of build to be done.
+    # Debug, use third party code, ...
+    # vpath and options to configure must be set for the buildType
+    #---------------------------------------------------------------------
+    buildTypes=['Default','Debug']
+    for buildType in buildTypes :    
+    
+      #---------------------------------------------------------------------
+      # Setup the directory where the build will be done
+      #---------------------------------------------------------------------
+      vpathDir = projectVersion+buildType
+      fullVpathDir = os.path.join(projectBaseDir,vpathDir)
+      #TODO: if (MAKE_CLEAN) : distutils.dir_util.remove_tree(fullVpathDir)
+      if not os.path.isdir(fullVpathDir) : os.mkdir(fullVpathDir)
+      print fullVpathDir
 
-  
-  #---------------------------------------------------------------------
-  # Setup the directory where the build will be done
-  #---------------------------------------------------------------------
-  vpathDir = 'defaultBuild'
-  fullVpathDir = os.path.join(projectBaseDir,vpathDir)
-  #TODO: if (MAKE_CLEAN) : distutils.dir_util.remove_tree(fullVpathDir)
-  if not os.path.isdir(fullVpathDir) : os.mkdir(fullVpathDir)
-  print fullVpathDir
+      #---------------------------------------------------------------------
+      # Run configure part of build (only if config has not previously 
+      # ran successfully).
+      #---------------------------------------------------------------------
+      os.chdir(fullVpathDir)
+      #configCmd = os.path.join('.','configure -C')
+      configCmd = os.path.join('.',projectCheckOutDir,"configure -C")
+      if buildType=='Debug' : configCmd += " --enable-debug"
+      print configCmd
+      if NBcheckResult.didConfigRunOK() :
+        NBlogMessages.writeMessage("  '"+configCmd+"' previously ran. Not rerunning")
+      else :
+        NBlogMessages.writeMessage('  '+configCmd)
+        result=NBosCommand.run(configCmd)
+      
+        # Check if configure worked
+        if result['returnCode'] != 0 :
+          error_msg = result
+          # Add contents of log file to message
+          logFileName = 'config.log'
+          if os.path.isfile(logFileName) :
+            logFilePtr = open(logFileName,'r')
+            error_msg['config.log']  = "config.log contains: \n" 
+            error_msg['config.log'] += logFilePtr.read()
+            logFilePtr.close()
+          NBemail.sendCmdMsgs(p,error_msg,configCmd)
+          continue
 
-  #---------------------------------------------------------------------
-  # Run configure part of build (only if config has not previously 
-  # ran successfully).
-  #---------------------------------------------------------------------
-  os.chdir(fullVpathDir)
-  #configCmd = os.path.join('.','configure -C')
-  configCmd = os.path.join('.',projectCheckOutDir,"configure -C")
-  print configCmd
-  if NBcheckResult.didConfigRunOK() :
-    NBlogMessages.writeMessage("  '"+configCmd+"' previously ran. Not rerunning")
-  else :
-    NBlogMessages.writeMessage('  '+configCmd)
-    result=NBosCommand.run(configCmd)
-  
-    # Check if configure worked
-    if result['returnCode'] != 0 :
-      error_msg = result
-      # Add contents of log file to message
-      logFileName = 'config.log'
-      if os.path.isfile(logFileName) :
-        logFilePtr = open(logFileName,'r')
-        error_msg['config.log']  = "config.log contains: \n" 
-        error_msg['config.log'] += logFilePtr.read()
-        logFilePtr.close()
-      NBemail.sendCmdMsgs(p,error_msg,configCmd)
-      continue
+      #---------------------------------------------------------------------
+      # Run make part of build
+      #---------------------------------------------------------------------
+      NBlogMessages.writeMessage( '  make' )
+      result=NBosCommand.run('make')
+      
+      # Check if make worked
+      if result['returnCode'] != 0 :
+        NBemail.sendCmdMsgs(p,result,'make')
+        continue
 
-  #---------------------------------------------------------------------
-  # Run make part of build
-  #---------------------------------------------------------------------
-  NBlogMessages.writeMessage( '  make' )
-  result=NBosCommand.run('make')
-  
-  # Check if make worked
-  if result['returnCode'] != 0 :
-    NBemail.sendCmdMsgs(p,result,'make')
-    continue
+      #---------------------------------------------------------------------
+      # Run 'make test' part of build
+      #---------------------------------------------------------------------
+      NBlogMessages.writeMessage( '  make test' )
+      result=NBosCommand.run('make test')
+      
+      # Check if 'make test' worked
+      didMakeTestFail=NBcheckResult.didTestFail(result,p,"make test")
+      if didMakeTestFail :
+        result['make test']=didMakeTestFail
+        NBemail.sendCmdMsgs(p,result,"make test")
+        continue
 
-  #---------------------------------------------------------------------
-  # Run 'make test' part of build
-  #---------------------------------------------------------------------
-  NBlogMessages.writeMessage( '  make test' )
-  result=NBosCommand.run('make test')
-  
-  # Check if 'make test' worked
-  didMakeTestFail=NBcheckResult.didTestFail(result,p,"make test")
-  if didMakeTestFail :
-    result['make test']=didMakeTestFail
-    NBemail.sendCmdMsgs(p,result,"make test")
-    continue
+      #---------------------------------------------------------------------
+      # Run unitTest if available and different from 'make test'
+      #---------------------------------------------------------------------
+      if NBprojectConfig.UNITTEST_CMD.has_key(p) :
+        unitTestPath = os.path.join(fullVpathDir,NBprojectConfig.UNITTEST_DIR[p])
+        os.chdir(unitTestPath)
+        print unitTestPath
 
-  #---------------------------------------------------------------------
-  # Run unitTest if available and different from 'make test'
-  #---------------------------------------------------------------------
-  if NBprojectConfig.UNITTEST_CMD.has_key(p) :
-    unitTestPath = os.path.join(fullVpathDir,NBprojectConfig.UNITTEST_DIR[p])
-    os.chdir(unitTestPath)
-    print unitTestPath
+        unitTestCmdTemplate=NBprojectConfig.UNITTEST_CMD[p]
+        unitTestCmd=unitTestCmdTemplate.replace('_NETLIBDIR_',netlibDir)
+        unitTestCmd=unitTestCmd.replace('_MIPLIB3DIR_',miplib3Dir)
 
-    unitTestCmdTemplate=NBprojectConfig.UNITTEST_CMD[p]
-    unitTestCmd=unitTestCmdTemplate.replace('_NETLIBDIR_',netlibDir)
-    unitTestCmd=unitTestCmd.replace('_MIPLIB3DIR_',miplib3Dir)
-
-    NBlogMessages.writeMessage( '  '+unitTestCmd )
-    result=NBosCommand.run(unitTestCmd)
-  
-    didUnitTestFail=NBcheckResult.didTestFail(result,p,unitTestCmdTemplate)
-    if didUnitTestFail :
-      result['unitTest']=didUnitTestFail
-      NBemail.sendCmdMsgs(p,result,unitTestCmd)
-      continue
-
-  # For testing purposes only do first successful project
-  #break
-
+        NBlogMessages.writeMessage( '  '+unitTestCmd )
+        result=NBosCommand.run(unitTestCmd)
+      
+        didUnitTestFail=NBcheckResult.didTestFail(result,p,unitTestCmdTemplate)
+        if didUnitTestFail :
+          result['unitTest']=didUnitTestFail
+          NBemail.sendCmdMsgs(p,result,unitTestCmd)
+          continue
 
 NBlogMessages.writeMessage( "nightlyBuild.py Finished" )
 
