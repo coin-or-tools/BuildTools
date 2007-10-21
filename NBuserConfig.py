@@ -137,5 +137,5 @@ VPATH_CONFIG_ARGS = ['configure -C' ,\
                      'configure COIN_SKIP_PROJECTS="Ipopt ThirdParty/ASL ThirdParty/Blas ThirdParty/Glpk ThirdParty/HSL ThirdParty/Lapack ThirdParty/Mumps"']
 
 # Perhaps use dictionaries
-VPATH_BUILD = ['vpath': 'configure -C' ,\
-               'vpath-no_third_party': 'configure COIN_SKIP_PROJECTS="Ipopt ThirdParty/ASL ThirdParty/Blas ThirdParty/Glpk ThirdParty/HSL ThirdParty/Lapack ThirdParty/Mumps"']
+VPATH_BUILD = {'vpath': 'configure -C' ,\
+               'vpath-no_third_party': 'configure COIN_SKIP_PROJECTS="Ipopt ThirdParty/ASL ThirdParty/Blas ThirdParty/Glpk ThirdParty/HSL ThirdParty/Lapack ThirdParty/Mumps"'}
