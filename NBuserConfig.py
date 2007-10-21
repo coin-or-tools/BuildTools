@@ -136,7 +136,7 @@ elif gethostname()=='fitzgeralds' :
 # List of Projects to be processed by script
 #----------------------------------------------------------------------
 PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc',\
-            'FlopC++','Ipopt','OS','CppAD']
+            'Ipopt','Bonmin','FlopC++',,'OS','CppAD']
 
 
 #----------------------------------------------------------------------
@@ -151,9 +151,9 @@ PROJECT_VERSIONS = ['trunk','latestStable']
 # Presently, NoThirdParty is not yet working
 #----------------------------------------------------------------------
 BUILD_TYPES = [\
-              ['Default','ThirdParty'   ],\
-              ['Debug',  'ThirdParthy'  ]\
-              #['Debug',  'NoThirdParthy']\
+              ['Default','ThirdParty'   ]\
+              ,['Debug',  'ThirdParty'   ]\
+              #,['Debug',  'NoThirdParty' ]\
               ]
 
                

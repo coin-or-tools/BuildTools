@@ -89,15 +89,20 @@ PROJECT_CONFIG_LINES['Cbc'].update(SKIP3RDPARTY_CONFIG_LINES)
 PROJECT_CONFIG_LINES['Cbc']['Parallel']='--enable-cbc-parallel'
 
 #----------------------------------------------------------------------
+PROJECT_EMAIL_ADDRS['Ipopt'] = 'andreasw _AT_ us _DOT_ ibm _DOT_ com'
+PROJECT_CONFIG_LINES['Ipopt'] = STANDARD_CONFIG_LINES
+#third party packages are not optional here
+
+#----------------------------------------------------------------------
+PROJECT_EMAIL_ADDRS['Bonmin'] = 'pbonami _AT_ us _DOT_ ibm _DOT_ com'
+PROJECT_CONFIG_LINES['Bonmin'] = STANDARD_CONFIG_LINES
+#third party packages are not optional here
+
+#----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['FlopC++'] = 'Tim _DOT_ Hultberg _AT_ eumetsat _DOT_ int'
 ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['FlopC++'] = ['make test']
 PROJECT_CONFIG_LINES['FlopC++'] = STANDARD_CONFIG_LINES
 #does not have references to third party packages
-
-#----------------------------------------------------------------------
-PROJECT_EMAIL_ADDRS['Ipopt'] = 'andreasw _AT_ us _DOT_ ibm _DOT_ com'
-PROJECT_CONFIG_LINES['Ipopt'] = STANDARD_CONFIG_LINES
-#third party packages are not optional here
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['OS'] = 'kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
