@@ -2,6 +2,7 @@
 
 import os
 import sys
+import distutils.dir_util
 
 import NBuserConfig
 import NBprojectConfig
@@ -92,12 +93,24 @@ for p in NBuserConfig.PROJECTS:
   # or delete the VPATH directory when there is one
   #---------------------------------------------------------------------
 
+  
+  #---------------------------------------------------------------------
+  # Setup the directory where the build will be done
+  #---------------------------------------------------------------------
+  vpathDir = 'defaultBuild'
+  fullVpathDir = os.path.join(projectBaseDir,vpathDir)
+  #TODO: if (MAKE_CLEAN) : distutils.dir_util.remove_tree(fullVpathDir)
+  if not os.path.isdir(fullVpathDir) : os.mkdir(fullVpathDir)
+  print fullVpathDir
 
   #---------------------------------------------------------------------
-  # Run configure part of buid
+  # Run configure part of build (only if config has not previously 
+  # ran successfully).
   #---------------------------------------------------------------------
-  os.chdir(projectCheckOutDir)
-  configCmd = os.path.join('.','configure -C')
+  os.chdir(fullVpathDir)
+  #configCmd = os.path.join('.','configure -C')
+  configCmd = os.path.join('.',projectCheckOutDir,"configure -C")
+  print configCmd
   if NBcheckResult.didConfigRunOK() :
     NBlogMessages.writeMessage("  '"+configCmd+"' previously ran. Not rerunning")
   else :
@@ -145,8 +158,9 @@ for p in NBuserConfig.PROJECTS:
   # Run unitTest if available and different from 'make test'
   #---------------------------------------------------------------------
   if NBprojectConfig.UNITTEST_CMD.has_key(p) :
-    unitTestPath = os.path.join(projectCheckOutDir,NBprojectConfig.UNITTEST_DIR[p])
+    unitTestPath = os.path.join(fullVpathDir,NBprojectConfig.UNITTEST_DIR[p])
     os.chdir(unitTestPath)
+    print unitTestPath
 
     unitTestCmdTemplate=NBprojectConfig.UNITTEST_CMD[p]
     unitTestCmd=unitTestCmdTemplate.replace('_NETLIBDIR_',netlibDir)
