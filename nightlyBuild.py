@@ -17,7 +17,8 @@ import NBcheckResult
 #   -In userConfig allow one to optionally do a clean checkout and/or config
 #   -Don't do build if 'svn update' doesn't change anything and prior test was OK.
 #     (no need to re-run if nothing has changed since prior run)
-#   -Figure out how to run configure with no third party code
+#   -Figure out how to run configure with no third party code (done, or?)
+#   -Remove markerfile in ThirdParty dir if svn update updated the get... script of the ThirdParty project
 
 
 
@@ -95,9 +96,14 @@ for p in NBuserConfig.PROJECTS:
           thirdPartyDir=os.path.join(thirdPartyBaseDir,d)
           install3rdPartyCmd=os.path.join(".","get."+d)
           os.chdir(thirdPartyDir)
-          if os.path.isfile(install3rdPartyCmd) :
-            NBlogMessages.writeMessage('  '+install3rdPartyCmd)
-            NBosCommand.run(install3rdPartyCmd)
+          if not os.path.isfile('NBinstalldone') :
+            if os.path.isfile(install3rdPartyCmd) :
+              NBlogMessages.writeMessage('  '+install3rdPartyCmd)
+              NBosCommand.run(install3rdPartyCmd)
+              f=open('NBinstalldone','w')
+              f.close()
+          else :
+            NBlogMessages.writeMessage('  skipped anew download of '+d)
     
     #---------------------------------------------------------------------
     # Loop once for each type of build to be done.
