@@ -29,9 +29,11 @@ for buildType in NBuserConfig.BUILD_TYPES :
 	if "ThirdParty" in buildType :
 		STANDARD_CONFIG_LINES[key] = val
 	else :
-		key += "-no3rdParty"
-		val += ' '+SKIP3RDPARTY_CONFIG_LINE
-		SKIP3RDPARTY_CONFIG_LINES[key] = val
+		#key += "-no3rdParty"
+                key += "-NoThirdParty"
+		#val += ' '+SKIP3RDPARTY_CONFIG_LINE
+		#SKIP3RDPARTY_CONFIG_LINES[key] = val
+		STANDARD_CONFIG_LINES[key] = val
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['CoinUtils'] = 'ladanyi _AT_ us _DOT_ ibm _DOT_ com'

@@ -115,6 +115,9 @@ for p in NBuserConfig.PROJECTS:
     # vpath and options to configure must be set for the buildType
     #---------------------------------------------------------------------
     buildtypes=NBprojectConfig.PROJECT_CONFIG_LINES[p]
+
+    print buildtypes
+    
     for buildType, configLine in buildtypes.iteritems() :
     
       #---------------------------------------------------------------------
@@ -123,6 +126,10 @@ for p in NBuserConfig.PROJECTS:
       #---------------------------------------------------------------------
       vpathDir=projectVersion[0]+'-'+buildType
       configOptions='-C '+NBuserConfig.CONFIGURE_FLAGS+' '+configLine
+
+      print 'HERE ARE THE CONFIG OPTIONS SO FAR'
+      print configOptions
+
 
 #      if "ThirdParty" in buildType :
 #        vpathDir += "ThirdParty"
@@ -135,7 +142,21 @@ for p in NBuserConfig.PROJECTS:
 #          for d in thirdPartyDirs :
 #            skipOptions+=' ThirdParty/'+d
 #          configOptions+=' COIN_SKIP_PROJECTS="'+skipOptions+'"'
-     
+
+# Added by Kipp -- Sunday, Oct 21
+      print buildType
+      print configLine
+      if "NoThirdParty" in buildType :
+        skipOptions=''
+        thirdPartyBaseDir=os.path.join(projectCheckOutDir,'ThirdParty')
+        if os.path.isdir(thirdPartyBaseDir) :
+          thirdPartyDirs = os.listdir(thirdPartyBaseDir)
+          for d in thirdPartyDirs :
+            skipOptions+=' ThirdParty/'+d
+        configOptions+=' COIN_SKIP_PROJECTS="'+skipOptions+'"'
+# End Kipp
+
+
       fullVpathDir = os.path.join(projectBaseDir,vpathDir)
       #TODO: if (MAKE_CLEAN) : distutils.dir_util.remove_tree(fullVpathDir)
       if not os.path.isdir(fullVpathDir) : os.mkdir(fullVpathDir)

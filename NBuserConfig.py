@@ -143,6 +143,8 @@ elif gethostname()=='fitzgeralds' :
   DOWNLOAD_3RD_PARTY=1
 elif gethostname()=='sol10vm' :
   DOWNLOAD_3RD_PARTY=1
+elif gethostname()=='kmartin-maclt.local' :
+  DOWNLOAD_3RD_PARTY=1
 
 #----------------------------------------------------------------------
 #On some systems the user might want to set extra options for the
@@ -157,6 +159,9 @@ if gethostname()=='sol10vm' :
 #----------------------------------------------------------------------
 PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc',\
             'Ipopt','Bonmin','FlopC++','OS','CppAD']
+
+
+PROJECTS = ['SYMPHONY']
 
 
 #----------------------------------------------------------------------
@@ -176,7 +181,9 @@ BUILD_TYPES = [\
               #,['Debug',  'NoThirdParty' ]\
               ]
 
-               
+BUILD_TYPES = [\
+              ['Default',  'NoThirdParty' ]\
+              ]               
 
 #----------------------------------------------------------------------
 # List of vpath directories and corresponding configure options
