@@ -879,10 +879,14 @@ AC_ARG_VAR(OPT_CFLAGS,[Optimize C compiler options])
 coin_has_cc=yes
 
 save_cflags="$CFLAGS"
-# For *-*-solaris*, promote Studio/Workshop compiler to front of list.
-# ToDo: If Studio/Workshop cc is not present, we may find /usr/ucb/cc, which
-# is likely to be a non-functional shell. But many installations will have
-# both cc and gcc, so promoting gcc isn't good either. How to test reliably?
+
+# For *-*-solaris*, promote Studio/Workshop cc compiler to front of list.
+# Depending on the user's PATH, when Studio/Workshop cc is not present we may
+# find /usr/ucb/cc, which is likely to be a non-functional shell. The test used
+# here is the same as that used in /usr/ucb/cc. This doesn't entirely solve the
+# problem, as the user may still need to force the issue if /usr/ucb/cc and gcc
+# both work and the user's PATH leads to /usr/ucb/cc before gcc.
+
 case $build in
   *-cygwin* | *-mingw*)
   	     if test "$enable_doscompile" = msvc ; then
@@ -891,7 +895,12 @@ case $build in
 	       comps="gcc cl"
 	     fi ;;
   *-*-solaris*)
-  	     comps="cc xlc gcc pgcc icc" ;;
+	     if test -f /usr/ccs/bin/ucbcc ; then
+	       comps="cc xlc gcc pgcc icc"
+	     else
+	       comps="xlc gcc pgcc icc"
+	     fi
+	     ;;
   *-linux-*) comps="xlc gcc cc pgcc icc" ;;
   *)         comps="xlc_r xlc cc gcc pgcc icc" ;;
 esac
@@ -1774,6 +1783,48 @@ AC_SUBST(LT_LDFLAGS)
 
 
 ###########################################################################
+#                      COIN_PATCH_LIBTOOL_CYGWIN                          #
+###########################################################################
+
+# Patches to libtool for cygwin. Lots for cl, a few for GCC.
+# For cl:
+# - cygpath is not correctly quoted in fix_srcfile_path
+# - paths generated for .lib files is not run through cygpath -w
+
+
+AC_DEFUN([AC_COIN_PATCH_LIBTOOL_CYGWIN],
+[ case "$CXX" in
+    cl* | */cl* | CL* | */CL*) 
+      AC_MSG_NOTICE(Applying patches to libtool for cl compiler)
+      sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
+	  -e 's|fix_srcfile_path=\"\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
+	  -e 's%compile_deplibs=\"\$dir/\$old_library \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$old_library | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
+	  -e 's%compile_deplibs=\"\$dir/\$linklib \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$linklib | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
+	  -e 's%lib /OUT:%lib -OUT:%' \
+	  -e "s%cygpath -w%$CYGPATH_W%" \
+	  -e 's%$AR x \\$f_ex_an_ar_oldlib%bla=\\`lib -nologo -list \\$f_ex_an_ar_oldlib | xargs echo '"$mydos2unix"'\\`; echo \\$bla; for i in \\$bla; do lib -nologo -extract:\\$i \\$f_ex_an_ar_oldlib; done%' \
+	  -e 's/$AR t/lib -nologo -list/' \
+	  -e 's%f_ex_an_ar_oldlib="\($?*1*\)"%f_ex_an_ar_oldlib='\`"$CYGPATH_W"' \1`%' \ 
+	  -e 's%^archive_cmds=.*%archive_cmds="\\$CC -o \\$lib \\$libobjs \\$compiler_flags \\\\\\`echo \\\\\\"\\$deplibs\\\\\\" | \\$SED -e '"\'"'s/ -lc\\$//'"\'"'\\\\\\` -link -dll~linknames="%' \
+	  -e 's%old_archive_cmds="lib -OUT:\\$oldlib\\$oldobjs\\$old_deplibs"%old_archive_cmds="if test -r \\$oldlib; then bla=\\"\\$oldlib\\"; else bla=; fi; lib -OUT:\\$oldlib \\\\\\$bla\\$oldobjs\\$old_deplibs"%' \
+      libtool > conftest.bla
+
+      mv conftest.bla libtool
+      chmod 755 libtool
+      ;;
+    *)
+      AC_MSG_NOTICE(Applying patches to libtool for GNU compiler)
+      sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
+	  -e 's|"lib /OUT:\\$oldlib\\$oldobjs\\$old_deplibs"|"\\$AR \\$AR_FLAGS \\$oldlib\\$oldobjs\\$old_deplibs~\\$RANLIB \\$oldlib"|' \
+	  -e 's|libext="lib"|libext="a"|' \
+      libtool > conftest.bla
+
+      mv conftest.bla libtool
+      chmod 755 libtool
+      ;;
+  esac ]) # COIN_PATCH_LIBTOOL_CYGWIN
+
+###########################################################################
 #                           COIN_PROG_LIBTOOL                             #
 ###########################################################################
 
@@ -1807,25 +1858,6 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
   AC_SUBST(ac_c_preproc_warn_flag)
   AC_SUBST(ac_cxx_preproc_warn_flag)
 
-# Fix bugs in libtool script for Windows native compilation:
-# - cygpath is not correctly quoted in fix_srcfile_path
-# - paths generated for .lib files is not run through cygpath -w
-
-
-# - lib includes subdirectory information; we want to replace
-#
-# old_archive_cmds="lib /OUT:\$oldlib\$oldobjs\$old_deplibs"
-#
-# by
-#
-# old_archive_cmds="echo \$oldlib | grep .libs >/dev/null; if test \$? = 0; then cd .libs; lib /OUT:\`echo \$oldlib\$oldobjs\$old_deplibs | sed -e s@\.libs/@@g\`; cd .. ; else lib /OUT:\$oldlib\$oldobjs\$old_deplibs ; fi"
-#
-#          -e 's%old_archive_cmds="lib /OUT:\\\$oldlib\\\$oldobjs\\\$old_deplibs"%old_archive_cmds="echo \\\$oldlib \| grep .libs >/dev/null; if test \\\$? = 0; then cd .libs; lib /OUT:\\\`echo \\\$oldlib\\\$oldobjs\\\$old_deplibs \| sed -e s@\\.libs/@@g\\\`; cd .. ; else lib /OUT:\\\$oldlib\\\$oldobjs\\\$old_deplibs; fi"%' \
-
-# The following was a hack for chaniing @BACKSLASH to \
-#          -e 'sYcompile_command=`\$echo "X\$compile_command" | \$Xsed -e '"'"'s%@OUTPUT@%'"'"'"\$output"'"'"'%g'"'"'`Ycompile_command=`\$echo "X\$compile_command" | \$Xsed -e '"'"'s%@OUTPUT@%'"'"'"\$output"'"'"'%g'"'"' | \$Xsed -e '"'"'s%@BACKSLASH@%\\\\\\\\\\\\\\\\%g'"'"'`Y' \
-
-  # Correct cygpath for minGW (ToDo!)
   AC_MSG_NOTICE([Build is "$build".])
   mydos2unix='| dos2unix'
   case $build in
@@ -1836,8 +1868,9 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
   esac
 
   case $build in
+    # Here we need to check if -m32 is specified.  If so, we need to correct
+    # sys_lib_search_path_spec
     *x86_64-*)
-# Here we need to check if -m32 is specified.  If so, we need to correct sys_lib_search_path_spec
       if test "$GCC" = yes && (echo $CXXFLAGS $CFLAGS $FFLAGS | $EGREP 'm32' >& /dev/null); then 
         AC_MSG_NOTICE(Applying patches to libtool for 32bit compilation)
         sed -e 's|sys_lib_search_path_spec=".*"|sys_lib_search_path_spec="/lib /usr/lib"|' libtool > conftest.bla
@@ -1845,38 +1878,32 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
         chmod 755 libtool  
       fi
       ;;
+    # The opposite problem: if we want to do a 64-bit build, the system search
+    # libraries need to point to the sparcv9 subdirectories. If they do not
+    # already do that, fix them.
+    sparc-sun-solaris*)
+      if test "$GCC" = yes && \
+	 (echo $CXXFLAGS $CFLAGS $FFLAGS | $EGREP 'm64' >/dev/null 2>&1) ; then
+	fixlibtmp=`$CC -print-search-dirs | $EGREP '^libraries:'`
+	if `echo "$fixlibtmp" | $EGREP -v sparcv9  >/dev/null 2>&1` ; then
+	  AC_MSG_NOTICE([Applying patches to libtool for 64-bit compilation])
+	  fixlibtmp=`echo $fixlibtmp | sed -e 's/libraries: =//' -e 's/:/ /g'`
+	  v9syslibpath=
+	  for lib in $fixlibtmp ; do
+	    if test -d "${lib}sparcv9" ; then
+	      v9syslibpath="$v9syslibpath ${lib}sparcv9/"
+	    fi
+	  done
+	  sed -e 's|sys_lib_search_path_spec=".*"|sys_lib_search_path_spec="'"$v9syslibpath"'"|' libtool > conftest.bla
+	  mv conftest.bla libtool
+	  chmod 755 libtool  
+	fi
+      fi
+      ;;
+    # Cygwin. Ah, cygwin. Too big and ugly to inline; see the macro.
     *-cygwin* | *-mingw*)
-    case "$CXX" in
-      cl* | */cl* | CL* | */CL*) 
-        AC_MSG_NOTICE(Applying patches to libtool for cl compiler)
-        sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
-            -e 's|fix_srcfile_path=\"\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
-            -e 's%compile_deplibs=\"\$dir/\$old_library \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$old_library | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
-            -e 's%compile_deplibs=\"\$dir/\$linklib \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$linklib | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
-	    -e 's%lib /OUT:%lib -OUT:%' \
-	    -e "s%cygpath -w%$CYGPATH_W%" \
-  	    -e 's%$AR x \\$f_ex_an_ar_oldlib%bla=\\`lib -nologo -list \\$f_ex_an_ar_oldlib | xargs echo '"$mydos2unix"'\\`; echo \\$bla; for i in \\$bla; do lib -nologo -extract:\\$i \\$f_ex_an_ar_oldlib; done%' \
-	    -e 's/$AR t/lib -nologo -list/' \
-	    -e 's%f_ex_an_ar_oldlib="\($?*1*\)"%f_ex_an_ar_oldlib='\`"$CYGPATH_W"' \1`%' \ 
-	    -e 's%^archive_cmds=.*%archive_cmds="\\$CC -o \\$lib \\$libobjs \\$compiler_flags \\\\\\`echo \\\\\\"\\$deplibs\\\\\\" | \\$SED -e '"\'"'s/ -lc\\$//'"\'"'\\\\\\` -link -dll~linknames="%' \
-	    -e 's%old_archive_cmds="lib -OUT:\\$oldlib\\$oldobjs\\$old_deplibs"%old_archive_cmds="if test -r \\$oldlib; then bla=\\"\\$oldlib\\"; else bla=; fi; lib -OUT:\\$oldlib \\\\\\$bla\\$oldobjs\\$old_deplibs"%' \
-        libtool > conftest.bla
-
-        mv conftest.bla libtool
-        chmod 755 libtool
-        ;;
-      *)
-        AC_MSG_NOTICE(Applying patches to libtool for GNU compiler)
-        sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
-            -e 's|"lib /OUT:\\$oldlib\\$oldobjs\\$old_deplibs"|"\\$AR \\$AR_FLAGS \\$oldlib\\$oldobjs\\$old_deplibs~\\$RANLIB \\$oldlib"|' \
-            -e 's|libext="lib"|libext="a"|' \
-        libtool > conftest.bla
-
-        mv conftest.bla libtool
-        chmod 755 libtool
-        ;;
-    esac
-    ;;
+      AC_COIN_PATCH_LIBTOOL_CYGWIN
+      ;;
     *-darwin*)
       AC_MSG_NOTICE(Applying patches to libtool for Darwin)
       sed -e 's/verstring="${wl}-compatibility_version ${wl}$minor_current ${wl}-current_version ${wl}$minor_current.$revision"/verstring="-compatibility_version $minor_current -current_version $minor_current.$revision"/' \
