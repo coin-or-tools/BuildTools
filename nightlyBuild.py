@@ -98,7 +98,8 @@ for p in NBuserConfig.PROJECTS:
           # If the install command has been updated since the last
           # install, then do a new install
           if NBosCommand.newer(install3rdPartyCmd,'NBinstalldone') :
-            os.remove('NBinstalldone')
+            if os.path.isfile('NBinstalldone') :
+              os.remove('NBinstalldone')
           if not os.path.isfile('NBinstalldone') :
             if os.path.isfile(install3rdPartyCmd) :
               NBlogMessages.writeMessage('  '+install3rdPartyCmd)
