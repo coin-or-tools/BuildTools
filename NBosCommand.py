@@ -22,15 +22,18 @@ def newer(source,target) :
     else :
       # running on posix so should be able to use ls command
       if not os.path.isfile(target) : return True
-      lsSource=run("ls --full-time "+source)
-      lsTarget=run("ls --full-time "+target)
+      statsource = os.stat(source)
+      stattarget = os.stat(target)
+      return statsource.st_mtime > stattarget.st_mtime
+#      lsSource=run("ls --full-time "+source)
+#      lsTarget=run("ls --full-time "+target)
       #-rwxrwxrwx 1 jpf4 None 12309 2007-10-21 16:13:47.395793600 -0400 nightlyBuild.py
-      rexBase=r"(-|r|w|x){10} . (.+) (.+) (.+) (\d\d\d\d-\d\d-\d\d .+) "
-      rexSource=rexBase+source
-      rexTarget=rexBase+target
-      timeSource=(re.findall(rexSource,lsSource['stdout']))[0][4]
-      timeTarget=(re.findall(rexTarget,lsTarget['stdout']))[0][4]
-      return timeSource > timeTarget
+#      rexBase=r"(-|r|w|x){10} . (.+) (.+) (.+) (\d\d\d\d-\d\d-\d\d .+) "
+#      rexSource=rexBase+source
+#      rexTarget=rexBase+target
+#      timeSource=(re.findall(rexSource,lsSource['stdout']))[0][4]
+#      timeTarget=(re.findall(rexTarget,lsTarget['stdout']))[0][4]
+#      return timeSource > timeTarget
       
   else :
     import distutils.dep_util 

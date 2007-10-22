@@ -99,8 +99,8 @@ for p in NBuserConfig.PROJECTS:
           os.chdir(thirdPartyDir)
           # If the install command has been updated since the last
           # install, then do a new install
-          if NBosCommand.newer(install3rdPartyCmd,'NBinstalldone') :
-            if os.path.isfile('NBinstalldone') :
+          if os.path.isfile('NBinstalldone') :
+            if NBosCommand.newer(install3rdPartyCmd,'NBinstalldone') :
               os.remove('NBinstalldone')
           if not os.path.isfile('NBinstalldone') :
             if os.path.isfile(install3rdPartyCmd) :
@@ -129,8 +129,8 @@ for p in NBuserConfig.PROJECTS:
       vpathDir=projectVersion[0]+'-'+buildType
       configOptions='-C '+NBuserConfig.CONFIGURE_FLAGS+' '+configLine
 
-      print 'HERE ARE THE CONFIG OPTIONS SO FAR'
-      print configOptions
+#      print 'HERE ARE THE CONFIG OPTIONS SO FAR'
+#      print configOptions
 
 
 #      if "ThirdParty" in buildType :
@@ -146,8 +146,8 @@ for p in NBuserConfig.PROJECTS:
 #          configOptions+=' COIN_SKIP_PROJECTS="'+skipOptions+'"'
 
 # Added by Kipp -- Sunday, Oct 21
-      print buildType
-      print configLine
+#      print buildType
+#      print configLine
       if "NoThirdParty" in buildType :
         skipOptions=''
         thirdPartyBaseDir=os.path.join(projectCheckOutDir,'ThirdParty')
