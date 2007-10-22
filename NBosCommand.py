@@ -13,7 +13,7 @@ import re
 # Raise DistutilsFileError if source does not exist.
 #------------------------------------------------------------------------
 def newer(source,target) :
-  if sys.version[:6]>='2.5.0' :
+  if sys.version[:6]<'2.5.0' :
     # Version of python being used does not have distutils
     if not os.path.isfile(source) : sys.exit(1)
     if os.name!="posix" :

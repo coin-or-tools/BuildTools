@@ -18,7 +18,6 @@ import NBcheckResult
 #   -Don't do build if 'svn update' doesn't change anything and prior test was OK.
 #     (no need to re-run if nothing has changed since prior run)
 #   -Figure out how to run configure with no third party code (done, or?)
-#   -Remove markerfile in ThirdParty dir if svn update updated the get... script of the ThirdParty project
 
 
 
@@ -96,6 +95,10 @@ for p in NBuserConfig.PROJECTS:
           thirdPartyDir=os.path.join(thirdPartyBaseDir,d)
           install3rdPartyCmd=os.path.join(".","get."+d)
           os.chdir(thirdPartyDir)
+          # If the install command has been updated since the last
+          # install, then do a new install
+          if NBosCommand.newer(install3rdPartyCmd,'NBinstalldone') :
+            os.remove('NBinstalldone')
           if not os.path.isfile('NBinstalldone') :
             if os.path.isfile(install3rdPartyCmd) :
               NBlogMessages.writeMessage('  '+install3rdPartyCmd)
