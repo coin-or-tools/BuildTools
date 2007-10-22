@@ -2,6 +2,40 @@
 
 from socket import gethostname
 import sys
+import os
+import re
+
+#------------------------------------------------------------------------
+# newer(source, target)
+# Return true if source exists and is more recently modified than target,
+# or if source exists and target doesn't.
+# Return false if both exist and target is the same age or newer than source.
+# Raise DistutilsFileError if source does not exist.
+#------------------------------------------------------------------------
+def newer(source,target) :
+  if sys.version[:6]>='2.5.0' :
+    # Version of python being used does not have distutils
+    if not os.path.isfile(source) : sys.exit(1)
+    if os.name!="posix" :
+      # Always assume target is out of date
+      return True
+    else :
+      # running on posix so should be able to use ls command
+      if not os.path.isfile(target) : return True
+      lsSource=run("ls --full-time "+source)
+      lsTarget=run("ls --full-time "+target)
+      #-rwxrwxrwx 1 jpf4 None 12309 2007-10-21 16:13:47.395793600 -0400 nightlyBuild.py
+      rexBase=r"(-|r|w|x){10} . (.+) (.+) (.+) (\d\d\d\d-\d\d-\d\d .+) "
+      rexSource=rexBase+source
+      rexTarget=rexBase+target
+      timeSource=(re.findall(rexSource,lsSource['stdout']))[0][4]
+      timeTarget=(re.findall(rexTarget,lsTarget['stdout']))[0][4]
+      return timeSource > timeTarget
+      
+  else :
+    import distutils.dep_util 
+    return distutils.dep_util.newer(source,target)
+
 
 #------------------------------------------------------------------------
 # Run an OS command in another process.
@@ -37,28 +71,5 @@ def run(cmd) :
     return retVal 
 
 
-#  run = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-#
-#  # Wait for the process to return
-#  import thread, threading
-#  out, err = [''], ['']
-#  #out, err = "", "" 
-#  out_ended, err_ended = threading.Event(), threading.Event()
-#
-#  def getOutput(output, lines, ended_event) :
-#    #for i in output.readlines() : lines.append(i)
-#    for i in output.readlines() : 
-#      lines[0] = lines[0]+i
-#    ended_event.set()
-#
-#  out_thread = thread.start_new_thread(getOutput, (run.stdout, out, out_ended))
-#  err_thread = thread.start_new_thread(getOutput, (run.stderr, err, err_ended))
-#
-#  out_ended.wait()
-#  err_ended.wait()
-#
-#  returncode = run.wait()
-#
-#  retVal = { 'returnCode':returncode, 'stdout':out[0], 'stderr':err[0] }
-#  return retVal
+
 
