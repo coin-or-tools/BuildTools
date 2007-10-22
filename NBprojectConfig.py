@@ -61,7 +61,7 @@ PROJECT_CONFIG_LINES['Clp'].update(SKIP3RDPARTY_CONFIG_LINES)
 PROJECT_EMAIL_ADDRS['SYMPHONY'] = 'tkr2 _AT_ lehigh _DOT_ edu'
 ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['SYMPHONY'] = ['make test']
 PROJECT_CONFIG_LINES['SYMPHONY'] = STANDARD_CONFIG_LINES.copy()
-#does not have references to third party packages
+PROJECT_CONFIG_LINES['SYMPHONY'].update(SKIP3RDPARTY_CONFIG_LINES)
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['Vol'] = 'barahon _AT_ us _DOT_ ibm _DOT_ com'
@@ -92,27 +92,27 @@ PROJECT_CONFIG_LINES['Cbc']['Parallel']='--enable-cbc-parallel'
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['Ipopt'] = 'andreasw _AT_ us _DOT_ ibm _DOT_ com'
-PROJECT_CONFIG_LINES['Ipopt'] = STANDARD_CONFIG_LINES
+PROJECT_CONFIG_LINES['Ipopt'] = STANDARD_CONFIG_LINES.copy()
 #third party packages are not optional here
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['Bonmin'] = 'pbonami _AT_ us _DOT_ ibm _DOT_ com'
-PROJECT_CONFIG_LINES['Bonmin'] = STANDARD_CONFIG_LINES
+PROJECT_CONFIG_LINES['Bonmin'] = STANDARD_CONFIG_LINES.copy()
 #third party packages are not optional here
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['FlopC++'] = 'Tim _DOT_ Hultberg _AT_ eumetsat _DOT_ int'
 ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['FlopC++'] = ['make test']
-PROJECT_CONFIG_LINES['FlopC++'] = STANDARD_CONFIG_LINES
+PROJECT_CONFIG_LINES['FlopC++'] = STANDARD_CONFIG_LINES.copy()
 #does not have references to third party packages
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['OS'] = 'kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
 ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['OS'] = ['make test']
-PROJECT_CONFIG_LINES['OS'] = STANDARD_CONFIG_LINES
+PROJECT_CONFIG_LINES['OS'] = STANDARD_CONFIG_LINES.copy()
 #third party packages are not optional here (because it uses Ipopt)
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['CppAD'] = 'bradbell _AT_ washington _DOT_ edu'
-PROJECT_CONFIG_LINES['CppAD'] = STANDARD_CONFIG_LINES
+PROJECT_CONFIG_LINES['CppAD'] = STANDARD_CONFIG_LINES.copy()
 #does not have references to third party packages
