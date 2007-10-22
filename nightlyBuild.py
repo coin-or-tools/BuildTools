@@ -17,9 +17,11 @@ import NBcheckResult
 #   -In userConfig allow one to optionally do a clean checkout and/or config
 #   -Don't do build if 'svn update' doesn't change anything and prior test was OK.
 #     (no need to re-run if nothing has changed since prior run)
-#   -Figure out how to run configure with no third party code (done, or?)
-
-
+#   -Skip make of project that depend on a project which make had been failing. (Similar for configure.)
+#    But also tell project managers of skiped project that their project was skipped.
+#   -Store output of get.XXX calls, make, make test, configures... in some files.
+#   -Allow a fine configuration of which build tests to run per project.
+#   -Move actual [get project, configure, make, tests] part into an extra file.
 
 
 #------------------------------------------------------------------------
