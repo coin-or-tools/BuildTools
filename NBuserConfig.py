@@ -1,6 +1,11 @@
 #! /usr/bin/env python
 
+import sys
+#sys.path.append('/Users/kmartin/Documents/files')
+import userParameters
+
 from socket import gethostname
+
 
 #----------------------------------------------------------------------
 # This file contains variables that person running this script
@@ -21,8 +26,6 @@ elif gethostname()=='math01.watson.ibm.com' :
   NIGHTLY_BUILD_ROOT_DIR = '/u/jpfasano/COIN/nbTest'
 elif gethostname()=='JPF4' :
   NIGHTLY_BUILD_ROOT_DIR = 'd:/nbTest'
-elif gethostname()=='kmartin-maclt.local' :
-  NIGHTLY_BUILD_ROOT_DIR = '/Users/kmartin/COIN'
 elif gethostname()=='fitzgeralds' :
   NIGHTLY_BUILD_ROOT_DIR = '/home/stefan/globopt/nightlyBuild'
 elif gethostname()=='sol10vm' :
@@ -37,8 +40,7 @@ if gethostname()=='math01.watson.ibm.com' :
   SVNPATH_PREFIX='/gsa/yktgsa/projects/o/oslos/local/bin'
 elif gethostname()=='JPF4' :
   SVNPATH_PREFIX = ''
-elif gethostname()=='kmartin-maclt.local' :
-  SVNPATH_PREFIX='/usr/local/bin'
+
   
 
 
@@ -93,16 +95,6 @@ if gethostname()=='ubuntu' or \
   SENDER_EMAIL_ADDR='jpfasano _AT_ verizon _DOT_ net'
   MY_EMAIL_ADDR='jpfasano _AT_ us _DOT_ ibm _DOT_ com'
   SEND_MAIL_TO_PROJECT_MANAGER=0
-elif gethostname()=='kmartin-maclt.local' :
-  SMTP_SERVER_NAME = 'gsbims.uchicago.edu'
-  SMTP_SERVER_PORT =587
-  SMTP_SSL_SERVER = 0
-  SMTP_USER_NAME = 'kmartin'
-  SMTP_PASSWORD_FILENAME = '/Users/kmartin/passwd'
-
-  SENDER_EMAIL_ADDR='kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
-  MY_EMAIL_ADDR='kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
-  SEND_MAIL_TO_PROJECT_MANAGER=0
 elif gethostname()=='fitzgeralds' :
 	SMTP_SERVER_NAME = 'smtp.1und1.de'
 	SMTP_SERVER_PORT = 25
@@ -143,8 +135,7 @@ elif gethostname()=='fitzgeralds' :
   DOWNLOAD_3RD_PARTY=1
 elif gethostname()=='sol10vm' :
   DOWNLOAD_3RD_PARTY=1
-elif gethostname()=='kmartin-maclt.local' :
-  DOWNLOAD_3RD_PARTY=1
+
 
 #----------------------------------------------------------------------
 #On some systems the user might want to set extra options for the
@@ -161,7 +152,7 @@ PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc',\
             'Ipopt','Bonmin','FlopC++','OS','CppAD']
 
 
-PROJECTS = ['SYMPHONY']
+PROJECTS = ['CoinUtils']
 
 
 #----------------------------------------------------------------------
@@ -197,3 +188,22 @@ VPATH_CONFIG_ARGS = ['configure -C' ,\
 # Perhaps use dictionaries
 VPATH_BUILD = {'vpath': 'configure -C' ,\
                'vpath-no_third_party': 'configure COIN_SKIP_PROJECTS="Ipopt ThirdParty/ASL ThirdParty/Blas ThirdParty/Glpk ThirdParty/HSL ThirdParty/Lapack ThirdParty/Mumps"'}
+
+
+
+
+#NEW PARAMETER SETTINGS:
+
+
+##NIGHTLY_BUILD_ROOT_DIR = userParameters.data['NIGHTLY_BUILD_ROOT_DIR']
+##SMTP_SERVER_NAME = userParameters.data['SMTP_SERVER_NAME']
+##SMTP_SERVER_PORT = userParameters.data['SMTP_SERVER_PORT']
+##SMTP_SSL_SERVER = userParameters.data['SMTP_SSL_SERVER']
+##SMTP_USER_NAME = userParameters.data['SMTP_USER_NAME']
+##SMTP_PASSWORD_FILENAME = userParameters.data['SMTP_PASSWORD_FILENAME']
+##SENDER_EMAIL_ADDR = userParameters.data['SENDER_EMAIL_ADDR']
+##MY_EMAIL_ADDR =  userParameters.data['MY_EMAIL_ADDR']
+##SEND_MAIL_TO_PROJECT_MANAGER = userParameters.data['SEND_MAIL_TO_PROJECT_MANAGER']
+##SVNPATH_PREFIX = userParameters.data['SVNPATH_PREFIX']
+##DOWNLOAD_3RD_PARTY = userParameters.data['DOWNLOAD_3RD_PARTY'] 
+
