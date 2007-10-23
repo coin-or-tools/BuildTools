@@ -6,14 +6,6 @@ import userParameters
 
 from socket import gethostname
 
-
-#----------------------------------------------------------------------
-# This file contains variables that person running this script
-# might need to change. 
-#----------------------------------------------------------------------
-
-
-
 #----------------------------------------------------------------------
 # NIGHTLY_BUILD_ROOT_DIR: 
 #   directory where code will be checked out and builds
@@ -121,7 +113,7 @@ CONFIGURE_FLAGS = ''
 # List of Projects to be processed by script
 #----------------------------------------------------------------------
 PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc',\
-            'Ipopt','Bonmin','FlopC++','OS','CppAD']
+            'Ipopt','Bonmin','FlopC++','OS']
 
 
 PROJECTS = ['CoinUtils']
@@ -163,4 +155,4 @@ BUILD_TYPES = [\
 ##SEND_MAIL_TO_PROJECT_MANAGER = userParameters.data['SEND_MAIL_TO_PROJECT_MANAGER']
 ##SVNPATH_PREFIX = userParameters.data['SVNPATH_PREFIX']
 ##DOWNLOAD_3RD_PARTY = userParameters.data['DOWNLOAD_3RD_PARTY'] 
-
+##CONFIGURE_FLAGS = userParameters.data['CONFIGURE_FLAGS'] 
