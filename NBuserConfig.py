@@ -20,6 +20,16 @@ elif gethostname()=='JPF4' :
   NIGHTLY_BUILD_ROOT_DIR = 'd:/nbTest'
 
 #----------------------------------------------------------------------
+# LOGFILE: 
+#   file where log messages from the nightlyBuild system will be stored
+#   If no file is given, then we will print to stdout.
+#   The LOGFILE will be used relative to the NIGHTLY_BUILD_ROOT_DIR, i.e.,
+#   log will be written into NIGHTLY_BUILD_ROOT_DIR+'/'+LOGFILE
+#----------------------------------------------------------------------
+
+LOGFILE=''
+	
+#----------------------------------------------------------------------
 # Define directory where svn is located.
 # If svn is in the default path, then this can be set to an empty string
 #----------------------------------------------------------------------
@@ -144,15 +154,16 @@ BUILD_TYPES = [\
 #NEW PARAMETER SETTINGS:
 
 
-##NIGHTLY_BUILD_ROOT_DIR = userParameters.data['NIGHTLY_BUILD_ROOT_DIR']
-##SMTP_SERVER_NAME = userParameters.data['SMTP_SERVER_NAME']
-##SMTP_SERVER_PORT = userParameters.data['SMTP_SERVER_PORT']
-##SMTP_SSL_SERVER = userParameters.data['SMTP_SSL_SERVER']
-##SMTP_USER_NAME = userParameters.data['SMTP_USER_NAME']
-##SMTP_PASSWORD_FILENAME = userParameters.data['SMTP_PASSWORD_FILENAME']
-##SENDER_EMAIL_ADDR = userParameters.data['SENDER_EMAIL_ADDR']
-##MY_EMAIL_ADDR =  userParameters.data['MY_EMAIL_ADDR']
-##SEND_MAIL_TO_PROJECT_MANAGER = userParameters.data['SEND_MAIL_TO_PROJECT_MANAGER']
-##SVNPATH_PREFIX = userParameters.data['SVNPATH_PREFIX']
-##DOWNLOAD_3RD_PARTY = userParameters.data['DOWNLOAD_3RD_PARTY'] 
-##CONFIGURE_FLAGS = userParameters.data['CONFIGURE_FLAGS'] 
+# NIGHTLY_BUILD_ROOT_DIR = userParameters.data['NIGHTLY_BUILD_ROOT_DIR']
+# SMTP_SERVER_NAME = userParameters.data['SMTP_SERVER_NAME']
+# SMTP_SERVER_PORT = userParameters.data['SMTP_SERVER_PORT']
+# SMTP_SSL_SERVER = userParameters.data['SMTP_SSL_SERVER']
+# SMTP_USER_NAME = userParameters.data['SMTP_USER_NAME']
+# SMTP_PASSWORD_FILENAME = userParameters.data['SMTP_PASSWORD_FILENAME']
+# SENDER_EMAIL_ADDR = userParameters.data['SENDER_EMAIL_ADDR']
+# MY_EMAIL_ADDR =  userParameters.data['MY_EMAIL_ADDR']
+# SEND_MAIL_TO_PROJECT_MANAGER = userParameters.data['SEND_MAIL_TO_PROJECT_MANAGER']
+# SVNPATH_PREFIX = userParameters.data['SVNPATH_PREFIX']
+# DOWNLOAD_3RD_PARTY = userParameters.data['DOWNLOAD_3RD_PARTY'] 
+# CONFIGURE_FLAGS = userParameters.data['CONFIGURE_FLAGS'] 
+# LOGFILE = userParameters.data['LOGFILE'] 
