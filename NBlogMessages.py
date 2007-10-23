@@ -11,9 +11,9 @@ import NBuserConfig
 def writeMessage( msg ) :
   logMsg = time.ctime(time.time())+': '
   logMsg += msg
-  if len(NBuserConfig.LOGFILE) == 0 or NBuserConfig.LOGFILE.isspace() :
+  if NBuserConfig.LOGPRINT :
     print logMsg
-  else :
+  if len(NBuserConfig.LOGFILE) > 0 and not NBuserConfig.LOGFILE.isspace() :
     logfile=open(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR+'/'+NBuserConfig.LOGFILE, 'a')
     logfile.write(logMsg+'\n')
 #    logfile.flush()

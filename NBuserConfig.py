@@ -20,13 +20,17 @@ elif gethostname()=='JPF4' :
   NIGHTLY_BUILD_ROOT_DIR = 'd:/nbTest'
 
 #----------------------------------------------------------------------
+# LOGPRINT:
+#   switch for logoutput to stdout. If set to 1 (default) log will go to
+#   stdout, if set to 0, then not.
 # LOGFILE: 
-#   file where log messages from the nightlyBuild system will be stored
-#   If no file is given, then we will print to stdout.
+#   If not empty, then log messages will go to this file.
+#   If LOGPRINT is 1, then log messages will go to stdout as well.
 #   The LOGFILE will be used relative to the NIGHTLY_BUILD_ROOT_DIR, i.e.,
 #   log will be written into NIGHTLY_BUILD_ROOT_DIR+'/'+LOGFILE
 #----------------------------------------------------------------------
 
+LOGPRINT='1'
 LOGFILE=''
 	
 #----------------------------------------------------------------------
@@ -167,3 +171,4 @@ BUILD_TYPES = [\
 # DOWNLOAD_3RD_PARTY = userParameters.data['DOWNLOAD_3RD_PARTY'] 
 # CONFIGURE_FLAGS = userParameters.data['CONFIGURE_FLAGS'] 
 # LOGFILE = userParameters.data['LOGFILE'] 
+# LOGPRINT = userParameters.data['LOGPRINT'] 

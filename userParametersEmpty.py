@@ -16,5 +16,6 @@ data ={
 'SVNPATH_PREFIX': '',
 'DOWNLOAD_3RD_PARTY': '',
 'CONFIGURE_FLAGS': '',
-'LOGFILE': ''
+'LOGFILE': '',
+'LOGPRINT': '1',
 }
