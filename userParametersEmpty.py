@@ -1,3 +1,8 @@
+#----------------------------------------------------------------------
+# This file is a template for a user-given parameter file.
+# It contains variables that the person running this script need to set.
+#----------------------------------------------------------------------
+
 data ={
 'NIGHTLY_BUILD_ROOT_DIR':'',
 'SMTP_SERVER_NAME': '',
@@ -10,4 +15,5 @@ data ={
 'SEND_MAIL_TO_PROJECT_MANAGER':'',
 'SVNPATH_PREFIX': '',
 'DOWNLOAD_3RD_PARTY': ''
+'CONFIGURE_FLAGS': ''
 }

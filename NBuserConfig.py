@@ -26,10 +26,6 @@ elif gethostname()=='math01.watson.ibm.com' :
   NIGHTLY_BUILD_ROOT_DIR = '/u/jpfasano/COIN/nbTest'
 elif gethostname()=='JPF4' :
   NIGHTLY_BUILD_ROOT_DIR = 'd:/nbTest'
-elif gethostname()=='fitzgeralds' :
-  NIGHTLY_BUILD_ROOT_DIR = '/home/stefan/globopt/nightlyBuild'
-elif gethostname()=='sol10vm' :
-  NIGHTLY_BUILD_ROOT_DIR = '/export/home/gams/stefan/nightlyBuild'  
 
 #----------------------------------------------------------------------
 # Define directory where svn is located.
@@ -95,24 +91,6 @@ if gethostname()=='ubuntu' or \
   SENDER_EMAIL_ADDR='jpfasano _AT_ verizon _DOT_ net'
   MY_EMAIL_ADDR='jpfasano _AT_ us _DOT_ ibm _DOT_ com'
   SEND_MAIL_TO_PROJECT_MANAGER=0
-elif gethostname()=='fitzgeralds' :
-	SMTP_SERVER_NAME = 'smtp.1und1.de'
-	SMTP_SERVER_PORT = 25
-	SMTP_SSL_SERVER = 0
-	SMTP_USER_NAME = 'm40378980-stef'
-	SMTP_PASSWORD_FILENAME = '/home/stefan/globopt/testScripts/smtpPwFile'
-	SENDER_EMAIL_ADDR='stefan _AT_ vigerske _DOT_ de'
-	MY_EMAIL_ADDR='stefan _AT_ vigerske _DOT_ de'
-	SEND_MAIL_TO_PROJECT_MANAGER=0
-elif gethostname()=='sol10vm' :
-	SMTP_SERVER_NAME = 'smtp.1und1.de'
-	SMTP_SERVER_PORT = 25
-	SMTP_SSL_SERVER = 0
-	SMTP_USER_NAME = 'm40378980-stef'
-	SMTP_PASSWORD_FILENAME = '/export/home/gams/stefan/.smtpPwFile'
-	SENDER_EMAIL_ADDR='stefan _AT_ vigerske _DOT_ de'
-	MY_EMAIL_ADDR='stefan _AT_ vigerske _DOT_ de'
-	SEND_MAIL_TO_PROJECT_MANAGER=0
 
 
 #----------------------------------------------------------------------
@@ -131,10 +109,6 @@ elif gethostname()=='math01.watson.ibm.com' :
   DOWNLOAD_3RD_PARTY=1
 elif gethostname()=='JPF4' :
   DOWNLOAD_3RD_PARTY=1
-elif gethostname()=='fitzgeralds' :
-  DOWNLOAD_3RD_PARTY=1
-elif gethostname()=='sol10vm' :
-  DOWNLOAD_3RD_PARTY=1
 
 
 #----------------------------------------------------------------------
@@ -142,8 +116,6 @@ elif gethostname()=='sol10vm' :
 #configure script like compilers...
 #----------------------------------------------------------------------
 CONFIGURE_FLAGS = ''
-if gethostname()=='sol10vm' :
-  CONFIGURE_FLAGS = 'CC="gcc -m64" CXX="g++ -m64" F77="gfortran -m64" LDFLAGS="-lstdc++" ADD_CXXFLAGS="-Wno-conversion"'
 
 #----------------------------------------------------------------------
 # List of Projects to be processed by script
@@ -169,27 +141,12 @@ PROJECT_VERSIONS = ['trunk','latestStable']
 BUILD_TYPES = [\
               ['Default','ThirdParty'   ]\
               ,['Debug',  'ThirdParty'   ]\
-              #,['Debug',  'NoThirdParty' ]\
+              ,['Debug',  'NoThirdParty' ]\
               ]
 
 BUILD_TYPES = [\
               ['Default',  'NoThirdParty' ]\
               ]               
-
-#----------------------------------------------------------------------
-# List of vpath directories and corresponding configure options
-# Setup as a dictionary
-#----------------------------------------------------------------------
-
-VPATH_DIRS = ['vpath', 'vpath-no_third_party']
-VPATH_CONFIG_ARGS = ['configure -C' ,\
-                     'configure COIN_SKIP_PROJECTS="Ipopt ThirdParty/ASL ThirdParty/Blas ThirdParty/Glpk ThirdParty/HSL ThirdParty/Lapack ThirdParty/Mumps"']
-
-# Perhaps use dictionaries
-VPATH_BUILD = {'vpath': 'configure -C' ,\
-               'vpath-no_third_party': 'configure COIN_SKIP_PROJECTS="Ipopt ThirdParty/ASL ThirdParty/Blas ThirdParty/Glpk ThirdParty/HSL ThirdParty/Lapack ThirdParty/Mumps"'}
-
-
 
 
 #NEW PARAMETER SETTINGS:
