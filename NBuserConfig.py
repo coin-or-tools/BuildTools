@@ -12,12 +12,7 @@ from socket import gethostname
 #   done. If the directory does not exist, it will be created.
 #----------------------------------------------------------------------
 NIGHTLY_BUILD_ROOT_DIR = 'xxx'
-if gethostname()=='ubuntu' :
-  NIGHTLY_BUILD_ROOT_DIR = '/home/jp/COIN'
-elif gethostname()=='math01.watson.ibm.com' :
-  NIGHTLY_BUILD_ROOT_DIR = '/u/jpfasano/COIN/nbTest'
-elif gethostname()=='JPF4' :
-  NIGHTLY_BUILD_ROOT_DIR = 'd:/nbTest'
+
 
 #----------------------------------------------------------------------
 # LOGPRINT:
@@ -38,10 +33,7 @@ LOGFILE=''
 # If svn is in the default path, then this can be set to an empty string
 #----------------------------------------------------------------------
 SVNPATH_PREFIX=''
-if gethostname()=='math01.watson.ibm.com' :
-  SVNPATH_PREFIX='/gsa/yktgsa/projects/o/oslos/local/bin'
-elif gethostname()=='JPF4' :
-  SVNPATH_PREFIX = ''
+
 
   
 
@@ -75,28 +67,7 @@ SMTP_PASSWORD_FILENAME = '/xxx/yyy/smtpPassWordFile'
 SENDER_EMAIL_ADDR='xxx _AT_ yyyy _DOT_ edu'
 MY_EMAIL_ADDR='xxx _AT_ yyyy _DOT_ edu'
 SEND_MAIL_TO_PROJECT_MANAGER=0
-if gethostname()=='ubuntu' or \
-   gethostname()=='math01.watson.ibm.com' or\
-   gethostname()=='JPF4' :
-  #SMTP_SERVER_NAME = 'outgoing.verizon.net'
-  #SMTP_SERVER_PORT = 25
-  #SMTP_SSL_SERVER = 0
-  #SMTP_USER_NAME = 'jpfasano'
 
-  SMTP_SERVER_NAME = 'smtp.gmail.com'
-  SMTP_SERVER_PORT = 587
-  SMTP_SSL_SERVER = 1
-  SMTP_USER_NAME = 'jpfasano _AT_ gmail _DOT_ com'
-  if gethostname()=='ubuntu' :
-    SMTP_PASSWORD_FILENAME = '/home/jp/bin/smtpPwFile'
-  elif gethostname()=='math01.watson.ibm.com' :
-    SMTP_PASSWORD_FILENAME = '/u/jpfasano/COIN/bin/smtpPwFile'
-  else :
-    SMTP_PASSWORD_FILENAME = 'c:\smtpPwFile.txt'
-
-  SENDER_EMAIL_ADDR='jpfasano _AT_ verizon _DOT_ net'
-  MY_EMAIL_ADDR='jpfasano _AT_ us _DOT_ ibm _DOT_ com'
-  SEND_MAIL_TO_PROJECT_MANAGER=0
 
 
 #----------------------------------------------------------------------
@@ -109,12 +80,7 @@ if gethostname()=='ubuntu' or \
 # ThirdParty/xxx/get.xxx where xxx is the name of the third party code
 #----------------------------------------------------------------------
 DOWNLOAD_3RD_PARTY=0
-if gethostname()=='ubuntu' :
-  DOWNLOAD_3RD_PARTY=1
-elif gethostname()=='math01.watson.ibm.com' :
-  DOWNLOAD_3RD_PARTY=1
-elif gethostname()=='JPF4' :
-  DOWNLOAD_3RD_PARTY=1
+
 
 
 #----------------------------------------------------------------------
@@ -157,18 +123,17 @@ BUILD_TYPES = [\
 
 #NEW PARAMETER SETTINGS:
 
-
-# NIGHTLY_BUILD_ROOT_DIR = userParameters.data['NIGHTLY_BUILD_ROOT_DIR']
-# SMTP_SERVER_NAME = userParameters.data['SMTP_SERVER_NAME']
-# SMTP_SERVER_PORT = userParameters.data['SMTP_SERVER_PORT']
-# SMTP_SSL_SERVER = userParameters.data['SMTP_SSL_SERVER']
-# SMTP_USER_NAME = userParameters.data['SMTP_USER_NAME']
-# SMTP_PASSWORD_FILENAME = userParameters.data['SMTP_PASSWORD_FILENAME']
-# SENDER_EMAIL_ADDR = userParameters.data['SENDER_EMAIL_ADDR']
-# MY_EMAIL_ADDR =  userParameters.data['MY_EMAIL_ADDR']
-# SEND_MAIL_TO_PROJECT_MANAGER = userParameters.data['SEND_MAIL_TO_PROJECT_MANAGER']
-# SVNPATH_PREFIX = userParameters.data['SVNPATH_PREFIX']
-# DOWNLOAD_3RD_PARTY = userParameters.data['DOWNLOAD_3RD_PARTY'] 
-# CONFIGURE_FLAGS = userParameters.data['CONFIGURE_FLAGS'] 
-# LOGFILE = userParameters.data['LOGFILE'] 
-# LOGPRINT = userParameters.data['LOGPRINT'] 
+NIGHTLY_BUILD_ROOT_DIR = userParameters.data['NIGHTLY_BUILD_ROOT_DIR']
+SMTP_SERVER_NAME = userParameters.data['SMTP_SERVER_NAME']
+SMTP_SERVER_PORT = userParameters.data['SMTP_SERVER_PORT']
+SMTP_SSL_SERVER = userParameters.data['SMTP_SSL_SERVER']
+SMTP_USER_NAME = userParameters.data['SMTP_USER_NAME']
+SMTP_PASSWORD_FILENAME = userParameters.data['SMTP_PASSWORD_FILENAME']
+SENDER_EMAIL_ADDR = userParameters.data['SENDER_EMAIL_ADDR']
+MY_EMAIL_ADDR =  userParameters.data['MY_EMAIL_ADDR']
+SEND_MAIL_TO_PROJECT_MANAGER = userParameters.data['SEND_MAIL_TO_PROJECT_MANAGER']
+SVNPATH_PREFIX = userParameters.data['SVNPATH_PREFIX']
+DOWNLOAD_3RD_PARTY = userParameters.data['DOWNLOAD_3RD_PARTY'] 
+CONFIGURE_FLAGS = userParameters.data['CONFIGURE_FLAGS'] 
+LOGFILE = userParameters.data['LOGFILE'] 
+LOGPRINT = userParameters.data['LOGPRINT'] 
