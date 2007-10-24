@@ -155,6 +155,7 @@ for p in NBuserConfig.PROJECTS:
           thirdPartyDirs = os.listdir(thirdPartyBaseDir)
           for d in thirdPartyDirs :
             skipOptions+=' ThirdParty/'+d
+          skipOptions+=' Ipopt'  
         configOptions+=' COIN_SKIP_PROJECTS="'+skipOptions+'"'
 # End Kipp
 
