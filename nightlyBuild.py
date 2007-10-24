@@ -118,7 +118,7 @@ for p in NBuserConfig.PROJECTS:
     #---------------------------------------------------------------------
     buildtypes=NBprojectConfig.PROJECT_CONFIG_LINES[p]
 
-    print buildtypes
+#    print buildtypes
     
     for buildType, configLine in buildtypes.iteritems() :
     
