@@ -104,18 +104,20 @@ for p in NBuserConfig.PROJECTS :
     #--------------------------------------------------------------------
     # Set config options
     #--------------------------------------------------------------------
-    configuration['configOptions']=""
+    configuration['configOptions']={}
+    configuration['configOptions']['unique']=""
+    configuration['configOptions']['invariant']=""
     if 'OptLevel' not in bc :
       print 'Error. BUILDS does not contain OptLevel'
       print '       Project is '+p
       print '       BuildConfig is '+str(bc)
       sys.exit(1)
     if bc['OptLevel']=='Debug' :
-      configuration['configOptions']+=" --enable-debug"
+      configuration['configOptions']['unique']+=" --enable-debug"
     if 'AdditionalConfigOptions' in bc :
-      configuration['configOptions']+=" "+bc['AdditionalConfigOptios']
+      configuration['configOptions']['unique']+=" "+bc['AdditionalConfigOptions']
 
-    configuration['configOptions']+=" "+NBuserConfig.CONFIGURE_FLAGS
+    configuration['configOptions']['invariant']+=" "+NBuserConfig.CONFIGURE_FLAGS
 
     #--------------------------------------------------------------------
     # Deal with coin projects to be skipped by ./config
