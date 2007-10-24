@@ -96,7 +96,6 @@ PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc',\
             'Ipopt','Bonmin','FlopC++','OS']
 
 
-PROJECTS = ['CoinUtils']
 
 
 #----------------------------------------------------------------------

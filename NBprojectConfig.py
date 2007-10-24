@@ -116,3 +116,83 @@ PROJECT_CONFIG_LINES['OS'] = STANDARD_CONFIG_LINES.copy()
 PROJECT_EMAIL_ADDRS['CppAD'] = 'bradbell _AT_ washington _DOT_ edu'
 PROJECT_CONFIG_LINES['CppAD'] = STANDARD_CONFIG_LINES.copy()
 #does not have references to third party packages
+
+
+#---------------------------------------------------
+#  Not sure what file this belongs in.
+#  This data structure is intended to describe how each COIN project
+#  should be built.
+#---------------------------------------------------
+BUILDS = {
+   #'DefaultProject'   : 
+   #  [ 
+   #    { 'SvnVersion': 'trunk',        'OptLevel': 'Default', 'ThirdParty':'Yes' }, 
+   #    { 'SvnVersion': 'latestStable', 'OptLevel': 'Debug',   'ThirdParty':'No'  } 
+   #  ],
+   'CoinUtils' : 
+     [
+       { 'SvnVersion': 'trunk',         'OptLevel': 'Default', 'ThirdParty': 'No' } 
+     #,{ 'SvnVersion': 'trunk',         'OptLevel': 'Debug',   'ThirdParty': 'No' } 
+     #,{ 'SvnVersion': 'latestStable',  'OptLevel': 'Default', 'ThirdParty': 'No' } 
+      ,{ 'SvnVersion': 'latestStable',  'OptLevel': 'Debug',   'ThirdParty': 'No' } 
+     ],
+   'DyLP' : 
+     [ 
+       { 'Reference' : 'CoinUtils' }, 
+     ],
+   'Clp' : 
+     [ 
+       { 'Reference' : 'CoinUtils' }, 
+     ],
+   'SYMPHONY' : 
+     [ 
+       { 'Reference' : 'CoinUtils' }, 
+     ],
+   'Vol' : 
+     [ 
+       { 'Reference' : 'CoinUtils' }, 
+     ],
+   'Osi' : 
+     [ 
+       { 'Reference' : 'CoinUtils' }, 
+     ],
+   'Cgl' : 
+     [ 
+       { 'Reference' : 'CoinUtils' }, 
+     ],
+   'Cbc' : 
+     [ 
+       { 'Reference' : 'CoinUtils' }, 
+           
+            
+       # And build a parallel version with Third Party
+       { 
+         'SvnVersion': 'releases/1.2.0', 
+         'OptLevel': 'Default', 
+         'ThirdParty': 'Yes', 
+         'AdditionConfigOptions': '--enable-cbc-parallel' 
+       }
+     ],
+   'FlopC++' : 
+     [ 
+       { 'Reference' : 'CoinUtils' }, 
+     ],
+   'Ipopt' : 
+     [ 
+       { 'SvnVersion': 'trunk', 'OptLevel': 'Default', 'ThirdParty':'Yes' }, 
+     ],
+   'Bonmin' : 
+     [ 
+       { 'Reference' : 'Ipopt' }, 
+     ],
+   'OS' :
+     [ 
+       { 'Reference' : 'Ipopt' }, 
+       { 
+         'SvnVersion': 'trunk', 
+         'OptLevel': 'Default', 
+         'ThirdParty': 'No', 
+         'SkipProjects': ('Ipopt') } 
+     ]
+  }
+
