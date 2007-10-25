@@ -57,6 +57,9 @@ SVNPATH_PREFIX=''
 #  SEND_MAIL_TO_PROJECT_MANAGER: 0 or 1. If 1 then any problems
 #                 detected are sent to MY_EMAIL_ADDRESS and the
 #                 project manager.
+#  STORE_EMAIL: If set, then e-mails are not send but stored in a file.
+#               The filename is relative to NIGHTLY_BUILD_ROOT_DIR.
+#               If set, then no values for the SMTP_ fields need to be given.
 #----------------------------------------------------------------------
 SMTP_SERVER_NAME = 'xxx.smtp.server.name'
 SMTP_SERVER_PORT =25
@@ -68,7 +71,7 @@ SENDER_EMAIL_ADDR='xxx _AT_ yyyy _DOT_ edu'
 MY_EMAIL_ADDR='xxx _AT_ yyyy _DOT_ edu'
 SEND_MAIL_TO_PROJECT_MANAGER=0
 
-
+STORE_EMAIL = ''
 
 #----------------------------------------------------------------------
 # DOWNLOAD_3RD_PARTY: 0 or 1.
@@ -131,6 +134,7 @@ SMTP_PASSWORD_FILENAME = userParameters.data['SMTP_PASSWORD_FILENAME']
 SENDER_EMAIL_ADDR = userParameters.data['SENDER_EMAIL_ADDR']
 MY_EMAIL_ADDR =  userParameters.data['MY_EMAIL_ADDR']
 SEND_MAIL_TO_PROJECT_MANAGER = userParameters.data['SEND_MAIL_TO_PROJECT_MANAGER']
+STORE_EMAIL = userParameters.data['STORE_EMAIL']
 SVNPATH_PREFIX = userParameters.data['SVNPATH_PREFIX']
 DOWNLOAD_3RD_PARTY = userParameters.data['DOWNLOAD_3RD_PARTY'] 
 CONFIGURE_FLAGS = userParameters.data['CONFIGURE_FLAGS'] 

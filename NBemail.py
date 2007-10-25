@@ -73,7 +73,7 @@ def sendCmdMsgs(project,cmdMsgs,cmd):
   NBlogMessages.writeMessage( "  email sent regarding "+project+" running '"+cmd+"'" )
 
 #------------------------------------------------------------------------
-# Send email 
+# Send email (or store in a file)
 #------------------------------------------------------------------------
 def send(toAddrs,subject,message):
 
@@ -81,8 +81,20 @@ def send(toAddrs,subject,message):
   msgWHeader = ("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n"
        % (sender, ", ".join(toAddrs), subject))
   msgWHeader += message
-  
-  # Get smpt server password
+
+  #store email in a file instead of sending
+  if len(NBuserConfig.STORE_EMAIL) > 0 and not NBuserConfig.STORE_EMAIL.isspace() :
+    NBlogMessages.writeMessage( '  store email in file '+NBuserConfig.STORE_EMAIL)
+    emailfile=open(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR+'/'+NBuserConfig.STORE_EMAIL, 'a')
+    emailfile.write(msgWHeader)
+    emailfile.write("\n============ EMAIL END ======================================\n")
+    emailfile.close()
+    return
+
+  print len(NBuserConfig.STORE_EMAIL)
+  print NBuserConfig.STORE_EMAIL.isspace()
+
+  # Get smtp server password
   if os.path.isfile(NBuserConfig.SMTP_PASSWORD_FILENAME) :
     pwFilePtr = open(NBuserConfig.SMTP_PASSWORD_FILENAME,'r')
     smtppass  = pwFilePtr.read().strip()
