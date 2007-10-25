@@ -11,6 +11,11 @@
 NIGHTLY_BUILD_ROOT_DIR = 'xxx'
 
 #----------------------------------------------------------------------
+# List of Projects to be processed by script
+#----------------------------------------------------------------------
+PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc','Ipopt','Bonmin','FlopC++','OS']
+
+#----------------------------------------------------------------------
 # LOGPRINT:
 #   switch for logoutput to stdout. If set to 1 (default) log will go to
 #   stdout, if set to 0, then not.

@@ -6,12 +6,7 @@ from socket import gethostname
 
 execfile('NBuserParametersDefault.py')
 
-#----------------------------------------------------------------------
-# List of Projects to be processed by script
-#----------------------------------------------------------------------
-PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc',\
-            'Ipopt','Bonmin','FlopC++','OS']
-
+#the following two should go away when newNightlyBuild.py becomes the default
 
 #----------------------------------------------------------------------
 # For every project, indicate which svn versions are to be used.
