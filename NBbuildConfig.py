@@ -72,8 +72,6 @@ def run(configuration) :
   projectBaseDir=os.path.join(configuration['rootDir'],configuration['project'])
   projectCheckOutDir=os.path.join(projectBaseDir,svnVersionFlattened)
 
-  os.chdir(projectBaseDir)
-
   # Don't get source from subversion if previously done
   if projectCheckOutDir not in SVN_HISTORY :
     if not os.path.isdir(projectBaseDir) :
