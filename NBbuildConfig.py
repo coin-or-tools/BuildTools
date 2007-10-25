@@ -67,11 +67,44 @@ def run(configuration) :
   svnVersionFlattened=configuration['svnVersion'].replace('/','-')
 
   #---------------------------------------------------------------------
-  # svn checkout or update the project
+  # Create names of directory where source is located and
+  # and were object, libs and executables are located (vpath).
+  # To compute vpath directory, the ./configure options need to be 
+  # generated.
   #---------------------------------------------------------------------
   projectBaseDir=os.path.join(configuration['rootDir'],configuration['project'])
   projectCheckOutDir=os.path.join(projectBaseDir,svnVersionFlattened)
 
+  vpathDir=''
+
+  if 'SkipProjects' in configuration :
+    vpathDir+="No"+configuration['SkipProjects']
+  if 'noThirdParty' in configuration : 
+    if configuration['noThirdParty'] :
+      vpathDir+='-NoThirdParty'
+  vpathDir=svnVersionFlattened+\
+          configuration['configOptions']['unique']+\
+          vpathDir
+  vpathDir=vpathDir.replace(' ','')
+  vpathDir=vpathDir.replace('"','')
+  vpathDir=vpathDir.replace("'",'')
+  vpathDir=vpathDir.replace('--enable','')
+  if vpathDir==svnVersionFlattened : vpathDir+='-default'
+
+  fullVpathDir = os.path.join(projectBaseDir,vpathDir)
+
+  #---------------------------------------------------------------------
+  # Create the vpath directory if it doesn't exist
+  # and remove file that indicates prior run tested ok.
+  #---------------------------------------------------------------------
+  if not os.path.isdir(fullVpathDir) : 
+    os.makedirs(fullVpathDir)
+  os.chdir(fullVpathDir)
+  if os.path.isfile('NBallTestsPassed') : os.remove('NBallTestsPassed')
+
+  #---------------------------------------------------------------------
+  # svn checkout or update the project
+  #---------------------------------------------------------------------
   # Don't get source from subversion if previously done
   if projectCheckOutDir not in SVN_HISTORY :
     if not os.path.isdir(projectBaseDir) :
@@ -134,7 +167,6 @@ def run(configuration) :
   # Source is now available, so now it is time to run config
   #---------------------------------------------------------------------
   skipOptions=''
-  vpathDir=''
 
   if 'SkipProjects' in configuration :
     skipOptions+=configuration['SkipProjects']
@@ -145,7 +177,6 @@ def run(configuration) :
     needSkip3PartySkipOptions=True
   elif configuration['noThirdParty'] :
     needSkip3PartySkipOptions=True
-    vpathDir='-NoThirdParty'
   if needSkip3PartySkipOptions :
     thirdPartyBaseDir=os.path.join(projectCheckOutDir,'ThirdParty')
     if os.path.isdir(thirdPartyBaseDir) :
@@ -156,22 +187,9 @@ def run(configuration) :
   if skipOptions!='' :
     skipOptions=' COIN_SKIP_PROJECTS="'+skipOptions+'"'
 
-  # Determine the build directory, and make sure it exists   
-  vpathDir=svnVersionFlattened+\
-          configuration['configOptions']['unique']+\
-          vpathDir
-  vpathDir=vpathDir.replace(' ','')
-  vpathDir=vpathDir.replace('"','')
-  vpathDir=vpathDir.replace("'",'')
-  vpathDir=vpathDir.replace('--enable','')
-  if vpathDir==svnVersionFlattened : vpathDir+='-default'
-
-  fullVpathDir = os.path.join(projectBaseDir,vpathDir)
-  if not os.path.isdir(fullVpathDir) : 
-    os.makedirs(fullVpathDir)
   os.chdir(fullVpathDir)
   NBlogMessages.writeMessage('  Current directory: '+fullVpathDir)
-
+  
   # Assemble all config options together and create config command
   configOptions ="-C "+configuration['configOptions']['unique']
   configOptions+=configuration['configOptions']['unique']
@@ -282,6 +300,6 @@ def run(configuration) :
   #---------------------------------------------------------------------
   # Everything build and all tests passed.
   #---------------------------------------------------------------------
-  os.chdir(fullVpathDir)
-  f=open('NBallTestsPassed','w')
-  f.close()
+  #os.chdir(fullVpathDir)
+  #f=open('NBallTestsPassed','w')
+  #f.close()
