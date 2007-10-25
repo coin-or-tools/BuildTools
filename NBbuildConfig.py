@@ -75,6 +75,10 @@ def run(configuration) :
   projectBaseDir=os.path.join(configuration['rootDir'],configuration['project'])
   projectCheckOutDir=os.path.join(projectBaseDir,svnVersionFlattened)
 
+  svnCheckOutUrl='https://projects.coin-or.org/svn/'+\
+                 configuration['project']+'/'+\
+                 configuration['svnVersion']
+
   vpathDir=''
 
   if 'SkipProjects' in configuration :
@@ -93,14 +97,30 @@ def run(configuration) :
 
   fullVpathDir = os.path.join(projectBaseDir,vpathDir)
 
+  NBlogMessages.writeMessage('  SVN source URL: '+svnCheckOutUrl)
+  NBlogMessages.writeMessage('  Checkout directory: '+projectCheckOutDir)
+  NBlogMessages.writeMessage('  Vpath directory: '+fullVpathDir)
+  
+
   #---------------------------------------------------------------------
   # Create the vpath directory if it doesn't exist
   # and remove file that indicates prior run tested ok.
   #---------------------------------------------------------------------
   if not os.path.isdir(fullVpathDir) : 
     os.makedirs(fullVpathDir)
+
+  #---------------------------------------------------------------------
+  # If nothing has changed and the prior run tested OK, then there
+  # is no need to do anything.
+  #---------------------------------------------------------------------
   os.chdir(fullVpathDir)
-  if os.path.isfile('NBallTestsPassed') : os.remove('NBallTestsPassed')
+
+  if os.path.isfile('NBallTestsPassed') : 
+    if not NBsvnCommand.newer(svnCheckOutUrl,projectCheckOutDir):
+      # Previous run ran fine, and nothing has changed.
+      NBlogMessages.writeMessage('  No changes since previous successfull run')
+      return
+    os.remove('NBallTestsPassed')
 
   #---------------------------------------------------------------------
   # svn checkout or update the project
@@ -112,7 +132,7 @@ def run(configuration) :
     if not os.path.isdir(projectCheckOutDir) :
       svnCmd='svn ' +\
            'checkout ' +\
-           'https://projects.coin-or.org/svn/'+configuration['project']+'/'+configuration['svnVersion']+\
+           svnCheckOutUrl +\
            ' '+svnVersionFlattened
       if NBsvnCommand.run(svnCmd,projectBaseDir,configuration['project'])!='OK' :
         return
@@ -300,6 +320,6 @@ def run(configuration) :
   #---------------------------------------------------------------------
   # Everything build and all tests passed.
   #---------------------------------------------------------------------
-  #os.chdir(fullVpathDir)
-  #f=open('NBallTestsPassed','w')
-  #f.close()
+  os.chdir(fullVpathDir)
+  f=open('NBallTestsPassed','w')
+  f.close()
