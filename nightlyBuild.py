@@ -2,8 +2,7 @@
 
 import os
 import sys
-
-import NBuserConfig
+#import NBuserConfig
 import NBprojectConfig
 import NBlogMessages
 import NBemail
@@ -11,6 +10,15 @@ import NBosCommand
 import NBsvnCommand
 import NBcheckResult
 import NBbuildConfig
+
+
+execfile('NBuserParametersDefault.py')
+execfile('NBuserParameters.py')
+
+
+
+
+
 
 # TODO:
 #   -Get some information about the platform and put this in email failure message.
@@ -28,21 +36,21 @@ import NBbuildConfig
 #------------------------------------------------------------------------
 #  If needed create the top level directory
 #------------------------------------------------------------------------
-if not os.path.isdir(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR) :
-  os.makedirs(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR)
-os.chdir(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR)
+if not os.path.isdir( NIGHTLY_BUILD_ROOT_DIR) :
+  os.makedirs(NIGHTLY_BUILD_ROOT_DIR)
+os.chdir( NIGHTLY_BUILD_ROOT_DIR)
 
 #------------------------------------------------------------------------
 #  Get the data directories if they don't already exist
 #------------------------------------------------------------------------
-dataBaseDir=os.path.join(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR,'Data')
+dataBaseDir=os.path.join(NIGHTLY_BUILD_ROOT_DIR,'Data')
 if not os.path.isdir(dataBaseDir) :
   os.makedirs(dataBaseDir)
 dataDirs=['Netlib','miplib3']
 for d in dataDirs :
   dataDir=os.path.join(dataBaseDir,d)
   if not os.path.isdir(dataDir) :
-    svnCmd=os.path.join(NBuserConfig.SVNPATH_PREFIX,'svn') + ' checkout https://projects.coin-or.org/svn/Data/releases/1.0.0/'+d+' '+d
+    svnCmd=os.path.join( SVNPATH_PREFIX,'svn') + ' checkout https://projects.coin-or.org/svn/Data/releases/1.0.0/'+d+' '+d
     if NBsvnCommand.run(svnCmd,dataBaseDir,'Data')!='OK' :
       sys.exit(1)
     result=NBosCommand.run('find '+d+' -name \*.gz -print | xargs gzip -d')
@@ -53,16 +61,16 @@ miplib3Dir=os.path.join(dataBaseDir,'miplib3')
 # Loop once for each project (get code, compile & link, and test).
 #------------------------------------------------------------------------
 configuration={}
-configuration['rootDir']=NBuserConfig.NIGHTLY_BUILD_ROOT_DIR
+configuration['rootDir']=NIGHTLY_BUILD_ROOT_DIR
 #for p,buildConfigs in NBprojectConfig.BUILDS.iteritems():
-for p in NBuserConfig.PROJECTS :
+for p in PROJECTS :
 
   configuration['project']=p
 
   #------------------------------------------------------------------------
   # Loop once for each build configuration of p
   #------------------------------------------------------------------------
-  buildConfigs = NBprojectConfig.BUILDS[p]
+  buildConfigs = BUILDS[p]
   for bc in buildConfigs:
 
     #--------------------------------------------------------------------
@@ -70,7 +78,7 @@ for p in NBuserConfig.PROJECTS :
     # If yes, then build p as specified by the reference project.
     #--------------------------------------------------------------------
     if 'Reference' in bc :
-      referencedConfigs = NBprojectConfig.BUILDS[ bc['Reference'] ]
+      referencedConfigs = BUILDS[ bc['Reference'] ]
       for c in referencedConfigs :
         buildConfigs.append(c)
       continue
@@ -114,7 +122,7 @@ for p in NBuserConfig.PROJECTS :
     if 'AdditionalConfigOptions' in bc :
       configuration['configOptions']['unique']+=" "+bc['AdditionalConfigOptions']
 
-    configuration['configOptions']['invariant']+=" "+NBuserConfig.CONFIGURE_FLAGS
+    configuration['configOptions']['invariant']+=" "+ CONFIGURE_FLAGS
 
     #--------------------------------------------------------------------
     # Deal with coin projects to be skipped by ./config
