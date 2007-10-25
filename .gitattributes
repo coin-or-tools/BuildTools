@@ -7,6 +7,7 @@
 /NBprojectConfig.py -text
 /NBsvnCommand.py -text
 /NBuserConfig.py -text
+/NBuserParametersDefault.py -text
 /newNightlyBuild.py -text
 /nightlyBuildMod.py -text
 /userParametersEmpty.py -text

@@ -83,9 +83,9 @@ def send(toAddrs,subject,message):
   msgWHeader += message
 
   #store email in a file instead of sending
-  if len(NBuserConfig.STORE_EMAIL) > 0 and not NBuserConfig.STORE_EMAIL.isspace() :
-    NBlogMessages.writeMessage( '  store email in file '+NBuserConfig.STORE_EMAIL)
-    emailfile=open(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR+'/'+NBuserConfig.STORE_EMAIL, 'a')
+  if len(NBuserConfig.EMAIL_STOREFILE) > 0 and not NBuserConfig.EMAIL_STOREFILE.isspace() :
+    NBlogMessages.writeMessage( '  store email in file '+NBuserConfig.EMAIL_STOREFILE)
+    emailfile=open(NBuserConfig.NIGHTLY_BUILD_ROOT_DIR+'/'+NBuserConfig.EMAIL_STOREFILE, 'a')
     emailfile.write(msgWHeader)
     emailfile.write("\n============ EMAIL END ======================================\n")
     emailfile.close()
