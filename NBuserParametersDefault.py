@@ -32,6 +32,8 @@ LOGFILE = ''
 # Define directory where svn is located.
 # If svn is in the default path, then this can be set to an empty string
 #----------------------------------------------------------------------
+# This is not supported by newNightlyBuild.py
+# If newNightlyBuild becomes default, then SVNPATH_PREFIX will go away
 SVNPATH_PREFIX = ''
 
 #----------------------------------------------------------------------
