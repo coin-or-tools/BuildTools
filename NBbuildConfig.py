@@ -278,3 +278,10 @@ def run(configuration) :
       NBemail.sendCmdMsgs(p,result,unitTestCmd)
       return
 
+
+  #---------------------------------------------------------------------
+  # Everything build and all tests passed.
+  #---------------------------------------------------------------------
+  os.chdir(fullVpathDir)
+  f=open('NBallTestsPassed','w')
+  f.close()
