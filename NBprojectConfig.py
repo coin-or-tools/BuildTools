@@ -13,27 +13,11 @@ PROJECT_EMAIL_ADDRS = {}
 PROJECT_CONFIG_LINES = {}
 UNITTEST_DIR = {}
 UNITTEST_CMD = {}
-ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS = {} 
-SKIP3RDPARTY_CONFIG_LINE = 'COIN_SKIP_PROJECTS="ThirdParty/ASL ThirdParty/Blas ThirdParty/Glpk ThirdParty/HSL ThirdParty/Lapack ThirdParty/Mumps"'
+ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS = {}
 STANDARD_CONFIG_LINES = {}
 SKIP3RDPARTY_CONFIG_LINES = {}
 
-for buildType in NBuserConfig.BUILD_TYPES :
-	if "Debug" in buildType :
-		key = 'Debug'
-		val = '--enable-debug'
-	else :
-		key = 'Default'
-		val = ''
 
-	if "ThirdParty" in buildType :
-		STANDARD_CONFIG_LINES[key] = val
-	else :
-		#key += "-no3rdParty"
-                key += "-NoThirdParty"
-		#val += ' '+SKIP3RDPARTY_CONFIG_LINE
-		#SKIP3RDPARTY_CONFIG_LINES[key] = val
-		STANDARD_CONFIG_LINES[key] = val
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['CoinUtils'] = 'ladanyi _AT_ us _DOT_ ibm _DOT_ com'
