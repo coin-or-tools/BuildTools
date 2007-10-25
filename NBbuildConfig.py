@@ -45,7 +45,7 @@ THIRD_PARTY_HISTORY = []
 #  configuration['configOptions']['invariant']= These are options that
 #   that are the same for every build configuration so they don't need
 #   to be part of the vpath directory name.
-#   Example: 'CXX=g++ -m64 LDFLAGS=-lstdc++'
+#   Example: 'CXX="g++ -m64" LDFLAGS=-lstdc++'
 #
 #  configuration['SkipProjects']= List of COIN projects to skip (exclude)
 #    from the build.
@@ -55,9 +55,9 @@ THIRD_PARTY_HISTORY = []
 #    if "make test" ran correctly
 #
 #  configuration['unitTest']= undefined or dictionary D where
-#    D['path']= relataive path were unitTest is to be run from.
+#    D['path']= relative path were unitTest is to be run from.
 #    D['command']= command to be issued to run unitTest
-#    d['checkUnitTest']= function to be called to determine if unitTest
+#    D['checkUnitTest']= function to be called to determine if unitTest
 #       ran correctly.
 #------------------------------------------------------------------------
 def run(configuration) :
@@ -113,14 +113,23 @@ def run(configuration) :
             if not os.path.isfile('NBinstalldone') :
               if os.path.isfile(install3rdPartyCmd) :
                 NBlogMessages.writeMessage('  '+install3rdPartyCmd)
-                NBosCommand.run(install3rdPartyCmd)
-                f=open('NBinstalldone','w')
-                f.close()
+                installReturn = NBosCommand.run(install3rdPartyCmd)
+                if installReturn['returnCode'] :
+                  NBlogMessages.writeMsg('  warning: Install of 3rd party code in '+thirdPartyDir+' returned '+installReturn['returnCode'])
+                else :
+                  f=open('NBinstalldone','w')
+                  f.close()
+                stdoutfile=open(thirdPartyDir+'/NBstdout','w')
+                stdoutfile.write(installReturn['stdout'])
+                stdoutfile.close()
+                stderrfile=open(thirdPartyDir+'/NBstderr','w')
+                stderrfile.write(installReturn['stderr'])
+                stderrfile.close()
             else :
               NBlogMessages.writeMessage('  skipped a new download of '+d)
         else :
           NBlogMessages.writeMessage('  Skipped a new download into '+thirdPartyBaseDir)
-    
+
   #---------------------------------------------------------------------
   # Source is now available, so now it is time to run config
   #---------------------------------------------------------------------
@@ -156,7 +165,7 @@ def run(configuration) :
   vpathDir=vpathDir.replace("'",'')
   vpathDir=vpathDir.replace('--enable','')
   if vpathDir==svnVersionFlattened : vpathDir+='-default'
-  
+
   fullVpathDir = os.path.join(projectBaseDir,vpathDir)
   if not os.path.isdir(fullVpathDir) : 
     os.makedirs(fullVpathDir)
@@ -174,13 +183,19 @@ def run(configuration) :
 
   # If config was previously run, then no need to run again.
   if NBcheckResult.didConfigRunOK() :
-    NBlogMessages.writeMessage("  '"+configCmd+"' previously ran. Not rerunning")
+    NBlogMessages.writeMessage("  configure previously ran. Not rerunning.")
   else :
     NBlogMessages.writeMessage("  "+configCmd)
 
     # Finally run config
     result=NBosCommand.run(configCmd)
-      
+    stdoutfile=open('NBconfig.stdout','w')
+    stdoutfile.write(result['stdout'])
+    stdoutfile.close()
+    stderrfile=open('NBconfig.stderr','w')
+    stderrfile.write(result['stderr'])
+    stderrfile.close()
+
     # Check if configure worked
     if result['returnCode'] != 0 :
         error_msg = result
@@ -199,7 +214,13 @@ def run(configuration) :
   #---------------------------------------------------------------------
   NBlogMessages.writeMessage( '  make' )
   result=NBosCommand.run('make')
-      
+  stdoutfile=open('NBmake.stdout','w')
+  stdoutfile.write(result['stdout'])
+  stdoutfile.close()
+  stderrfile=open('NBmake.stderr','w')
+  stderrfile.write(result['stderr'])
+  stderrfile.close()
+
   # Check if make worked
   if result['returnCode'] != 0 :
     NBemail.sendCmdMsgs(configuration['project'],result,'make')
@@ -210,7 +231,13 @@ def run(configuration) :
   #---------------------------------------------------------------------
   NBlogMessages.writeMessage( '  make test' )
   result=NBosCommand.run('make test')
-      
+  stdoutfile=open('NBmaketest.stdout','w')
+  stdoutfile.write(result['stdout'])
+  stdoutfile.close()
+  stderrfile=open('NBmaketest.stderr','w')
+  stderrfile.write(result['stderr'])
+  stderrfile.close()
+
   # Check if 'make test' worked
   didMakeTestFail=configuration['checkMakeTest'](result,configuration['project'],"make test")
   if didMakeTestFail :
@@ -238,7 +265,13 @@ def run(configuration) :
 
     NBlogMessages.writeMessage( '  '+unitTestCmd )
     result=NBosCommand.run(unitTestCmd)
-      
+    stdoutfile=open('NBunittest.stdout','w')
+    stdoutfile.write(result['stdout'])
+    stdoutfile.close()
+    stderrfile=open('NBunittest.stderr','w')
+    stderrfile.write(result['stderr'])
+    stderrfile.close()
+
     didUnitTestFail=configuration['unitTest']['checkUnitTest'](result,configuration['project'],unitTestCmdTemplate)
     if didUnitTestFail :
       result['unitTest']=didUnitTestFail
