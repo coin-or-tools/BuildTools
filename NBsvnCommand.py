@@ -82,16 +82,16 @@ def newer(source,target) :
   if tarRev==-1 :
     # Target probably does not exist. It does not have an svn revision
     # nubmer, so return that it is out of date.
-    return True
+    return "Does not exist: "+target
 
   srcRev=svnRevision(source)
   if srcRev==-1 :
     # Source should exist. Something is wrong that will be caught
     # when an 'svn checkout' is done.
-    return True
+    return "Does not exist: "+source
 
   if srcRev>tarRev :
-    return True
+    return "New revision of: "+source
 
   # if there is an externals file then process it
   extFileName=os.path.join(target,"Externals")
@@ -107,17 +107,17 @@ def newer(source,target) :
           found=re.findall(reg,line)
           if len(found)!=1:
             # something is wrong. Do a rebuild
-            return True
+            return "Assumed out of date when reading: "+extFileName
           found=found[0]
           if len(found)!=3 :
             # something is wrong. Do a rebuild
-            return True
+            return "Assumed out of date when reading: "+extFileName
           extTarget=os.path.join(target,found[0])
           extSource=found[2]
           # Recursive call to see if external indicates rebuild
           if newer(extSource,extTarget) :
             extFilePtr.close()
-            return True
+            return "New revision of: "+extSource
       line = extFilePtr.readline()
 
     extFilePtr.close()

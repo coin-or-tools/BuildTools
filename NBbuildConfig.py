@@ -116,11 +116,15 @@ def run(configuration) :
   os.chdir(fullVpathDir)
 
   if os.path.isfile('NBallTestsPassed') : 
-    if not NBsvnCommand.newer(svnCheckOutUrl,projectCheckOutDir):
+    msg=NBsvnCommand.newer(svnCheckOutUrl,projectCheckOutDir)
+    if not msg:
       # Previous run ran fine, and nothing has changed.
       NBlogMessages.writeMessage('  No changes since previous successfull run')
       return
+    NBlogMessages.writeMessage('  '+msg)
     os.remove('NBallTestsPassed')
+  else :
+    NBlogMessages.writeMessage('  No record of all tests having passed')
 
   #---------------------------------------------------------------------
   # svn checkout or update the project

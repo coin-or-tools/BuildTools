@@ -6,8 +6,6 @@ import sys
 
 execfile('NBuserParametersDefault.py')
 
-print NIGHTLY_BUILD_ROOT_DIR
-
 #the following two should go away when newNightlyBuild.py becomes the default
 
 #----------------------------------------------------------------------
@@ -30,4 +28,3 @@ print NIGHTLY_BUILD_ROOT_DIR
 # NEW WAY to read user parameters:
 execfile('NBuserParameters.py')
 
-print NIGHTLY_BUILD_ROOT_DIR
