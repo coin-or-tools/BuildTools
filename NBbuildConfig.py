@@ -146,7 +146,7 @@ def run(configuration) :
         return
     SVN_HISTORY.append(projectCheckOutDir)
   else :
-    NBlogMessages.writeMessage('  Skipping an "svn update"')
+    NBlogMessages.writeMessage('  "svn update" skipped. nightlyBuild has already updated for prior build configuration')
 
   #---------------------------------------------------------------------
   # If there are third party apps, then get these apps
