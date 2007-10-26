@@ -5,7 +5,7 @@ import NBuserConfig
 
 #----------------------------------------------------------------------
 # This file defines variables which describe how the specific
-# coin-or projects are to be build and tested. 
+# coin-or projects are to be tested and who are their managers.
 #----------------------------------------------------------------------
 
 #----------------------------------------------------------------------
@@ -74,10 +74,8 @@ ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['FlopC++'] = ['make test']
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['OS'] = 'kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
 ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['OS'] = ['make test']
-#third party packages are not optional here (because it uses Ipopt)
+#third party packages are not optional if Ipopt is not excluded
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['CppAD'] = 'bradbell _AT_ washington _DOT_ edu'
 #does not have references to third party packages
-
-

@@ -2,7 +2,6 @@
 
 import os
 import sys
-#import NBuserConfig
 import NBprojectConfig
 import NBlogMessages
 import NBemail
@@ -19,16 +18,8 @@ execfile('NBuserParameters.py')
 
 
 
-
 # TODO:
-#   -Get some information about the platform and put this in email 
-#    failure message. Add text better explaining the email so project
-#    managers can better understand it.  Somehow remember the ./configure
-#    command options and put it in the email message.
 #   -In userConfig allow one to optionally do a clean checkout and/or config
-#   -Skip make of project that depend on a project which make had been failing.
-#    (Similar for configure.) But also tell project managers of skiped 
-#    project that their project was skipped.
 #   -Clean up the kludge that tests if "make test" and 'unitTest' were
 #    successfull
 

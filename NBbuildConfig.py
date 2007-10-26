@@ -213,10 +213,9 @@ def run(configuration) :
 
   os.chdir(fullVpathDir)
   NBlogMessages.writeMessage('  Current directory: '+fullVpathDir)
-  
+
   # Assemble all config options together and create config command
   configOptions ="-C "+configuration['configOptions']['unique']
-  configOptions+=configuration['configOptions']['unique']
   configOptions+=configuration['configOptions']['invariant']
   configOptions+=skipOptions
   configCmd = os.path.join(projectCheckOutDir,"configure "+configOptions)
@@ -241,12 +240,12 @@ def run(configuration) :
     # Check if configure worked
     if result['returnCode'] != 0 :
         error_msg = result
+        error_msg['configure flags']=configOptions
         # Add contents of log file to message
         logFileName = 'config.log'
         if os.path.isfile(logFileName) :
           logFilePtr = open(logFileName,'r')
-          error_msg['config.log']  = "config.log contains: \n" 
-          error_msg['config.log'] += logFilePtr.read()
+          error_msg['config.log'] = logFilePtr.read()
           logFilePtr.close()
         NBemail.sendCmdMsgs(configuration['project'],error_msg,configCmd)
         return
@@ -265,6 +264,7 @@ def run(configuration) :
 
   # Check if make worked
   if result['returnCode'] != 0 :
+    result['configure flags']=configOptions
     NBemail.sendCmdMsgs(configuration['project'],result,'make')
     return
 
@@ -283,6 +283,7 @@ def run(configuration) :
   # Check if 'make test' worked
   didMakeTestFail=configuration['checkMakeTest'](result,configuration['project'],"make test")
   if didMakeTestFail :
+    result['configure flags']=configOptions
     result['make test']=didMakeTestFail
     NBemail.sendCmdMsgs(configuration['project'],result,"make test")
     return
@@ -316,6 +317,7 @@ def run(configuration) :
 
     didUnitTestFail=configuration['unitTest']['checkUnitTest'](result,configuration['project'],unitTestCmdTemplate)
     if didUnitTestFail :
+      result['configure flags']=configOptions
       result['unitTest']=didUnitTestFail
       NBemail.sendCmdMsgs(p,result,unitTestCmd)
       return

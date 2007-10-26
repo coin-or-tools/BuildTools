@@ -13,12 +13,9 @@ NIGHTLY_BUILD_ROOT_DIR = 'xxx'
 #----------------------------------------------------------------------
 # List of Projects to be processed by script
 #----------------------------------------------------------------------
-PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc','Ipopt','Bonmin','FlopC++','OS']
-
-
+PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc','Ipopt','Bonmin','FlopC++','OS','CppAD']
 
 #---------------------------------------------------
-#  Not sure what file this belongs in.
 #  This data structure is intended to describe how each COIN project
 #  should be built.
 #---------------------------------------------------
@@ -62,14 +59,12 @@ BUILDS = {
    'Cbc' : 
      [ 
        { 'Reference' : 'CoinUtils' }, 
-           
-            
        # And build a parallel version with Third Party
        { 
-         'SvnVersion': 'releases/1.2.0', 
+         'SvnVersion': 'latestStable', 
          'OptLevel': 'Default', 
          'ThirdParty': 'Yes', 
-         'AdditionConfigOptions': '--enable-cbc-parallel' 
+         'AdditionalConfigOptions': '--enable-cbc-parallel' 
        }
      ],
    'FlopC++' : 
@@ -92,11 +87,19 @@ BUILDS = {
          'OptLevel': 'Default', 
          'ThirdParty': 'No', 
          'SkipProjects': ('Ipopt') } 
+     ],
+   'CppAD' : 
+     [ 
+       { 'SvnVersion': 'latestStable',  'OptLevel': 'Default',   'ThirdParty': 'No' } 
      ]
   }
 
+#----------------------------------------------------------------------
+#On some systems the user might want to set extra options for the
+#configure script like compilers...
+#----------------------------------------------------------------------
 
-
+CONFIGURE_FLAGS = ''
 
 
 #----------------------------------------------------------------------
@@ -146,10 +149,3 @@ SENDER_EMAIL_ADDR='xxx _AT_ yyyy _DOT_ edu'
 MY_EMAIL_ADDR = SENDER_EMAIL_ADDR
 
 SEND_MAIL_TO_PROJECT_MANAGER = 0
-
-#----------------------------------------------------------------------
-#On some systems the user might want to set extra options for the
-#configure script like compilers...
-#----------------------------------------------------------------------
-
-CONFIGURE_FLAGS = ''
