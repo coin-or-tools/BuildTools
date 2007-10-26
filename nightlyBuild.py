@@ -21,12 +21,16 @@ execfile('NBuserParameters.py')
 
 
 # TODO:
-#   -Get some information about the platform and put this in email failure message.
+#   -Get some information about the platform and put this in email 
+#    failure message. Add text better explaining the email so project
+#    managers can better understand it.  Somehow remember the ./configure
+#    command options and put it in the email message.
 #   -In userConfig allow one to optionally do a clean checkout and/or config
-#   -Don't do build if 'svn update' doesn't change anything and prior test was OK.
-#     (no need to re-run if nothing has changed since prior run)
-#   -Skip make of project that depend on a project which make had been failing. (Similar for configure.)
-#    But also tell project managers of skiped project that their project was skipped.
+#   -Skip make of project that depend on a project which make had been failing.
+#    (Similar for configure.) But also tell project managers of skiped 
+#    project that their project was skipped.
+#   -Clean up the kludge that tests if "make test" and 'unitTest' were
+#    successfull
 
 
 #------------------------------------------------------------------------

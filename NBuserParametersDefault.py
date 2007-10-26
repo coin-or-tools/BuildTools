@@ -113,14 +113,6 @@ LOGPRINT = 1
 LOGFILE = ''
 
 #----------------------------------------------------------------------
-# Define directory where svn is located.
-# If svn is in the default path, then this can be set to an empty string
-#----------------------------------------------------------------------
-# This is not supported by newNightlyBuild.py
-# If newNightlyBuild becomes default, then SVNPATH_PREFIX will go away
-SVNPATH_PREFIX = ''
-
-#----------------------------------------------------------------------
 # Values for sending mail:
 #  EMAIL_STOREFILE: If set, then e-mails are not send but stored in a file.
 #                   The filename is relative to NIGHTLY_BUILD_ROOT_DIR.
@@ -154,18 +146,6 @@ SENDER_EMAIL_ADDR='xxx _AT_ yyyy _DOT_ edu'
 MY_EMAIL_ADDR = SENDER_EMAIL_ADDR
 
 SEND_MAIL_TO_PROJECT_MANAGER = 0
-
-#----------------------------------------------------------------------
-# DOWNLOAD_3RD_PARTY: 0 or 1.
-# Several COIN-OR projects provide scripts for downloading 3rd party
-# code that the project will use if it is available.  Some of
-# the this 3rd party code is distributed under various different
-# licenses. A 1 indicates that the script will download 3rd party
-# code if the COIN-OR project provides the script
-# ThirdParty/xxx/get.xxx where xxx is the name of the third party code
-#----------------------------------------------------------------------
-
-DOWNLOAD_3RD_PARTY = 0
 
 #----------------------------------------------------------------------
 #On some systems the user might want to set extra options for the
