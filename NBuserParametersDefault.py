@@ -122,6 +122,7 @@ BUILDS = {
 #----------------------------------------------------------------------
 #On some systems the user might want to set extra options for the
 #configure script like compilers...
+#example: CONFIGURE_FLAGS = 'CC="gcc -m32" CXX="g++ -m32" F77="gfortran -m32"'
 #----------------------------------------------------------------------
 
 CONFIGURE_FLAGS = ''
