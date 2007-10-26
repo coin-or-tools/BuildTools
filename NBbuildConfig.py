@@ -241,6 +241,7 @@ def run(configuration) :
     if result['returnCode'] != 0 :
         error_msg = result
         error_msg['configure flags']=configOptions
+        error_msg['project release']=configuration['svnVersion']
         # Add contents of log file to message
         logFileName = 'config.log'
         if os.path.isfile(logFileName) :
@@ -265,6 +266,7 @@ def run(configuration) :
   # Check if make worked
   if result['returnCode'] != 0 :
     result['configure flags']=configOptions
+    result['project release']=configuration['svnVersion']
     NBemail.sendCmdMsgs(configuration['project'],result,'make')
     return
 
@@ -284,6 +286,7 @@ def run(configuration) :
   didMakeTestFail=configuration['checkMakeTest'](result,configuration['project'],"make test")
   if didMakeTestFail :
     result['configure flags']=configOptions
+    result['project release']=configuration['svnVersion']
     result['make test']=didMakeTestFail
     NBemail.sendCmdMsgs(configuration['project'],result,"make test")
     return
@@ -318,6 +321,7 @@ def run(configuration) :
     didUnitTestFail=configuration['unitTest']['checkUnitTest'](result,configuration['project'],unitTestCmdTemplate)
     if didUnitTestFail :
       result['configure flags']=configOptions
+      result['project release']=configuration['svnVersion']
       result['unitTest']=didUnitTestFail
       NBemail.sendCmdMsgs(p,result,unitTestCmd)
       return

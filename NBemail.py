@@ -34,10 +34,16 @@ def sendCmdMsgs(project,cmdMsgs,cmd):
     unscrambledEmailAddress=unscrambleAddress(scrambledEmailAddress)
     toAddrs.append(unscrambledEmailAddress)
 
-  subject = "NightlyBuild: problem with project "+project+" when running '" + cmd +"'"
+  subject = "NightlyBuild: problem with project "+project
+  if cmdMsgs.has_key('project release') :
+    subject += " release "+cmdMsgs['project release']
+  subject+=" when running '" + cmd +"'"
 
   emailMsg = "Dear projectmanager,\n\n" \
-   +"the nightly build tests scripts have recognized a failure when building project "+project+". The failing command was\n\n\t"+cmd+"\n\n" \
+   +"the nightly build tests scripts have recognized a failure when building project "+project
+  if cmdMsgs.has_key('project release') :
+    emailMsg += " release "+cmdMsgs['project release']
+  emailMsg += ". The failing command was\n\n\t"+cmd+"\n\n" \
    +"Details on the problem can be found below.\n" \
    +"You will also get a failure message if the build of your project failed because of problems with a depending projects (externals).\n" \
    +"We hope you find this report useful.\n\n"
