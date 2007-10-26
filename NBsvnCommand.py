@@ -115,7 +115,7 @@ def newer(source,target) :
           extTarget=os.path.join(target,found[0])
           extSource=found[2]
           # Recursive call to see if external indicates rebuild
-          msg=newer(extSource,extTarget) :
+          msg=newer(extSource,extTarget) 
           if msg :
             extFilePtr.close()
             return msg
