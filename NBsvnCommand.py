@@ -54,7 +54,8 @@ def svnRevision(url) :
   retVal=-1
   result = NBosCommand.run('svn info '+url)
   if result['returnCode']==0 :
-    reg=r'Revision: (\d+)'
+    #reg=r'Revision: (\d+)'
+    reg=r'Last Changed Rev: (\d+)'
     found=re.findall(reg,result['stdout'])
     if len(found)!=0 :
       retVal=int(found[0])
