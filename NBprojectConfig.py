@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 
 import os
-import NBuserConfig
 
 #----------------------------------------------------------------------
 # This file defines variables which describe how the specific
