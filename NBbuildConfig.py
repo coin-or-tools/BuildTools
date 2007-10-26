@@ -113,8 +113,8 @@ def run(configuration) :
   # If nothing has changed and the prior run tested OK, then there
   # is no need to do anything.
   #---------------------------------------------------------------------
-  os.chdir(fullVpathDir)
 
+  os.chdir(fullVpathDir)
   if os.path.isfile('NBallTestsPassed') : 
     msg=NBsvnCommand.newer(svnCheckOutUrl,projectCheckOutDir)
     if not msg:
@@ -122,7 +122,17 @@ def run(configuration) :
       NBlogMessages.writeMessage('  No changes since previous successfull run')
       return
     NBlogMessages.writeMessage('  '+msg)
-    os.remove('NBallTestsPassed')
+    
+    # Must remove file NBallTestsPassed from all vpath directories that
+    # use projectCheckoutDir for their source code. This is to ensure
+    # that make will be run in all the vpath dirs after "svn update"
+    dirs = os.listdir("..")
+    for d in dirs :
+      if d.startswith(configuration['svnVersion']) and \
+         d!=configuration['svnVersion']:
+        fileToBeRemoved=os.path.join("..",d,'NBallTestsPassed')
+        if os.path.isfile(fileToBeRemoved) :
+          os.remove(fileToBeRemoved)
   else :
     NBlogMessages.writeMessage('  No record of all tests having passed')
 
