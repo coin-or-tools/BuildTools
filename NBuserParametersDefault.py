@@ -15,10 +15,35 @@ NIGHTLY_BUILD_ROOT_DIR = 'xxx'
 #----------------------------------------------------------------------
 PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc','Ipopt','Bonmin','FlopC++','OS','CppAD']
 
-#---------------------------------------------------
-#  This data structure is intended to describe how each COIN project
-#  should be built.
-#---------------------------------------------------
+#----------------------------------------------------------------------
+#  Define how a COIN-OR project is to be built and tested.
+#  A project can be built multiple times in different ways.
+#
+#  SvnVersion: Specifies where in subversion the source should be obtained.
+#   Examples: 'trunk', 'latestStable', 'releases/1.2.0'
+#
+#  OptLevel: 'Default' or 'Debug'. Specifies if "./configure" needs
+#   additional parameters to build with debug.  The default is supposed
+#   to be an optimized build.
+#
+#  ThirdParty: 'Yes' or 'No'.  Some projects provide scripts for downloading
+#   third party code. If 'Yes' then these scripts will be run. If 'No'
+#   then the options for skipping the use of third party codes are
+#   used when running "./configure".
+#
+#  'AdditionConfigOptions': This provides the ability to specify an
+#    additional './configure' option to be applied to this specific build.
+#    CONFIGURE_FLAGS can be set if one wants to specify addtional configure
+#    options to all builds.
+#    Example: '--enable-cbc-parallel'
+#
+#  'Reference': This specifies that the build is to be done in the way
+#    of the referenced name.
+#    Example: 'CoinUtils'
+#    The example indicates that the build configurations specified
+#    for CoinUtils are to be used for building.
+#
+#----------------------------------------------------------------------
 BUILDS = {
    #'DefaultProject'   : 
    #  [ 
