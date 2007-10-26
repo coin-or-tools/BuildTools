@@ -882,10 +882,8 @@ save_cflags="$CFLAGS"
 
 # For *-*-solaris*, promote Studio/Workshop cc compiler to front of list.
 # Depending on the user's PATH, when Studio/Workshop cc is not present we may
-# find /usr/ucb/cc, which is likely to be a non-functional shell. The test used
-# here is the same as that used in /usr/ucb/cc. This doesn't entirely solve the
-# problem, as the user may still need to force the issue if /usr/ucb/cc and gcc
-# both work and the user's PATH leads to /usr/ucb/cc before gcc.
+# find /usr/ucb/cc, which is almost certainly not a good choice for the C
+# compiler. In this case, put cc after gcc.
 
 case $build in
   *-cygwin* | *-mingw*)
@@ -895,10 +893,11 @@ case $build in
 	       comps="gcc cl"
 	     fi ;;
   *-*-solaris*)
-	     if test -f /usr/ccs/bin/ucbcc ; then
+	     AC_CHECK_PROG(sol_cc_compiler,cc,cc,[],[],/usr/ucb/cc)
+	     if test "$sol_cc_compiler" = "cc" ; then
 	       comps="cc xlc gcc pgcc icc"
 	     else
-	       comps="xlc gcc pgcc icc"
+	       comps="xlc gcc pgcc icc cc"
 	     fi
 	     ;;
   *-linux-*) comps="xlc gcc cc pgcc icc" ;;
