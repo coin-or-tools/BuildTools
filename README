@@ -26,17 +26,4 @@ There are also rules implemented to avoid the rebuild and test of a project if t
 The failure reports contain, next to information about the build type and the system, also the output to stdout and stderr.
 The output of get.XXX scripts, configure, make, unittests to stdout and stderr is also stored in the build directories for later analysis (e.g., NBmake.stdout).
 
-To adapt NightlyBuild for your system, it is proposed to follow the following steps:
-Copy the file NBuserParametersDefault.py to the file NBuserParameters.ny and adapt it to your preferences.
-The NightlyBuild system executes first NBuserParametersDefault.py to get default values for all parameters.
-Afterwards NBuserParameters.ny is executed to overwrite parameter values with user-specific ones.
-In NBuserParameters.ny you can specify:
-- the directory where the projects will be downloaded and built
-- the list of projects to built
-- the build types to built
-- additional flags for the configure call that might be specific to your system (compiler setting,...)
-- the name of a file where logging messages should go to
-- information about the sending of email, e.g., should emails be send, your mail address, SMTP server, ...
-
-Please read the comments in NBuserParametersDefault.ny about detailed information which settings can be made and how they are specified.
-To get things running properly, you will need to specify at least information about the sending of emails.
+To install and use NightlyBuile please see the INSTALL file.
