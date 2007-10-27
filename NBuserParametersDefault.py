@@ -13,7 +13,7 @@ NIGHTLY_BUILD_ROOT_DIR = 'xxx'
 #----------------------------------------------------------------------
 # List of Projects to be processed by script
 #----------------------------------------------------------------------
-PROJECTS = ['CoinUtils','DyLP','Clp','SYMPHONY','Vol','Osi','Cgl','Cbc','Ipopt','Bonmin','FlopC++','OS','CppAD']
+PROJECTS = ['CoinUtils','Clp','Osi','DyLP','SYMPHONY','Vol','Cgl','Cbc','Smi','FlopC++','Ipopt','Bonmin','OS','CppAD']
 
 #----------------------------------------------------------------------
 #  Define how a COIN-OR project is to be built and tested.
@@ -57,29 +57,29 @@ BUILDS = {
      #,{ 'SvnVersion': 'latestStable',  'OptLevel': 'Default', 'ThirdParty': 'No' } 
       ,{ 'SvnVersion': 'latestStable',  'OptLevel': 'Debug',   'ThirdParty': 'No' } 
      ],
-   'DyLP' : 
+   'Osi' : 
      [ 
-       { 'Reference' : 'CoinUtils' }, 
+       { 'Reference' : 'CoinUtils' }
      ],
    'Clp' : 
      [ 
-       { 'Reference' : 'CoinUtils' }, 
+       { 'Reference' : 'CoinUtils' }
+     ],
+   'DyLP' : 
+     [ 
+       { 'Reference' : 'CoinUtils' }
      ],
    'SYMPHONY' : 
      [ 
-       { 'Reference' : 'CoinUtils' }, 
+       { 'Reference' : 'CoinUtils' }
      ],
    'Vol' : 
      [ 
-       { 'Reference' : 'CoinUtils' }, 
-     ],
-   'Osi' : 
-     [ 
-       { 'Reference' : 'CoinUtils' }, 
+       { 'Reference' : 'CoinUtils' }
      ],
    'Cgl' : 
      [ 
-       { 'Reference' : 'CoinUtils' }, 
+       { 'Reference' : 'CoinUtils' }
      ],
    'Cbc' : 
      [ 
@@ -92,17 +92,21 @@ BUILDS = {
          'AdditionalConfigOptions': '--enable-cbc-parallel' 
        }
      ],
+   'Smi' : 
+     [ 
+       { 'Reference' : 'CoinUtils' } 
+     ],
    'FlopC++' : 
      [ 
-       { 'Reference' : 'CoinUtils' }, 
+       { 'Reference' : 'CoinUtils' }
      ],
    'Ipopt' : 
      [ 
-       { 'SvnVersion': 'trunk', 'OptLevel': 'Default', 'ThirdParty':'Yes' }, 
+       { 'SvnVersion': 'trunk', 'OptLevel': 'Default', 'ThirdParty':'Yes' }
      ],
    'Bonmin' : 
      [ 
-       { 'Reference' : 'Ipopt' }, 
+       { 'Reference' : 'Ipopt' }
      ],
    'OS' :
      [ 

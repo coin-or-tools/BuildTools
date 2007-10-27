@@ -19,7 +19,7 @@ For such a build type, NightlyBuild does
 3. Assemble the parameter for the configure call.
 4. Call configure. If there is an error, send a failure report as e-mail and break.
 5. Call make. If there is an error, send a failure report as e-mail and break.
-6. Call make test. If there is an error, send a failure report as e-mail and break.
+6. If the project has a test program, call make test. If there is an error, send a failure report as e-mail and break.
 7. If the project has unit tests, call the unit tests. If there is an error, send a failure report as e-mail and break.
 
 There are also rules implemented to avoid the rebuild and test of a project if there has been no change in the code since the last build.

@@ -78,3 +78,8 @@ ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['OS'] = ['make test']
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['CppAD'] = 'bradbell _AT_ washington _DOT_ edu'
 #does not have references to third party packages
+
+#----------------------------------------------------------------------
+PROJECT_EMAIL_ADDRS['Smi'] = 'kingaj _AT_ us _DOT_ ibm _DOT_ com'
+#does not have references to third party packages
+#TODO: need some check whether make test was successful; what is the behaviour in Smi's unittest if it fails?
