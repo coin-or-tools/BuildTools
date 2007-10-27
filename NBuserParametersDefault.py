@@ -1,3 +1,8 @@
+#------------------------------------------------------------------------
+# This file is distributed under the Common Public License.
+# It is part of the BuildTools project in COIN-OR (www.coin-or.org)
+#------------------------------------------------------------------------
+
 #----------------------------------------------------------------------
 # This file is a template for a user-given parameter file.
 # It contains variables that the person running this script need to set or modify.

@@ -1,5 +1,10 @@
 #! /usr/bin/env python
 
+#------------------------------------------------------------------------
+# This file is distributed under the Common Public License.
+# It is part of the BuildTools project in COIN-OR (www.coin-or.org)
+#------------------------------------------------------------------------
+
 import re 
 import os 
 
