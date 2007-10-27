@@ -42,9 +42,30 @@ def latestStableVersion(project) :
   #   <li><a href="3.3/">3.3/</a></li>
   r=r'<li><a href="(\d*\.\d*)/">(\d*\.\d*)/</a></li>'
   findResult=re.findall(r,html)
+  if len(findResult)==0: return False
   latestStableVersionRepeated2Times = findResult[-1:][0]
   latestStableVersion=latestStableVersionRepeated2Times[0]
   return latestStableVersion
+
+#------------------------------------------------------------------------
+# Function which returns the latest release version of a project
+# If there isn't a release version then False is returned
+#------------------------------------------------------------------------
+def latestReleaseVersion(project) :
+  url='https://projects.coin-or.org/svn/'+project+'/releases'
+  handle=urllib2.urlopen(url)
+  html=handle.read()
+  handle.close()
+
+  # In html code find the latest version number
+  #   <li><a href="1.6.0/">1.6.0/</a></li>
+  r=r'<li><a href="(\d*\.\d*.\d*)/">(\d*\.\d*.\d*)/</a></li>'
+  findResult=re.findall(r,html)
+  if len(findResult)==0: return False
+  latestReleaseVersionRepeated2Times = findResult[-1:][0]
+  latestReleaseVersion=latestReleaseVersionRepeated2Times[0]
+  return latestReleaseVersion
+
 
 #------------------------------------------------------------------------
 # Return svn revision number or url

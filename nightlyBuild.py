@@ -87,7 +87,23 @@ for p in PROJECTS :
       print '       BuildConfig is '+str(bc)
       sys.exit(1)
     if bc['SvnVersion']=='latestStable' :
-      configuration['svnVersion']='stable/'+NBsvnCommand.latestStableVersion(p)
+      lsv=NBsvnCommand.latestStableVersion(p)
+      if not lsv :
+        print 'Error. BUILDS configured to use lastest stable svn version'
+        print '       Project does not have a stable version'
+        print '       Project is '+p
+        print '       BuildConfig is '+str(bc)
+        sys.exit(1)
+      configuration['svnVersion']='stable/'+lsv
+    elif bc['SvnVersion']=='latestRelease' :
+      lrv=NBsvnCommand.latestReleaseVersion(p)
+      if not lrv :
+        print 'Error. BUILDS configured to use lastest release svn version'
+        print '       Project does not have a release version'
+        print '       Project is '+p
+        print '       BuildConfig is '+str(bc)
+        sys.exit(1)
+      configuration['svnVersion']='releases/'+lrv
     else:
       configuration['svnVersion']=bc['SvnVersion']
 
