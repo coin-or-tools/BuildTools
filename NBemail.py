@@ -5,9 +5,11 @@ import sys
 from socket import gethostname 
 import smtplib
 
-import NBuserParameters
 import NBprojectConfig
 import NBlogMessages
+
+execfile('NBuserParametersDefault.py')
+execfile('NBuserParameters.py')
 
 #------------------------------------------------------------------------
 #
@@ -26,10 +28,8 @@ import NBlogMessages
 def sendCmdMsgs(project,cmdMsgs,cmd):
   curDir = os.getcwd()
 
-  toAddrs = [unscrambleAddress(NBuserParameters.MY_EMAIL_ADDR)]
-  if NBprojectConfig.PROJECT_EMAIL_ADDRS.has_key(project) \
-     and \
-     NBuserParameters.SEND_MAIL_TO_PROJECT_MANAGER:
+  toAddrs = [unscrambleAddress(MY_EMAIL_ADDR)]
+  if SEND_MAIL_TO_PROJECT_MANAGER and NBprojectConfig.PROJECT_EMAIL_ADDRS.has_key(project) :
     scrambledEmailAddress=NBprojectConfig.PROJECT_EMAIL_ADDRS[project]
     unscrambledEmailAddress=unscrambleAddress(scrambledEmailAddress)
     toAddrs.append(unscrambledEmailAddress)
@@ -93,37 +93,37 @@ def sendCmdMsgs(project,cmdMsgs,cmd):
 #------------------------------------------------------------------------
 def send(toAddrs,subject,message):
 
-  sender = unscrambleAddress(NBuserParameters.SENDER_EMAIL_ADDR)  
+  sender = unscrambleAddress(SENDER_EMAIL_ADDR)  
   msgWHeader = ("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n"
        % (sender, ", ".join(toAddrs), subject))
   msgWHeader += message
 
   #store email in a file instead of sending
-  if len(NBuserParameters.EMAIL_STOREFILE) > 0 and not NBuserParameters.EMAIL_STOREFILE.isspace() :
-    NBlogMessages.writeMessage( '  store email in file '+NBuserParameters.EMAIL_STOREFILE)
-    emailfile=open(NBuserParameters.NIGHTLY_BUILD_ROOT_DIR+'/'+NBuserParameters.EMAIL_STOREFILE, 'a')
+  if len(EMAIL_STOREFILE) > 0 and not EMAIL_STOREFILE.isspace() :
+    NBlogMessages.writeMessage( '  store email in file '+EMAIL_STOREFILE)
+    emailfile=open(NIGHTLY_BUILD_ROOT_DIR+'/'+EMAIL_STOREFILE, 'a')
     emailfile.write(msgWHeader)
     emailfile.write("\n============ EMAIL END ======================================\n")
     emailfile.close()
     return
 
   # Get smtp server password
-  if os.path.isfile(NBuserParameters.SMTP_PASSWORD_FILENAME) :
-    pwFilePtr = open(NBuserParameters.SMTP_PASSWORD_FILENAME,'r')
+  if os.path.isfile(SMTP_PASSWORD_FILENAME) :
+    pwFilePtr = open(SMTP_PASSWORD_FILENAME,'r')
     smtppass  = pwFilePtr.read().strip()
     #print smtppass
     pwFilePtr.close()
   else :
-    NBlogMessages.writeMessage( "Failure reading pwFileName=" + NBuserParameters.SMTP_PASSWORD_FILENAME )
+    NBlogMessages.writeMessage( "Failure reading pwFileName=" + SMTP_PASSWORD_FILENAME )
     sys.exit(1)
     
-  session = smtplib.SMTP(NBuserParameters.SMTP_SERVER_NAME,NBuserParameters.SMTP_SERVER_PORT)
+  session = smtplib.SMTP(SMTP_SERVER_NAME,SMTP_SERVER_PORT)
   #session.set_debuglevel(1)
-  if NBuserParameters.SMTP_SSL_SERVER==1 :
+  if SMTP_SSL_SERVER==1 :
     session.ehlo('x')
     session.starttls()
     session.ehlo('x')  
-  session.login(unscrambleAddress(NBuserParameters.SMTP_USER_NAME),smtppass)
+  session.login(unscrambleAddress(SMTP_USER_NAME),smtppass)
 
   rc = session.sendmail(sender,toAddrs,msgWHeader)
   if rc!={} :

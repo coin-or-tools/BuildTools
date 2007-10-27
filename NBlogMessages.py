@@ -1,7 +1,9 @@
 #! /usr/bin/env python
 
 import time
-import NBuserParameters
+
+execfile('NBuserParametersDefault.py')
+execfile('NBuserParameters.py')
 
 #TODO: one could open the logfile once in the beginning, set it to sys.stdout, flush after each message, and close it finally
 
@@ -11,10 +13,10 @@ import NBuserParameters
 def writeMessage( msg ) :
   logMsg = time.ctime(time.time())+': '
   logMsg += msg
-  if NBuserParameters.LOGPRINT :
+  if LOGPRINT :
     print logMsg
-  if len(NBuserParameters.LOGFILE) > 0 and not NBuserParameters.LOGFILE.isspace() :
-    logfile=open(NBuserParameters.NIGHTLY_BUILD_ROOT_DIR+'/'+NBuserParameters.LOGFILE, 'a')
+  if len(LOGFILE) > 0 and not LOGFILE.isspace() :
+    logfile=open(NIGHTLY_BUILD_ROOT_DIR+'/'+LOGFILE, 'a')
     logfile.write(logMsg+'\n')
 #    logfile.flush()
     logfile.close()
