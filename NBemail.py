@@ -34,19 +34,24 @@ def sendCmdMsgs(project,cmdMsgs,cmd):
     unscrambledEmailAddress=unscrambleAddress(scrambledEmailAddress)
     toAddrs.append(unscrambledEmailAddress)
 
-  subject = "NightlyBuild: problem with project "+project
-  if cmdMsgs.has_key('project release') :
-    subject += " release "+cmdMsgs['project release']
-  subject+=" when running '" + cmd +"'"
+  subject = "NightlyBuild on "+sys.platform+": "+project
+  if cmdMsgs.has_key('svn version') :
+    subject += " "+cmdMsgs['svn version']
+  subject+=" Problem with: '" + cmd +"'"
 
-  emailMsg = "Dear projectmanager,\n\n" \
-   +"the nightly build tests scripts have recognized a failure when building project "+project
-  if cmdMsgs.has_key('project release') :
-    emailMsg += " release "+cmdMsgs['project release']
+  emailMsg = "Subject: "+subject+"\n\n"
+  emailMsg += "Dear "+project+" Project Manager,\n\n" \
+   +"The nightly build tests scripts reported a problem when building project "+project
+  if cmdMsgs.has_key('svn version') :
+    emailMsg += " from subversion version "+cmdMsgs['svn version']+'\n'
   emailMsg += ". The failing command was\n\n\t"+cmd+"\n\n" \
    +"Details on the problem can be found below.\n" \
-   +"You will also get a failure message if the build of your project failed because of problems with a depending projects (externals).\n" \
+   +"The cause of the problem may be from one of the projects that "\
+   +project+" depends on (externals).\n" \
    +"We hope you find this report useful.\n\n"
+
+  if cmdMsgs.has_key("configure flags") :
+    emailMsg += "Flags for configure: "+cmdMsgs['configure flags']+'\n'
 
   emailMsg += "Operating System: "+sys.platform+" "+os.name+"\n"
   emailMsg += "Host name: "+gethostname()+"\n"
@@ -62,9 +67,6 @@ def sendCmdMsgs(project,cmdMsgs,cmd):
     emailMsg += "PATH: "+os.environ["PATH"]+"\n"
 
   emailMsg += "Directory: "+curDir+'\n'
-
-  if cmdMsgs.has_key("configure flags") :
-    emailMsg += "Flags for configure: "+cmdMsgs['configure flags']+'\n'
 
   if cmdMsgs.has_key('make test') :
     emailMsg += "\n\n'make test' problem:\n"
