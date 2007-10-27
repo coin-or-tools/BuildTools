@@ -1,0 +1,42 @@
+README for NightlyBuild
+
+The NightlyBuild scripts are made for the automatic download, configure, build, and test of COIN-OR projects.
+If a failure is recognized, NightlyBuild can send an e-mail to the corresponding project manager.
+NightlyBuild can also be used to generate automatically binary distributions of COIN-OR projects.
+The main program is nightlyBuild.py
+
+For each supported COIN-OR project a set of build types can be specified.
+A build type is a tuple of information containing the
+- SvnVersion: which version from the repository to built (trunk, latestStable, latestRelease, stable/0.1, ...)?
+- OptLevel: should the code be build in optimized mode ("Default") or debugging mode ("Debug")
+- ThirdParty: should it be allowed to use third party codes
+- SkipProjects: a list of COIN-OR projects (from the externals) that should be skipped in the build
+- AdditionalConfigOptions: additional flags for the configure call
+
+For such a build type, NightlyBuild does
+1. Checkout the specified version from the svn repository (https://projects.coin-or.org/svn/<project>/...).
+2. Download third party codes for which get.XXX scripts can be found.
+3. Assemble the parameter for the configure call.
+4. Call configure. If there is an error, send a failure report as e-mail and break.
+5. Call make. If there is an error, send a failure report as e-mail and break.
+6. Call make test. If there is an error, send a failure report as e-mail and break.
+7. If the project has unit tests, call the unit tests. If there is an error, send a failure report as e-mail and break.
+
+There are also rules implemented to avoid the rebuild and test of a project if there has been no change in the code since the last build.
+The failure reports contain, next to information about the build type and the system, also the output to stdout and stderr.
+The output of get.XXX scripts, configure, make, unittests to stdout and stderr is also stored in the build directories for later analysis (e.g., NBmake.stdout).
+
+To adapt NightlyBuild for your system, it is proposed to follow the following steps:
+Copy the file NBuserParametersDefault.py to the file NBuserParameters.ny and adapt it to your preferences.
+The NightlyBuild system executes first NBuserParametersDefault.py to get default values for all parameters.
+Afterwards NBuserParameters.ny is executed to overwrite parameter values with user-specific ones.
+In NBuserParameters.ny you can specify:
+- the directory where the projects will be downloaded and built
+- the list of projects to built
+- the build types to built
+- additional flags for the configure call that might be specific to your system (compiler setting,...)
+- the name of a file where logging messages should go to
+- information about the sending of email, e.g., should emails be send, your mail address, SMTP server, ...
+
+Please read the comments in NBuserParametersDefault.ny about detailed information which settings can be made and how they are specified.
+To get things running properly, you will need to specify at least information about the sending of emails.
