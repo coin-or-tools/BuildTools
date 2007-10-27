@@ -37,14 +37,14 @@ def sendCmdMsgs(project,cmdMsgs,cmd):
   subject = "NightlyBuild on "+sys.platform+": "+project
   if cmdMsgs.has_key('svn version') :
     subject += " "+cmdMsgs['svn version']
-  subject+=" Problem with: '" + cmd +"'"
+  subject+=". Problem with '" + cmd +"'"
 
   emailMsg = "Subject: "+subject+"\n\n"
   emailMsg += "Dear "+project+" Project Manager,\n\n" \
    +"The nightly build tests scripts reported a problem when building project "+project
   if cmdMsgs.has_key('svn version') :
-    emailMsg += " from subversion version "+cmdMsgs['svn version']+'\n'
-  emailMsg += ". The failing command was\n\n\t"+cmd+"\n\n" \
+    emailMsg += " from subversion version "+cmdMsgs['svn version']
+  emailMsg += "\nThe failing command was\n\n\t"+cmd+"\n\n" \
    +"Details on the problem can be found below.\n" \
    +"The cause of the problem may be from one of the projects that "\
    +project+" depends on (externals).\n" \
