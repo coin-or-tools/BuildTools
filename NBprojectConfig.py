@@ -6,6 +6,7 @@
 #------------------------------------------------------------------------
 
 import os
+import NBcheckResult
 
 #----------------------------------------------------------------------
 # This file defines variables which describe how the specific
@@ -17,12 +18,15 @@ PROJECT_EMAIL_ADDRS = {}
 UNITTEST_DIR = {}
 UNITTEST_CMD = {}
 ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS = {}
+CHECK_MAKE_TEST = {}
+CHECK_UNITTEST = {}
 
 
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['CoinUtils'] = 'ladanyi _AT_ us _DOT_ ibm _DOT_ com'
 ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS['CoinUtils'] = ['make test']
+CHECK_MAKE_TEST['CoinUtils']=[NBcheckRsult.rc0,NBcheckResult.standardSuccessMessage]
 #does not have references to third party packages
 
 #----------------------------------------------------------------------

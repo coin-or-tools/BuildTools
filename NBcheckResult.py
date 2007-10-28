@@ -10,28 +10,41 @@ import os
 
 import NBprojectConfig
 
-
 #------------------------------------------------------------------------
 # Determine if a projects "make test" or unitTest ran successfully.
 # Since projects are not consistent in how they report success,
 # this function has specialized code for some projects.
 #------------------------------------------------------------------------
+
+def rc0( result, project ) :
+  retVal = None
+  # If the return code is not 0, then failure
+  if result['returnCode'] != 0 :
+    retVal = "Non-zero return code of "+str(result['returnCode'])
+
+def standardSuccessMessage(result,project) :
+  retVal = None
+  # Is the success message contained in the output?
+  if result['stderr'].rfind("All tests completed successfully") == -1 and \
+     result['stdout'].rfind("All tests completed successfully") == -1 :
+    # Success message not found, assume test failed
+    retVal = "The output does not contain the messages: 'All tests completed successfully'"
+
+
+
 def didTestFail( result, project, buildStep ) :
   retVal = None
 
   # If the return code is not 0, then failure
-  if result['returnCode'] != 0 :
-    retVal = "Non-zero return code of "+str(result['returnCode'])
+  retVal=rc0(result,project)
+  if retVal : return retVal
 
   # Many tests write a "Success" message.
   # For test that do this, check for the success message
   if NBprojectConfig.ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS.has_key(project) : 
     if buildStep in NBprojectConfig.ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS[project] :
-      # Is the success message contained in the output?
-      if result['stderr'].rfind("All tests completed successfully") == -1 and \
-         result['stdout'].rfind("All tests completed successfully") == -1 :
-        # Success message not found, assume test failed
-        retVal = "The output does not contain the messages: 'All tests completed successfully'"
+      retVal= standardSucessMessage(result,project)
+      if retVal : return retVal
 
   #---------------------------------------------------------------------
   # Some (project,buildStep) pairs require further checking
