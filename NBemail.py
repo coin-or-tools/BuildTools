@@ -46,7 +46,7 @@ def sendCmdMsgs(project,cmdMsgs,cmd):
 
   emailMsg = "Subject: "+subject+"\n\n"
   emailMsg += "Dear "+project+" Project Manager,\n\n" \
-   +"The nightly build tests scripts reported a problem when building "+project
+   +"The nightly build test script reported a problem when building "+project
   if cmdMsgs.has_key('svn version') :
     emailMsg += " from svn version "+cmdMsgs['svn version']
   emailMsg += ".\nThe failing command was\n\n\t"+cmd+"\n\n" \

@@ -43,7 +43,7 @@ def didTestFail( result, project, buildStep ) :
   # For test that do this, check for the success message
   if NBprojectConfig.ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS.has_key(project) : 
     if buildStep in NBprojectConfig.ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS[project] :
-      retVal= standardSucessMessage(result,project)
+      retVal= standardSuccessMessage(result,project)
       if retVal : return retVal
 
   #---------------------------------------------------------------------
