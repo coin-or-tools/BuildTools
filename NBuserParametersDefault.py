@@ -13,12 +13,12 @@
 #   directory where code will be checked out and builds
 #   done. If the directory does not exist, it will be created.
 #----------------------------------------------------------------------
-NIGHTLY_BUILD_ROOT_DIR = 'xxx'
+NIGHTLY_BUILD_ROOT_DIR = '/xxx'
 
 #----------------------------------------------------------------------
 # List of Projects to be processed by script
 #----------------------------------------------------------------------
-PROJECTS = ['CoinUtils','Clp','Osi','DyLP','SYMPHONY','Vol','Cgl','Cbc','Smi','FlopC++','Ipopt','Bonmin','OS','CppAD']
+PROJECTS = ['CoinUtils','Clp','Osi','DyLP','SYMPHONY','Vol','Cgl','Cbc','Smi','FlopC++','Ipopt','Bonmin','OS','CppAD','Smi']
 
 #----------------------------------------------------------------------
 #  Define how a COIN-OR project is to be built and tested.
@@ -125,6 +125,10 @@ BUILDS = {
    'CppAD' : 
      [ 
        { 'SvnVersion': 'latestStable',  'OptLevel': 'Default',   'ThirdParty': 'No' } 
+     ],
+   'Smi' : 
+     [ 
+       { 'Reference' : 'CoinUtils' }
      ]
   }
 
