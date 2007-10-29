@@ -27,6 +27,8 @@ execfile('NBuserParameters.py')
 #   -In userConfig allow one to optionally do a clean checkout and/or config
 #   -Clean up the kludge that tests if "make test" and 'unitTest' were
 #    successfull
+#   -Reduce size of email messages.
+#   -Get working on windows
 
 
 #------------------------------------------------------------------------
