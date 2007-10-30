@@ -1666,11 +1666,15 @@ AC_COIN_INIT_AUTO_TOOLS
 # This is a trick to have this code before AC_COIN_PROG_LIBTOOL
 AC_DEFUN([AC_COIN_DISABLE_STATIC],
 [
-# On Cygwin, building DLLs doesn't work
+# On Cygwin and AIX, building DLLs doesn't work
 case $build in
   *-cygwin*)
     coin_disable_shared=yes
     platform=Cygwin
+  ;;
+  *-aix*)
+    coin_disable_shared=yes
+    platform=AIX
   ;;
   *-mingw*)
     coin_disable_shared=yes
