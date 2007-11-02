@@ -60,7 +60,8 @@ BUILDS = {
        { 'SvnVersion': 'trunk',         'OptLevel': 'Default', 'ThirdParty': 'No' } 
      #,{ 'SvnVersion': 'trunk',         'OptLevel': 'Debug',   'ThirdParty': 'No' } 
      #,{ 'SvnVersion': 'latestStable',  'OptLevel': 'Default', 'ThirdParty': 'No' } 
-      ,{ 'SvnVersion': 'latestStable',  'OptLevel': 'Debug',   'ThirdParty': 'No' } 
+     #,{ 'SvnVersion': 'latestStable',  'OptLevel': 'Debug',   'ThirdParty': 'No' } 
+     #,{ 'SvnVersion': 'latestRelease', 'OptLevel': 'Default', 'ThirdParty': 'No' } 
      ],
    'Osi' : 
      [ 
@@ -88,14 +89,15 @@ BUILDS = {
      ],
    'Cbc' : 
      [ 
-       { 'Reference' : 'CoinUtils' }, 
+       { 'Reference' : 'CoinUtils' } 
+
        # And build a parallel version with Third Party
-       { 
-         'SvnVersion': 'latestStable', 
-         'OptLevel': 'Default', 
-         'ThirdParty': 'Yes', 
-         'AdditionalConfigOptions': '--enable-cbc-parallel' 
-       }
+     #,{ 
+     #   'SvnVersion': 'latestStable', 
+     #   'OptLevel': 'Default', 
+     #   'ThirdParty': 'Yes', 
+     #   'AdditionalConfigOptions': '--enable-cbc-parallel' 
+     # }
      ],
    'Smi' : 
      [ 
@@ -107,7 +109,10 @@ BUILDS = {
      ],
    'Ipopt' : 
      [ 
-       { 'SvnVersion': 'trunk', 'OptLevel': 'Default', 'ThirdParty':'Yes' }
+       { 'SvnVersion': 'trunk',        'OptLevel': 'Default', 'ThirdParty':'Yes' }
+     #,{ 'SvnVersion': 'trunk',        'OptLevel': 'Debug',   'ThirdParty':'Yes' }
+     #,{ 'SvnVersion': 'latestStable', 'OptLevel': 'Default', 'ThirdParty':'Yes' }
+     #,{ 'SvnVersion': 'latestRelease','OptLevel': 'Default', 'ThirdParty':'Yes' }
      ],
    'Bonmin' : 
      [ 
@@ -115,16 +120,18 @@ BUILDS = {
      ],
    'OS' :
      [ 
-       { 'Reference' : 'Ipopt' }, 
-       { 
-         'SvnVersion': 'trunk', 
-         'OptLevel': 'Default', 
-         'ThirdParty': 'No', 
-         'SkipProjects': ('Ipopt') } 
+       { 'Reference' : 'Ipopt' } 
+     #,{ 'SvnVersion': 'trunk',        'OptLevel': 'Default', 'ThirdParty': 'No', 'SkipProjects': ('Ipopt') } 
+     #,{ 'SvnVersion': 'trunk',        'OptLevel': 'Debug',   'ThirdParty': 'No', 'SkipProjects': ('Ipopt') } 
+     #,{ 'SvnVersion': 'latestStable', 'OptLevel': 'Default', 'ThirdParty': 'No', 'SkipProjects': ('Ipopt') } 
+     #,{ 'SvnVersion': 'latestRelease','OptLevel': 'Default', 'ThirdParty': 'No', 'SkipProjects': ('Ipopt') } 
      ],
    'CppAD' : 
      [ 
-       { 'SvnVersion': 'latestStable',  'OptLevel': 'Default',   'ThirdParty': 'No' } 
+       { 'SvnVersion': 'trunk',        'OptLevel': 'Default', 'ThirdParty': 'No', 'AdditionalConfigOptions':'--with-Example' } 
+     #,{ 'SvnVersion': 'trunk',        'OptLevel': 'Debug',   'ThirdParty': 'No', 'AdditionalConfigOptions':'--with-Example' } 
+     #,{ 'SvnVersion': 'latestStable', 'OptLevel': 'Default', 'ThirdParty': 'No', 'AdditionalConfigOptions':'--with-Example' } 
+     #,{ 'SvnVersion': 'latestRelease','OptLevel': 'Default', 'ThirdParty': 'No', 'AdditionalConfigOptions':'--with-Example' } 
      ],
    'Smi' : 
      [ 

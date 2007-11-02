@@ -152,7 +152,8 @@ for p in PROJECTS :
     #---------------------------------------------------------------------
     # Setup checkMakeTest
     #---------------------------------------------------------------------
-    configuration['checkMakeTest']=NBcheckResult.didTestFail
+    #configuration['checkMakeTest']=NBcheckResult.didTestFail
+    configuration['checkMakeTest']=NBprojectConfig.CHECK_MAKE_TEST[p]
 
 
     #---------------------------------------------------------------------
@@ -166,7 +167,7 @@ for p in PROJECTS :
       unitTestCmd=unitTestCmd.replace('_MIPLIB3DIR_',miplib3Dir)
 
       configuration['unitTest']['command']=unitTestCmd
-      configuration['unitTest']['checkUnitTest']=NBcheckResult.didTestFail
+      configuration['unitTest']['checkUnitTest']=NBprojectConfig.CHECK_UNITTEST[p]
       configuration['unitTest']['path']=NBprojectConfig.UNITTEST_DIR[p]
 
     else :

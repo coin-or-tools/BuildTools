@@ -298,13 +298,15 @@ def run(configuration) :
   stderrfile.close()
 
   # Check if 'make test' worked
-  didMakeTestFail=configuration['checkMakeTest'](result,configuration['project'],"make test")
-  if didMakeTestFail :
-    result['configure flags']=configOptions
-    result['svn version']=configuration['svnVersion']
-    result['make test']=didMakeTestFail
-    NBemail.sendCmdMsgs(configuration['project'],result,"make test")
-    return
+  for testFunc in configuration['checkMakeTest'] :
+    testResultFail=testFunc(result,configuration['project'])
+    if testResultFail :
+      result['configure flags']=configOptions
+      result['svn version']=configuration['svnVersion']
+      result['make test']=testResultFail
+      NBemail.sendCmdMsgs(configuration['project'],result,"make test")
+      return
+
 
   #---------------------------------------------------------------------
   # Run unitTest if available and different from 'make test'
@@ -333,13 +335,22 @@ def run(configuration) :
     stderrfile.write(result['stderr'])
     stderrfile.close()
 
-    didUnitTestFail=configuration['unitTest']['checkUnitTest'](result,configuration['project'],unitTestCmdTemplate)
-    if didUnitTestFail :
-      result['configure flags']=configOptions
-      result['svn version']=configuration['svnVersion']
-      result['unitTest']=didUnitTestFail
-      NBemail.sendCmdMsgs(p,result,unitTestCmd)
-      return
+    #didUnitTestFail=configuration['unitTest']['checkUnitTest'](result,configuration['project'],unitTestCmdTemplate)
+    #if didUnitTestFail :
+    #  result['configure flags']=configOptions
+    #  result['svn version']=configuration['svnVersion']
+    #  result['unitTest']=didUnitTestFail
+    #  NBemail.sendCmdMsgs(p,result,unitTestCmd)
+    #  return
+    
+    for testFunc in configuration['unitTest']['checkUnitTest'] :
+      testResultFail=testFunc(result,configuration['project'])
+      if testResultFail :
+        result['configure flags']=configOptions
+        result['svn version']=configuration['svnVersion']
+        result['unitTest']=testResultFail
+        NBemail.sendCmdMsgs(configuration['project'],result,unitTestCmd)
+        return
 
 
   #---------------------------------------------------------------------

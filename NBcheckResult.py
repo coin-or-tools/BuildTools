@@ -16,12 +16,28 @@ import NBprojectConfig
 # this function has specialized code for some projects.
 #------------------------------------------------------------------------
 
+# Assume result is always correct
+def anythingGoes( result, project ) :
+  retVal = None
+  return retVal
+
+# Is the rc=0?
 def rc0( result, project ) :
   retVal = None
   # If the return code is not 0, then failure
   if result['returnCode'] != 0 :
     retVal = "Non-zero return code of "+str(result['returnCode'])
+  return retVal  
+    
+# Is 0<=rc<=2?
+def rc0to2( result, project ) :
+  retVal = None
+  # If the return code is not 0, then failure
+  if 0>result['returnCode'] or result['returnCode']>2 :
+    retVal = "Return code out of range. Expected: 0<=rc<=2. rc="+str(result['returnCode'])
+  return retVal
 
+# Was the standard success message written?
 def standardSuccessMessage(result,project) :
   retVal = None
   # Is the success message contained in the output?
@@ -29,103 +45,74 @@ def standardSuccessMessage(result,project) :
      result['stdout'].rfind("All tests completed successfully") == -1 :
     # Success message not found, assume test failed
     retVal = "The output does not contain the messages: 'All tests completed successfully'"
+  return retVal  
 
-
-
-def didTestFail( result, project, buildStep ) :
+# Was woodw the last netlib problem run?
+# Check that last netlib test case ran by looking for message of form
+# '../../Data/Netlib/woodw took 0.47 seconds using algorithm either'
+def endWithWoodw(result,project) :
   retVal = None
-
-  # If the return code is not 0, then failure
-  retVal=rc0(result,project)
-  if retVal : return retVal
-
-  # Many tests write a "Success" message.
-  # For test that do this, check for the success message
-  if NBprojectConfig.ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS.has_key(project) : 
-    if buildStep in NBprojectConfig.ALL_TESTS_COMPLETED_SUCCESSFULLY_CMDS[project] :
-      retVal= standardSuccessMessage(result,project)
-      if retVal : return retVal
-
-  #---------------------------------------------------------------------
-  # Some (project,buildStep) pairs require further checking
-  # to determine if they were successful
-  #---------------------------------------------------------------------
-  # Clp's "./clp -unitTest dirNetlib=_NETLIBDIR_ -netlib"
-  if project=='Clp' and buildStep==NBprojectConfig.UNITTEST_CMD['Clp'] :
-    # Check that last netlib test case ran by looking for message of form
-    # '../../Data/Netlib/woodw took 0.47 seconds using algorithm either'
-    reexp = r"(.|\n)*(\\|/)Data(\\|/)Netlib(\\|/)woodw took (\d*\.\d*) seconds using algorithm either(.|\n)*"
-    msgTail = result['stdout'][-200:]
-    if not re.compile(reexp).match(msgTail,1) :
-      # message not found, assume test failed
-      retVal = "Did not complete the woodw testcase"
-      
-  # Cbc's "make test"
-  elif project=='Cbc' and buildStep=='make test' :
-    # Check that last the last few lines are of the form
-    # 'cbc_clp solved 2 out of 2 and took XX.XX seconds.'
-    reexp=r"(.|\n)*cbc_clp solved 2 out of 2 and took (\d*\.\d*) seconds."
-    msgTail = result['stdout'][-300:]
-    if not re.compile(reexp).match(msgTail,1) :
-      # message not found, assume test failed
-      retVal = "Did not display message 'cbc_clp solved 2 out of 2 and took XX.XX seconds.'" 
-
-  # Cbc's "./cbc -unitTest dirNetlib=_MIPLIB3DIR_ -miplib"
-  elif project=='Cbc' and buildStep==NBprojectConfig.UNITTEST_CMD['Cbc'] :
-    if result['returnCode']>=0 and result['returnCode']<=2 :
-      # return code is between 0 and 2.
-      # Return code between 1 and 44 is the number of test cases that
-      # ended because maxnodes limit reached.  John Forrest says if this
-      # is less than 3, the OK.
-      retVal=None
-    else :
-      retVal = "Return code of "+str(result['returnCode'])+" which is > 2."
-
-  # DyLP's "make test"
-  # DyLP's "./unitTest -testOsiSolverInterface -netlibDir=_NETLIBDIR_"
-  # Osi's "make test"
-  # Osi's "./unitTest -testOsiSolverInterface -netlibDir=_NETLIBDIR_"
-  elif project=='DyLP' and buildStep=='make test' or \
-       project=='DyLP' and buildStep==NBprojectConfig.UNITTEST_CMD['Osi'] or \
-       project=='Osi'  and buildStep=='make test' or \
-       project=='Osi'  and buildStep==NBprojectConfig.UNITTEST_CMD['Osi'] :
-    # Messages should not contain:
-    # "*** xxxSolverInterface testing issue: whatever the problem is"
-    reexp=r'.*\*\*.+SolverInterface testing issue:.*'
-    if re.compile(reexp).match(result['stderr'],1) :
-      # message found, assume test failed
-      retVal = "Issued message: 'SolverInterface tessting issue:'"
-    if re.compile(reexp).match(result['stdout'],1) :
-      # message found, assume test failed
-      retVal = "Issued message: 'SolverInterface tessting issue:'"
-
-    if project=='Osi'  and buildStep==NBprojectConfig.UNITTEST_CMD['Osi'] :
-
-      # Look for pattern "<solver> solved NN out of 90 and took nnn.xx seconds"
-      r=r'((.+) solved (\d+) out of 90 and took (\d*\.\d*) seconds)'
-      osisSummaryResult=re.findall(r,result['stdout'][-800:])
-      expectedOsis=['clp','sym','dylp','cbcclp']
-      for osi in osisSummaryResult :
-        if osi[1] in expectedOsis: expectedOsis.remove(osi[1])
-        numSolved = int(osi[2])
-        # Sym only solves 89 of the 90
-        if osi[1]=='sym':
-          if numSolved<89 :
-            retVal=osi[1]+\
-                 " only solved "\
-                 +osi[2]\
-                 +" out of 90 in "\
-                 +osi[3]+" seconds"
-        elif numSolved<90 :
-          retVal=osi[1]+\
-                 " only solved "\
-                 +osi[2]+\
-                 " out of 90 in "\
-                 +osi[3]+" seconds"
-      if len(expectedOsis)!=0 :
-        retVal="Osi "+expectedOsis[0]+" did not report number solved"
-
+  reexp = r"(.|\n)*(\\|/)Data(\\|/)Netlib(\\|/)woodw took (\d*\.\d*) seconds using algorithm either(.|\n)*"
+  msgTail = result['stdout'][-200:]
+  if not re.compile(reexp).match(msgTail,1) :
+    # message not found, assume test failed
+    retVal = "Did not complete the woodw testcase"
   return retVal
+
+# Did Cbc 'make test' write its success message?
+# Check that last the last few lines are of the form
+# 'cbc_clp solved 2 out of 2 and took XX.XX seconds.'
+def cbcMakeTestSuccessMessage(result,project) :
+  retVal=None
+  reexp=r"(.|\n)*cbc_clp solved 2 out of 2 and took (\d*\.\d*) seconds."
+  msgTail = result['stdout'][-300:]
+  if not re.compile(reexp).match(msgTail,1) :
+    # message not found, assume test failed
+    retVal = "Did not display message 'cbc_clp solved 2 out of 2 and took XX.XX seconds.'" 
+  return retVal
+
+# Messages must not contain:
+# "*** xxxSolverInterface testing issue: whatever the problem is"
+def noSolverInterfaceTestingIssueMessage(result,project):
+  retVal = None
+  reexp=r'.*\*\*.+SolverInterface testing issue:.*'
+  if re.compile(reexp).match(result['stderr'],1) :
+    # message found, assume test failed
+    retVal = "Issued message: 'SolverInterface tessting issue:'"
+  if re.compile(reexp).match(result['stdout'],1) :
+    # message found, assume test failed
+    retVal = "Issued message: 'SolverInterface tessting issue:'"
+  return retVal
+      
+
+# Look for pattern "<solver> solved NN out of 90 and took nnn.xx seconds"
+def OsiUnitTestSuccessMessages(result,project):
+  retVal = None
+  # Look for pattern "<solver> solved NN out of 90 and took nnn.xx seconds"
+  r=r'((.+) solved (\d+) out of 90 and took (\d*\.\d*) seconds)'
+  osisSummaryResult=re.findall(r,result['stdout'][-800:])
+  expectedOsis=['clp','sym','dylp','cbcclp']
+  for osi in osisSummaryResult :
+    if osi[1] in expectedOsis: expectedOsis.remove(osi[1])
+    numSolved = int(osi[2])
+    # Sym only solves 89 of the 90
+    if osi[1]=='sym':
+      if numSolved<89 :
+        retVal=osi[1]+\
+               " only solved "\
+               +osi[2]\
+               +" out of 90 in "\
+               +osi[3]+" seconds"
+    elif numSolved<90 :
+      retVal=osi[1]+\
+               " only solved "\
+               +osi[2]+\
+               " out of 90 in "\
+               +osi[3]+" seconds"
+  if len(expectedOsis)!=0 :
+        retVal="Osi "+expectedOsis[0]+" did not report number solved"
+  return retVal      
+
 
 #-------------------------------------------------------------------------
 #
