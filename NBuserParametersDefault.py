@@ -18,7 +18,7 @@ NIGHTLY_BUILD_ROOT_DIR = '/xxx'
 #----------------------------------------------------------------------
 # List of Projects to be processed by script
 #----------------------------------------------------------------------
-PROJECTS = ['CoinUtils','Clp','Osi','DyLP','SYMPHONY','Vol','Cgl','Cbc','Smi','FlopC++','Ipopt','Bonmin','OS','CppAD','Smi']
+PROJECTS = ['CoinUtils','Clp','Osi','DyLP','SYMPHONY','Vol','Cgl','Cbc','Smi','FlopC++','Ipopt','Bonmin','OS','CppAD']
 
 #----------------------------------------------------------------------
 #  Define how a COIN-OR project is to be built and tested.
