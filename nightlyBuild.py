@@ -32,7 +32,7 @@ execfile('NBuserParameters.py')
 
 
 #------------------------------------------------------------------------
-#  Main Program Starts Here  
+#  Main Program Starts Here
 #------------------------------------------------------------------------
 
 #------------------------------------------------------------------------
@@ -52,7 +52,7 @@ dataDirs=['Netlib','miplib3']
 for d in dataDirs :
   dataDir=os.path.join(dataBaseDir,d)
   if not os.path.isdir(dataDir) :
-    svnCmd=os.path.join( SVNPATH_PREFIX,'svn') + ' checkout https://projects.coin-or.org/svn/Data/releases/1.0.0/'+d+' '+d
+    svnCmd='svn checkout https://projects.coin-or.org/svn/Data/releases/1.0.0/'+d+' '+d
     if NBsvnCommand.run(svnCmd,dataBaseDir,'Data')!='OK' :
       sys.exit(1)
     result=NBosCommand.run('find '+d+' -name \*.gz -print | xargs gzip -d')
