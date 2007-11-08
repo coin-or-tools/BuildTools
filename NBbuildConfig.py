@@ -238,33 +238,33 @@ def run(configuration) :
 
 
   # If config was previously run, then no need to run again.
-  if NBcheckResult.didConfigRunOK() :
-    NBlogMessages.writeMessage("  configure previously ran. Not rerunning.")
-  else :
-    NBlogMessages.writeMessage("  "+configCmd)
+#  if NBcheckResult.didConfigRunOK() :
+#    NBlogMessages.writeMessage("  configure previously ran. Not rerunning.")
+#  else :
+  NBlogMessages.writeMessage("  "+configCmd)
 
-    # Finally run config
-    result=NBosCommand.run(configCmd)
-    stdoutfile=open('NBconfig.stdout','w')
-    stdoutfile.write(result['stdout'])
-    stdoutfile.close()
-    stderrfile=open('NBconfig.stderr','w')
-    stderrfile.write(result['stderr'])
-    stderrfile.close()
+  # Finally run config
+  result=NBosCommand.run(configCmd)
+  stdoutfile=open('NBconfig.stdout','w')
+  stdoutfile.write(result['stdout'])
+  stdoutfile.close()
+  stderrfile=open('NBconfig.stderr','w')
+  stderrfile.write(result['stderr'])
+  stderrfile.close()
 
-    # Check if configure worked
-    if result['returnCode'] != 0 :
-        error_msg = result
-        error_msg['configure flags']=configOptions
-        error_msg['svn version']=configuration['svnVersion']
-        # Add contents of log file to message
-        logFileName = 'config.log'
-        if os.path.isfile(logFileName) :
-          logFilePtr = open(logFileName,'r')
-          error_msg['config.log'] = logFilePtr.read()
-          logFilePtr.close()
-        NBemail.sendCmdMsgs(configuration['project'],error_msg,configCmd)
-        return
+  # Check if configure worked
+  if result['returnCode'] != 0 :
+      error_msg = result
+      error_msg['configure flags']=configOptions
+      error_msg['svn version']=configuration['svnVersion']
+      # Add contents of log file to message
+      logFileName = 'config.log'
+      if os.path.isfile(logFileName) :
+        logFilePtr = open(logFileName,'r')
+        error_msg['config.log'] = logFilePtr.read()
+        logFilePtr.close()
+      NBemail.sendCmdMsgs(configuration['project'],error_msg,configCmd)
+      return
 
   #---------------------------------------------------------------------
   # Run make part of build
