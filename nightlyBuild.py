@@ -7,6 +7,7 @@
 
 import os
 import sys
+from socket import gethostname
 import NBprojectConfig
 import NBlogMessages
 import NBemail
@@ -226,6 +227,11 @@ for p in PROJECTS :
 
 
 NBlogMessages.writeMessage( "nightlyBuild.py Finished" )
+
+# Email log messages to person running script
+toAddrs = [NBemail.unscrambleAddress(MY_EMAIL_ADDR)]
+subject = "NightlyBuild Log from "+gethostname()+" on "+sys.platform
+NBemail.send(toAddrs,subject,NBlogMessages.getAllMessages())
 
 sys.exit(0)
 
