@@ -129,6 +129,21 @@ for p in PROJECTS :
       configuration['svnVersion']=bc['SvnVersion']
 
     #--------------------------------------------------------------------
+    # Make sure optlevel specified
+    #--------------------------------------------------------------------
+    if 'OptLevel' not in bc :
+      print 'Error. BUILDS does not contain OptLevel'
+      print '       Project is '+p
+      print '       BuildConfig is '+str(bc)
+      sys.exit(1)
+    elif bc['OptLevel']!="Debug" and bc['OptLevel']!="Default" :
+      print 'Error. BUILDS has unrecognized OptLevel'
+      print '       Project is '+p
+      print '       BuildConfig is '+str(bc)
+      print '       Expected OptLevel: Debug or Default'
+      sys.exit(1)
+
+    #--------------------------------------------------------------------
     # Process Parameters that are used by unix configure style build
     #--------------------------------------------------------------------
     if configuration['buildMethod']=='unixConfig' :
@@ -152,11 +167,7 @@ for p in PROJECTS :
       configuration['configOptions']={}
       configuration['configOptions']['unique']=""
       configuration['configOptions']['invariant']=""
-      if 'OptLevel' not in bc :
-        print 'Error. BUILDS does not contain OptLevel'
-        print '       Project is '+p
-        print '       BuildConfig is '+str(bc)
-        sys.exit(1)
+
       if bc['OptLevel']=='Debug' :
         configuration['configOptions']['unique']+=" --enable-debug"
       if 'AdditionalConfigOptions' in bc :
@@ -205,6 +216,15 @@ for p in PROJECTS :
         configuration['slnFile']=NBprojectConfig.SLN_FILE[p]          
       else :
         configuration.pop('slnFile')
+
+      #--------------------------------------------------------------------
+      # Set msbuild configuration parm (Release or Debug)
+      #--------------------------------------------------------------------
+      #if bc['OptLevel']=='Debug' :
+      #  configuration['msbuild']="Debug"
+      #else :
+      #  configuration['msbuild']="Release"
+ 
                
     #---------------------------------------------------------------------
     # Modify any executable commands to have location of data directories
