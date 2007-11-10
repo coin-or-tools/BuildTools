@@ -126,17 +126,15 @@ def run(configuration) :
                  configuration['project']+'/'+\
                  configuration['svnVersion']
 
-  buildDir=''
+  buildDir=svnVersionFlattened
 
   if configuration['buildMethod']=='unixConfig' :
+    buildDir+=configuration['configOptions']['unique']
     if 'SkipProjects' in configuration :
       buildDir+="No"+configuration['SkipProjects']
     if 'noThirdParty' in configuration : 
       if configuration['noThirdParty'] :
         buildDir+='-NoThirdParty'
-    buildDir=svnVersionFlattened+\
-            configuration['configOptions']['unique']+\
-            buildDir
     buildDir=cleanUpName(buildDir)
     if buildDir==svnVersionFlattened : buildDir+='-default'
 
