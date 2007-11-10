@@ -30,11 +30,14 @@ THIRD_PARTY_HISTORY = []
 #---------------------------------------------------------------------
 def cleanUpName(messedUpName) :
   cleanedUpName=messedUpName
+  cleanedUpName=cleanedUpName.replace('-','')
   cleanedUpName=cleanedUpName.replace('/','-')
   cleanedUpName=cleanedUpName.replace('\\','-')
   cleanedUpName=cleanedUpName.replace(' ','')
   cleanedUpName=cleanedUpName.replace('"','')
   cleanedUpName=cleanedUpName.replace("'",'')
+  cleanedUpName=cleanedUpName.replace("=",'-')
+  cleanedUpName=cleanedUpName.replace(":",'')
   cleanedUpName=cleanedUpName.replace('--enable','')
   return cleanedUpName
 
