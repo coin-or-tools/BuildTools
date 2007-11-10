@@ -75,14 +75,13 @@ def sendCmdMsgs(project,cmdMsgs,cmd):
 
   emailMsg += "Directory: "+curDir+'\n'
 
-  if cmdMsgs.has_key('make test') :
-    emailMsg += "\n\n'make test' problem:\n"
-    emailMsg += cmdMsgs['make test']
-    emailMsg += "\n" 
-  if cmdMsgs.has_key('unitTest') :
-    emailMsg += "\n\nDetected problem:\n"
-    emailMsg += cmdMsgs['unitTest']
-    emailMsg += "\n" 
+  if cmdMsgs.has_key('test') :
+    emailMsg += "\n\nDetected problem when running test:\n"
+    emailMsg += cmdMsgs['test']
+    emailMsg += "\n"
+
+  emailMsg +="\nnightlyBuildScript log:\n"
+  emailMsg +=NBlogMessages.getMessages()
 
   emailMsg +="\n"
 

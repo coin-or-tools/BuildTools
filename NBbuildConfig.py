@@ -107,6 +107,7 @@ def writeResults(result,filenameSuffix) :
 #           results from running 'cmd' to determine if an error occurred
 #------------------------------------------------------------------------
 def run(configuration) :
+  NBlogMessages.clearMessages()
   NBlogMessages.writeMessage( configuration['project'] )
 
   # Create svn checkout target directory name
@@ -364,7 +365,7 @@ def run(configuration) :
         testResultFail=testFunc(result,configuration['project'])
         if testResultFail :
           result['svn version']=configuration['svnVersion']
-          result['unitTest']=testResultFail
+          result['test']=testResultFail
           NBemail.sendCmdMsgs(configuration['project'],result,testCmd)
           return
 

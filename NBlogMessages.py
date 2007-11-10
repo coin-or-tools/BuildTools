@@ -12,12 +12,25 @@ execfile('NBuserParameters.py')
 
 #TODO: one could open the logfile once in the beginning, set it to sys.stdout, flush after each message, and close it finally
 
+LOG_MESSAGES=''
+
+def clearMessages():
+  global LOG_MESSAGES
+  LOG_MESSAGES=''
+
+def getMessages():
+  global LOG_MESSAGES
+  return LOG_MESSAGES
+
+
 #------------------------------------------------------------------------
 # Function to write log messages
 #------------------------------------------------------------------------
 def writeMessage( msg ) :
+  global LOG_MESSAGES
   logMsg = time.ctime(time.time())+': '
   logMsg += msg
+  LOG_MESSAGES+=logMsg+'\n'
   if LOGPRINT :
     print logMsg
   if len(LOGFILE) > 0 and not LOGFILE.isspace() :

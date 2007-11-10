@@ -180,30 +180,6 @@ for p in PROJECTS :
         # No test commands so remove from configuration
         configuration.pop('test')  
 
-      #---------------------------------------------------------------------
-      # Setup checkMakeTest
-      #---------------------------------------------------------------------
-      #configuration['checkMakeTest']=NBprojectConfig.CHECK_MAKE_TEST[p]
-
-
-      #---------------------------------------------------------------------
-      # Set up unitTest
-      #---------------------------------------------------------------------
-      #configuration['unitTest']={}
-      #if NBprojectConfig.UNITTEST_CMD.has_key(p) :
-#
-      #  unitTestCmdTemplate=NBprojectConfig.UNITTEST_CMD[p]
-      #  unitTestCmd=unitTestCmdTemplate.replace('_NETLIBDIR_',netlibDir)
-      #  unitTestCmd=unitTestCmd.replace('_MIPLIB3DIR_',miplib3Dir)
-      #  unitTestCmd=unitTestCmd.replace('_SAMPLEDIR_',sampleDir)
-#
-      #  configuration['unitTest']['command']=unitTestCmd
-      #  configuration['unitTest']['checkUnitTest']=NBprojectConfig.CHECK_UNITTEST[p]
-      #  configuration['unitTest']['path']=NBprojectConfig.UNITTEST_DIR[p]
-#
-      #else :
-      #  # No unitTest so remove from configuration
-      #  configuration.pop('unitTest')
 
     if configuration['buildMethod']=='msSln' :
       #--------------------------------------------------------------------
