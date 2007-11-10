@@ -13,14 +13,24 @@ execfile('NBuserParameters.py')
 #TODO: one could open the logfile once in the beginning, set it to sys.stdout, flush after each message, and close it finally
 
 LOG_MESSAGES=''
+FULL_LOG_MESSAGES=''
 
 def clearMessages():
   global LOG_MESSAGES
+  global FULL_LOG_MESSAGES
+  FULL_LOG_MESSAGES+=LOG_MESSAGES
   LOG_MESSAGES=''
 
 def getMessages():
   global LOG_MESSAGES
   return LOG_MESSAGES
+
+
+def getAllMessages():
+  global LOG_MESSAGES
+  global FULL_LOG_MESSAGES
+  retVal = FULL_LOG_MESSAGES+LOG_MESSAGES
+  return retVal
 
 
 #------------------------------------------------------------------------
