@@ -28,12 +28,17 @@ files (.sln) the following hints may be useful:
   libraries.  The following commands have been used to achieve this:
   set LIB=E:\Microsoft Platform SDK for Windows Server 2003 R2\Lib
   set LIB=E:\Microsoft Visual Studio 8\VC\lib;%LIB%
+- To build OS, the INCLUDE environment variable needs to be set to the location of some MS provided
+  headers.  The following commands have been used to achieve this:
+  set INCLUDE=E:\Microsoft Platform SDK for Windows Server 2003 R2\Include;%INCLUDE%
+
 
 - A summary of the commands that have worked to start nightlyBuild for a DOS window
   are:
     "E:\Microsoft Visual Studio 8\Common7\Tools\vsvars32.bat"
     set LIB=E:\Microsoft Platform SDK for Windows Server 2003 R2\Lib
     set LIB=E:\Microsoft Visual Studio 8\VC\lib;%LIB%
+    set INCLUDE=E:\Microsoft Platform SDK for Windows Server 2003 R2\Include;%INCLUDE%
     f:
     cd \testScripts\
     nightlyBuild.py
