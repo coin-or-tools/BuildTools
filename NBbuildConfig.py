@@ -266,7 +266,7 @@ def run(configuration) :
       skipOptions=' COIN_SKIP_PROJECTS="'+skipOptions+'"'
 
     os.chdir(fullBuildDir)
-    NBlogMessages.writeMessage('  Current directory: '+fullBuildDir)
+    NBlogMessages.writeMessage('  cd '+fullBuildDir)
 
     # Assemble all config options together and create config command
     configOptions ="-C "+configuration['configOptions']['unique']
@@ -318,7 +318,7 @@ def run(configuration) :
     #---------------------------------------------------------------------
    
     os.chdir(projectCheckOutDir)
-    NBlogMessages.writeMessage('  Current directory: '+projectCheckOutDir)
+    NBlogMessages.writeMessage('  cd '+projectCheckOutDir)
 
     if configuration.has_key('slnFile') :
       slnFileName = os.path.join(projectCheckOutDir,configuration['slnFile'])
@@ -357,7 +357,7 @@ def run(configuration) :
       testRelDir=configuration['test'][t]['dir']
       testDir = os.path.join(fullBuildDir,testRelDir)
       os.chdir(testDir)
-      NBlogMessages.writeMessage('  Current directory: '+testDir)
+      NBlogMessages.writeMessage('  cd '+testDir)
 
       testCmd=configuration['test'][t]['cmd']
 
