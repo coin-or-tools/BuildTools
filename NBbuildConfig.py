@@ -149,37 +149,33 @@ def run(configuration) :
   
 
   #---------------------------------------------------------------------
-  # Create the build directory if it doesn't exist
-  # and remove file that indicates prior run tested ok.
-  #---------------------------------------------------------------------
-  if not os.path.isdir(fullBuildDir) : 
-    os.makedirs(fullBuildDir)
-
-  #---------------------------------------------------------------------
   # If nothing has changed and the prior run tested OK, then there
   # is no need to do anything.
   #---------------------------------------------------------------------
-
-  os.chdir(fullBuildDir)
-  if os.path.isfile('NBallTestsPassed') : 
-    msg=NBsvnCommand.newer(svnCheckOutUrl,projectCheckOutDir)
-    if not msg:
-      # Previous run ran fine, and nothing has changed.
-      NBlogMessages.writeMessage('  No changes since previous successfull run')
-      return
-    NBlogMessages.writeMessage('  '+msg)
-    
-    # Must remove file NBallTestsPassed from all build directories that
-    # use projectCheckoutDir for their source code. This is to ensure
-    # that make will be run in all the build dirs after "svn update"
-    dirs = os.listdir("..")
-    for d in dirs :
-      if d.startswith(configuration['svnVersion']) :
-        fileToBeRemoved=os.path.join("..",d,'NBallTestsPassed')
-        if os.path.isfile(fileToBeRemoved) :
-          os.remove(fileToBeRemoved)
+  if os.path.isdir(fullBuildDir) :
+    os.chdir(fullBuildDir)
+    if os.path.isfile('NBallTestsPassed') : 
+      msg=NBsvnCommand.newer(svnCheckOutUrl,projectCheckOutDir)
+      if not msg:
+        # Previous run ran fine, and nothing has changed.
+        NBlogMessages.writeMessage('  No changes since previous successfull run')
+        return
+      NBlogMessages.writeMessage('  '+msg)
+      
+      # Must remove file NBallTestsPassed from all build directories that
+      # use projectCheckoutDir for their source code. This is to ensure
+      # that make will be run in all the build dirs after "svn update"
+      dirs = os.listdir("..")
+      for d in dirs :
+        if d.startswith(configuration['svnVersion']) :
+          fileToBeRemoved=os.path.join("..",d,'NBallTestsPassed')
+          if os.path.isfile(fileToBeRemoved) :
+            os.remove(fileToBeRemoved)
+    else :
+      NBlogMessages.writeMessage('  No record of all tests having passed')
   else :
-    NBlogMessages.writeMessage('  No record of all tests having passed')
+    NBlogMessages.writeMessage('  Targets have not yet been built')
+
 
   #---------------------------------------------------------------------
   # svn checkout or update the project
@@ -236,6 +232,13 @@ def run(configuration) :
               NBlogMessages.writeMessage('  skipped a new download of '+d)
         else :
           NBlogMessages.writeMessage('  Skipped a new download into '+thirdPartyBaseDir)
+
+  #---------------------------------------------------------------------
+  # Create the build directory if it doesn't exist
+  # and remove file that indicates prior run tested ok.
+  #---------------------------------------------------------------------
+  if not os.path.isdir(fullBuildDir) : 
+    os.makedirs(fullBuildDir)
 
   #---------------------------------------------------------------------
   # Source is now available, so now it is time to run config
