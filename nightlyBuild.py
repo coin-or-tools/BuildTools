@@ -25,8 +25,6 @@ execfile('NBuserParameters.py')
 
 # TODO:
 #   -In userConfig allow one to optionally do a clean checkout and/or config
-#   -Clean up the kludge that tests if "make test" and 'unitTest' were
-#    successfull
 #   -Reduce size of email messages.
 #   -Get working on windows
 
@@ -171,31 +169,41 @@ for p in PROJECTS :
       if 'SkipProjects' in configuration: configuration.pop('SkipProjects')
       if 'SkipProjects' in bc :
         configuration['SkipProjects']=bc['SkipProjects']
+      
+      #---------------------------------------------------------------------
+      # Set up test commands
+      #---------------------------------------------------------------------
+      configuration['test']={}
+      if NBprojectConfig.CFG_BLD_TEST.has_key(p) :
+        configuration['test']=NBprojectConfig.CFG_BLD_TEST[p]
+      else :
+        # No test commands so remove from configuration
+        configuration.pop('test')  
 
       #---------------------------------------------------------------------
       # Setup checkMakeTest
       #---------------------------------------------------------------------
-      configuration['checkMakeTest']=NBprojectConfig.CHECK_MAKE_TEST[p]
+      #configuration['checkMakeTest']=NBprojectConfig.CHECK_MAKE_TEST[p]
 
 
       #---------------------------------------------------------------------
       # Set up unitTest
       #---------------------------------------------------------------------
-      configuration['unitTest']={}
-      if NBprojectConfig.UNITTEST_CMD.has_key(p) :
-
-        unitTestCmdTemplate=NBprojectConfig.UNITTEST_CMD[p]
-        unitTestCmd=unitTestCmdTemplate.replace('_NETLIBDIR_',netlibDir)
-        unitTestCmd=unitTestCmd.replace('_MIPLIB3DIR_',miplib3Dir)
-        unitTestCmd=unitTestCmd.replace('_SAMPLEDIR_',sampleDir)
-
-        configuration['unitTest']['command']=unitTestCmd
-        configuration['unitTest']['checkUnitTest']=NBprojectConfig.CHECK_UNITTEST[p]
-        configuration['unitTest']['path']=NBprojectConfig.UNITTEST_DIR[p]
-
-      else :
-        # No unitTest so remove from configuration
-        configuration.pop('unitTest')
+      #configuration['unitTest']={}
+      #if NBprojectConfig.UNITTEST_CMD.has_key(p) :
+#
+      #  unitTestCmdTemplate=NBprojectConfig.UNITTEST_CMD[p]
+      #  unitTestCmd=unitTestCmdTemplate.replace('_NETLIBDIR_',netlibDir)
+      #  unitTestCmd=unitTestCmd.replace('_MIPLIB3DIR_',miplib3Dir)
+      #  unitTestCmd=unitTestCmd.replace('_SAMPLEDIR_',sampleDir)
+#
+      #  configuration['unitTest']['command']=unitTestCmd
+      #  configuration['unitTest']['checkUnitTest']=NBprojectConfig.CHECK_UNITTEST[p]
+      #  configuration['unitTest']['path']=NBprojectConfig.UNITTEST_DIR[p]
+#
+      #else :
+      #  # No unitTest so remove from configuration
+      #  configuration.pop('unitTest')
 
     if configuration['buildMethod']=='msSln' :
       #--------------------------------------------------------------------
@@ -207,19 +215,11 @@ for p in PROJECTS :
       #---------------------------------------------------------------------
       configuration['test']={}
       if NBprojectConfig.SLN_BLD_TEST.has_key(p) :
-
         configuration['test']=NBprojectConfig.SLN_BLD_TEST[p]
-        for t in range( len(configuration['test']) ) :
-          testCmd=configuration['test'][t]['cmd']
-          testCmd=testCmd.replace('_NETLIBDIR_',netlibDir)
-          testCmd=testCmd.replace('_MIPLIB3DIR_',miplib3Dir)
-          testCmd=testCmd.replace('_SAMPLEDIR_',sampleDir)
-          configuration['test'][t]['cmd']=testCmd
-          
       else :
         # No test executables so remove from configuration
         configuration.pop('test')
-
+        
       #---------------------------------------------------------------------
       # If solution file is not in standard place then specify it's location
       #---------------------------------------------------------------------
@@ -228,6 +228,17 @@ for p in PROJECTS :
         configuration['slnFile']=NBprojectConfig.SLN_FILE[p]          
       else :
         configuration.pop('slnFile')
+               
+    #---------------------------------------------------------------------
+    # Modify any executable commands to have location of data directories
+    #---------------------------------------------------------------------
+    if configuration.has_key('test') :
+      for t in range( len(configuration['test']) ) :
+        testCmd=configuration['test'][t]['cmd']
+        testCmd=testCmd.replace('_NETLIBDIR_',netlibDir)
+        testCmd=testCmd.replace('_MIPLIB3DIR_',miplib3Dir)
+        testCmd=testCmd.replace('_SAMPLEDIR_',sampleDir)
+        configuration['test'][t]['cmd']=testCmd
 
     #--------------------------------------------------
     # Build & Test the configuration, if not previously done

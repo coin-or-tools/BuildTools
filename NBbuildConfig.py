@@ -21,6 +21,37 @@ import NBcheckResult
 SVN_HISTORY = []
 THIRD_PARTY_HISTORY = []
 
+
+#---------------------------------------------------------------------
+# cleanUpName:
+# File and directory names are generated and may contain 
+# undesireable characters.
+# Remove these characters from the name
+#---------------------------------------------------------------------
+def cleanUpName(messedUpName) :
+  cleanedUpName=messedUpName
+  cleanedUpName=cleanedUpName.replace('/','-')
+  cleanedUpName=cleanedUpName.replace('\\','-')
+  cleanedUpName=cleanedUpName.replace(' ','')
+  cleanedUpName=cleanedUpName.replace('"','')
+  cleanedUpName=cleanedUpName.replace("'",'')
+  cleanedUpName=cleanedUpName.replace('--enable','')
+  return cleanedUpName
+
+
+#---------------------------------------------------------------------
+# writeResults:
+# After running a command write stdout and stderr to a file
+#---------------------------------------------------------------------
+def writeResults(result,filenameSuffix) :
+  cleanedUpSuffix=cleanUpName(filenameSuffix)
+  stdoutfile=open('NBstdout-'+cleanedUpSuffix,'w')
+  stdoutfile.write(result['stdout'])
+  stdoutfile.close()
+  stderrfile=open('NBstderr-'+cleanedUpSuffix,'w')
+  stderrfile.write(result['stderr'])
+  stderrfile.close()
+  
 #------------------------------------------------------------------------
 #  Given a configuration, build and test it.
 #
@@ -62,27 +93,24 @@ THIRD_PARTY_HISTORY = []
 #  configuration['SkipProjects']= List of COIN projects to skip (exclude)
 #    from the build.
 #    examples: "Ipopt", "Ipopt DyLP"
+#
+#  configuration['slnFile']= path and name of solution file if it is not
+#    in the standard location.
 #    Only used if configuration['buildMethod']=='unixConfig'
 #
-#  configuration['checkMakeTest']= function to be called to determine
-#    if "make test" ran correctly
-#    Only used if configuration['buildMethod']=='unixConfig'
-#
-#  configuration['unitTest']= undefined or dictionary D where
-#    D['path']= relative path were unitTest is to be run from.
-#    D['command']= command to be issued to run unitTest
-#    D['checkUnitTest']= function to be called to determine if unitTest
-#       ran correctly.
-#    Only used if configuration['buildMethod']=='unixConfig'
-#
-#  configuration['test']
-#  configuration['slnFile']
+#  configuration['test']=vector of triples indicating tests that 
+#    are to be run after building the project. Each triple consists
+#    of:
+#    'dir': directory where test command is to be issued.
+#    'cmd': command to be run with any parameters.
+#    'check': vector of functions to be called which will check the 
+#           results from running 'cmd' to determine if an error occurred
 #------------------------------------------------------------------------
 def run(configuration) :
   NBlogMessages.writeMessage( configuration['project'] )
 
   # Create svn checkout target directory name
-  svnVersionFlattened=configuration['svnVersion'].replace('/','-')
+  svnVersionFlattened=cleanUpName(configuration['svnVersion'])
 
   #---------------------------------------------------------------------
   # Create names of directory where source is located and
@@ -108,10 +136,7 @@ def run(configuration) :
     buildDir=svnVersionFlattened+\
             configuration['configOptions']['unique']+\
             buildDir
-    buildDir=buildDir.replace(' ','')
-    buildDir=buildDir.replace('"','')
-    buildDir=buildDir.replace("'",'')
-    buildDir=buildDir.replace('--enable','')
+    buildDir=cleanUpName(buildDir)
     if buildDir==svnVersionFlattened : buildDir+='-default'
 
   fullBuildDir = os.path.join(projectBaseDir,buildDir)
@@ -204,21 +229,16 @@ def run(configuration) :
                 else :
                   f=open('NBinstalldone','w')
                   f.close()
-                stdoutfile=open(thirdPartyDir+'/NBstdout','w')
-                stdoutfile.write(installReturn['stdout'])
-                stdoutfile.close()
-                stderrfile=open(thirdPartyDir+'/NBstderr','w')
-                stderrfile.write(installReturn['stderr'])
-                stderrfile.close()
+                writeResults(result,install3rdPartyCmd) 
             else :
               NBlogMessages.writeMessage('  skipped a new download of '+d)
         else :
           NBlogMessages.writeMessage('  Skipped a new download into '+thirdPartyBaseDir)
 
+  #---------------------------------------------------------------------
+  # Source is now available, so now it is time to run config
+  #---------------------------------------------------------------------
   if configuration['buildMethod']=='unixConfig' :
-    #---------------------------------------------------------------------
-    # Source is now available, so now it is time to run config
-    #---------------------------------------------------------------------
     skipOptions=''
 
     if 'SkipProjects' in configuration :
@@ -249,8 +269,6 @@ def run(configuration) :
     configOptions+=skipOptions
     configCmd = os.path.join(projectCheckOutDir,"configure "+configOptions)
 
-
-
     # If config was previously run, then no need to run again.
   #  if NBcheckResult.didConfigRunOK() :
   #    NBlogMessages.writeMessage("  configure previously ran. Not rerunning.")
@@ -259,12 +277,7 @@ def run(configuration) :
 
     # Finally run config
     result=NBosCommand.run(configCmd)
-    stdoutfile=open('NBconfig.stdout','w')
-    stdoutfile.write(result['stdout'])
-    stdoutfile.close()
-    stderrfile=open('NBconfig.stderr','w')
-    stderrfile.write(result['stderr'])
-    stderrfile.close()
+    writeResults(result,'config') 
 
     # Check if configure worked
     if result['returnCode'] != 0 :
@@ -285,12 +298,7 @@ def run(configuration) :
     #---------------------------------------------------------------------
     NBlogMessages.writeMessage( '  make' )
     result=NBosCommand.run('make')
-    stdoutfile=open('NBmake.stdout','w')
-    stdoutfile.write(result['stdout'])
-    stdoutfile.close()
-    stderrfile=open('NBmake.stderr','w')
-    stderrfile.write(result['stderr'])
-    stderrfile.close()
+    writeResults(result,'make') 
 
     # Check if make worked
     if result['returnCode'] != 0 :
@@ -298,29 +306,6 @@ def run(configuration) :
       result['svn version']=configuration['svnVersion']
       NBemail.sendCmdMsgs(configuration['project'],result,'make')
       return
-
-  #---------------------------------------------------------------------
-  # Run 'make test' part of build
-  #---------------------------------------------------------------------
-  if configuration['buildMethod']=='unixConfig' :
-    NBlogMessages.writeMessage( '  make test' )
-    result=NBosCommand.run('make test')
-    stdoutfile=open('NBmaketest.stdout','w')
-    stdoutfile.write(result['stdout'])
-    stdoutfile.close()
-    stderrfile=open('NBmaketest.stderr','w')
-    stderrfile.write(result['stderr'])
-    stderrfile.close()
-
-    # Check if 'make test' worked
-    for testFunc in configuration['checkMakeTest'] :
-      testResultFail=testFunc(result,configuration['project'])
-      if testResultFail :
-        result['configure flags']=configOptions
-        result['svn version']=configuration['svnVersion']
-        result['make test']=testResultFail
-        NBemail.sendCmdMsgs(configuration['project'],result,"make test")
-        return
 
   if configuration['buildMethod']=='msSln' :
     #---------------------------------------------------------------------
@@ -350,12 +335,7 @@ def run(configuration) :
 
     # Finally run vcbuild
     result=NBosCommand.run(vcbuild)
-    stdoutfile=open('NBvcbuild.stdout','w')
-    stdoutfile.write(result['stdout'])
-    stdoutfile.close()
-    stderrfile=open('NBvcbuild.stderr','w')
-    stderrfile.write(result['stderr'])
-    stderrfile.close()
+    writeResults(result,'vcbuild') 
 
     # Check if vcbuild worked
     if result['returnCode'] != 0 :
@@ -365,71 +345,28 @@ def run(configuration) :
         return
 
   #---------------------------------------------------------------------
-  # Run unitTest if available and different from 'make test'
+  # Run all test executables
   #---------------------------------------------------------------------
-  if configuration['buildMethod']=='unixConfig' :
-    if "unitTest" in configuration :
-      unitTestRelPath=configuration['unitTest']['path']
-      unitTestPath = os.path.join(fullBuildDir,unitTestRelPath)
-      os.chdir(unitTestPath)
-      NBlogMessages.writeMessage('  Current directory: '+unitTestPath)
+  if "test" in configuration :
+    for t in range( len(configuration['test']) ) :
+      testRelDir=configuration['test'][t]['dir']
+      testDir = os.path.join(fullBuildDir,testRelDir)
+      os.chdir(testDir)
+      NBlogMessages.writeMessage('  Current directory: '+testDir)
 
-      unitTestCmdTemplate=configuration['unitTest']['command']
+      testCmd=configuration['test'][t]['cmd']
 
-      dataBaseDir=os.path.join(configuration['rootDir'],'Data')
-      netlibDir=os.path.join(dataBaseDir,'Netlib')
-      miplib3Dir=os.path.join(dataBaseDir,'miplib3')
-
-      unitTestCmd=unitTestCmdTemplate.replace('_NETLIBDIR_',netlibDir)
-      unitTestCmd=unitTestCmd.replace('_MIPLIB3DIR_',miplib3Dir)
-
-      NBlogMessages.writeMessage( '  '+unitTestCmd )
-      result=NBosCommand.run(unitTestCmd)
-      stdoutfile=open('NBunittest.stdout','w')
-      stdoutfile.write(result['stdout'])
-      stdoutfile.close()
-      stderrfile=open('NBunittest.stderr','w')
-      stderrfile.write(result['stderr'])
-      stderrfile.close()
-    
-      for testFunc in configuration['unitTest']['checkUnitTest'] :
+      NBlogMessages.writeMessage( '  '+testCmd )
+      result=NBosCommand.run(testCmd)
+      writeResults(result,testCmd) 
+        
+      for testFunc in configuration['test'][t]['check'] :
         testResultFail=testFunc(result,configuration['project'])
         if testResultFail :
-          result['configure flags']=configOptions
           result['svn version']=configuration['svnVersion']
           result['unitTest']=testResultFail
-          NBemail.sendCmdMsgs(configuration['project'],result,unitTestCmd)
+          NBemail.sendCmdMsgs(configuration['project'],result,testCmd)
           return
-
-  if configuration['buildMethod']=='msSln' :   
-    #---------------------------------------------------------------------
-    # Run all test executables
-    #---------------------------------------------------------------------
-    if "test" in configuration :
-      for t in range( len(configuration['test']) ) :
-        testRelDir=configuration['test'][t]['dir']
-        testDir = os.path.join(projectCheckOutDir,testRelDir)
-        os.chdir(testDir)
-        NBlogMessages.writeMessage('  Current directory: '+testDir)
-
-        testCmd=configuration['test'][t]['cmd']
-
-        NBlogMessages.writeMessage( '  '+testCmd )
-        result=NBosCommand.run(testCmd)
-        stdoutfile=open('NBtest.stdout','w')
-        stdoutfile.write(result['stdout'])
-        stdoutfile.close()
-        stderrfile=open('NBtest.stderr','w')
-        stderrfile.write(result['stderr'])
-        stderrfile.close()
-        
-        for testFunc in configuration['test'][t]['check'] :
-          testResultFail=testFunc(result,configuration['project'])
-          if testResultFail :
-            result['svn version']=configuration['svnVersion']
-            result['unitTest']=testResultFail
-            NBemail.sendCmdMsgs(configuration['project'],result,testCmd)
-            return
 
 
   #---------------------------------------------------------------------
