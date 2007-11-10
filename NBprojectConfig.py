@@ -182,11 +182,11 @@ CFG_BLD_TEST['FlopC++']=[
 SLN_FILE['FlopC++']=r'FlopCpp\MSVisualStudio\v8\FlopCpp.sln'
 SLN_BLD_TEST['FlopC++']=[
                   {'dir':r'FlopCpp\MSVisualStudio\v8\Release',
-                   'cmd':'unitTest -dirSample=_SAMPLEDIR_ -unitTest -dirNetlib=_NETLIBDIR_ -netlib',
+                   'cmd':'unitTest',
                    'check':[ NBcheckResult.rc0,
                              NBcheckResult.standardSuccessMessage ] },
                   {'dir':r'FlopCpp\MSVisualStudio\v8\Debug',
-                   'cmd':'unitTest -dirSample=_SAMPLEDIR_ -unitTest -dirNetlib=_NETLIBDIR_ -netlib',
+                   'cmd':'unitTest',
                    'check':[ NBcheckResult.rc0,
                              NBcheckResult.standardSuccessMessage ] } ]
 
@@ -222,11 +222,11 @@ CFG_BLD_TEST['Smi']=[
                    'check':[ NBcheckResult.rc0 ] } ]
 SLN_BLD_TEST['Smi']=[
                   {'dir':r'Smi\MSVisualStudio\v8\unitTest\Release',
-                   'cmd':'unitTest -dirSample=_SAMPLEDIR_ -unitTest -dirNetlib=_NETLIBDIR_ -netlib',
+                   'cmd':'unitTest',
                    'check':[ NBcheckResult.rc0,
                              NBcheckResult.standardSuccessMessage ] },
                   {'dir':r'Smi\MSVisualStudio\v8\unitTest\Debug',
-                   'cmd':'unitTest -dirSample=_SAMPLEDIR_ -unitTest -dirNetlib=_NETLIBDIR_ -netlib',
+                   'cmd':'unitTest',
                    'check':[ NBcheckResult.rc0,
                              NBcheckResult.standardSuccessMessage ] } ]
 #does not have references to third party packages
