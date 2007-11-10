@@ -48,23 +48,38 @@ os.chdir( NIGHTLY_BUILD_ROOT_DIR)
 dataBaseDir=os.path.join(NIGHTLY_BUILD_ROOT_DIR,'Data')
 if not os.path.isdir(dataBaseDir) :
   os.makedirs(dataBaseDir)
-dataDirs=['Netlib','miplib3']
+dataDirs=['Netlib','miplib3','Sample']
 for d in dataDirs :
   dataDir=os.path.join(dataBaseDir,d)
   if not os.path.isdir(dataDir) :
-    svnCmd='svn checkout https://projects.coin-or.org/svn/Data/releases/1.0.0/'+d+' '+d
+    svnCmd='svn checkout https://projects.coin-or.org/svn/Data/releases/1.0.4/'+d+' '+d
     if NBsvnCommand.run(svnCmd,dataBaseDir,'Data')!='OK' :
       sys.exit(1)
     result=NBosCommand.run('find '+d+' -name \*.gz -print | xargs gzip -d')
 netlibDir=os.path.join(dataBaseDir,'Netlib')
 miplib3Dir=os.path.join(dataBaseDir,'miplib3')
+sampleDir=os.path.join(dataBaseDir,'Sample')
+
+#------------------------------------------------------------------------
+# Define loop invariant configuration values
+#------------------------------------------------------------------------
+configuration={}
+configuration['rootDir']=NIGHTLY_BUILD_ROOT_DIR
+configurations = set("")
+
+#------------------------------------------------------------------------
+# Define how code is is to be built. Choices are:
+# msSoln: use microsoft compiler with a solution (sln) file.
+# unixConfig: use sequence "./configure", "make", "make test"
+#------------------------------------------------------------------------
+if sys.platform=='win32' :
+  configuration['buildMethod']='msSln'
+else :
+  configuration['buildMethod']='unixConfig'
 
 #------------------------------------------------------------------------
 # Loop once for each project (get code, compile & link, and test).
 #------------------------------------------------------------------------
-configuration={}
-configuration['rootDir']=NIGHTLY_BUILD_ROOT_DIR
-#for p,buildConfigs in NBprojectConfig.BUILDS.iteritems():
 for p in PROJECTS :
 
   configuration['project']=p
@@ -115,69 +130,112 @@ for p in PROJECTS :
       configuration['svnVersion']=bc['SvnVersion']
 
     #--------------------------------------------------------------------
-    # Setup usage of 3rd Party code
+    # Process Parameters that are used by unix configure style build
     #--------------------------------------------------------------------
-    if 'noThirdParty' in configuration: configuration.pop('noThirdParty')
-    if 'ThirdParty' in bc:
-      if bc['ThirdParty'].lower()=='yes' :
-        configuration['noThirdParty']=False
-      else:
-        configuration['noThirdParty']=True
+    if configuration['buildMethod']=='unixConfig' :
+      #--------------------------------------------------------------------
+      # Doing a unix config type build.  Grab unix config parms
+      #--------------------------------------------------------------------
 
-    #--------------------------------------------------------------------
-    # Set config options
-    #--------------------------------------------------------------------
-    configuration['configOptions']={}
-    configuration['configOptions']['unique']=""
-    configuration['configOptions']['invariant']=""
-    if 'OptLevel' not in bc :
-      print 'Error. BUILDS does not contain OptLevel'
-      print '       Project is '+p
-      print '       BuildConfig is '+str(bc)
-      sys.exit(1)
-    if bc['OptLevel']=='Debug' :
-      configuration['configOptions']['unique']+=" --enable-debug"
-    if 'AdditionalConfigOptions' in bc :
-      configuration['configOptions']['unique']+=" "+bc['AdditionalConfigOptions']
+      #--------------------------------------------------------------------
+      # Setup usage of 3rd Party code
+      #--------------------------------------------------------------------
+      if 'noThirdParty' in configuration: configuration.pop('noThirdParty')
+      if 'ThirdParty' in bc:
+        if bc['ThirdParty'].lower()=='yes' :
+          configuration['noThirdParty']=False
+        else:
+          configuration['noThirdParty']=True
 
-    configuration['configOptions']['invariant']+=" "+ CONFIGURE_FLAGS
+      #--------------------------------------------------------------------
+      # Set config options
+      #--------------------------------------------------------------------
+      configuration['configOptions']={}
+      configuration['configOptions']['unique']=""
+      configuration['configOptions']['invariant']=""
+      if 'OptLevel' not in bc :
+        print 'Error. BUILDS does not contain OptLevel'
+        print '       Project is '+p
+        print '       BuildConfig is '+str(bc)
+        sys.exit(1)
+      if bc['OptLevel']=='Debug' :
+        configuration['configOptions']['unique']+=" --enable-debug"
+      if 'AdditionalConfigOptions' in bc :
+        configuration['configOptions']['unique']+=" "+bc['AdditionalConfigOptions']
 
-    #--------------------------------------------------------------------
-    # Deal with coin projects to be skipped by ./config
-    #--------------------------------------------------------------------
-    if 'SkipProjects' in configuration: configuration.pop('SkipProjects')
-    if 'SkipProjects' in bc :
-      configuration['SkipProjects']=bc['SkipProjects']
+      configuration['configOptions']['invariant']+=" "+ CONFIGURE_FLAGS
 
-    #---------------------------------------------------------------------
-    # Setup checkMakeTest
-    #---------------------------------------------------------------------
-    #configuration['checkMakeTest']=NBcheckResult.didTestFail
-    configuration['checkMakeTest']=NBprojectConfig.CHECK_MAKE_TEST[p]
+      #--------------------------------------------------------------------
+      # Deal with coin projects to be skipped by ./config
+      #--------------------------------------------------------------------
+      if 'SkipProjects' in configuration: configuration.pop('SkipProjects')
+      if 'SkipProjects' in bc :
+        configuration['SkipProjects']=bc['SkipProjects']
+
+      #---------------------------------------------------------------------
+      # Setup checkMakeTest
+      #---------------------------------------------------------------------
+      configuration['checkMakeTest']=NBprojectConfig.CHECK_MAKE_TEST[p]
 
 
-    #---------------------------------------------------------------------
-    # Set up unitTest
-    #---------------------------------------------------------------------
-    configuration['unitTest']={}
-    if NBprojectConfig.UNITTEST_CMD.has_key(p) :
+      #---------------------------------------------------------------------
+      # Set up unitTest
+      #---------------------------------------------------------------------
+      configuration['unitTest']={}
+      if NBprojectConfig.UNITTEST_CMD.has_key(p) :
 
-      unitTestCmdTemplate=NBprojectConfig.UNITTEST_CMD[p]
-      unitTestCmd=unitTestCmdTemplate.replace('_NETLIBDIR_',netlibDir)
-      unitTestCmd=unitTestCmd.replace('_MIPLIB3DIR_',miplib3Dir)
+        unitTestCmdTemplate=NBprojectConfig.UNITTEST_CMD[p]
+        unitTestCmd=unitTestCmdTemplate.replace('_NETLIBDIR_',netlibDir)
+        unitTestCmd=unitTestCmd.replace('_MIPLIB3DIR_',miplib3Dir)
+        unitTestCmd=unitTestCmd.replace('_SAMPLEDIR_',sampleDir)
 
-      configuration['unitTest']['command']=unitTestCmd
-      configuration['unitTest']['checkUnitTest']=NBprojectConfig.CHECK_UNITTEST[p]
-      configuration['unitTest']['path']=NBprojectConfig.UNITTEST_DIR[p]
+        configuration['unitTest']['command']=unitTestCmd
+        configuration['unitTest']['checkUnitTest']=NBprojectConfig.CHECK_UNITTEST[p]
+        configuration['unitTest']['path']=NBprojectConfig.UNITTEST_DIR[p]
 
-    else :
-      # No unitTest so remove from configuration
-      configuration.pop('unitTest')
+      else :
+        # No unitTest so remove from configuration
+        configuration.pop('unitTest')
+
+    if configuration['buildMethod']=='msSln' :
+      #--------------------------------------------------------------------
+      # Doing a microsoft solution  build.  Grap ms sln parms
+      #--------------------------------------------------------------------
+
+      #---------------------------------------------------------------------
+      # Set up test executables
+      #---------------------------------------------------------------------
+      configuration['test']={}
+      if NBprojectConfig.SLN_BLD_TEST.has_key(p) :
+
+        configuration['test']=NBprojectConfig.SLN_BLD_TEST[p]
+        for t in range( len(configuration['test']) ) :
+          testCmd=configuration['test'][t]['cmd']
+          testCmd=testCmd.replace('_NETLIBDIR_',netlibDir)
+          testCmd=testCmd.replace('_MIPLIB3DIR_',miplib3Dir)
+          testCmd=testCmd.replace('_SAMPLEDIR_',sampleDir)
+          configuration['test'][t]['cmd']=testCmd
+          
+      else :
+        # No test executables so remove from configuration
+        configuration.pop('test')
+
+      #---------------------------------------------------------------------
+      # If solution file is not in standard place then specify it's location
+      #---------------------------------------------------------------------
+      configuration['slnFile']=''
+      if NBprojectConfig.SLN_FILE.has_key(p) :
+        configuration['slnFile']=NBprojectConfig.SLN_FILE[p]          
+      else :
+        configuration.pop('slnFile')
 
     #--------------------------------------------------
-    # Build & Test the configuration
+    # Build & Test the configuration, if not previously done
     #--------------------------------------------------
-    NBbuildConfig.run(configuration)
+    if str(configuration) not in configurations :
+      NBbuildConfig.run(configuration)
+      configurations=configurations | set([str(configuration)])
+    
 
 
 NBlogMessages.writeMessage( "nightlyBuild.py Finished" )

@@ -26,4 +26,4 @@ There are also rules implemented to avoid the rebuild and test of a project if t
 The failure reports contain, next to information about the build type and the system, also the output to stdout and stderr.
 The output of get.XXX scripts, configure, make, unittests to stdout and stderr is also stored in the build directories for later analysis (e.g., NBmake.stdout).
 
-To install and use NightlyBuile please see the INSTALL file.
+To install and use NightlyBuild please see the INSTALL file.

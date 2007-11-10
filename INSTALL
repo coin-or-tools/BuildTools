@@ -14,3 +14,27 @@ In NBuserParameters.ny you can specify:
 
 Please read the comments in NBuserParametersDefault.ny about detailed information which settings can be made and how they are specified.
 To get things running properly, you will need to specify at least information about the sending of emails.
+
+To build on Windows using the Microsoft compiler and the COIN-OR project supplied solution
+files (.sln) the following hints may be useful:
+- Subversion needs to be installed and runnable from a dos window command line.
+  The following subversion install file has worked for this:
+  http://subversion.tigris.org/files/documents/15/39559/svn-1.4.5-setup.exe
+- Python needs to be installed and runnable from a dos window command line.
+- The environment variables for accessing the microsoft compiler must be setup.
+  Microsoft provides a script to do this:
+  Microsoft Visual Studio 8\Common7\Tools\vsvars32.bat
+- The LIB environment variable needs to be set to the location of some MS provided
+  libraries.  The following commands have been used to achieve this:
+  set LIB=E:\Microsoft Platform SDK for Windows Server 2003 R2\Lib
+  set LIB=E:\Microsoft Visual Studio 8\VC\lib;%LIB%
+
+- A summary of the commands that have worked to start nightlyBuild for a DOS window
+  are:
+    "E:\Microsoft Visual Studio 8\Common7\Tools\vsvars32.bat"
+    set LIB=E:\Microsoft Platform SDK for Windows Server 2003 R2\Lib
+    set LIB=E:\Microsoft Visual Studio 8\VC\lib;%LIB%
+    f:
+    cd \testScripts\
+    nightlyBuild.py
+
