@@ -55,7 +55,7 @@ CFG_BLD_TEST['Clp']=[
                    'cmd':'make test',
                    'check':[ NBcheckResult.rc0,
                              NBcheckResult.standardSuccessMessage ] },
-                  {'dir':'Clp/Src',
+                  {'dir':'Clp/src',
                    'cmd':'./clp -unitTest -dirNetlib=_NETLIBDIR_ -netlib',
                    'check':[ NBcheckResult.rc0,
                              NBcheckResult.standardSuccessMessage,
@@ -138,7 +138,7 @@ CFG_BLD_TEST['Cbc']=[
                    'cmd':'make test',
                    'check':[ NBcheckResult.rc0,
                              NBcheckResult.cbcMakeTestSuccessMessage ] },
-                  {'dir':'Cbc/Src',
+                  {'dir':'Cbc/src',
                    'cmd':'./cbc -unitTest -dirMiplib=_MIPLIB3DIR_ -miplib',
                    'check':[ NBcheckResult.rc0to2 ] } ]
 
