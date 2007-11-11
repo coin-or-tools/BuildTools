@@ -68,7 +68,8 @@ BUILDS = {
      #,{ 'SvnVersion': 'trunk',         'OptLevel': 'Debug',   'ThirdParty': 'No' } 
      #,{ 'SvnVersion': 'latestStable',  'OptLevel': 'Default', 'ThirdParty': 'No' } 
      #,{ 'SvnVersion': 'latestStable',  'OptLevel': 'Debug',   'ThirdParty': 'No' } 
-     #,{ 'SvnVersion': 'latestRelease', 'OptLevel': 'Default', 'ThirdParty': 'No' } 
+     #,{ 'SvnVersion': 'latestRelease', 'OptLevel': 'Default', 'ThirdParty': 'No' }  
+     #,{ 'SvnVersion': 'latestRelease', 'OptLevel': 'Debug', 'ThirdParty': 'No' } 
      ],
    'Osi' : 
      [ 
@@ -135,10 +136,10 @@ BUILDS = {
      ],
    'CppAD' : 
      [ 
-       { 'SvnVersion': 'trunk',        'OptLevel': 'Default', 'ThirdParty': 'No', 'AdditionalConfigOptions':'--with-Example' } 
-     #,{ 'SvnVersion': 'trunk',        'OptLevel': 'Debug',   'ThirdParty': 'No', 'AdditionalConfigOptions':'--with-Example' } 
-     #,{ 'SvnVersion': 'latestStable', 'OptLevel': 'Default', 'ThirdParty': 'No', 'AdditionalConfigOptions':'--with-Example' } 
-     #,{ 'SvnVersion': 'latestRelease','OptLevel': 'Default', 'ThirdParty': 'No', 'AdditionalConfigOptions':'--with-Example' } 
+       { 'SvnVersion': 'trunk',        'OptLevel': 'Default', 'ThirdParty': 'No', 'AdditionalConfigOptions':'--with-Example --with-TestMore' } 
+     #,{ 'SvnVersion': 'trunk',        'OptLevel': 'Debug',   'ThirdParty': 'No', 'AdditionalConfigOptions':'--with-Example --with-TestMore' } 
+     #,{ 'SvnVersion': 'latestStable', 'OptLevel': 'Default', 'ThirdParty': 'No', 'AdditionalConfigOptions':'--with-Example --with-TestMore' } 
+     #,{ 'SvnVersion': 'latestRelease','OptLevel': 'Default', 'ThirdParty': 'No', 'AdditionalConfigOptions':'--with-Example --with-TestMore' } 
      ],
    'Smi' : 
      [ 

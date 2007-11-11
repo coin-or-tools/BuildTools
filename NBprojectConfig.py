@@ -167,8 +167,7 @@ PROJECT_EMAIL_ADDRS['Bonmin'] = 'pbonami _AT_ us _DOT_ ibm _DOT_ com'
 CFG_BLD_TEST['Bonmin']=[
                   {'dir':'',
                    'cmd':'make test',
-                   'check':[ NBcheckResult.rc0,
-                             NBcheckResult.standardSuccessMessage ] } ]
+                   'check':[ NBcheckResult.rc0 ] } ]
 #third party packages are not optional here
 
 #----------------------------------------------------------------------
@@ -219,6 +218,9 @@ PROJECT_EMAIL_ADDRS['CppAD'] = 'bradbell _AT_ washington _DOT_ edu'
 CFG_BLD_TEST['CppAD']=[
                   {'dir':'',
                    'cmd':'./example/example',
+                   'check':[ NBcheckResult.rc0 ] }, 
+                  {'dir':'',
+                   'cmd':'./test_more/test_more',
                    'check':[ NBcheckResult.rc0 ] } ]
 #does not have references to third party packages
 
