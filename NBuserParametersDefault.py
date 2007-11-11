@@ -12,6 +12,13 @@
 # NIGHTLY_BUILD_ROOT_DIR: 
 #   directory where code will be checked out and builds
 #   done. If the directory does not exist, it will be created.
+#
+#   This should be the full path, not a path relative to the
+#   nightlyBuild script.
+#
+#   examples for both unix and windows:
+#      NIGHTLY_BUILD_ROOT_DIR = '/home/userid/nbBuildDir'
+#      NIGHTLY_BUILD_ROOT_DIR = r'c:\nbBuildDir'
 #----------------------------------------------------------------------
 NIGHTLY_BUILD_ROOT_DIR = '/xxx'
 
