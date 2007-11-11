@@ -227,7 +227,7 @@ def run(configuration) :
                 else :
                   f=open('NBinstalldone','w')
                   f.close()
-                writeResults(result,install3rdPartyCmd) 
+                writeResults(installReturn,install3rdPartyCmd) 
             else :
               NBlogMessages.writeMessage('  skipped a new download of '+d)
         else :
