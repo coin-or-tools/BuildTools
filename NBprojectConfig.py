@@ -178,7 +178,7 @@ CFG_BLD_TEST['FlopC++']=[
                   {'dir':'',
                    'cmd':'make test',
                    'check':[ NBcheckResult.rc0,
-                             NBcheckResult.cbcMakeTestSuccessMessage ] } ]
+                             NBcheckResult.standardSuccessMessage ] } ]
 SLN_FILE['FlopC++']=r'FlopCpp\MSVisualStudio\v8\FlopCpp.sln'
 SLN_BLD_TEST['FlopC++']=[
                   {'dir':r'FlopCpp\MSVisualStudio\v8\Release',
