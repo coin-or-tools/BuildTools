@@ -204,11 +204,11 @@ CFG_BLD_TEST['OS']=[
                              NBcheckResult.cbcMakeTestSuccessMessage ] } ]
 SLN_BLD_TEST['OS']=[
                   {'dir':r'OS\test',
-                   'cmd':r'..\MSVisualStudio\v8\OSTest\Debug\OSTest.exe',
+                   'cmd':'unitTestDebug',
                    'check':[ NBcheckResult.rc0,
                              NBcheckResult.standardSuccessMessage ] },
                   {'dir':r'OS\test',
-                   'cmd':r'..\MSVisualStudio\v8\OSTest\Release\OSTest.exe',
+                   'cmd':'unitTestRelease',
                    'check':[ NBcheckResult.rc0,
                              NBcheckResult.standardSuccessMessage ] } ]
 #third party packages are not optional if Ipopt is not excluded
