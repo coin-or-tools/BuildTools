@@ -24,7 +24,7 @@ import NBosCommand
 def run(svnCmd,dir,project) :
   retVal='OK'
   os.chdir(dir)
-  NBlogMessages.writeMessage('  Current directory: '+dir)
+  NBlogMessages.writeMessage('  cd '+dir)
   NBlogMessages.writeMessage('  '+svnCmd)
   result = NBosCommand.run(svnCmd)
   if result['returnCode'] != 0 :
