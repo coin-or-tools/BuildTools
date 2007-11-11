@@ -201,7 +201,7 @@ CFG_BLD_TEST['OS']=[
                   {'dir':'',
                    'cmd':'make test',
                    'check':[ NBcheckResult.rc0,
-                             NBcheckResult.cbcMakeTestSuccessMessage ] } ]
+                             NBcheckResult.standardSuccessMessage ] } ]
 SLN_BLD_TEST['OS']=[
                   {'dir':r'OS\test',
                    'cmd':'unitTestDebug',
