@@ -122,6 +122,10 @@ BUILDS = {
      #,{ 'SvnVersion': 'latestStable', 'OptLevel': 'Default', 'ThirdParty':'Yes' }
      #,{ 'SvnVersion': 'latestRelease','OptLevel': 'Default', 'ThirdParty':'Yes' }
      ],
+   'LaGO' :
+     [
+       { 'Reference' : 'Ipopt' },
+     ],
    'Bonmin' : 
      [ 
        { 'Reference' : 'Ipopt' }
