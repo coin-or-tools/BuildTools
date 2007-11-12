@@ -356,10 +356,14 @@ def run(configuration) :
     for t in range( len(configuration['test']) ) :
       testRelDir=configuration['test'][t]['dir']
       testDir = os.path.join(fullBuildDir,testRelDir)
+      testCmd=configuration['test'][t]['cmd']
+      if not os.path.isdir(testDir) :
+        NBlogMessages.writeMessage('  Directory to run test from does not exist:')
+        NBlogMessages.writeMessage('    Intended directory: '+testDir)
+        NBlogMessages.writeMessage('    Intended command: '+testCmd)
+        continue
       os.chdir(testDir)
       NBlogMessages.writeMessage('  cd '+testDir)
-
-      testCmd=configuration['test'][t]['cmd']
 
       NBlogMessages.writeMessage( '  '+testCmd )
       result=NBosCommand.run(testCmd)
