@@ -51,7 +51,7 @@ def standardSuccessMessage(result,project) :
 def endWithStarDoneStar(result,project) :
   retVal = None
   # Is the success message contained in the output?
-  if result['stdout'][-20:].rfind("*** Done! ***") == -1 :
+  if result['stdout'][-200:].rfind("*** Done! ***") == -1 :
     # Success message not found, assume test failed
     retVal = "The output does not end with the message: '*** Done! ***'"
   return retVal  
