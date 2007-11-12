@@ -230,15 +230,16 @@ PROJECT_EMAIL_ADDRS['Smi'] = 'kingaj _AT_ us _DOT_ ibm _DOT_ com'
 CFG_BLD_TEST['Smi']=[
                   {'dir':'',
                    'cmd':'make test',
-                   'check':[ NBcheckResult.anythingGoes ] } ]
+                   'check':[ NBcheckResult.rc0,
+                             NBcheckResult.endWithStarDoneStar ] } ]
 SLN_BLD_TEST['Smi']=[
                   {'dir':r'Smi\test',
                    'cmd':r'..\MSVisualStudio\v8\unitTestSmi\Release\smiUnitTest',
                    'check':[ NBcheckResult.rc0,
-                             NBcheckResult.standardSuccessMessage ] },
+                             NBcheckResult.endWithStarDoneStar ] },
                   {'dir':r'Smi\test',
                    'cmd':r'..\MSVisualStudio\v8\unitTestSmi\Debug\smiUnitTest',
                    'check':[ NBcheckResult.rc0,
-                             NBcheckResult.standardSuccessMessage ] } ]
+                             NBcheckResult.endWithStarDoneStar ] } ]
 #does not have references to third party packages
 #TODO: need some check whether make test was successful; what is the behaviour in Smi's unittest if it fails?

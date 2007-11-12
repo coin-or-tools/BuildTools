@@ -44,7 +44,16 @@ def standardSuccessMessage(result,project) :
   if result['stderr'].rfind("All tests completed successfully") == -1 and \
      result['stdout'].rfind("All tests completed successfully") == -1 :
     # Success message not found, assume test failed
-    retVal = "The output does not contain the messages: 'All tests completed successfully'"
+    retVal = "The output does not contain the message: 'All tests completed successfully'"
+  return retVal
+
+# Was "*** Done! ***" written at end?
+def endWithStarDoneStar(result,project) :
+  retVal = None
+  # Is the success message contained in the output?
+  if result['stdout'][-20:].rfind("*** Done! ***") == -1 :
+    # Success message not found, assume test failed
+    retVal = "The output does not end with the message: '*** Done! ***'"
   return retVal  
 
 # Was woodw the last netlib problem run?
