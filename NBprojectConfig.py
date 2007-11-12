@@ -193,9 +193,6 @@ SLN_BLD_TEST['FlopC++']=[
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['OS'] = 'kipp _DOT_ martin _AT_ chicagogsb _DOT_ edu'
-#CHECK_MAKE_TEST['OS']=[
-#                         NBcheckResult.rc0,
-#                         NBcheckResult.standardSuccessMessage]
 CFG_BLD_TEST['OS']=[
                   {'dir':'',
                    'cmd':'make test',
@@ -208,6 +205,15 @@ SLN_BLD_TEST['OS']=[
                              NBcheckResult.standardSuccessMessage ] },
                   {'dir':r'OS\test',
                    'cmd':'unitTestRelease',
+                   'check':[ NBcheckResult.rc0,
+                             NBcheckResult.standardSuccessMessage ] } ]
+#third party packages are not optional if Ipopt is not excluded
+
+#----------------------------------------------------------------------
+PROJECT_EMAIL_ADDRS['LaGO'] = 'stefan _AT_ math _DOT_ hu-berlin _DOT_ de'
+CFG_BLD_TEST['LaGO']=[
+                  {'dir':'',
+                   'cmd':'make test',
                    'check':[ NBcheckResult.rc0,
                              NBcheckResult.standardSuccessMessage ] } ]
 #third party packages are not optional if Ipopt is not excluded
