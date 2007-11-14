@@ -25,7 +25,6 @@ execfile('NBuserParameters.py')
 
 
 # TODO:
-#   -In userConfig allow one to optionally do a clean checkout and/or config
 #   -Reduce size of email messages.
 #   -Get working on windows
 
@@ -90,6 +89,7 @@ else :
 for p in PROJECTS :
 
   configuration['project']=p
+  configuration['clear previous build']=CLEAR_PREVIOUS_BUILD
 
   #------------------------------------------------------------------------
   # Loop once for each build configuration of p

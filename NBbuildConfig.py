@@ -8,6 +8,7 @@
 import os
 import sys
 import re
+import shutil
 
 import NBlogMessages
 import NBemail
@@ -161,7 +162,7 @@ def run(configuration) :
       msg=NBsvnCommand.newer(svnCheckOutUrl,projectCheckOutDir)
       if not msg:
         # Previous run ran fine, and nothing has changed.
-        NBlogMessages.writeMessage('  No changes since previous successfull run')
+        NBlogMessages.writeMessage('  No changes since previous successful run')
         return
       NBlogMessages.writeMessage('  '+msg)
       
@@ -252,8 +253,17 @@ def run(configuration) :
           NBlogMessages.writeMessage('  Skipped a new download into '+thirdPartyBaseDir)
 
   #---------------------------------------------------------------------
+  # Completely remove a previous build if the user indicates this
+  #---------------------------------------------------------------------
+  if configuration['clear previous build'] and os.path.isdir(fullBuildDir) :
+    NBlogMessages.writeMessage('  Remove previous build in directory '+fullBuildDir)
+    try:
+      shutil.rmtree(fullBuildDir)
+    except shutils.Error :
+      NBlogMessages.writeMessage('  Warning: removal of directory '+fullBuildDir+' failed.')
+    
+  #---------------------------------------------------------------------
   # Create the build directory if it doesn't exist
-  # and remove file that indicates prior run tested ok.
   #---------------------------------------------------------------------
   if not os.path.isdir(fullBuildDir) : 
     os.makedirs(fullBuildDir)

@@ -159,6 +159,20 @@ BUILDS = {
 
 CONFIGURE_FLAGS = ''
 
+#----------------------------------------------------------------------
+#Normally, nightlyBuild does not remove old builds before rebuilding
+#a configuration, instead configure might be called and make needs to
+#recompile files that changed.
+#Setting this flag to 1 makes nightlyBuild remove a build directory
+#completely before starting a configure/make/tests run.
+#Note, that this can slow down the an anew build significantly. Thus,
+#you might consider to use a tool like ccache (http://ccache.samba.org).
+#After installing ccache and making it available in the $PATH, putting
+#CONFIGURE_FLAGS = 'CC="ccache gcc" CXX="ccache g++" F77="ccache g77"'
+#should make nightly build use ccache.
+#----------------------------------------------------------------------
+
+CLEAR_PREVIOUS_BUILD = 0
 
 #----------------------------------------------------------------------
 # LOGPRINT:
