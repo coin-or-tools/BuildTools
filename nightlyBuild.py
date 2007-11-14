@@ -42,6 +42,13 @@ if not os.path.isdir( NIGHTLY_BUILD_ROOT_DIR) :
 os.chdir( NIGHTLY_BUILD_ROOT_DIR)
 
 #------------------------------------------------------------------------
+#  If needed open the logfile
+#------------------------------------------------------------------------
+
+if len(LOGFILE) > 0 and not LOGFILE.isspace() :
+  NBlogMessages.openLogFile()
+
+#------------------------------------------------------------------------
 #  Get the data directories if they don't already exist
 #------------------------------------------------------------------------
 dataBaseDir=os.path.join(NIGHTLY_BUILD_ROOT_DIR,'Data')
@@ -252,6 +259,13 @@ NBlogMessages.writeMessage( "nightlyBuild.py Finished" )
 toAddrs = [NBemail.unscrambleAddress(MY_EMAIL_ADDR)]
 subject = "NightlyBuild Log from "+gethostname()+" on "+sys.platform
 NBemail.send(toAddrs,subject,NBlogMessages.getAllMessages())
+
+#------------------------------------------------------------------------
+#  If needed close the logfile
+#------------------------------------------------------------------------
+
+if len(LOGFILE) > 0 and not LOGFILE.isspace() :
+  NBlogMessages.closeLogFile()
 
 sys.exit(0)
 

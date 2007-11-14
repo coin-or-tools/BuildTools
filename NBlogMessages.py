@@ -10,10 +10,9 @@ import time
 execfile('NBuserParametersDefault.py')
 execfile('NBuserParameters.py')
 
-#TODO: one could open the logfile once in the beginning, set it to sys.stdout, flush after each message, and close it finally
-
 LOG_MESSAGES=''
 FULL_LOG_MESSAGES=''
+logfile=''
 
 def clearMessages():
   global LOG_MESSAGES
@@ -32,6 +31,13 @@ def getAllMessages():
   retVal = FULL_LOG_MESSAGES+LOG_MESSAGES
   return retVal
 
+def openLogFile():
+  global logfile
+  logfile=open(NIGHTLY_BUILD_ROOT_DIR+'/'+LOGFILE, 'a')
+    
+def closeLogFile():
+  global logfile
+  logfile.close()
 
 #------------------------------------------------------------------------
 # Function to write log messages
@@ -44,7 +50,6 @@ def writeMessage( msg ) :
   if LOGPRINT :
     print logMsg
   if len(LOGFILE) > 0 and not LOGFILE.isspace() :
-    logfile=open(NIGHTLY_BUILD_ROOT_DIR+'/'+LOGFILE, 'a')
+    global logfile
     logfile.write(logMsg+'\n')
-#    logfile.flush()
-    logfile.close()
+    logfile.flush()
