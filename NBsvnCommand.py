@@ -20,17 +20,17 @@ import NBosCommand
 #  dir: Directory where command is to be run from
 #  project: Coin project running the command (this is used to provide
 #           a better message if an error is detected
+#  return: the result of the NBosCommand call;
+#          return['returnCode'] is the return code of svn
 #------------------------------------------------------------------------
 def run(svnCmd,dir,project) :
-  retVal='OK'
   os.chdir(dir)
   NBlogMessages.writeMessage('  cd '+dir)
   NBlogMessages.writeMessage('  '+svnCmd)
   result = NBosCommand.run(svnCmd)
   if result['returnCode'] != 0 :
-    NBemail.sendCmdMsgs(project,result,svnCmd)
-    retVal='Error'
-  return retVal
+   NBemail.sendCmdMsgs(project,result,svnCmd)
+  return result
 
 
 #------------------------------------------------------------------------

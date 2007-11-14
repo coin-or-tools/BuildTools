@@ -7,6 +7,7 @@
 
 import os
 import sys
+import re
 
 import NBlogMessages
 import NBemail
@@ -18,7 +19,7 @@ import NBcheckResult
 # Keep history so same project is not repeatedly getting code from
 # subversion repository.
 #---------------------------------------------------------------------
-SVN_HISTORY = []
+SVN_HISTORY = {}
 THIRD_PARTY_HISTORY = []
 
 
@@ -183,7 +184,7 @@ def run(configuration) :
   # svn checkout or update the project
   #---------------------------------------------------------------------
   # Don't get source from subversion if previously done
-  if projectCheckOutDir not in SVN_HISTORY :
+  if not SVN_HISTORY.has_key(projectCheckOutDir) :
     if not os.path.isdir(projectBaseDir) :
       os.makedirs(projectBaseDir)
     if not os.path.isdir(projectCheckOutDir) :
@@ -192,16 +193,28 @@ def run(configuration) :
            svnCheckOutUrl +\
            ' '+svnVersionFlattened
       commandHistory+=[ svnCmd ]
-      if NBsvnCommand.run(svnCmd,projectBaseDir,configuration['project'])!='OK' :
+      svnResult=NBsvnCommand.run(svnCmd,projectBaseDir,configuration['project'])
+      if svnResult['returnCode'] != 0 :
         return
+      runConfigure = True
     else :
       svnCmd='svn update'
       commandHistory+=[ svnCmd ]
-      if NBsvnCommand.run(svnCmd,projectCheckOutDir,configuration['project'])!='OK' :
+      svnResult=NBsvnCommand.run(svnCmd,projectCheckOutDir,configuration['project'])
+      if svnResult['returnCode'] != 0 :
         return
-    SVN_HISTORY.append(projectCheckOutDir)
+      #check whether a *.in or configure file was updated 
+      r=r'(\S+\.in\s)|(configure\s)'
+      findResult=re.findall(r,svnResult['stdout'])
+      if len(findResult)!=0:
+        runConfigure = True
+      else :
+        runConfigure = False
+
+    SVN_HISTORY[projectCheckOutDir]=runConfigure
   else :
     NBlogMessages.writeMessage('  "svn update" skipped. nightlyBuild has already updated for prior build configuration')
+    runConfigure=SVN_HISTORY[projectCheckOutDir]
 
   #---------------------------------------------------------------------
   # If there are third party apps, then get these apps
@@ -280,18 +293,18 @@ def run(configuration) :
     configCmd = os.path.join(projectCheckOutDir,"configure "+configOptions)
 
     # If config was previously run, then no need to run again.
-  #  if NBcheckResult.didConfigRunOK() :
-  #    NBlogMessages.writeMessage("  configure previously ran. Not rerunning.")
-  #  else :
-    NBlogMessages.writeMessage("  "+configCmd)
-    commandHistory+=[ configCmd ]
+    if (not runConfigure) and NBcheckResult.didConfigRunOK() :
+      NBlogMessages.writeMessage("  configure previously ran. Not rerunning.")
+    else :
+      NBlogMessages.writeMessage("  "+configCmd)
+      commandHistory+=[ configCmd ]
 
-    # Finally run config
-    result=NBosCommand.run(configCmd)
-    writeResults(result,'config') 
+      # Finally run config
+      result=NBosCommand.run(configCmd)
+      writeResults(result,'config') 
 
-    # Check if configure worked
-    if result['returnCode'] != 0 :
+      # Check if configure worked
+      if result['returnCode'] != 0 :
         error_msg = result
         error_msg['configure flags']=configOptions
         error_msg['svn version']=configuration['svnVersion']

@@ -59,7 +59,8 @@ for d in dataDirs :
   dataDir=os.path.join(dataBaseDir,d)
   if not os.path.isdir(dataDir) :
     svnCmd='svn checkout https://projects.coin-or.org/svn/Data/releases/1.0.4/'+d+' '+d
-    if NBsvnCommand.run(svnCmd,dataBaseDir,'Data')!='OK' :
+    svnResult=NBsvnCommand.run(svnCmd,dataBaseDir,'Data')
+    if svnResult['returnCode'] != 0 :
       sys.exit(1)
     result=NBosCommand.run('find '+d+' -name \*.gz -print | xargs gzip -d')
 netlibDir=os.path.join(dataBaseDir,'Netlib')
