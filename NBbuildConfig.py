@@ -171,7 +171,7 @@ def run(configuration) :
       # that make will be run in all the build dirs after "svn update"
       dirs = os.listdir("..")
       for d in dirs :
-        if d.startswith(configuration['svnVersion']) :
+        if d.startswith(svnVersionFlattened) :
           fileToBeRemoved=os.path.join("..",d,'NBallTestsPassed')
           if os.path.isfile(fileToBeRemoved) :
             os.remove(fileToBeRemoved)
@@ -349,25 +349,27 @@ def run(configuration) :
     # Source is now available, so now it is time to run vcbuild
     #---------------------------------------------------------------------
    
-    os.chdir(projectCheckOutDir)
-    NBlogMessages.writeMessage('  cd '+projectCheckOutDir)
-
-    if configuration.has_key('slnFile') :
-      slnFileName = os.path.join(projectCheckOutDir,configuration['slnFile'])
-    else :
-      slnFileName = os.path.join(projectCheckOutDir,\
+    slnFileDir = os.path.join(projectCheckOutDir,\
                           configuration['project'],\
                           'MSVisualStudio',\
-                          'v8',\
-                          configuration['project']) +\
-                    '.sln'
+                          'v8')
+    if not os.path.isdir(slnFileDir) :
+      NBlogMessages.writeMessage("  Solution file directory does not exist: "+slnFileDir)
+      return
+
+    os.chdir(slnFileDir)
+    NBlogMessages.writeMessage('  cd '+slnFileDir)
+
+    if configuration.has_key('slnFile') :
+      slnFileName = os.path.join(slnFileDir,configuration['slnFile'])
+    else :
+      slnFileName = os.path.join(slnFileDir,configuration['project'])+'.sln'
     if not os.path.isfile(slnFileName) :
       NBlogMessages.writeMessage("  Solution file does not exist: "+slnFileName)
       return
 
     vcbuild='vcbuild /u ' + slnFileName + ' $ALL'
              
-
     NBlogMessages.writeMessage("  "+vcbuild)
     commandHistory+=[ vcbuild ]
 

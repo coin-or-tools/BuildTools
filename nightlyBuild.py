@@ -258,7 +258,7 @@ NBlogMessages.writeMessage( "nightlyBuild.py Finished" )
 
 # Email log messages to person running script
 toAddrs = [NBemail.unscrambleAddress(MY_EMAIL_ADDR)]
-subject = "NightlyBuild Log from "+gethostname()+" on "+sys.platform
+subject = "NightlyBuild Log on "+sys.platform+" from "+gethostname()
 NBemail.send(toAddrs,subject,NBlogMessages.getAllMessages())
 
 #------------------------------------------------------------------------
