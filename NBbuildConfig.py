@@ -147,6 +147,8 @@ def run(configuration) :
   NBlogMessages.writeMessage('  Checkout directory: '+projectCheckOutDir)
   NBlogMessages.writeMessage('  Build directory: '+fullBuildDir)
   
+  #for a list of commands that have been executed
+  commandHistory = []
 
   #---------------------------------------------------------------------
   # If nothing has changed and the prior run tested OK, then there
@@ -189,10 +191,12 @@ def run(configuration) :
            'checkout ' +\
            svnCheckOutUrl +\
            ' '+svnVersionFlattened
+      commandHistory+=[ svnCmd ]
       if NBsvnCommand.run(svnCmd,projectBaseDir,configuration['project'])!='OK' :
         return
     else :
       svnCmd='svn update'
+      commandHistory+=[ svnCmd ]
       if NBsvnCommand.run(svnCmd,projectCheckOutDir,configuration['project'])!='OK' :
         return
     SVN_HISTORY.append(projectCheckOutDir)
@@ -221,13 +225,14 @@ def run(configuration) :
             if not os.path.isfile('NBinstalldone') :
               if os.path.isfile(install3rdPartyCmd) :
                 NBlogMessages.writeMessage('  '+install3rdPartyCmd)
+                commandHistory+=[ install3rdPartyCmd ]
                 installReturn = NBosCommand.run(install3rdPartyCmd)
                 if installReturn['returnCode'] :
                   NBlogMessages.writeMsg('  warning: Install of 3rd party code in '+thirdPartyDir+' returned '+installReturn['returnCode'])
                 else :
                   f=open('NBinstalldone','w')
                   f.close()
-                writeResults(installReturn,install3rdPartyCmd) 
+                writeResults(installReturn,install3rdPartyCmd)
             else :
               NBlogMessages.writeMessage('  skipped a new download of '+d)
         else :
@@ -279,6 +284,7 @@ def run(configuration) :
   #    NBlogMessages.writeMessage("  configure previously ran. Not rerunning.")
   #  else :
     NBlogMessages.writeMessage("  "+configCmd)
+    commandHistory+=[ configCmd ]
 
     # Finally run config
     result=NBosCommand.run(configCmd)
@@ -289,6 +295,7 @@ def run(configuration) :
         error_msg = result
         error_msg['configure flags']=configOptions
         error_msg['svn version']=configuration['svnVersion']
+        error_msg['command history']=commandHistory 
         # Add contents of log file to message
         logFileName = 'config.log'
         if os.path.isfile(logFileName) :
@@ -302,6 +309,7 @@ def run(configuration) :
     # Run make part of build
     #---------------------------------------------------------------------
     NBlogMessages.writeMessage( '  make' )
+    commandHistory+=[ 'make' ]
     result=NBosCommand.run('make')
     writeResults(result,'make') 
 
@@ -309,6 +317,7 @@ def run(configuration) :
     if result['returnCode'] != 0 :
       result['configure flags']=configOptions
       result['svn version']=configuration['svnVersion']
+      result['command history']=commandHistory
       NBemail.sendCmdMsgs(configuration['project'],result,'make')
       return
 
@@ -337,6 +346,7 @@ def run(configuration) :
              
 
     NBlogMessages.writeMessage("  "+vcbuild)
+    commandHistory+=[ vcbuild ]
 
     # Finally run vcbuild
     result=NBosCommand.run(vcbuild)
@@ -346,6 +356,7 @@ def run(configuration) :
     if result['returnCode'] != 0 :
         error_msg = result
         error_msg['svn version']=configuration['svnVersion']
+        error_msg['command history']=commandHistory
         NBemail.sendCmdMsgs(configuration['project'],error_msg,vcbuild)
         return
 
@@ -366,6 +377,7 @@ def run(configuration) :
       NBlogMessages.writeMessage('  cd '+testDir)
 
       NBlogMessages.writeMessage( '  '+testCmd )
+      commandHistory+=[ testCmd ]
       result=NBosCommand.run(testCmd)
       writeResults(result,testCmd) 
         
@@ -374,6 +386,7 @@ def run(configuration) :
         if testResultFail :
           result['svn version']=configuration['svnVersion']
           result['test']=testResultFail
+          result['command history']=commandHistory
           NBemail.sendCmdMsgs(configuration['project'],result,testCmd)
           return
 

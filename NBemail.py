@@ -79,6 +79,11 @@ def sendCmdMsgs(project,cmdMsgs,cmd):
     emailMsg += "\n\nDetected problem when running test:\n"
     emailMsg += cmdMsgs['test']
     emailMsg += "\n"
+    
+  if cmdMsgs.has_key('command history') :
+    emailMsg += "\nHistory of commands called for this build:\n"
+    for cmditem in cmdMsgs['command history'] :
+      emailMsg += "  "+cmditem+"\n"
 
   emailMsg +="\nnightlyBuildScript log:\n"
   emailMsg +=NBlogMessages.getMessages()
