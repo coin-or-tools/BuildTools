@@ -6,6 +6,7 @@
 #------------------------------------------------------------------------
 
 import time
+import os
 
 execfile('NBuserParametersDefault.py')
 execfile('NBuserParameters.py')
@@ -33,7 +34,7 @@ def getAllMessages():
 
 def openLogFile():
   global logfile
-  logfile=open(NIGHTLY_BUILD_ROOT_DIR+'/'+LOGFILE, 'a')
+  logfile=open(os.path.join(NIGHTLY_BUILD_ROOT_DIR,LOGFILE), 'a')
     
 def closeLogFile():
   global logfile
