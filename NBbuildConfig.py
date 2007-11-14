@@ -361,11 +361,15 @@ def run(configuration) :
     NBlogMessages.writeMessage('  cd '+slnFileDir)
 
     if configuration.has_key('slnFile') :
-      slnFileName = os.path.join(slnFileDir,configuration['slnFile'])
+      slnFileName = configuration['slnFile']
     else :
-      slnFileName = os.path.join(slnFileDir,configuration['project'])+'.sln'
+      slnFileName = configuration['project']+'.sln'
     if not os.path.isfile(slnFileName) :
-      NBlogMessages.writeMessage("  Solution file does not exist: "+slnFileName)
+      NBlogMessages.writeMessage("  Solution file does not exist '" \
+                                 +slnFileName \
+                                 +"' in directory " \
+                                 +slnFileDir )
+
       return
 
     vcbuild='vcbuild /u ' + slnFileName + ' $ALL'
