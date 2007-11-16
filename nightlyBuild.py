@@ -8,6 +8,7 @@
 import os
 import sys
 from socket import gethostname
+from sets import Set
 import NBprojectConfig
 import NBlogMessages
 import NBemail
@@ -71,7 +72,7 @@ sampleDir=os.path.join(dataBaseDir,'Sample')
 #------------------------------------------------------------------------
 configuration={}
 configuration['rootDir']=NIGHTLY_BUILD_ROOT_DIR
-configurations = set("")
+configurations = Set([""])
 
 #------------------------------------------------------------------------
 # Define how code is is to be built. Choices are:
@@ -250,7 +251,7 @@ for p in PROJECTS :
     #--------------------------------------------------
     if str(configuration) not in configurations :
       NBbuildConfig.run(configuration)
-      configurations=configurations | set([str(configuration)])
+      configurations=configurations | Set([str(configuration)])
     
 
 
