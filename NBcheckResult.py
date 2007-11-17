@@ -51,7 +51,7 @@ def standardSuccessMessage(result,project) :
 def endWithStarDoneStar(result,project) :
   retVal = None
   # Is the success message contained in the output?
-  if result['stdout'][-200:].rfind("*** Done! ***") == -1 :
+  if result['stdout'][-500:].rfind("*** Done! ***") == -1 :
     # Success message not found, assume test failed
     retVal = "The output does not end with the message: '*** Done! ***'"
   return retVal  
@@ -62,7 +62,7 @@ def endWithStarDoneStar(result,project) :
 def endWithWoodw(result,project) :
   retVal = None
   reexp = r"(.|\n)*(\\|/)Data(\\|/)Netlib(\\|/)woodw took (\d*\.\d*) seconds using algorithm either(.|\n)*"
-  msgTail = result['stdout'][-200:]
+  msgTail = result['stdout'][-500:]
   if not re.compile(reexp).match(msgTail,1) :
     # message not found, assume test failed
     retVal = "Did not complete the woodw testcase"
