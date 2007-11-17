@@ -1828,6 +1828,52 @@ AC_DEFUN([AC_COIN_PATCH_LIBTOOL_CYGWIN],
   esac ]) # COIN_PATCH_LIBTOOL_CYGWIN
 
 ###########################################################################
+#                    COIN_PATCH_LIBTOOL_SOLARIS                           #
+###########################################################################
+# If we want to do a 64-bit build with GCC on Solaris, the system search
+# libraries need to point to 64-bit subdirectories. If they do not already do
+# that, fix them. This patch is evolving, as are GCC compilers.  GCC 4.2.1
+# reports the correct search list, given the correct call. GCC 4.1.1 does not.
+# `Correct call' means -m64 is specified. `Correct search list' seems to amount
+# to prepending the list of 64-bit subdirectories to the 32-bit directories.
+# Both SPARC and x86 have this issue, but a different hardware id string is
+# required depending on the underlying CPU. The macro executes isainfo to get
+# the string. This will fail, of course, if we're cross-compiling. The
+# alternative is to fail on a regular basis each time a new CPU identifier is
+# needed. This macro will also fail if the search list reported with
+# -print-search-dirs differs between the C, C++, and Fortran compilers; each
+# have their own setting in libtool.  If GCC reports the correct search list
+# given the -m64 flag, the best solution is to define CC='gcc -m64', and
+# similarly for CXX, F77, so that libtool will make the correct call.
+###########################################################################
+AC_DEFUN([AC_COIN_PATCH_LIBTOOL_SOLARIS],
+[ if test "$GCC" = yes && \
+     (echo $CXXFLAGS $CFLAGS $FFLAGS | $EGREP 'm64' >/dev/null 2>&1) ; then
+    hdwisa=`isainfo | sed -e 's/\(@<:@^ @:>@*\) .*$/\1/'`
+    if `$EGREP 'sys_lib_search_path_spec=' libtool | $EGREP -v $hdwisa >/dev/null 2>&1` ; then
+      AC_MSG_NOTICE([Applying patches to libtool for 64-bit GCC compilation])
+      fixlibtmp=`$CC -m64 -print-search-dirs | $EGREP '^libraries:'`
+      fixlibtmp=`echo $fixlibtmp | sed -e 's/libraries: =//' -e 's/:/ /g'`
+      if `echo "$fixlibtmp" | $EGREP -v $hdwisa  >/dev/null 2>&1` ; then
+	# AC_MSG_NOTICE(Compensating for broken gcc)
+	for lib in $fixlibtmp ; do
+	  if test -d "${lib}${hdwisa}" ; then
+	    syslibpath64="$syslibpath64 ${lib}${hdwisa}/"
+	  fi
+	done
+	syslibpath64="${syslibpath64} ${fixlibtmp}"
+      else
+	syslibpath64="$fixlibtmp"
+      fi
+      sed -e 's|sys_lib_search_path_spec=".*"|sys_lib_search_path_spec="'"$syslibpath64"'"|' libtool > conftest.bla
+      mv conftest.bla libtool
+      chmod 755 libtool  
+    fi
+    # AC_MSG_NOTICE(Result is )
+    # $EGREP 'sys_lib_search_path_spec=' libtool
+  fi ])	# COIN_PATCH_LIBTOOL_SOLARIS
+
+###########################################################################
 #                           COIN_PROG_LIBTOOL                             #
 ###########################################################################
 
@@ -1881,27 +1927,9 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
         chmod 755 libtool  
       fi
       ;;
-    # The opposite problem: if we want to do a 64-bit build, the system search
-    # libraries need to point to the sparcv9 subdirectories. If they do not
-    # already do that, fix them.
-    sparc-sun-solaris*)
-      if test "$GCC" = yes && \
-	 (echo $CXXFLAGS $CFLAGS $FFLAGS | $EGREP 'm64' >/dev/null 2>&1) ; then
-	fixlibtmp=`$CC -print-search-dirs | $EGREP '^libraries:'`
-	if `echo "$fixlibtmp" | $EGREP -v sparcv9  >/dev/null 2>&1` ; then
-	  AC_MSG_NOTICE([Applying patches to libtool for 64-bit compilation])
-	  fixlibtmp=`echo $fixlibtmp | sed -e 's/libraries: =//' -e 's/:/ /g'`
-	  v9syslibpath=
-	  for lib in $fixlibtmp ; do
-	    if test -d "${lib}sparcv9" ; then
-	      v9syslibpath="$v9syslibpath ${lib}sparcv9/"
-	    fi
-	  done
-	  sed -e 's|sys_lib_search_path_spec=".*"|sys_lib_search_path_spec="'"$v9syslibpath"'"|' libtool > conftest.bla
-	  mv conftest.bla libtool
-	  chmod 755 libtool  
-	fi
-      fi
+
+    *-solaris*)
+      AC_COIN_PATCH_LIBTOOL_SOLARIS
       ;;
     # Cygwin. Ah, cygwin. Too big and ugly to inline; see the macro.
     *-cygwin* | *-mingw*)
