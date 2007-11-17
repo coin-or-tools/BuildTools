@@ -29,6 +29,15 @@ CFG_BLD_TEST['CoinUtils']=[
                    'cmd':'make test',
                    'check':[ NBcheckResult.rc0,
                              NBcheckResult.standardSuccessMessage ] } ]
+SLN_BLD_TEST['CoinUtils']=[
+                  {'dir':r'CoinUtils\MSVisualStudio',
+                   'cmd':'v8\unitTestCoinUtils\Release\unitTestCoinUtils',
+                   'check':[ NBcheckResult.rc0,
+                             NBcheckResult.standardSuccessMessage] },
+                  {'dir':r'CoinUtils\MSVisualStudio',
+                   'cmd':'v8\unitTestCoinUtils\Debug\unitTestCoinUtils',
+                   'check':[ NBcheckResult.rc0,
+                             NBcheckResult.standardSuccessMessage] } ]
 #does not have references to third party packages
 
 #----------------------------------------------------------------------
