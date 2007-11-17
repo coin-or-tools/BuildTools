@@ -27,7 +27,7 @@ execfile('NBuserParameters.py')
 
 # TODO:
 #   -Reduce size of email messages.
-#   -Get working on windows
+#   -Get config style build working on Windows
 
 
 #------------------------------------------------------------------------
@@ -225,6 +225,12 @@ for p in PROJECTS :
         configuration['slnFile']=NBprojectConfig.SLN_FILE[p]          
       else :
         configuration.pop('slnFile')
+      configuration['slnDir']=''
+      if NBprojectConfig.SLN_DIR.has_key(p) :
+        configuration['slnDir']=NBprojectConfig.SLN_DIR[p]          
+      else :
+        configuration.pop('slnDir')
+        
 
       #--------------------------------------------------------------------
       # Set msbuild configuration parm (Release or Debug)

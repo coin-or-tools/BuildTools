@@ -18,6 +18,7 @@ PROJECT_EMAIL_ADDRS = {}
 SLN_BLD_TEST = {}
 CFG_BLD_TEST = {}
 SLN_FILE = {}
+SLN_DIR = {}
 
 
 #----------------------------------------------------------------------
@@ -156,9 +157,7 @@ PROJECT_EMAIL_ADDRS['Ipopt'] = 'andreasw _AT_ us _DOT_ ibm _DOT_ com'
 CFG_BLD_TEST['Ipopt']=[
                   {'dir':'',
                    'cmd':'make test',
-                   'check':[ NBcheckResult.rc0
-                             #,NBcheckResult.standardSuccessMessage
-                  ] } ]
+                   'check':[ NBcheckResult.rc0 ] } ]
 #third party packages are not optional here
 
 #----------------------------------------------------------------------
@@ -179,6 +178,7 @@ CFG_BLD_TEST['FlopC++']=[
                    'check':[ NBcheckResult.rc0,
                              NBcheckResult.standardSuccessMessage ] } ]
 SLN_FILE['FlopC++']=r'FlopCpp.sln'
+SLN_DIR['FlopC++']=r'FlopCpp\MSVisualStudio\v8'
 SLN_BLD_TEST['FlopC++']=[
                   {'dir':r'FlopCpp\MSVisualStudio\v8\Release',
                    'cmd':'unitTest',

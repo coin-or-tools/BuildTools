@@ -348,8 +348,11 @@ def run(configuration) :
     #---------------------------------------------------------------------
     # Source is now available, so now it is time to run vcbuild
     #---------------------------------------------------------------------
-   
-    slnFileDir = os.path.join(projectCheckOutDir,\
+
+    if configuration.has_key('slnDir') :
+      slnFileDir = os.path.join(projectCheckOutDir,configuration['slnDir'])
+    else :
+      slnFileDir = os.path.join(projectCheckOutDir,\
                           configuration['project'],\
                           'MSVisualStudio',\
                           'v8')
