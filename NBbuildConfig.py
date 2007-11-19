@@ -153,6 +153,16 @@ def run(configuration) :
   commandHistory = []
 
   #---------------------------------------------------------------------
+  # Completely remove a previous build if the user indicates this
+  #---------------------------------------------------------------------
+  if configuration['clear previous build'] and os.path.isdir(fullBuildDir) :
+    NBlogMessages.writeMessage('  Remove previous build in directory '+fullBuildDir)
+    try:
+      shutil.rmtree(fullBuildDir)
+    except shutils.Error :
+      NBlogMessages.writeMessage('  Warning: removal of directory '+fullBuildDir+' failed.')
+
+  #---------------------------------------------------------------------
   # If nothing has changed and the prior run tested OK, then there
   # is no need to do anything.
   #---------------------------------------------------------------------
@@ -252,15 +262,6 @@ def run(configuration) :
         else :
           NBlogMessages.writeMessage('  Skipped a new download into '+thirdPartyBaseDir)
 
-  #---------------------------------------------------------------------
-  # Completely remove a previous build if the user indicates this
-  #---------------------------------------------------------------------
-  if configuration['clear previous build'] and os.path.isdir(fullBuildDir) :
-    NBlogMessages.writeMessage('  Remove previous build in directory '+fullBuildDir)
-    try:
-      shutil.rmtree(fullBuildDir)
-    except shutils.Error :
-      NBlogMessages.writeMessage('  Warning: removal of directory '+fullBuildDir+' failed.')
     
   #---------------------------------------------------------------------
   # Create the build directory if it doesn't exist
