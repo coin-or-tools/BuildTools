@@ -49,6 +49,10 @@ PROJECTS = ['CoinUtils','Clp','Osi','DyLP','SYMPHONY','Vol','Cgl','Cbc','Smi','F
 #    options to all builds.
 #    Example: '--enable-cbc-parallel'
 #
+#  'KnownProblem': 'yes' or 'no'.  If the build configuration has a known
+#    problem then it will not be built and tested unless svn has been updated
+#    with new code that might fix the problem.
+#
 #  'Reference': This specifies that the build is to be done in the way
 #    of the referenced name.
 #    Example: 'CoinUtils'

@@ -239,7 +239,14 @@ for p in PROJECTS :
       #  configuration['msbuild']="Debug"
       #else :
       #  configuration['msbuild']="Release"
- 
+
+    #---------------------------------------------------------------------
+    # Get KnownProblem parm and pass it along
+    #---------------------------------------------------------------------
+    configuration['KnownProblem']=False
+    if 'KnownProblem' in bc :
+      if bc['KnownProblem'].lower()=='yes' :
+          configuration['KnownProblem']=True
                
     #---------------------------------------------------------------------
     # Modify any executable commands to have location of data directories

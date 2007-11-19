@@ -163,16 +163,21 @@ def run(configuration) :
       NBlogMessages.writeMessage('  Warning: removal of directory '+fullBuildDir+' failed.')
 
   #---------------------------------------------------------------------
-  # If nothing has changed and the prior run tested OK, then there
+  # If nothing has changed and the prior run tested OK or there is
+  # a known problem being worked on, then there
   # is no need to do anything.
   #---------------------------------------------------------------------
   if os.path.isdir(fullBuildDir) :
     os.chdir(fullBuildDir)
-    if os.path.isfile('NBallTestsPassed') : 
+    if os.path.isfile('NBallTestsPassed') or configuration['KnownProblem']: 
       msg=NBsvnCommand.newer(svnCheckOutUrl,projectCheckOutDir)
       if not msg:
         # Previous run ran fine, and nothing has changed.
-        NBlogMessages.writeMessage('  No changes since previous successful run')
+        if os.path.isfile('NBallTestsPassed') :
+          NBlogMessages.writeMessage('  No changes since previous successful run')
+        else :  
+          NBlogMessages.writeMessage('  There is a known problem and no changes have been made that might fix it.')
+          
         return
       NBlogMessages.writeMessage('  '+msg)
       
