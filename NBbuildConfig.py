@@ -238,6 +238,7 @@ def run(configuration) :
           THIRD_PARTY_HISTORY.append(thirdPartyBaseDir)
           thirdPartyDirs = os.listdir(thirdPartyBaseDir)
           for d in thirdPartyDirs :
+            if d=='.svn' : continue
             thirdPartyDir=os.path.join(thirdPartyBaseDir,d)
             install3rdPartyCmd=os.path.join(".","get."+d)
             os.chdir(thirdPartyDir)
@@ -289,6 +290,7 @@ def run(configuration) :
       if os.path.isdir(thirdPartyBaseDir) :
         thirdPartyDirs = os.listdir(thirdPartyBaseDir)
         for d in thirdPartyDirs :
+          if d=='.svn' : continue
           skipOptions+=' ThirdParty/'+d
 
     if skipOptions!='' :
