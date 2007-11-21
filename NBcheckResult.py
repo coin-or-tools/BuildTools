@@ -74,7 +74,7 @@ def endWithWoodw(result,project) :
 def cbcMakeTestSuccessMessage(result,project) :
   retVal=None
   reexp=r"(.|\n)*cbc_clp solved 2 out of 2 and took (\d*\.\d*) seconds."
-  msgTail = result['stdout'][-300:]
+  msgTail = result['stdout'][-600:]
   if not re.compile(reexp).match(msgTail,1) :
     # message not found, assume test failed
     retVal = "Did not display message 'cbc_clp solved 2 out of 2 and took XX.XX seconds.'" 

@@ -169,18 +169,19 @@ def run(configuration) :
   #---------------------------------------------------------------------
   if os.path.isdir(fullBuildDir) :
     os.chdir(fullBuildDir)
-    if os.path.isfile('NBallTestsPassed') or configuration['KnownProblem']: 
-      msg=NBsvnCommand.newer(svnCheckOutUrl,projectCheckOutDir)
-      if not msg:
-        # Previous run ran fine, and nothing has changed.
-        if os.path.isfile('NBallTestsPassed') :
-          NBlogMessages.writeMessage('  No changes since previous successful run')
-        else :  
-          NBlogMessages.writeMessage('  There is a known problem and no changes have been made that might fix it.')
-          
-        return
+    msg=NBsvnCommand.newer(svnCheckOutUrl,projectCheckOutDir)
+
+    if os.path.isfile('NBallTestsPassed') :
+      prevRunSuccess=True
+      NBlogMessages.writeMessage('  In prior build all test passed')
+    else:
+      prevRunSuccess=False
+      NBlogMessages.writeMessage('  No record of all tests having passed')
+
+    # If new source in svn, then must remove "allTestsPassed" files
+    if msg:
+      # SVN has changed since last run
       NBlogMessages.writeMessage('  '+msg)
-      
       # Must remove file NBallTestsPassed from all build directories that
       # use projectCheckoutDir for their source code. This is to ensure
       # that make will be run in all the build dirs after "svn update"
@@ -190,8 +191,20 @@ def run(configuration) :
           fileToBeRemoved=os.path.join("..",d,'NBallTestsPassed')
           if os.path.isfile(fileToBeRemoved) :
             os.remove(fileToBeRemoved)
+            NBlogMessages.writeMessage('  Removing all test passed record from directory: '+d)
     else :
-      NBlogMessages.writeMessage('  No record of all tests having passed')
+      # SVN has not changed since last run
+      if configuration['Run']=='noSuccessOrAfterChange':
+        if prevRunSuccess :
+          NBlogMessages.writeMessage('  No changes since previous successful run')
+          return
+        else: 
+          NBlogMessages.writeMessage('  Rerunning. No changes, but no record of successful run')
+      elif configuration['Run']=='afterChange' :
+        NBlogMessages.writeMessage('  No changes since previous run')
+        return
+      else:
+        NBlogMessages.writeMessage('  No changes but run always selected')
   else :
     NBlogMessages.writeMessage('  Targets have not yet been built')
 

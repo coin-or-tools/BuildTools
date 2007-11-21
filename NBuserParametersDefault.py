@@ -37,21 +37,40 @@ PROJECTS = ['CoinUtils','Clp','Osi','DyLP','SYMPHONY','Vol','Cgl','Cbc','Smi','F
 #  OptLevel: 'Default' or 'Debug'. Specifies if "./configure" needs
 #   additional parameters to build with debug.  The default is supposed
 #   to be an optimized build.
+#   This is ignored on windows when building with MS compiler solution file
+#   because both Release and Debug are built.
 #
 #  ThirdParty: 'Yes' or 'No'.  Some projects provide scripts for downloading
 #   third party code. If 'Yes' then these scripts will be run. If 'No'
 #   then the options for skipping the use of third party codes are
 #   used when running "./configure".
+#   Presently this ignored on windows when building with MS compiler 
+#   solution file because ThirdParty code is never used.
 #
 #  'AdditionConfigOptions': This provides the ability to specify an
 #    additional './configure' option to be applied to this specific build.
 #    CONFIGURE_FLAGS can be set if one wants to specify addtional configure
 #    options to all builds.
 #    Example: '--enable-cbc-parallel'
+#    This is ignored on windows when building with MS compiler solution file
+#    because configure is not run.
 #
-#  'KnownProblem': 'yes' or 'no'.  If the build configuration has a known
-#    problem then it will not be built and tested unless svn has been updated
-#    with new code that might fix the problem.
+#  'Run' : 'always', 'noSuccessOrAfterChange', 'afterChange'
+#    This specifies when a specific configuration will be run.
+#    nightlyBuild can determine if the source code has been updated
+#    since the last run. nightlyBuild also records when a run 
+#    successful run has occured.  This can be used to decide if a new
+#    run should be done.
+#    'always': the configuration is always run.  This is useful for
+#              debugging.
+#    'noSuccessOrAfterChange': This is the default behavior.  If
+#              the prior run did not successfully complete or
+#              the source code has changed then the run is done.
+#    'afterChange': Only run if the source code has changed since
+#              the last run.  This is useful if there is a known
+#              problem that is waiting for a fix. There is no
+#              point in repeating a known failure unless a possible
+#              fix has been committed to svn.
 #
 #  'Reference': This specifies that the build is to be done in the way
 #    of the referenced name.
