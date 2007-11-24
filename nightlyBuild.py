@@ -80,7 +80,13 @@ configurations = Set([""])
 # unixConfig: use sequence "./configure", "make", "make test"
 #------------------------------------------------------------------------
 if sys.platform=='win32' :
-  configuration['buildMethod']='msSln'
+  # see if we are running Mingw
+  # assume Bourne shell in path
+  result=NBosCommand.run( "sh -c ls" )
+  if result['returnCode'] == 0 :
+    configuration['buildMethod']='mingw'
+  else:
+    configuration['buildMethod']='msSln'
 else :
   configuration['buildMethod']='unixConfig'
 
@@ -155,7 +161,7 @@ for p in PROJECTS :
     #--------------------------------------------------------------------
     # Process Parameters that are used by unix configure style build
     #--------------------------------------------------------------------
-    if configuration['buildMethod']=='unixConfig' :
+    if configuration['buildMethod']=='unixConfig' or configuration['buildMethod']=='mingw':
       #--------------------------------------------------------------------
       # Doing a unix config type build.  Grab unix config parms
       #--------------------------------------------------------------------

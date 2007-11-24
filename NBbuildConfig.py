@@ -291,7 +291,7 @@ def run(configuration) :
   #---------------------------------------------------------------------
   # Source is now available, so now it is time to run config
   #---------------------------------------------------------------------
-  if configuration['buildMethod']=='unixConfig' :
+  if configuration['buildMethod']=='unixConfig' or configuration['buildMethod']=='mingw':
     skipOptions=''
 
     if 'SkipProjects' in configuration :
@@ -321,7 +321,22 @@ def run(configuration) :
     configOptions ="-C "+configuration['configOptions']['unique']
     configOptions+=configuration['configOptions']['invariant']
     configOptions+=skipOptions
-    configCmd = os.path.join(projectCheckOutDir,"configure "+configOptions)
+    
+
+    #start kipp change
+    #
+    if configuration['buildMethod']=='mingw' :
+      configCmd = os.path.join(projectCheckOutDir,"configure ")
+      #what a pain replace("\\", "/") does not work
+      # we must split and then join, ugh
+      pathParts = configCmd.split("\\")
+      sep = '/'
+      configCmd = sep.join(pathParts)
+      configCmd = "sh -c " + "'" + configCmd + configOptions +  "'"
+    else:
+      configCmd = os.path.join(projectCheckOutDir,"configure "+configOptions) 
+    #
+    #end kipp change
 
     # If config was previously run, then no need to run again.
     if (not runConfigure) and NBcheckResult.didConfigRunOK() :
@@ -354,7 +369,16 @@ def run(configuration) :
     #---------------------------------------------------------------------
     NBlogMessages.writeMessage( '  make' )
     commandHistory+=[ 'make' ]
-    result=NBosCommand.run('make')
+    
+    #
+    # start kipp
+    if configuration['buildMethod']=='mingw' :
+      result=NBosCommand.run('sh -c make') 
+    else:
+      result=NBosCommand.run('make')
+      
+    # end kipp
+    # 
     writeResults(result,'make') 
 
     # Check if make worked
