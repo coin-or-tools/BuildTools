@@ -223,9 +223,7 @@ PROJECT_EMAIL_ADDRS['LaGO'] = 'stefan _AT_ math _DOT_ hu-berlin _DOT_ de'
 CFG_BLD_TEST['LaGO']=[
                   {'dir':'',
                    'cmd':'make test',
-                   'check':[ NBcheckResult.rc0,
-                             NBcheckResult.standardSuccessMessage ] } ]
-#third party packages are not optional if Ipopt is not excluded
+                   'check':[ NBcheckResult.rc0 ] } ]
 
 #----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['CppAD'] = 'bradbell _AT_ washington _DOT_ edu'
