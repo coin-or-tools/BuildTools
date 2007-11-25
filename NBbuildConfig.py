@@ -133,7 +133,7 @@ def run(configuration) :
 
   buildDir=svnVersionFlattened
 
-  if configuration['buildMethod']=='unixConfig' :
+  if configuration['buildMethod']=='unixConfig' or configuration['buildMethod']=='mingw' :
     buildDir+=configuration['configOptions']['unique']
     if 'SkipProjects' in configuration :
       buildDir+="No"+configuration['SkipProjects']
