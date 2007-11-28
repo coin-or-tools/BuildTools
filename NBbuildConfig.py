@@ -271,7 +271,7 @@ def run(configuration) :
                 commandHistory+=[ install3rdPartyCmd ]
                 installReturn = NBosCommand.run(install3rdPartyCmd)
                 if installReturn['returnCode'] :
-                  NBlogMessages.writeMsg('  warning: Install of 3rd party code in '+thirdPartyDir+' returned '+installReturn['returnCode'])
+                  NBlogMessages.writeMessage('  warning: Install of 3rd party code in '+thirdPartyDir+' returned '+installReturn['returnCode'])
                 else :
                   f=open('NBinstalldone','w')
                   f.close()
