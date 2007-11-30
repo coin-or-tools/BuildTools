@@ -258,6 +258,7 @@ def run(configuration) :
           for d in thirdPartyDirs :
             if d=='.svn' : continue
             thirdPartyDir=os.path.join(thirdPartyBaseDir,d)
+            if not os.path.isdir(thirdPartyDir) : continue
             install3rdPartyCmd=os.path.join(".","get."+d)
             os.chdir(thirdPartyDir)
             # If the install command has been updated since the last
