@@ -255,6 +255,23 @@ def run(configuration) :
         if thirdPartyBaseDir not in THIRD_PARTY_HISTORY :
           THIRD_PARTY_HISTORY.append(thirdPartyBaseDir)
           thirdPartyDirs = os.listdir(thirdPartyBaseDir)
+          #clean up: take care of .svn, .OLD, and non-directory entries
+          for d in thirdPartyDirs[:] :
+            if d=='.svn' : 
+              thirdPartyDirs.remove(d)
+              continue
+            thirdPartyDir=os.path.join(thirdPartyBaseDir,d)
+            if not os.path.isdir(thirdPartyDir) :
+              thirdPartyDirs.remove(d)
+              continue
+            if d.endswith('.OLD') :
+              NBlogMessages.writeMessage('  removing '+d)
+              shutil.rmtree(thirdPartyDir)
+              fileToBeRemoved=os.path.join(thirdPartyDir[0:-4], 'NBinstalldone')
+              if os.path.isfile(fileToBeRemoved) :
+                os.remove(fileToBeRemoved)
+              thirdPartyDirs.remove(d)
+              continue
           for d in thirdPartyDirs :
             if d=='.svn' : continue
             thirdPartyDir=os.path.join(thirdPartyBaseDir,d)
