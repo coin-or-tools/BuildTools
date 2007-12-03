@@ -205,7 +205,18 @@ for p in PROJECTS :
         configuration['test']=NBprojectConfig.CFG_BLD_TEST[p]
       else :
         # No test commands so remove from configuration
-        configuration.pop('test')  
+        configuration.pop('test')
+        
+      #kipp add
+      #---------------------------------------------------------------------
+      # Set up install executables
+      #---------------------------------------------------------------------
+      configuration['install']={}
+      if NBprojectConfig.CFG_BLD_INSTALL.has_key(p) :
+        configuration['install']=NBprojectConfig.CFG_BLD_INSTALL[p]
+      else :
+        # No test executables so remove from configuration
+        configuration.pop('install')
 
 
     if configuration['buildMethod']=='msSln' :
@@ -222,6 +233,7 @@ for p in PROJECTS :
       else :
         # No test executables so remove from configuration
         configuration.pop('test')
+
         
       #---------------------------------------------------------------------
       # If solution file is not in standard place then specify it's location

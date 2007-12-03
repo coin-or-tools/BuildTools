@@ -474,7 +474,8 @@ def run(configuration) :
       NBlogMessages.writeMessage( '  '+testCmd )
       commandHistory+=[ testCmd ]
       result=NBosCommand.run(testCmd)
-      writeResults(result,testCmd) 
+      writeResults(result,testCmd)
+
         
       for testFunc in configuration['test'][t]['check'] :
         testResultFail=testFunc(result,configuration['project'])
@@ -485,6 +486,33 @@ def run(configuration) :
           NBemail.sendCmdMsgs(configuration['project'],result,testCmd)
           return
 
+  #---------------------------------------------------------------------
+  # Run all install executables
+  #---------------------------------------------------------------------
+  if "install" in configuration :
+    for t in range( len(configuration['install']) ) :
+      installRelDir=configuration['install'][t]['dir']
+      installDir = os.path.join(fullBuildDir, installRelDir)
+      installCmd=configuration['install'][t]['cmd']
+      if not os.path.isdir( installDir) :
+        NBlogMessages.writeMessage('  Directory to run install from does not exist:')
+        NBlogMessages.writeMessage('    Intended directory: '+installDir)
+        NBlogMessages.writeMessage('    Intended command: '+installCmd)
+        continue
+      os.chdir(installDir)
+      NBlogMessages.writeMessage('  cd '+installDir)
+      NBlogMessages.writeMessage( '  '+installCmd )
+      commandHistory+=[ installCmd ]
+      result=NBosCommand.run(installCmd)
+      writeResults(result,installCmd)
+      if result['returnCode'] != 0 :
+          result['svn version']=configuration['svnVersion']
+          result['install']=installResultFail
+          result['command history']=commandHistory
+          NBemail.sendCmdMsgs(configuration['project'],result,installCmd)
+          return
+
+     
 
   #---------------------------------------------------------------------
   # Everything build and all tests passed.

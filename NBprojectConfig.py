@@ -17,6 +17,7 @@ import NBcheckResult
 PROJECT_EMAIL_ADDRS = {}
 SLN_BLD_TEST = {}
 CFG_BLD_TEST = {}
+CFG_BLD_INSTALL = {}
 SLN_FILE = {}
 SLN_DIR = {}
 
@@ -29,6 +30,13 @@ CFG_BLD_TEST['CoinUtils']=[
                    'cmd':'make test',
                    'check':[ NBcheckResult.rc0,
                              NBcheckResult.standardSuccessMessage ] } ]
+
+CFG_BLD_INSTALL['CoinUtils']=[
+                  {'dir':'',
+                   'cmd':'make install',
+                   'check':[ NBcheckResult.rc0,
+                             NBcheckResult.standardSuccessMessage ] } ]
+
 SLN_BLD_TEST['CoinUtils']=[
                   {'dir':r'CoinUtils\MSVisualStudio',
                    'cmd':'v8\unitTestCoinUtils\Release\unitTestCoinUtils',
@@ -207,6 +215,12 @@ CFG_BLD_TEST['OS']=[
                    'cmd':'make test',
                    'check':[ NBcheckResult.rc0,
                              NBcheckResult.standardSuccessMessage ] } ]
+CFG_BLD_INSTALL['OS']=[
+                  {'dir':'',
+                   'cmd':'make install',
+                   'check':[ NBcheckResult.rc0,
+                             NBcheckResult.standardSuccessMessage ] } ]
+
 SLN_BLD_TEST['OS']=[
                   {'dir':r'OS\test',
                    'cmd':'unitTestDebug',
