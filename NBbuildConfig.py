@@ -159,7 +159,7 @@ def run(configuration) :
     NBlogMessages.writeMessage('  Remove previous build in directory '+fullBuildDir)
     try:
       shutil.rmtree(fullBuildDir)
-    except shutils.Error :
+    except shutil.Error :
       NBlogMessages.writeMessage('  Warning: removal of directory '+fullBuildDir+' failed.')
 
   #---------------------------------------------------------------------
