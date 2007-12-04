@@ -16,6 +16,8 @@ import NBosCommand
 import NBsvnCommand
 import NBcheckResult
 
+import NBuserParameters
+
 #---------------------------------------------------------------------
 # Keep history so same project is not repeatedly getting code from
 # subversion repository.
@@ -489,31 +491,71 @@ def run(configuration) :
   #---------------------------------------------------------------------
   # Run all install executables
   #---------------------------------------------------------------------
-  if "install" in configuration :
-    for t in range( len(configuration['install']) ) :
-      installRelDir=configuration['install'][t]['dir']
-      installDir = os.path.join(fullBuildDir, installRelDir)
-      installCmd=configuration['install'][t]['cmd']
-      if not os.path.isdir( installDir) :
-        NBlogMessages.writeMessage('  Directory to run install from does not exist:')
-        NBlogMessages.writeMessage('    Intended directory: '+installDir)
-        NBlogMessages.writeMessage('    Intended command: '+installCmd)
-        continue
-      os.chdir(installDir)
-      NBlogMessages.writeMessage('  cd '+installDir)
-      NBlogMessages.writeMessage( '  '+installCmd )
-      commandHistory+=[ installCmd ]
-      result=NBosCommand.run(installCmd)
-      writeResults(result,installCmd)
-      if result['returnCode'] != 0 :
-          result['svn version']=configuration['svnVersion']
-          result['install']=installResultFail
-          result['command history']=commandHistory
-          NBemail.sendCmdMsgs(configuration['project'],result,installCmd)
-          return
 
-     
 
+  if configuration['buildMethod']=='unixConfig' or configuration['buildMethod']=='mingw':
+    if "install" in configuration :
+      for t in range( len(configuration['install']) ) :
+        installRelDir=configuration['install'][t]['dir']
+        installDir = os.path.join(fullBuildDir, installRelDir)
+        installCmd=configuration['install'][t]['cmd']
+        if not os.path.isdir( installDir) :
+          NBlogMessages.writeMessage('  Directory to run install from does not exist:')
+          NBlogMessages.writeMessage('    Intended directory: '+installDir)
+          NBlogMessages.writeMessage('    Intended command: '+installCmd)
+          continue
+        os.chdir(installDir)
+        NBlogMessages.writeMessage('  cd '+installDir)
+        NBlogMessages.writeMessage( '  '+installCmd )
+        commandHistory+=[ installCmd ]
+        result=NBosCommand.run(installCmd)
+        writeResults(result,installCmd)
+        if result['returnCode'] != 0 :
+            result['svn version']=configuration['svnVersion']
+            result['install']=installResultFail
+            result['command history']=commandHistory
+            NBemail.sendCmdMsgs(configuration['project'],result,installCmd)
+            return
+
+    
+    #---------------------------------------------------------------------
+    # Build the binary distribution
+    #---------------------------------------------------------------------
+       
+    # when doing this right make sure the example, include, and lib directories
+    # are there.
+    # if the lib  directory is there, add it
+    directories  = " lib "
+
+    # if the include directory is there, add it
+    directories +=  " include "
+
+    # if the examples directory is there, add it
+    #directories +=  " examples "
+
+    # if the bin directory is there, add it
+    #directories +=  " bin "
+
+    # don't forget to add LICENSE and AUTHORS file
+
+    #configuration['project']
+    outputDirectory = os.path.join(NBuserParameters.NIGHTLY_BUILD_BIN_DIR, configuration['project'])
+    print outputDirectory
+    # create the output directory
+    
+    # tar it up
+
+    tarCmd = "tar -czvf "
+    tarCmd += os.path.join(outputDirectory, "test.tgz")
+    tarCmd += directories
+
+    print tarCmd
+
+    result=NBosCommand.run( tarCmd)
+
+
+
+  
   #---------------------------------------------------------------------
   # Everything build and all tests passed.
   #---------------------------------------------------------------------
