@@ -507,7 +507,7 @@ AC_ARG_VAR(OPT_CXXFLAGS,[Optimize C++ compiler options])
 coin_has_cxx=yes
 
 save_cxxflags="$CXXFLAGS"
-# For sparc-sun-solaris, promote Studio/Workshop compiler to front of list.
+# For *-*-solaris*, promote Studio/Workshop compiler to front of list.
 case $build in
   *-cygwin* | *-mingw*)
   	     if test "$enable_doscompile" = msvc ; then
@@ -515,7 +515,7 @@ case $build in
 	     else
 	       comps="g++ cl"
 	     fi ;;
-  sparc-sun-solaris*)
+  *-*-solaris*)
   	     comps="CC xlC aCC g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC" ;;
   *-darwin*) comps="g++ c++ CC" ;;
           *) comps="xlC aCC CC g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC" ;;
@@ -635,7 +635,7 @@ if test x"$CXXFLAGS" = x; then
             ;;
         esac
         ;;
-      *-sun-*)
+      *-*-solaris*)
           coin_opt_cxxflags="-O4"
           coin_dbg_cxxflags="-g"
         ;;
@@ -778,7 +778,7 @@ if test -z "$CXXLIBS"; then
     *-hp-*)
       CXXLIBS="-L/opt/aCC/lib -l++ -lstd_v2 -lCsup_v2 -lm -lcl -lc"
       ;;
-    *-sun-*)
+    *-*-solaris*)
       CXXLIBS="-lCstd -lCrun"
     esac
   fi
@@ -879,10 +879,12 @@ AC_ARG_VAR(OPT_CFLAGS,[Optimize C compiler options])
 coin_has_cc=yes
 
 save_cflags="$CFLAGS"
-# For sparc-sun-solaris, promote Studio/Workshop compiler to front of list.
-# ToDo: If Studio/Workshop cc is not present, we may find /usr/ucb/cc, which
-# is likely to be a non-functional shell. But many installations will have
-# both cc and gcc, so promoting gcc isn't good either. How to test reliably?
+
+# For *-*-solaris*, promote Studio/Workshop cc compiler to front of list.
+# Depending on the user's PATH, when Studio/Workshop cc is not present we may
+# find /usr/ucb/cc, which is almost certainly not a good choice for the C
+# compiler. In this case, put cc after gcc.
+
 case $build in
   *-cygwin* | *-mingw*)
   	     if test "$enable_doscompile" = msvc ; then
@@ -890,8 +892,14 @@ case $build in
 	     else
 	       comps="gcc cl"
 	     fi ;;
-  sparc-sun-solaris*)
-  	     comps="cc xlc gcc pgcc icc" ;;
+  *-*-solaris*)
+	     AC_CHECK_PROG(sol_cc_compiler,cc,cc,[],[],/usr/ucb/cc)
+	     if test "$sol_cc_compiler" = "cc" ; then
+	       comps="cc xlc gcc pgcc icc"
+	     else
+	       comps="xlc gcc pgcc icc cc"
+	     fi
+	     ;;
   *-linux-*) comps="xlc gcc cc pgcc icc" ;;
   *)         comps="xlc_r xlc cc gcc pgcc icc" ;;
 esac
@@ -991,7 +999,7 @@ if test x"$CFLAGS" = x; then
         coin_add_cflags="-Ae"
         coin_dbg_cflags="-g"
         ;;
-      *-sun-*)
+      *-*-solaris*)
         coin_opt_cflags="-xO4"
         coin_dbg_cflags="-g"
         ;;
@@ -1207,7 +1215,7 @@ if test "$F77" != "unavailable" && test x"$FFLAGS" = x ; then
         coin_add_fflags="+U77"
         coin_dbg_fflags="-C -g"
         ;;
-      *-sun-*)
+      *-*-solaris*)
         coin_opt_fflags="-O4"
         coin_dbg_fflags="-g"
         ;;
@@ -1380,7 +1388,7 @@ AC_CHECK_PROGS([F77],[$coin_f77_comps],[unavailable])
 
 # Auxilliary macro to make sure both COIN_PROG_F77 and COIN_FIND_F77 use
 # the same search lists for compiler names.
-# For sparc-sun-solaris, promote Studio/Workshop compilers to front of list.
+# For *-*-solaris*, promote Studio/Workshop compilers to front of list.
 AC_DEFUN([AC_COIN_F77_COMPS],
 [case $build in
   *-cygwin* | *-mingw*)
@@ -1389,7 +1397,7 @@ AC_DEFUN([AC_COIN_F77_COMPS],
      else
        coin_f77_comps="gfortran g77 ifort fl32 compile_f2c"
      fi ;;
-  sparc-sun-solaris*)
+  *-*-solaris*)
      coin_f77_comps="f95 f90 f77 xlf fort77 gfortran g77 pgf90 pgf77 ifort ifc frt af77" ;;
   *) coin_f77_comps="xlf fort77 gfortran f77 g77 pgf90 pgf77 ifort ifc frt af77" ;;
  esac
@@ -1658,11 +1666,15 @@ AC_COIN_INIT_AUTO_TOOLS
 # This is a trick to have this code before AC_COIN_PROG_LIBTOOL
 AC_DEFUN([AC_COIN_DISABLE_STATIC],
 [
-# On Cygwin, building DLLs doesn't work
+# On Cygwin and AIX, building DLLs doesn't work
 case $build in
   *-cygwin*)
     coin_disable_shared=yes
     platform=Cygwin
+  ;;
+  *-aix*)
+    coin_disable_shared=yes
+    platform=AIX
   ;;
   *-mingw*)
     coin_disable_shared=yes
@@ -1774,6 +1786,94 @@ AC_SUBST(LT_LDFLAGS)
 
 
 ###########################################################################
+#                      COIN_PATCH_LIBTOOL_CYGWIN                          #
+###########################################################################
+
+# Patches to libtool for cygwin. Lots for cl, a few for GCC.
+# For cl:
+# - cygpath is not correctly quoted in fix_srcfile_path
+# - paths generated for .lib files is not run through cygpath -w
+
+
+AC_DEFUN([AC_COIN_PATCH_LIBTOOL_CYGWIN],
+[ case "$CXX" in
+    cl* | */cl* | CL* | */CL*) 
+      AC_MSG_NOTICE(Applying patches to libtool for cl compiler)
+      sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
+	  -e 's|fix_srcfile_path=\"\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
+	  -e 's%compile_deplibs=\"\$dir/\$old_library \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$old_library | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
+	  -e 's%compile_deplibs=\"\$dir/\$linklib \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$linklib | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
+	  -e 's%lib /OUT:%lib -OUT:%' \
+	  -e "s%cygpath -w%$CYGPATH_W%" \
+	  -e 's%$AR x \\$f_ex_an_ar_oldlib%bla=\\`lib -nologo -list \\$f_ex_an_ar_oldlib | xargs echo '"$mydos2unix"'\\`; echo \\$bla; for i in \\$bla; do lib -nologo -extract:\\$i \\$f_ex_an_ar_oldlib; done%' \
+	  -e 's/$AR t/lib -nologo -list/' \
+	  -e 's%f_ex_an_ar_oldlib="\($?*1*\)"%f_ex_an_ar_oldlib='\`"$CYGPATH_W"' \1`%' \ 
+	  -e 's%^archive_cmds=.*%archive_cmds="\\$CC -o \\$lib \\$libobjs \\$compiler_flags \\\\\\`echo \\\\\\"\\$deplibs\\\\\\" | \\$SED -e '"\'"'s/ -lc\\$//'"\'"'\\\\\\` -link -dll~linknames="%' \
+	  -e 's%old_archive_cmds="lib -OUT:\\$oldlib\\$oldobjs\\$old_deplibs"%old_archive_cmds="if test -r \\$oldlib; then bla=\\"\\$oldlib\\"; else bla=; fi; lib -OUT:\\$oldlib \\\\\\$bla\\$oldobjs\\$old_deplibs"%' \
+      libtool > conftest.bla
+
+      mv conftest.bla libtool
+      chmod 755 libtool
+      ;;
+    *)
+      AC_MSG_NOTICE(Applying patches to libtool for GNU compiler)
+      sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
+	  -e 's|"lib /OUT:\\$oldlib\\$oldobjs\\$old_deplibs"|"\\$AR \\$AR_FLAGS \\$oldlib\\$oldobjs\\$old_deplibs~\\$RANLIB \\$oldlib"|' \
+	  -e 's|libext="lib"|libext="a"|' \
+      libtool > conftest.bla
+
+      mv conftest.bla libtool
+      chmod 755 libtool
+      ;;
+  esac ]) # COIN_PATCH_LIBTOOL_CYGWIN
+
+###########################################################################
+#                    COIN_PATCH_LIBTOOL_SOLARIS                           #
+###########################################################################
+# If we want to do a 64-bit build with GCC on Solaris, the system search
+# libraries need to point to 64-bit subdirectories. If they do not already do
+# that, fix them. This patch is evolving, as are GCC compilers.  GCC 4.2.1
+# reports the correct search list, given the correct call. GCC 4.1.1 does not.
+# `Correct call' means -m64 is specified. `Correct search list' seems to amount
+# to prepending the list of 64-bit subdirectories to the 32-bit directories.
+# Both SPARC and x86 have this issue, but a different hardware id string is
+# required depending on the underlying CPU. The macro executes isainfo to get
+# the string. This will fail, of course, if we're cross-compiling. The
+# alternative is to fail on a regular basis each time a new CPU identifier is
+# needed. This macro will also fail if the search list reported with
+# -print-search-dirs differs between the C, C++, and Fortran compilers; each
+# have their own setting in libtool.  If GCC reports the correct search list
+# given the -m64 flag, the best solution is to define CC='gcc -m64', and
+# similarly for CXX, F77, so that libtool will make the correct call.
+###########################################################################
+AC_DEFUN([AC_COIN_PATCH_LIBTOOL_SOLARIS],
+[ if test "$GCC" = yes && \
+     (echo $CXXFLAGS $CFLAGS $FFLAGS | $EGREP 'm64' >/dev/null 2>&1) ; then
+    hdwisa=`isainfo | sed -e 's/\(@<:@^ @:>@*\) .*$/\1/'`
+    if `$EGREP 'sys_lib_search_path_spec=' libtool | $EGREP -v $hdwisa >/dev/null 2>&1` ; then
+      AC_MSG_NOTICE([Applying patches to libtool for 64-bit GCC compilation])
+      fixlibtmp=`$CC -m64 -print-search-dirs | $EGREP '^libraries:'`
+      fixlibtmp=`echo $fixlibtmp | sed -e 's/libraries: =//' -e 's/:/ /g'`
+      if `echo "$fixlibtmp" | $EGREP -v $hdwisa  >/dev/null 2>&1` ; then
+	# AC_MSG_NOTICE(Compensating for broken gcc)
+	for lib in $fixlibtmp ; do
+	  if test -d "${lib}${hdwisa}" ; then
+	    syslibpath64="$syslibpath64 ${lib}${hdwisa}/"
+	  fi
+	done
+	syslibpath64="${syslibpath64} ${fixlibtmp}"
+      else
+	syslibpath64="$fixlibtmp"
+      fi
+      sed -e 's|sys_lib_search_path_spec=".*"|sys_lib_search_path_spec="'"$syslibpath64"'"|' libtool > conftest.bla
+      mv conftest.bla libtool
+      chmod 755 libtool  
+    fi
+    # AC_MSG_NOTICE(Result is )
+    # $EGREP 'sys_lib_search_path_spec=' libtool
+  fi ])	# COIN_PATCH_LIBTOOL_SOLARIS
+
+###########################################################################
 #                           COIN_PROG_LIBTOOL                             #
 ###########################################################################
 
@@ -1807,25 +1907,6 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
   AC_SUBST(ac_c_preproc_warn_flag)
   AC_SUBST(ac_cxx_preproc_warn_flag)
 
-# Fix bugs in libtool script for Windows native compilation:
-# - cygpath is not correctly quoted in fix_srcfile_path
-# - paths generated for .lib files is not run through cygpath -w
-
-
-# - lib includes subdirectory information; we want to replace
-#
-# old_archive_cmds="lib /OUT:\$oldlib\$oldobjs\$old_deplibs"
-#
-# by
-#
-# old_archive_cmds="echo \$oldlib | grep .libs >/dev/null; if test \$? = 0; then cd .libs; lib /OUT:\`echo \$oldlib\$oldobjs\$old_deplibs | sed -e s@\.libs/@@g\`; cd .. ; else lib /OUT:\$oldlib\$oldobjs\$old_deplibs ; fi"
-#
-#          -e 's%old_archive_cmds="lib /OUT:\\\$oldlib\\\$oldobjs\\\$old_deplibs"%old_archive_cmds="echo \\\$oldlib \| grep .libs >/dev/null; if test \\\$? = 0; then cd .libs; lib /OUT:\\\`echo \\\$oldlib\\\$oldobjs\\\$old_deplibs \| sed -e s@\\.libs/@@g\\\`; cd .. ; else lib /OUT:\\\$oldlib\\\$oldobjs\\\$old_deplibs; fi"%' \
-
-# The following was a hack for chaniing @BACKSLASH to \
-#          -e 'sYcompile_command=`\$echo "X\$compile_command" | \$Xsed -e '"'"'s%@OUTPUT@%'"'"'"\$output"'"'"'%g'"'"'`Ycompile_command=`\$echo "X\$compile_command" | \$Xsed -e '"'"'s%@OUTPUT@%'"'"'"\$output"'"'"'%g'"'"' | \$Xsed -e '"'"'s%@BACKSLASH@%\\\\\\\\\\\\\\\\%g'"'"'`Y' \
-
-  # Correct cygpath for minGW (ToDo!)
   AC_MSG_NOTICE([Build is "$build".])
   mydos2unix='| dos2unix'
   case $build in
@@ -1836,8 +1917,9 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
   esac
 
   case $build in
+    # Here we need to check if -m32 is specified.  If so, we need to correct
+    # sys_lib_search_path_spec
     *x86_64-*)
-# Here we need to check if -m32 is specified.  If so, we need to correct sys_lib_search_path_spec
       if test "$GCC" = yes && (echo $CXXFLAGS $CFLAGS $FFLAGS | $EGREP 'm32' >& /dev/null); then 
         AC_MSG_NOTICE(Applying patches to libtool for 32bit compilation)
         sed -e 's|sys_lib_search_path_spec=".*"|sys_lib_search_path_spec="/lib /usr/lib"|' libtool > conftest.bla
@@ -1845,38 +1927,14 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
         chmod 755 libtool  
       fi
       ;;
+
+    *-solaris*)
+      AC_COIN_PATCH_LIBTOOL_SOLARIS
+      ;;
+    # Cygwin. Ah, cygwin. Too big and ugly to inline; see the macro.
     *-cygwin* | *-mingw*)
-    case "$CXX" in
-      cl* | */cl* | CL* | */CL*) 
-        AC_MSG_NOTICE(Applying patches to libtool for cl compiler)
-        sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
-            -e 's|fix_srcfile_path=\"\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
-            -e 's%compile_deplibs=\"\$dir/\$old_library \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$old_library | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
-            -e 's%compile_deplibs=\"\$dir/\$linklib \$compile_deplibs\"%compile_deplibs="'\`"$CYGPATH_W"' \$dir/\$linklib | sed -e '"'"'sY\\\\\\\\Y/Yg'"'"\`' \$compile_deplibs\"'% \
-	    -e 's%lib /OUT:%lib -OUT:%' \
-	    -e "s%cygpath -w%$CYGPATH_W%" \
-  	    -e 's%$AR x \\$f_ex_an_ar_oldlib%bla=\\`lib -nologo -list \\$f_ex_an_ar_oldlib | xargs echo '"$mydos2unix"'\\`; echo \\$bla; for i in \\$bla; do lib -nologo -extract:\\$i \\$f_ex_an_ar_oldlib; done%' \
-	    -e 's/$AR t/lib -nologo -list/' \
-	    -e 's%f_ex_an_ar_oldlib="\($?*1*\)"%f_ex_an_ar_oldlib='\`"$CYGPATH_W"' \1`%' \ 
-	    -e 's%^archive_cmds=.*%archive_cmds="\\$CC -o \\$lib \\$libobjs \\$compiler_flags \\\\\\`echo \\\\\\"\\$deplibs\\\\\\" | \\$SED -e '"\'"'s/ -lc\\$//'"\'"'\\\\\\` -link -dll~linknames="%' \
-	    -e 's%old_archive_cmds="lib -OUT:\\$oldlib\\$oldobjs\\$old_deplibs"%old_archive_cmds="if test -r \\$oldlib; then bla=\\"\\$oldlib\\"; else bla=; fi; lib -OUT:\\$oldlib \\\\\\$bla\\$oldobjs\\$old_deplibs"%' \
-        libtool > conftest.bla
-
-        mv conftest.bla libtool
-        chmod 755 libtool
-        ;;
-      *)
-        AC_MSG_NOTICE(Applying patches to libtool for GNU compiler)
-        sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
-            -e 's|"lib /OUT:\\$oldlib\\$oldobjs\\$old_deplibs"|"\\$AR \\$AR_FLAGS \\$oldlib\\$oldobjs\\$old_deplibs~\\$RANLIB \\$oldlib"|' \
-            -e 's|libext="lib"|libext="a"|' \
-        libtool > conftest.bla
-
-        mv conftest.bla libtool
-        chmod 755 libtool
-        ;;
-    esac
-    ;;
+      AC_COIN_PATCH_LIBTOOL_CYGWIN
+      ;;
     *-darwin*)
       AC_MSG_NOTICE(Applying patches to libtool for Darwin)
       sed -e 's/verstring="${wl}-compatibility_version ${wl}$minor_current ${wl}-current_version ${wl}$minor_current.$revision"/verstring="-compatibility_version $minor_current -current_version $minor_current.$revision"/' \
@@ -1934,7 +1992,7 @@ if test $enable_shared = yes; then
         RPATH_FLAGS=nothing ;;
     *-mingw32)
         RPATH_FLAGS=nothing ;;
-    *-sun-*)
+    *-*-solaris*)
         RPATH_FLAGS=
         for dir in $1; do
           RPATH_FLAGS="$RPATH_FLAGS -R$dir"
@@ -2760,14 +2818,22 @@ else
                         [AC_MSG_RESULT([no])
                          SAVE_LIBS="$LIBS"])
       ;;
-    *-sun-*)
+
+# Ideally, we'd use -library=sunperf, but it's an imperfect world. Studio
+# cc doesn't recognise -library, it wants -xlic_lib. Studio 12 CC doesn't
+# recognise -xlic_lib. Libtool doesn't like -xlic_lib anyway. Sun claims
+# that CC and cc will understand -library in Studio 13. The main extra
+# function of -xlic_lib and -library is to arrange for the Fortran run-time
+# libraries to be linked for C++ and C. We can arrange that explicitly.
+    *-*-solaris*)
       SAVE_LIBS="$LIBS"
-      AC_MSG_CHECKING([whether -xlic_lib=sunperf has BLAS])
-      LIBS="-xlic_lib=sunperf $LIBS"
+      AC_MSG_CHECKING([for BLAS in libsunperf])
+      LIBS="-lsunperf $FLIBS $LIBS"
       AC_COIN_TRY_FLINK([daxpy],
                         [AC_MSG_RESULT([yes])
-                         use_blas='-xlic_lib=sunperf'
-                         ADDLIBS="-xlic_lib=sunperf $ADDLIBS"],
+                         use_blas='-lsunperf'
+                         ADDLIBS="-lsunperf $ADDLIBS"
+			 coin_need_flibs=yes],
                         [AC_MSG_RESULT([no])
                          LIBS="$SAVE_LIBS"])
       ;;
@@ -2881,16 +2947,19 @@ else
                           [AC_MSG_RESULT([no])
                            SAVE_LIBS="$LIBS"])
         ;;
-      *-sun-*)
-        SAVE_LIBS="$LIBS"
-        AC_MSG_CHECKING([whether -xlic_lib=sunperf has LAPACK])
-        LIBS="-xlic_lib=sunperf $LIBS"
-        AC_COIN_TRY_FLINK([dsyev],
-                          [AC_MSG_RESULT([yes])
-                           use_lapack='-xlic_lib=sunperf'
-                           ADDLIBS="-xlic_lib=sunperf $ADDLIBS"],
-                          [AC_MSG_RESULT([no])
-                           LIBS="$SAVE_LIBS"])
+
+# See comments in COIN_HAS_BLAS.
+      *-*-solaris*)
+      SAVE_LIBS="$LIBS"
+      AC_MSG_CHECKING([for LAPACK in libsunperf])
+      LIBS="-lsunperf $FLIBS $LIBS"
+      AC_COIN_TRY_FLINK([dsyev],
+                        [AC_MSG_RESULT([yes])
+                         use_blas='-lsunperf'
+                         ADDLIBS="-lsunperf $ADDLIBS"
+			 coin_need_flibs=yes],
+                        [AC_MSG_RESULT([no])
+                         LIBS="$SAVE_LIBS"])
         ;;
 # On cygwin, do this check only if doscompile is disabled. The prebuilt library
 # will want to link with cygwin, hence won't run standalone in DOS.

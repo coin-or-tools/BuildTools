@@ -58,7 +58,7 @@ if test -r Externals; then
   svn pset svn:externals -F Externals .
 fi
 
-conf_ac_files=`find . -name 'configure.ac'`
+conf_ac_files=`find . -name 'configure.ac' | grep -v -E 'ThirdParty/.*/.*/configure.ac'`
 
 echo ''
 echo "===> Restoring version number (${stable_branch}stable) in configure.ac files"

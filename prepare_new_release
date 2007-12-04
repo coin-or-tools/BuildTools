@@ -177,7 +177,7 @@ tmpbas=`cd $tmpbas; pwd`
 cd $tmpcodir
 
 echo ''
-conf_ac_files=`find . -name 'configure.ac'`
+conf_ac_files=`find . -name 'configure.ac' | grep -v -E 'ThirdParty/.*/.*/configure.ac'`
 echo "===> Creating backup (.bak) for configure.ac files..."
 for i in $conf_ac_files; do
   cp $i $i.bak
