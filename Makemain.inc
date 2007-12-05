@@ -7,6 +7,25 @@
 # Author:  Andreas Waechter           IBM    2006-04-13
 
 ########################################################################
+#                    Documentation installation                        #
+########################################################################
+
+DocFiles =  README AUTHORS LICENSE
+DocInstallDir = $(prefix)/share/doc/$(PACKAGE)-$(PACKAGE_VERSION)
+
+install-exec-am:
+	test -z "$(DocInstallDir)" || $(mkdir_p) "$(DESTDIR)$(DocInstallDir)"
+	for file in $(DocFiles); do \
+	  if test -f "$$file"; then dir=; else dir="$(srcdir)/"; fi; \
+	  if test -f "$$dir$$file"; then $(INSTALL_DATA) "$$dir$$file" "$(DESTDIR)$(DocInstallDir)/$$file"; fi; \
+	done
+
+uninstall-am:
+	for file in $(DocFiles); do \
+	  rm -f "$(DESTDIR)$(DocInstallDir)/$$file"; \
+	done
+
+########################################################################
 #                         Maintainer Stuff                             #
 ########################################################################
 
