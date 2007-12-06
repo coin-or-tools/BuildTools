@@ -490,6 +490,7 @@ def run(configuration) :
 
   #---------------------------------------------------------------------
   # Run all install executables
+  # We assume a Unix Installation
   #---------------------------------------------------------------------
 
 
@@ -512,7 +513,8 @@ def run(configuration) :
         writeResults(result,installCmd)
         if result['returnCode'] != 0 :
             result['svn version']=configuration['svnVersion']
-            result['install']=installResultFail
+            # figure out what installResultFail should be
+            #result['install']=installResultFail
             result['command history']=commandHistory
             NBemail.sendCmdMsgs(configuration['project'],result,installCmd)
             return
@@ -520,40 +522,71 @@ def run(configuration) :
     
     #---------------------------------------------------------------------
     # Build the binary distribution
+    # We assume a Unix distribution
     #---------------------------------------------------------------------
-       
-    # when doing this right make sure the example, include, and lib directories
-    # are there.
-    # if the lib  directory is there, add it
-    directories  = " lib "
+    if configuration['buildMethod']=='unixConfig' or configuration['buildMethod']=='mingw':
+      directories = ""   
+      # when doing this right make sure the example, include, and lib directories
+      # are there.
+      
+      # if the lib  directory is there, add it
+      if os.path.isdir( "lib") == True :
+        directories  += " lib "
 
-    # if the include directory is there, add it
-    directories +=  " include "
+      # if the include directory is there, add it
+      if os.path.isdir( "include") == True :
+        directories +=  " include "
 
-    # if the examples directory is there, add it
-    #directories +=  " examples "
+      # if the examples directory is there, add it
+      if os.path.isdir( "examples") == True :
+        directories +=  " examples "
 
-    # if the bin directory is there, add it
-    #directories +=  " bin "
+      # if the bin directory is there, add it
+      if os.path.isdir( "bin") == True :
+        directories +=  " bin "
 
-    # don't forget to add LICENSE and AUTHORS file
+      # don't forget to add LICENSE and AUTHORS file
+      # Andreas is going to add a directory where these reside from doing
+      # make install
 
-    #configuration['project']
-    outputDirectory = os.path.join(NBuserParameters.NIGHTLY_BUILD_BIN_DIR, configuration['project'])
-    print outputDirectory
-    # create the output directory
-    
-    # tar it up
+      #if the binary directory is not there create it,
 
-    tarCmd = "tar -czvf "
-    tarCmd += os.path.join(outputDirectory, "test.tgz")
-    tarCmd += directories
+      if not os.path.isdir( NBuserParameters.NIGHTLY_BUILD_BIN_DIR) :
+        os.makedirs( NBuserParameters.NIGHTLY_BUILD_BIN_DIR)
 
-    print tarCmd
-
-    result=NBosCommand.run( tarCmd)
+      #configuration['project']
+      outputDirectory = os.path.join(NBuserParameters.NIGHTLY_BUILD_BIN_DIR, configuration['project'])
+      print outputDirectory
 
 
+      if not os.path.isdir( outputDirectory) :
+        os.makedirs( outputDirectory)
+
+      # create the output directory
+      
+      # tar it up
+
+      tarCmd = "tar -czvf "
+      #do something better with tar file name
+      svnVersionFlattened = cleanUpName(configuration['svnVersion'])
+      tarFileName =  configuration['project'] + "-" + svnVersionFlattened + "-" + sys.platform + ".tgz"
+      tarCmd += os.path.join(outputDirectory, tarFileName)
+      tarCmd += directories
+
+
+
+ 
+      NBlogMessages.writeMessage( '  '+ tarCmd )
+      commandHistory+=[ tarCmd ]
+      result=NBosCommand.run( tarCmd)
+      writeResults(result, tarCmd)
+      if result['returnCode'] != 0 :
+          result['svn version']=configuration['svnVersion']
+          # figure out what tarResultFail should be
+          #result['tar']=tarResultFail
+          result['command history']=commandHistory
+          NBemail.sendCmdMsgs(configuration['project'],result,  tarCmd)
+          return
 
   
   #---------------------------------------------------------------------
