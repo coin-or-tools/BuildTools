@@ -530,6 +530,7 @@ def run(configuration) :
       # are there.
       
       # if the lib  directory is there, add it
+      # delete these if already there
       if os.path.isdir( "lib") == True :
         directories  += " lib "
 
@@ -565,7 +566,7 @@ def run(configuration) :
       # create the output directory
       
       # tar it up
-
+      # buidDir should be name of tar file -- make unique
       tarCmd = "tar -czvf "
       #do something better with tar file name
       svnVersionFlattened = cleanUpName(configuration['svnVersion'])
