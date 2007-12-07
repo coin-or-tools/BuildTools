@@ -524,7 +524,6 @@ def run(configuration) :
     # Build the binary distribution
     # We assume a Unix distribution
     #---------------------------------------------------------------------
-    if configuration['buildMethod']=='unixConfig' or configuration['buildMethod']=='mingw':
       directories = ""   
       # when doing this right make sure the example, include, and lib directories
       # are there.
