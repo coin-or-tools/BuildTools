@@ -25,7 +25,7 @@ NIGHTLY_BUILD_ROOT_DIR = '/xxx'
 #----------------------------------------------------------------------
 # List of Projects to be processed by script
 #----------------------------------------------------------------------
-PROJECTS = ['CoinUtils','Clp','Osi','DyLP','SYMPHONY','Vol','Cgl','Cbc','Smi','FlopC++','Ipopt','Bonmin','OS','CppAD']
+PROJECTS = ['CoinUtils','Clp','Osi','DyLP','SYMPHONY','Vol','Cgl','Cbc','Smi','FlopC++','Ipopt','Bonmin','OS','CppAD','CoinAll']
 
 #----------------------------------------------------------------------
 #  Define how a COIN-OR project is to be built and tested.
@@ -144,6 +144,11 @@ BUILDS = {
      #,{ 'SvnVersion': 'trunk',        'OptLevel': 'Debug',   'ThirdParty':'Yes' }
      #,{ 'SvnVersion': 'latestStable', 'OptLevel': 'Default', 'ThirdParty':'Yes' }
      #,{ 'SvnVersion': 'latestRelease','OptLevel': 'Default', 'ThirdParty':'Yes' }
+     ],
+   'CoinAll' :
+     [
+       { 'SvnVersion': 'trunk', 'OptLevel': 'Default', 'ThirdParty':'Yes' },
+       { 'SvnVersion': 'trunk', 'OptLevel': 'Debug',   'ThirdParty':'Yes' }
      ],
    'LaGO' :
      [

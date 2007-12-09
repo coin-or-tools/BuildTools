@@ -240,6 +240,13 @@ CFG_BLD_TEST['LaGO']=[
                    'check':[ NBcheckResult.rc0 ] } ]
 
 #----------------------------------------------------------------------
+PROJECT_EMAIL_ADDRS['CoinAll'] = 'tkr2 _AT_ lehigh _DOT_ edu'
+CFG_BLD_TEST['CoinAll']=[
+                  {'dir':'',
+                   'cmd':'make test',
+                   'check':[ NBcheckResult.rc0 ] } ]
+
+#----------------------------------------------------------------------
 PROJECT_EMAIL_ADDRS['CppAD'] = 'bradbell _AT_ washington _DOT_ edu'
 
 CFG_BLD_TEST['CppAD']=[

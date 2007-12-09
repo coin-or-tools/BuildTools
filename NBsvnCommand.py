@@ -73,7 +73,7 @@ def latestReleaseVersion(project) :
 
 
 #------------------------------------------------------------------------
-# Return svn revision number or url
+# Return svn revision number from url
 # If not found the return -1
 #------------------------------------------------------------------------
 def svnRevision(url) :
@@ -85,6 +85,21 @@ def svnRevision(url) :
     found=re.findall(reg,result['stdout'])
     if len(found)!=0 :
       retVal=int(found[0])
+  return retVal
+
+
+#------------------------------------------------------------------------
+# Return svn url corresponding to given directory
+# If not found the return -1
+#------------------------------------------------------------------------
+def svnUrl(dir) :
+  retVal='error in NBsvnCommand.svnUrl'
+  result = NBosCommand.run('svn info --xml '+dir)
+  if result['returnCode']==0 :
+    reg=r'<url>(.+)</url>'
+    found=re.findall(reg,result['stdout'])
+    if len(found)!=0 :
+      retVal=found[0]
   return retVal
   
 
@@ -152,3 +167,33 @@ def newer(source,target) :
 
   return False
 
+#------------------------------------------------------------------------
+# svnRevisions(target)
+# Return svn version and version of all referenced externals
+#------------------------------------------------------------------------
+def svnRevisions(relPath,revisions) :
+  #path=os.path.join(basePath,relPath)
+  #os.chdir(path)
+  
+  rev=svnRevision(relPath)
+  if rev==-1 : rev = "Error getting svn revision"
+  url=svnUrl(relPath)
+  revisions[relPath]=url+" "+str(rev)
+  
+  # get externals
+  result = NBosCommand.run('svn propget svn:externals '+relPath)
+  if result['returnCode']!=0 : print 'error getting external property'
+  externals = result['stdout']
+
+  for external in externals.split('\n'):
+    if external=="" : continue
+    p=external.split()
+    path=os.path.join(relPath,p[0])
+    #print path
+    svnRevisions(path,revisions)
+  return
+
+#r={}
+#path=os.chdir('/home/jp/COIN/Cbc/trunk')
+#svnRevisions('.',r)
+#print r
