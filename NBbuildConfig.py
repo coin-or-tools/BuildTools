@@ -549,13 +549,14 @@ def run(configuration) :
       # Andreas is going to add a directory where these reside from doing
       # make install
 
-      #if the binary directory is not there create it,
+      #if the binary directory is not there create it
+      binariesDir=os.path.join(projectBaseDir,"binaries")
 
-      if not os.path.isdir( NBuserParameters.NIGHTLY_BUILD_BIN_DIR) :
-        os.makedirs( NBuserParameters.NIGHTLY_BUILD_BIN_DIR)
+      if not os.path.isdir( binariesDir ) :
+        os.makedirs( binariesDir )
 
       #configuration['project']
-      outputDirectory = os.path.join(NBuserParameters.NIGHTLY_BUILD_BIN_DIR, configuration['project'])
+      outputDirectory = os.path.join(binariesDir, configuration['project'])
       print outputDirectory
 
 
