@@ -34,7 +34,10 @@ THIRD_PARTY_HISTORY = []
 #---------------------------------------------------------------------
 def cleanUpName(messedUpName) :
   cleanedUpName=messedUpName
-  cleanedUpName=cleanedUpName.replace('-','')
+  
+  # Do not remove "-". This will cause problems when removing NBallTestsPassed.
+  #cleanedUpName=cleanedUpName.replace('-','')
+
   cleanedUpName=cleanedUpName.replace('/','-')
   cleanedUpName=cleanedUpName.replace('\\','-')
   cleanedUpName=cleanedUpName.replace(' ','')
@@ -43,6 +46,7 @@ def cleanUpName(messedUpName) :
   cleanedUpName=cleanedUpName.replace("=",'-')
   cleanedUpName=cleanedUpName.replace(":",'')
   cleanedUpName=cleanedUpName.replace('--enable','')
+  cleanedUpName=cleanedUpName.replace('--','-')
   return cleanedUpName
 
 
@@ -341,7 +345,9 @@ def run(configuration) :
     configOptions ="-C "+configuration['configOptions']['unique']
     configOptions+=configuration['configOptions']['invariant']
     configOptions+=skipOptions
-    
+    configOptions=configOptions.replace("  "," ")
+    configOptions=configOptions.replace("  "," ")
+    configOptions=configOptions.replace('=" ','="')
 
     #start kipp change
     #
@@ -367,6 +373,7 @@ def run(configuration) :
 
       # Finally run config
       result=NBosCommand.run(configCmd)
+      result['stdout']=configOptions+"\n"+result['stdout']
       writeResults(result,'config') 
 
       # Check if configure worked

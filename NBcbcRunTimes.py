@@ -36,6 +36,18 @@ def getCbcStdout(cbcStdoutFileName):
     cbcStdoutFilePtr.close()
   return retVal
 #===========================================================================
+def getConfigOptions(buildDir):
+  retVal=''
+  configFile = os.path.join(buildDir,'NBstdout-config')
+  if os.path.isfile(configFile) :
+    configFilePtr = open(configFile,'r')
+    retVal=configFilePtr.readline()
+    configFilePtr.close()
+  else :
+    NBlogMessages.writeMessage( "Failure reading " + configFile )
+    sys.exit(1)
+  return retVal
+#===========================================================================
 def updateMachineTables(db) : 
   cursor = db.cursor()
   
@@ -72,18 +84,20 @@ def updateBuildTables(db,svnSrcDir,buildDir) :
   execFilename=os.path.join(buildDir,"Cbc","src","cbc")
   execModTimeEpoch=os.path.getmtime(execFilename)
   execModTime=str(datetime.datetime.fromtimestamp(execModTimeEpoch))
+  configOptions=getConfigOptions(buildDir)
+  print configOptions
 
   # Does this build already exist in database?
-  x=cursor.execute("""SELECT buildId from build WHERE svnRevision='%s' and svnUrl='%s' and executableTimeStamp='%s'"""%
-                 (str(svnRevNum),svnUrl,execModTime) )
+  x=cursor.execute("""SELECT buildId from build WHERE svnRevision='%s' and svnUrl='%s' and executableTimeStamp='%s' and configOptions='%s'"""%
+                 (str(svnRevNum),svnUrl,execModTime,configOptions) )
   row = cursor.fetchone()
   if row!=None :
     retVal=row[0]
     cursor.close()
     return retVal
   
-  x=cursor.execute("Insert INTO build (svnRevision,svnUrl,executableTimeStamp) VALUES (%s,%s,%s)",
-                 (str(svnRevNum),svnUrl,execModTime) )  
+  x=cursor.execute("Insert INTO build (svnRevision,svnUrl,executableTimeStamp,configOptions) VALUES (%s,%s,%s,%s)",
+                 (str(svnRevNum),svnUrl,execModTime,configOptions) )  
   retVal = db.insert_id()
 
   # Insert build attributes in database
@@ -99,6 +113,7 @@ def updateBuildTables(db,svnSrcDir,buildDir) :
 
 
 
+#==================================================================================
   
 
 def updateDb(dbPwDir,svnSrcDir,buildDir,cbcStdout) :
