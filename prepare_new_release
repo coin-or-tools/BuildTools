@@ -283,8 +283,8 @@ if test -r Externals; then
           if test -r $ext_name/$getfile; then
 	    curdir=`pwd`
             cd $ext_name
-            echo "Running $getfile in `pwd`"
-            eval ./$getfile
+            echo "Running $getfile -patch in `pwd`"
+            eval ./$getfile -patch
             cd "$curdir"
           fi
           ;;
