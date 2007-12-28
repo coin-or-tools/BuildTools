@@ -11,7 +11,7 @@
 ########################################################################
 
 DocFiles =  README AUTHORS LICENSE
-DocInstallDir = $(prefix)/share/doc/$(PACKAGE)
+DocInstallDir = $(prefix)/share/doc/$(PACKAGE_NAME)
 
 install-doc:
 	test -z "$(DocInstallDir)" || $(mkdir_p) "$(DESTDIR)$(DocInstallDir)"
