@@ -13,14 +13,14 @@
 DocFiles =  README AUTHORS LICENSE
 DocInstallDir = $(prefix)/share/doc/$(PACKAGE)
 
-install-exec-am:
+install-doc:
 	test -z "$(DocInstallDir)" || $(mkdir_p) "$(DESTDIR)$(DocInstallDir)"
 	for file in $(DocFiles); do \
 	  if test -f "$$file"; then dir=; else dir="$(srcdir)/"; fi; \
 	  if test -f "$$dir$$file"; then $(INSTALL_DATA) "$$dir$$file" "$(DESTDIR)$(DocInstallDir)/$$file"; fi; \
 	done
 
-uninstall-am:
+uninstall-doc:
 	for file in $(DocFiles); do \
 	  rm -f "$(DESTDIR)$(DocInstallDir)/$$file"; \
 	done
@@ -75,3 +75,5 @@ DISTCLEANFILES += .Externals-stamp
 endif
 
 DISTCLEANFILES += $(VPATH_DISTCLEANFILES)
+
+.PHONY: install-doc uninstall-doc update-externals
