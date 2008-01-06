@@ -1,4 +1,4 @@
-# Copyright (C) 2006 International Business Machines and others.
+# Copyright (C) 2006, 2007 International Business Machines and others.
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
@@ -11,9 +11,9 @@
 ########################################################################
 
 DocFiles =  README AUTHORS LICENSE
-DocInstallDir = $(prefix)/share/doc/$(PACKAGE_NAME)
+DocInstallDir = $(prefix)/share/doc/coin/$(PACKAGE_NAME)
 
-install-doc:
+install-doc: $(DocFiles)
 	test -z "$(DocInstallDir)" || $(mkdir_p) "$(DESTDIR)$(DocInstallDir)"
 	for file in $(DocFiles); do \
 	  if test -f "$$file"; then dir=; else dir="$(srcdir)/"; fi; \
