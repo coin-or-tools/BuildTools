@@ -456,7 +456,7 @@ AC_DEFUN([AC_COIN_ENABLE_DOSCOMPILE],
   [AC_HELP_STRING([--enable-doscompile],
                   [Under Cygwin, compile so that executables run under DOS.
 		   Set to mingw to use gcc/g++/ld with -mno-cygwin.
-		   Set to msvc to use cl/link.
+		   Set to msvc to use cl/link (or icl/link).
 		   Default when mentioned: mingw.
 		   Default when not mentioned: disabled.])],
   [if test "$enable_doscompile" != no; then
@@ -511,7 +511,7 @@ save_cxxflags="$CXXFLAGS"
 case $build in
   *-cygwin* | *-mingw*)
   	     if test "$enable_doscompile" = msvc ; then
-	       comps="cl"
+	       comps="icl cl"
 	     else
 	       comps="g++ cl"
 	     fi ;;
@@ -532,7 +532,7 @@ fi
 
 # It seems that we need to cleanup something here for the Windows 
 case "$CXX" in
-  cl* | */cl* | CL* | */CL* )
+  cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
     sed -e 's/^void exit (int);//' confdefs.h >> confdefs.hh
     mv confdefs.hh confdefs.h
     ;;
@@ -596,6 +596,12 @@ if test x"$CXXFLAGS" = x; then
             coin_opt_cxxflags='-MT -O2'
             coin_add_cxxflags='-nologo -EHsc -GR -wd4996 -D_CRT_SECURE_NO_DEPRECATE'
             coin_dbg_cxxflags='-MTd'
+            ;;
+          icl* | */icl* | ICL* | */ICL*)
+	    # The MT and MTd options are mutually exclusive
+            coin_opt_cxxflags='-MT -Ox'
+            coin_add_cxxflags='-nologo -EHsc -GR -D_CRT_SECURE_NO_DEPRECATE'
+            coin_dbg_cxxflags='-MTd -debug'
             ;;
         esac
         ;;
@@ -862,7 +868,7 @@ AC_LANG_PUSH(C)
 # compiler, if the C++ is set, but the C compiler isn't (only for CXX=cl)
 if test x"$CXX" != x; then
   case "$CXX" in
-    cl* | */cl* | CL* | */CL*)
+    cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
       if test x"$CC" = x; then
         CC="$CXX"
         AC_MSG_WARN([C++ compiler name provided as $CXX, but CC is unset. Setting CC to $CXX])
@@ -888,7 +894,7 @@ save_cflags="$CFLAGS"
 case $build in
   *-cygwin* | *-mingw*)
   	     if test "$enable_doscompile" = msvc ; then
-	       comps="cl"
+	       comps="icl cl"
 	     else
 	       comps="gcc cl"
 	     fi ;;
@@ -964,6 +970,11 @@ if test x"$CFLAGS" = x; then
             coin_opt_cflags='-MT -O2'
             coin_add_cflags='-nologo -wd4996 -D_CRT_SECURE_NO_DEPRECATE'
             coin_dbg_cflags='-MTd'
+            ;;
+          icl* | */icl* | ICL* | */ICL*)
+            coin_opt_cflags='-MT -Ox'
+            coin_add_cflags='-nologo -D_CRT_SECURE_NO_DEPRECATE'
+            coin_dbg_cflags='-MTd -debug'
             ;;
         esac
         ;;
@@ -1089,7 +1100,7 @@ fi
 
 # Correct ADDLIBS initialization if we are using the MS compiler
 case "$CC" in
-  cl* | */cl* | CL* | */CL*)
+  cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
     ADDLIBS=
     AC_COIN_MINGW_LD_FIX
     ;;
@@ -1797,7 +1808,7 @@ AC_SUBST(LT_LDFLAGS)
 
 AC_DEFUN([AC_COIN_PATCH_LIBTOOL_CYGWIN],
 [ case "$CXX" in
-    cl* | */cl* | CL* | */CL*) 
+    cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*) 
       AC_MSG_NOTICE(Applying patches to libtool for cl compiler)
       sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
 	  -e 's|fix_srcfile_path=\"\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
@@ -2031,7 +2042,7 @@ if test "$enable_doscompile" = mingw; then
   coin_link_input_cmd=cp
 fi
 case "$CC" in
-  cl* | */cl* | CL* | */CL*)
+  cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
     coin_link_input_cmd=cp ;;
 esac
 AC_MSG_RESULT($coin_link_input_cmd)
@@ -2061,7 +2072,7 @@ if test x$coin_skip_ac_output != xyes; then
   # library extension
   AC_SUBST(LIBEXT)
   case "$CC" in
-    cl* | */cl* | CL* | */CL*)
+    cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
          LIBEXT=lib ;;
       *) LIBEXT=a ;;
   esac
@@ -2376,7 +2387,7 @@ if test $coin_vpath_config = yes; then
     lnkcmd=cp
   fi
   case "$CC" in
-    cl* | */cl* | CL* | */CL*)
+    cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
       lnkcmd=cp ;;
   esac
   if test "$lnkcmd" = cp; then
@@ -2621,7 +2632,7 @@ coin_aslsrcdir=$srcdir/$coin_aslobjdir
 
 # Determine the name of the ASL library
 case "$CC" in
-  cl* | */cl* | CL* | */CL*)
+  cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
     ampllib=amplsolv.lib ;;
   *)
     ampllib=amplsolver.a ;;
@@ -2837,12 +2848,25 @@ else
                         [AC_MSG_RESULT([no])
                          LIBS="$SAVE_LIBS"])
       ;;
+    *-cygwin* | *-mingw*)
 # On cygwin, consider -lblas only if doscompile is disabled. The prebuilt
 # library will want to link with cygwin, hence won't run standalone in DOS.
-    *-cygwin*)
       if test "$enable_doscompile" = mingw; then
 	skip_lblas_check=yes
       fi
+      case "$CC" in
+        cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+          SAVE_LIBS="$LIBS"
+          AC_MSG_CHECKING([for BLAS in MKL])
+          LIBS="mkl_intel_c.lib mkl_sequential.lib mkl_core.lib $LIBS"
+          AC_COIN_TRY_FLINK([daxpy],
+                            [AC_MSG_RESULT([yes])
+                             use_blas='mkl_intel_c.lib mkl_sequential.lib mkl_core.lib'
+                             ADDLIBS="mkl_intel_c.lib mkl_sequential.lib mkl_core.lib $ADDLIBS"],
+                            [AC_MSG_RESULT([no])
+                             LIBS="$SAVE_LIBS"])
+          ;;
+      esac
       ;;
   esac
 
@@ -3052,7 +3076,7 @@ if test "$use_mumps" != "no"; then
   AC_LANG_POP(C)
 
   case "$CC" in
-    cl* | */cl* | CL* | */CL*)
+    cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
          libe=lib ;;
       *) libe=a ;;
   esac
