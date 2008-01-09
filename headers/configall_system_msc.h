@@ -9,8 +9,6 @@
 #endif
 
 /* Quick fix so CoinAlloc will compile on windows */
-#define SIZEOF_SIZE_T 4
-#define SIZEOF_VOID_P 4
 #define COINUTILS_MEMPOOL_MAXPOOLED -1
 
 /* Define to integer type capturing pointer */
