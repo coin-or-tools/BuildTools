@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
-## $Id: Makmaint.inc 5920 2006-05-02 05:51:22Z andreasw $
+## $Id$
 
 # Author:  Andreas Waechter           IBM    2006-04-13
 
