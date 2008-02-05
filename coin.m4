@@ -2468,6 +2468,8 @@ if test $m4_tolower(coin_has_$1) != unavailable &&
   m4_toupper($1SRCDIR)=`cd $srcdir/$m4_tolower(coin_has_$1); pwd`
   AC_SUBST(m4_toupper($1OBJDIR))
   m4_toupper($1OBJDIR)=`pwd`/$m4_tolower(coin_has_$1)
+  AC_SUBST(m4_toupper($1DOCDIR))
+  m4_toupper($1DOCDIR)=$abs_lib_dir/../share/doc/coin/$1
 fi
 
   # Define the Makefile conditional
