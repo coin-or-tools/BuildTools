@@ -46,6 +46,8 @@ fi
 cincs="-I`$CYGPATH_W $f2clibdir`"
 
 options=
+makedll=
+linkflags=
 incs=
 fsrc=
 objs=
@@ -73,6 +75,13 @@ do
         options="$options $arg"
         f2clib=
         mainobj=
+        ;;
+      -shared)
+        makedll=yes
+        linkflags="$linkflags -dll"
+        ;;
+      -def:*)
+        linkflags="$linkflags $arg"
         ;;
       -*)
         options="$options $arg"
@@ -113,9 +122,15 @@ if test "$outfile"; then
   cout="-o `$CYGPATH_W $outfile`"
 fi
 
-echo $F2C_CC $options $cincs $csrc $objs $cout $mainobj $f2clib
+if test x$makedll = xyes; then
+  echo $F2C_CC $options $cincs $csrc $objs $cout $f2clib -link $linkflags
 
-$F2C_CC $options $cincs $csrc $objs $cout $mainobj $f2clib
+  $F2C_CC $options $cincs $csrc $objs $cout $f2clib -link $linkflags
+else
+  echo $F2C_CC $options $cincs $csrc $objs $cout $mainobj $f2clib
+
+  $F2C_CC $options $cincs $csrc $objs $cout $mainobj $f2clib
+fi
 cl_status=$?
 
 rm -f $csrc

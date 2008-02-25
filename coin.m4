@@ -1677,27 +1677,35 @@ AC_COIN_INIT_AUTO_TOOLS
 # This is a trick to have this code before AC_COIN_PROG_LIBTOOL
 AC_DEFUN([AC_COIN_DISABLE_STATIC],
 [
-# On Cygwin and AIX, building DLLs doesn't work
-case $build in
-  *-cygwin*)
-    coin_disable_shared=yes
-    platform=Cygwin
-  ;;
-  *-aix*)
-    coin_disable_shared=yes
-    platform=AIX
-  ;;
-  *-mingw*)
-    coin_disable_shared=yes
-    platform="Msys"
-#    case "$CXX" in
-#      cl*)
-#        coin_disable_shared=yes
-#        platform="Msys with cl"
-#    ;;
-#    esac
-  ;;
-esac
+# Test if force_shared has been set
+if test "x$1" = xforce_shared; then
+  if test x$enable_shared = xno; then
+    AC_MSG_ERROR([Shared libraries are disabled by user, but this is not feasible with the given options])
+  fi
+  enable_shared=yes;
+else
+  # On Cygwin and AIX, building DLLs doesn't work
+  case $build in
+    *-cygwin*)
+      coin_disable_shared=yes
+      platform=Cygwin
+    ;;
+    *-aix*)
+      coin_disable_shared=yes
+      platform=AIX
+    ;;
+    *-mingw*)
+      coin_disable_shared=yes
+      platform="Msys"
+#      case "$CXX" in
+#        cl*)
+#          coin_disable_shared=yes
+#          platform="Msys with cl"
+#      ;;
+#      esac
+    ;;
+  esac
+fi
 if test x"$coin_disable_shared" = xyes; then
   if test x"$enable_shared" = xyes; then
     AC_MSG_WARN([On $platform, shared objects are not supported. I'm disabling your choice.])
@@ -1714,7 +1722,7 @@ AC_BEFORE([AC_COIN_PROG_CC],[$0])
 AC_BEFORE([AC_COIN_PROG_F77],[$0])
 
 # START
-AC_COIN_DISABLE_STATIC
+AC_COIN_DISABLE_STATIC([$1])
 
 # Initialize automake
 AC_COIN_INIT_AUTOMAKE
