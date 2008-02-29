@@ -1957,6 +1957,7 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
     *-darwin*)
       AC_MSG_NOTICE(Applying patches to libtool for Darwin)
       sed -e 's/verstring="${wl}-compatibility_version ${wl}$minor_current ${wl}-current_version ${wl}$minor_current.$revision"/verstring="-compatibility_version $minor_current -current_version $minor_current.$revision"/' \
+        -e 's/ -dynamiclib / -dynamiclib -single_module /g' \
       libtool > conftest.bla
 
       mv conftest.bla libtool
