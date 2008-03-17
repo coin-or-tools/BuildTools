@@ -3064,7 +3064,7 @@ if test "$PACKAGE_NAME" = ThirdPartyMumps; then
 else
   coin_mumpsobjdir=../ThirdParty/Mumps
 fi
-coin_mumpssrcdir=$abs_source_dir/$coin_mumpsobjdir
+coin_mumpssrcdir=$abs_source_dir/$coin_mumpsobjdir/MUMPS
 
 MAKEOKFILE=.MakeOk
 
@@ -3132,7 +3132,7 @@ if test x"$use_mumps" != x; then
   # and we need the Fortran runtime libraries if we want to link with C/C++
   coin_need_flibs=yes
 
-  MUMPS_INCFLAGS="-I\`\$(CYGPATH_W) $coin_mumpssrcdir/MUMPS/libseq\` -I\`\$(CYGPATH_W) $coin_mumpssrcdir/MUMPS/include\`"
+  MUMPS_INCFLAGS="-I\`\$(CYGPATH_W) $coin_mumpssrcdir/libseq\` -I\`\$(CYGPATH_W) $coin_mumpssrcdir/include\`"
   AC_SUBST(MUMPS_INCFLAGS)
 fi
 
