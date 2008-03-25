@@ -133,6 +133,12 @@
 /* Define to 1 if va_copy is avaliable */
 /* #undef HAVE_VA_COPY */
 
+/* Define to 1 if you have the <windows.h> header file. */
+#define HAVE_WINDOWS_H 1
+
+/* Define to 1 if you have the `_snprintf' function. */
+#define HAVE__SNPRINTF 1
+
 /* Define to be the name of C-function for Inf check */
 #define MY_C_FINITE _finite
 
