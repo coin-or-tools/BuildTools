@@ -1677,27 +1677,35 @@ AC_COIN_INIT_AUTO_TOOLS
 # This is a trick to have this code before AC_COIN_PROG_LIBTOOL
 AC_DEFUN([AC_COIN_DISABLE_STATIC],
 [
-# On Cygwin and AIX, building DLLs doesn't work
-case $build in
-  *-cygwin*)
-    coin_disable_shared=yes
-    platform=Cygwin
-  ;;
-  *-aix*)
-    coin_disable_shared=yes
-    platform=AIX
-  ;;
-  *-mingw*)
-    coin_disable_shared=yes
-    platform="Msys"
-#    case "$CXX" in
-#      cl*)
-#        coin_disable_shared=yes
-#        platform="Msys with cl"
-#    ;;
-#    esac
-  ;;
-esac
+# Test if force_shared has been set
+if test "x$1" = xforce_shared; then
+  if test x$enable_shared = xno; then
+    AC_MSG_ERROR([Shared libraries are disabled by user, but this is not feasible with the given options])
+  fi
+  enable_shared=yes;
+else
+  # On Cygwin and AIX, building DLLs doesn't work
+  case $build in
+    *-cygwin*)
+      coin_disable_shared=yes
+      platform=Cygwin
+    ;;
+    *-aix*)
+      coin_disable_shared=yes
+      platform=AIX
+    ;;
+    *-mingw*)
+      coin_disable_shared=yes
+      platform="Msys"
+#      case "$CXX" in
+#        cl*)
+#          coin_disable_shared=yes
+#          platform="Msys with cl"
+#      ;;
+#      esac
+    ;;
+  esac
+fi
 if test x"$coin_disable_shared" = xyes; then
   if test x"$enable_shared" = xyes; then
     AC_MSG_WARN([On $platform, shared objects are not supported. I'm disabling your choice.])
@@ -1714,7 +1722,7 @@ AC_BEFORE([AC_COIN_PROG_CC],[$0])
 AC_BEFORE([AC_COIN_PROG_F77],[$0])
 
 # START
-AC_COIN_DISABLE_STATIC
+AC_COIN_DISABLE_STATIC([$1])
 
 # Initialize automake
 AC_COIN_INIT_AUTOMAKE
@@ -1949,6 +1957,7 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
     *-darwin*)
       AC_MSG_NOTICE(Applying patches to libtool for Darwin)
       sed -e 's/verstring="${wl}-compatibility_version ${wl}$minor_current ${wl}-current_version ${wl}$minor_current.$revision"/verstring="-compatibility_version $minor_current -current_version $minor_current.$revision"/' \
+        -e 's/ -dynamiclib / -dynamiclib -single_module /g' \
       libtool > conftest.bla
 
       mv conftest.bla libtool
@@ -3055,7 +3064,7 @@ if test "$PACKAGE_NAME" = ThirdPartyMumps; then
 else
   coin_mumpsobjdir=../ThirdParty/Mumps
 fi
-coin_mumpssrcdir=$abs_source_dir/$coin_mumpsobjdir
+coin_mumpssrcdir=$abs_source_dir/$coin_mumpsobjdir/MUMPS
 
 MAKEOKFILE=.MakeOk
 
@@ -3123,7 +3132,7 @@ if test x"$use_mumps" != x; then
   # and we need the Fortran runtime libraries if we want to link with C/C++
   coin_need_flibs=yes
 
-  MUMPS_INCFLAGS="-I\`\$(CYGPATH_W) $coin_mumpssrcdir/MUMPS/libseq\` -I\`\$(CYGPATH_W) $coin_mumpssrcdir/MUMPS/include\`"
+  MUMPS_INCFLAGS="-I\`\$(CYGPATH_W) $coin_mumpssrcdir/libseq\` -I\`\$(CYGPATH_W) $coin_mumpssrcdir/include\`"
   AC_SUBST(MUMPS_INCFLAGS)
 fi
 
