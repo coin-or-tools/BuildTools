@@ -8,9 +8,6 @@
 #define COIN_INT64_T long long
 #endif
 
-/* Quick fix so CoinAlloc will compile on windows */
-#define COINUTILS_MEMPOOL_MAXPOOLED -1
-
 /* Define to integer type capturing pointer */
 #define COIN_INTPTR_T long
 
