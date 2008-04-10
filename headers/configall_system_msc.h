@@ -1,11 +1,13 @@
 /* This is the header file for the Microsoft compiler, defining all
  * system and compiler dependent configuration macros */
 
-/* Define to 64bit integer type */
+/* Define to 64bit integer types */
 #if _MSC_VER==1200
 #define COIN_INT64_T __int64
+#define COIN_UINT64_T __uint64
 #else
 #define COIN_INT64_T long long
+#define COIN_UINT64_T unsigned long long
 #endif
 
 /* Define to integer type capturing pointer */
