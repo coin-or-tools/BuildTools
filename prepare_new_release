@@ -105,7 +105,7 @@ if test $new_rel = -10000; then
 elif test $new_rel = 0; then
   new_rel=1
 else
-  let new_rel++
+  new_rel=`(expr $new_rel + 1)`
 fi
 new_ver="$stable_branch.$new_rel"
 
