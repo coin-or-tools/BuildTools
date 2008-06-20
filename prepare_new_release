@@ -284,7 +284,11 @@ if test -r Externals; then
 	    curdir=`pwd`
             cd $ext_name
             echo "Running $getfile -patch in `pwd`"
+#	    mv $getfile $getfile.orig
+#	    sed -e 's+ftp://+http://+g' $getfile.orig > $getfile
+#	    chmod +x $getfile
             eval ./$getfile -patch
+#	    mv $getfile.orig $getfile
             cd "$curdir"
           fi
           ;;
