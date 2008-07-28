@@ -3068,47 +3068,19 @@ coin_mumpssrcdir=$abs_source_dir/$coin_mumpsobjdir/MUMPS
 
 MAKEOKFILE=.MakeOk
 
-AC_ARG_WITH([mumps-dir],
-            AC_HELP_STRING([--with-mumps-dir],
-                           [specify directory where MUMPS is installed]),
-            [use_mumps="$withval"], [use_mumps=no])
+#check if user provides a MUMPS library (that works)
+AC_LANG_PUSH(C)
+AC_COIN_HAS_USER_LIBRARY(mumps, MUMPS, dmumps_c.h, dmumps_c)
+AC_LANG_POP(C)
 
-if test "$use_mumps" != "no"; then
-  if test -d $use_mumps; then :; else
-    AC_MSG_ERROR([User provided MUMPS directory $use_mumps does not exist.])
-  fi
-  mumps_dir=`cd $use_mumps; pwd`
+if test "$coin_has_mumps" = "true"; then  # user provided mumps library
+  use_mumps=yes
+  coin_has_mumps=yes
 
-  # library extension
-  AC_LANG_PUSH(C)
-  save_LIBS="$LIBS"
-  LIBS="$LIBS $FLIBS"
-  AC_CHECK_LIB([pthread],[pthread_create],[LIBS="-lpthread $save_LIBS"; ADDLIBS="-lpthread $ADDLIBS"],[LIBS="$save_LIBS"])
-  AC_LANG_POP(C)
+  MUMPS_INCFLAGS="-I\`\$(CYGPATH_W) $MUMPSINCDIR\`"
+  ADDLIBS="$MUMPSLIB $ADDLIBS"
 
-  case "$CC" in
-    cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
-         libe=lib ;;
-      *) libe=a ;;
-  esac
-
-  # Check if hearders are there
-  AC_COIN_CHECK_FILE([$mumps_dir/include/dmumps_c.h],
-                     [],
-                     [AC_MSG_ERROR([I cannot find headers for MUMPS])])
-  LIBS="$mumps_dir/lib/libdmumps.$libe $mumps_dir/lib/libpord.$libe $mumps_dir/libseq/libmpiseq.$libe $LIBS"
-  ADDLIBS="$mumps_dir/lib/libdmumps.$libe $mumps_dir/lib/libpord.$libe $mumps_dir/libseq/libmpiseq.$libe $ADDLIBS"
-  # Check if MUMPS actually works
-  AC_LANG_PUSH(C)
-  save_LIBS="$LIBS"
-  LIBS="$LIBS $FLIBS"
-  AC_TRY_LINK([void dmumps_c();],[dmumps_c()],[],
-              [AC_MSG_ERROR([User provided MUMPS library doesn't work])])
-  LIBS="$save_LIBS"
-  AC_LANG_POP(C)
-  coin_mumpssrcdir="$mumps_dir"
-
-else
+else # no user provided library, so we try to build our own
   use_mumps=BUILD
 
   # Check if the MUMPS' ThirdParty project has been configured
@@ -3121,34 +3093,34 @@ else
       LIBS="$LIBS $FLIBS"
       AC_CHECK_LIB([pthread],[pthread_create],[LIBS="-lpthread $save_LIBS"; ADDLIBS="-lpthread $ADDLIBS"],[LIBS="save_LIBS"])
       AC_LANG_POP(C)
+  
+      MUMPS_INCFLAGS="-I\`\$(CYGPATH_W) $coin_mumpssrcdir/libseq\` -I\`\$(CYGPATH_W) $coin_mumpssrcdir/include\`"
     else
       use_mumps=
     fi
   fi
+
+  # if a user provided library is used, then COIN_HAS_USER_LIBRARY takes care of the COIN_HAS_MUMPS conditional and preprocessor symbol
+  AM_CONDITIONAL([COIN_HAS_MUMPS],[test x"$use_mumps" != x])
+  if test x"$use_mumps" != x; then
+    AC_DEFINE([COIN_HAS_MUMPS],[1],[If defined, the MUMPS Library is available.])
+    coin_has_mumps=yes
+  else
+    coin_has_mumps=no
+  fi
+  AC_MSG_CHECKING([whether MUMPS is available])
+  AC_MSG_RESULT([$coin_has_mumps])
 fi
 
 if test x"$use_mumps" != x; then
-
-  # and we need the Fortran runtime libraries if we want to link with C/C++
+  # we need the Fortran runtime libraries if we want to link with C/C++
   coin_need_flibs=yes
 
-  MUMPS_INCFLAGS="-I\`\$(CYGPATH_W) $coin_mumpssrcdir/libseq\` -I\`\$(CYGPATH_W) $coin_mumpssrcdir/include\`"
   AC_SUBST(MUMPS_INCFLAGS)
 fi
 
-AM_CONDITIONAL([COIN_HAS_MUMPS],[test x"$use_mumps" != x])
 AM_CONDITIONAL([COIN_BUILD_MUMPS],[test "$use_mumps" = BUILD])
 
-AC_MSG_CHECKING([whether MUMPS is available])
-
-if test x"$use_mumps" = x || test "$use_mumps" = no; then
-  coin_has_mumps=no
-else
-  coin_has_mumps=yes
-  AC_DEFINE([COIN_HAS_MUMPS],[1],
-            [If defined, the MUMPS Library is available.])
-fi
-AC_MSG_RESULT([$coin_has_mumps])
 ]) # AC_COIN_HAS_MUMPS
 
 ###########################################################################
