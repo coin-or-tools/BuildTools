@@ -2793,7 +2793,7 @@ esac
 # COIN_BUILD_BLAS, if blas is compiled within COIN.
 
 AC_DEFUN([AC_COIN_HAS_BLAS],
-[if test "$PACKAGE_NAME" = ThirdPartyBlas || test "$PACKAGE_NAME" = ThirdPartyLapack; then
+[if test "$PACKAGE_NAME" = ThirdPartyBlas || test "$PACKAGE_NAME" = ThirdPartyLapack || test "$PACKAGE_NAME" = ThirdPartyMumps; then
   coin_blasobjdir=../Blas
 else
   coin_blasobjdir=../ThirdParty/Blas
