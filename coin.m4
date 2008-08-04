@@ -1183,9 +1183,9 @@ if test "$F77" != "unavailable" && test x"$FFLAGS" = x ; then
       *-cygwin* | *-mingw*)
         case $F77 in
           ifort* | */ifort* | IFORT* | */IFORT* )
-            coin_opt_fflags='-O3'
-            coin_add_fflags='-fpp -nologo -MT'
-            coin_dbg_fflags='-debug'
+            coin_opt_fflags='-MT -O3'
+            coin_add_fflags='-fpp -nologo'
+            coin_dbg_fflags='-MTd -debug'
           ;;
           compile_f2c*)
             coin_opt_fflags='-MT -O2'
