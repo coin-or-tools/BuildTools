@@ -1359,7 +1359,12 @@ else
      *-cygwin* | *-mingw*)
        case "$F77" in
          ifort* | */ifort* | IFORT* | */IFORT*)
-           FLIBS="-link libifcorert.lib $LIBS /NODEFAULTLIB:libc.lib";;
+           if test "$coin_debug_compile" = "true"; then
+             FLIBS="-link libifcorertd.lib $LIBS /NODEFAULTLIB:libc.lib"
+           else
+             FLIBS="-link libifcorert.lib $LIBS /NODEFAULTLIB:libc.lib"
+           fi
+           ;;
          compile_f2c*)
            FLIBS=`$F77 -FLIBS` ;;
        esac;;
