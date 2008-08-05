@@ -756,7 +756,7 @@ if test -z "$CXXLIBS"; then
   if test "$GXX" = "yes"; then
     case "$CXX" in
       icpc* | */icpc*)
-        CXXLIBS=""
+        CXXLIBS="-lstdc++"
         ;;
       *)
         CXXLIBS="-lstdc++ -lm" # -lgcc"
@@ -772,7 +772,7 @@ if test -z "$CXXLIBS"; then
      *-linux-*)
       case "$CXX" in
       icpc* | */icpc*)
-        CXXLIBS=""
+        CXXLIBS="-lstdc++"
              ;;
       pgCC* | */pgCC*)
         CXXLIBS="-lstd -lC -lc"
