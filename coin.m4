@@ -1356,14 +1356,13 @@ else
 
   case $build in
   # The following is a fix to define FLIBS for ifort on Windows
+  # In its original version, it linked in libifcorert.lib or libifcorertd.lib on Windows/ifort explicitly.
+  # However, this seem to create a dependency on libifcorert.dll (or libifcorertd.dll) in the executables.
+  # This is seem to be unnecessary, libifcorert(d).lib has been removed from the link line.
      *-cygwin* | *-mingw*)
        case "$F77" in
          ifort* | */ifort* | IFORT* | */IFORT*)
-           if test "$coin_debug_compile" = "true"; then
-             FLIBS="-link libifcorertd.lib $LIBS /NODEFAULTLIB:libc.lib"
-           else
-             FLIBS="-link libifcorert.lib $LIBS /NODEFAULTLIB:libc.lib"
-           fi
+           FLIBS="-link $LIBS /NODEFAULTLIB:libc.lib"
            ;;
          compile_f2c*)
            FLIBS=`$F77 -FLIBS` ;;
