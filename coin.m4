@@ -2414,9 +2414,9 @@ if test $coin_vpath_config = yes; then
     rm -f $file
     $lnkcmd $srcdir/$file $file
   done
-  EXAMPLE_CLEAN_FILES='$1'
+  EXAMPLE_CLEAN_FILES="$EXAMPLE_CLEAN_FILES $1"
 else
-  EXAMPLE_CLEAN_FILES=
+  EXAMPLE_CLEAN_FILES="$EXAMPLE_CLEAN_FILES"
 fi
 
 # In case there are compressed files, we create a variable with the
