@@ -516,9 +516,9 @@ case $build in
 	       comps="g++ cl"
 	     fi ;;
   *-*-solaris*)
-  	     comps="CC xlC aCC g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC" ;;
+  	     comps="CC xlC_r aCC g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC" ;;
   *-darwin*) comps="g++ c++ CC" ;;
-          *) comps="xlC aCC CC g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC" ;;
+          *) comps="xlC_r aCC CC g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC" ;;
 esac
 
 # We delete the cached value, since the test might not have been
@@ -573,15 +573,22 @@ if test x"$CXXFLAGS" = x; then
         coin_opt_cxxflags="-O3 -fomit-frame-pointer"
         coin_add_cxxflags="-pipe"
         coin_dbg_cxxflags="-g"
-        coin_warn_cxxflags="-pedantic-errors -Wimplicit -Wparentheses -Wreturn-type -Wcast-qual -Wall -Wpointer-arith -Wwrite-strings -Wconversion"
-	case $enable_doscompile in
-	  mingw)
-	    CXXFLAGS="-mno-cygwin"
-	    AC_TRY_LINK(,[int i=0; i++;],
-			[coin_add_cxxflags="-mno-cygwin $coin_add_cxxflags"])
-	    CXXFLAGS=
-	    ;;
-	esac
+        coin_warn_cxxflags="-Wimplicit -Wparentheses -Wreturn-type -Wcast-qual -Wall -Wpointer-arith -Wwrite-strings -Wconversion -Wno-unknown-pragmas"
+        case $build in
+          *-darwin*)
+            ;;
+          *)
+            coin_warn_cxxflags="-pedantic-errors $coin_warn_cxxflags"
+            ;;
+        esac
+
+        case $enable_doscompile in
+          mingw)
+            CXXFLAGS="-mno-cygwin"
+            AC_TRY_LINK(,[int i=0; i++;],[coin_add_cxxflags="-mno-cygwin $coin_add_cxxflags"])
+            CXXFLAGS=
+          ;;
+        esac
     esac
   fi
 
@@ -608,7 +615,7 @@ if test x"$CXXFLAGS" = x; then
       *-linux-*)
         case "$CXX" in
           icpc* | */icpc*)
-            coin_opt_cxxflags="-O3 -ip"
+            coin_opt_cxxflags="-O3 -ip -mp1"
             coin_add_cxxflags=""
             coin_dbg_cxxflags="-g"
             # Check if -i_dynamic is necessary (for new glibc library)
@@ -627,7 +634,7 @@ if test x"$CXXFLAGS" = x; then
         case "$CXX" in
           xlC* | */xlC* | mpxlC* | */mpxlC*)
             coin_opt_cxxflags="-O -qarch=auto -qcache=auto -qtune=auto -qmaxmem=-1"
-            coin_add_cxxflags="-bmaxdata:0x80000000 -qrtti=dyna -qsuppress=1500-036 -qsuppress=1500-029"
+            coin_add_cxxflags="-bmaxdata:0x80000000 -qrtti=dyna -qsuppress=1500-036 -qsuppress=1500-029 -qsourcetype=c++"
             coin_dbg_cxxflags="-g"
             ;;
         esac
@@ -756,7 +763,7 @@ if test -z "$CXXLIBS"; then
   if test "$GXX" = "yes"; then
     case "$CXX" in
       icpc* | */icpc*)
-        CXXLIBS=""
+        CXXLIBS="-lstdc++"
         ;;
       *)
         CXXLIBS="-lstdc++ -lm" # -lgcc"
@@ -772,7 +779,7 @@ if test -z "$CXXLIBS"; then
      *-linux-*)
       case "$CXX" in
       icpc* | */icpc*)
-        CXXLIBS=""
+        CXXLIBS="-lstdc++"
              ;;
       pgCC* | */pgCC*)
         CXXLIBS="-lstd -lC -lc"
@@ -951,7 +958,14 @@ if test x"$CFLAGS" = x; then
         coin_opt_cflags="-O3 -fomit-frame-pointer"
         coin_add_cflags="-pipe"
         coin_dbg_cflags="-g"
-        coin_warn_cflags="-pedantic-errors -Wimplicit -Wparentheses -Wsequence-point -Wreturn-type -Wcast-qual -Wall"
+        coin_warn_cflags="-Wimplicit -Wparentheses -Wsequence-point -Wreturn-type -Wcast-qual -Wall -Wno-unknown-pragmas"
+        case $build in
+          *-darwin*)
+            ;;
+          *)
+            coin_warn_cflags="-pedantic-errors $coin_warn_cflags"
+            ;;
+        esac
 	case $enable_doscompile in
 	  mingw)
 	    CFLAGS="-mno-cygwin"
@@ -981,7 +995,7 @@ if test x"$CFLAGS" = x; then
       *-linux-*)
         case "$CC" in
           icc* | */icc*)
-            coin_opt_cflags="-O3 -ip"
+            coin_opt_cflags="-O3 -ip -mp1"
             coin_add_cflags=""
             coin_dbg_cflags="-g"
             # Check if -i_dynamic is necessary (for new glibc library)
@@ -1183,9 +1197,9 @@ if test "$F77" != "unavailable" && test x"$FFLAGS" = x ; then
       *-cygwin* | *-mingw*)
         case $F77 in
           ifort* | */ifort* | IFORT* | */IFORT* )
-            coin_opt_fflags='-O3'
-            coin_add_fflags='-fpp -nologo -MT'
-            coin_dbg_fflags='-debug'
+            coin_opt_fflags='-MT -O3'
+            coin_add_fflags='-fpp -nologo'
+            coin_dbg_fflags='-MTd -debug'
           ;;
           compile_f2c*)
             coin_opt_fflags='-MT -O2'
@@ -1356,10 +1370,19 @@ else
 
   case $build in
   # The following is a fix to define FLIBS for ifort on Windows
+  # In its original version, it linked in libifcorert.lib or libifcorertd.lib on Windows/ifort explicitly.
+  # However, this seem to create a dependency on libifcorert.dll (or libifcorertd.dll) in the executables.
+  # This is seem to be unnecessary, libifcorert(d).lib has been removed from the link line.
      *-cygwin* | *-mingw*)
        case "$F77" in
          ifort* | */ifort* | IFORT* | */IFORT*)
-           FLIBS="-link libifcorert.lib $LIBS /NODEFAULTLIB:libc.lib";;
+           FLIBS="-link $LIBS /NODEFAULTLIB:libc.lib"
+#           if "$coin_debug_compile" = true ; then
+#             FLIBS="-link $LIBS /NODEFAULTLIB:libc.lib /NODEFAULTLIB:libcmt.lib"
+#           else
+#             FLIBS="-link $LIBS /NODEFAULTLIB:libc.lib /NODEFAULTLIB:libcmtd.lib"
+#           fi
+           ;;
          compile_f2c*)
            FLIBS=`$F77 -FLIBS` ;;
        esac;;
@@ -1409,8 +1432,8 @@ AC_DEFUN([AC_COIN_F77_COMPS],
        coin_f77_comps="gfortran g77 ifort fl32 compile_f2c"
      fi ;;
   *-*-solaris*)
-     coin_f77_comps="f95 f90 f77 xlf fort77 gfortran g77 pgf90 pgf77 ifort ifc frt af77" ;;
-  *) coin_f77_comps="xlf fort77 gfortran f77 g77 pgf90 pgf77 ifort ifc frt af77" ;;
+     coin_f77_comps="f95 f90 f77 xlf_r fort77 gfortran g77 pgf90 pgf77 ifort ifc frt af77" ;;
+  *) coin_f77_comps="xlf_r fort77 gfortran f77 g77 pgf90 pgf77 ifort ifc frt af77" ;;
  esac
 ])
 
@@ -2410,9 +2433,9 @@ if test $coin_vpath_config = yes; then
     rm -f $file
     $lnkcmd $srcdir/$file $file
   done
-  EXAMPLE_CLEAN_FILES='$1'
+  EXAMPLE_CLEAN_FILES="$EXAMPLE_CLEAN_FILES $1"
 else
-  EXAMPLE_CLEAN_FILES=
+  EXAMPLE_CLEAN_FILES="$EXAMPLE_CLEAN_FILES"
 fi
 
 # In case there are compressed files, we create a variable with the
@@ -3068,47 +3091,19 @@ coin_mumpssrcdir=$abs_source_dir/$coin_mumpsobjdir/MUMPS
 
 MAKEOKFILE=.MakeOk
 
-AC_ARG_WITH([mumps-dir],
-            AC_HELP_STRING([--with-mumps-dir],
-                           [specify directory where MUMPS is installed]),
-            [use_mumps="$withval"], [use_mumps=no])
+#check if user provides a MUMPS library (that works)
+AC_LANG_PUSH(C)
+AC_COIN_HAS_USER_LIBRARY(mumps, MUMPS, dmumps_c.h, dmumps_c)
+AC_LANG_POP(C)
 
-if test "$use_mumps" != "no"; then
-  if test -d $use_mumps; then :; else
-    AC_MSG_ERROR([User provided MUMPS directory $use_mumps does not exist.])
-  fi
-  mumps_dir=`cd $use_mumps; pwd`
+if test "$coin_has_mumps" = "true"; then  # user provided mumps library
+  use_mumps=yes
+  coin_has_mumps=yes
 
-  # library extension
-  AC_LANG_PUSH(C)
-  save_LIBS="$LIBS"
-  LIBS="$LIBS $FLIBS"
-  AC_CHECK_LIB([pthread],[pthread_create],[LIBS="-lpthread $save_LIBS"; ADDLIBS="-lpthread $ADDLIBS"],[LIBS="$save_LIBS"])
-  AC_LANG_POP(C)
+  MUMPS_INCFLAGS="-I\`\$(CYGPATH_W) $MUMPSINCDIR\`"
+  ADDLIBS="$MUMPSLIB $ADDLIBS"
 
-  case "$CC" in
-    cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
-         libe=lib ;;
-      *) libe=a ;;
-  esac
-
-  # Check if hearders are there
-  AC_COIN_CHECK_FILE([$mumps_dir/include/dmumps_c.h],
-                     [],
-                     [AC_MSG_ERROR([I cannot find headers for MUMPS])])
-  LIBS="$mumps_dir/lib/libdmumps.$libe $mumps_dir/lib/libpord.$libe $mumps_dir/libseq/libmpiseq.$libe $LIBS"
-  ADDLIBS="$mumps_dir/lib/libdmumps.$libe $mumps_dir/lib/libpord.$libe $mumps_dir/libseq/libmpiseq.$libe $ADDLIBS"
-  # Check if MUMPS actually works
-  AC_LANG_PUSH(C)
-  save_LIBS="$LIBS"
-  LIBS="$LIBS $FLIBS"
-  AC_TRY_LINK([void dmumps_c();],[dmumps_c()],[],
-              [AC_MSG_ERROR([User provided MUMPS library doesn't work])])
-  LIBS="$save_LIBS"
-  AC_LANG_POP(C)
-  coin_mumpssrcdir="$mumps_dir"
-
-else
+else # no user provided library, so we try to build our own
   use_mumps=BUILD
 
   # Check if the MUMPS' ThirdParty project has been configured
@@ -3121,34 +3116,34 @@ else
       LIBS="$LIBS $FLIBS"
       AC_CHECK_LIB([pthread],[pthread_create],[LIBS="-lpthread $save_LIBS"; ADDLIBS="-lpthread $ADDLIBS"],[LIBS="save_LIBS"])
       AC_LANG_POP(C)
+  
+      MUMPS_INCFLAGS="-I\`\$(CYGPATH_W) $coin_mumpssrcdir/libseq\` -I\`\$(CYGPATH_W) $coin_mumpssrcdir/include\`"
     else
       use_mumps=
     fi
   fi
+
+  # if a user provided library is used, then COIN_HAS_USER_LIBRARY takes care of the COIN_HAS_MUMPS conditional and preprocessor symbol
+  AM_CONDITIONAL([COIN_HAS_MUMPS],[test x"$use_mumps" != x])
+  if test x"$use_mumps" != x; then
+    AC_DEFINE([COIN_HAS_MUMPS],[1],[If defined, the MUMPS Library is available.])
+    coin_has_mumps=yes
+  else
+    coin_has_mumps=no
+  fi
+  AC_MSG_CHECKING([whether MUMPS is available])
+  AC_MSG_RESULT([$coin_has_mumps])
 fi
 
 if test x"$use_mumps" != x; then
-
-  # and we need the Fortran runtime libraries if we want to link with C/C++
+  # we need the Fortran runtime libraries if we want to link with C/C++
   coin_need_flibs=yes
 
-  MUMPS_INCFLAGS="-I\`\$(CYGPATH_W) $coin_mumpssrcdir/libseq\` -I\`\$(CYGPATH_W) $coin_mumpssrcdir/include\`"
   AC_SUBST(MUMPS_INCFLAGS)
 fi
 
-AM_CONDITIONAL([COIN_HAS_MUMPS],[test x"$use_mumps" != x])
 AM_CONDITIONAL([COIN_BUILD_MUMPS],[test "$use_mumps" = BUILD])
 
-AC_MSG_CHECKING([whether MUMPS is available])
-
-if test x"$use_mumps" = x || test "$use_mumps" = no; then
-  coin_has_mumps=no
-else
-  coin_has_mumps=yes
-  AC_DEFINE([COIN_HAS_MUMPS],[1],
-            [If defined, the MUMPS Library is available.])
-fi
-AC_MSG_RESULT([$coin_has_mumps])
 ]) # AC_COIN_HAS_MUMPS
 
 ###########################################################################

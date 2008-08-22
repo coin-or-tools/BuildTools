@@ -21,6 +21,10 @@ to know about the Microsoft 'cl' compiler and 'nmake'.
 
    In the source directory (libf2c), type 'nmake -f makefile.vc all'
 
+   If you encounter an error during the compilation of "err.c" due to
+   a missing unistd.h, edit the makefile.vc file and add -DNO_ISATTY
+   to the CFLAGS (line 9).
+
    If you encounter an error during the compilation of "arithchk.c"
    (involving the "comptry.bat" file), edit the makefile.vc file and
    delete the word "comptry.bat" in the 4th from last line.
