@@ -526,9 +526,18 @@ esac
 $as_unset ac_cv_prog_CXX || test "${ac_cv_prog_CXX+set}" != set || { ac_cv_prog_CXX=; export ac_cv_prog_CXX; }
 # AC_MSG_NOTICE([C++ compiler candidates: $comps])
 AC_PROG_CXX([$comps])
-if test -z "$CXX" ; then
-  AC_MSG_ERROR([Failed to find a C++ compiler!])
-fi
+
+#AC_PROG_CXX sets CXX to g++ if it cannot find a working C++ compiler
+#thus, we test here whether $CXX is actually working 
+AC_LANG_PUSH(C++)
+AC_MSG_CHECKING([whether C++ compiler $CXX works]);
+AC_COMPILE_IFELSE(
+  [AC_LANG_PROGRAM(, [int i=0;])],
+  [AC_MSG_RESULT(yes)],
+  [AC_MSG_RESULT(no)
+   AC_MSG_ERROR(failed to find a C++ compiler or C++ compiler $CXX does not work)]
+)
+AC_LANG_POP(C++)
 
 # It seems that we need to cleanup something here for the Windows 
 case "$CXX" in
