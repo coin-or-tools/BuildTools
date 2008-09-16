@@ -8,8 +8,6 @@ compile_f2c/compile_f2c -text
 /config.guess -text
 /config.sub -text
 /depcomp -text
-headers/configall_system.h -text
-headers/configall_system_msc.h -text
 /install-sh -text
 /missing -text
 /prepare_new_release -text
