@@ -67,7 +67,7 @@ fi
 if test $# != 0; then
   dirs="$*"
 else
-  pos_dirs=`find . -name configure.ac | sed -e s%/configure.ac%%g`
+  pos_dirs=`find . -name configure.ac | sed -e s%/configure.ac%%g | grep -v 'ThirdParty/[^/]*/[^/]*'`
   dirs=
   for dir in $pos_dirs; do
     if test -r $dir/configure.ac; then
