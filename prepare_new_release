@@ -479,7 +479,11 @@ if test -r Externals; then
       ext_name="$i"
     else
       ext_url=$i
-      ext_url=$i
+      if (echo $ext_name | grep -E '^#' >/dev/null); then
+        echo "Skip $ext_name $ext_url."
+        ext_name=
+        continue
+      fi                                    
       if (echo $ext_url | grep -E 'stable/|releases/' >/dev/null); then
 	:;
       else
