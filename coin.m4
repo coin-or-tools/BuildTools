@@ -3102,7 +3102,10 @@ MAKEOKFILE=.MakeOk
 
 #check if user provides a MUMPS library (that works)
 AC_LANG_PUSH(C)
+SAVE_ADDLIBS="$ADDLIBS"
+ADDLIBS="$ADDLIBS $FLIBS"
 AC_COIN_HAS_USER_LIBRARY(mumps, MUMPS, dmumps_c.h, dmumps_c)
+ADDLIBS="$SAVE_ADDLIBS"
 AC_LANG_POP(C)
 
 if test "$coin_has_mumps" = "true"; then  # user provided mumps library
