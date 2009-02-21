@@ -8,173 +8,442 @@
 ## $Id$
 #
 # Author: Andreas Waechter     IBM      2007-06-21
+# Modified: Lou Hafer	       SFU	2008-01-20
+#	Accommodate simultaneous creation of releases with circular
+#	dependencies.
 
 #set -x -v
-
 set -e
-echo ''
+
+# You can think of this script as having three sections: first, the following
+# function definition, then parameter parsing and validation, and finally the
+# actual generation of the release candidate. See the help message for a good
+# description of the actions taken to generate the release candidate.
+
+# Utility function to determine current or next release for a given stable
+# branch. Call is determine_release(stableURL,next). Replace next with 1 for
+# the next release, 0 for the current release. This code is needed in three
+# separate places, so it really deserves to be a function. We can hope that
+# maintainers will have a reasonably modern version of standard sh.
+
+# Data is a real pain in the **** and should be converted to the standard
+# nomenclature.
+
+determine_release ()
+{ 
+  if test $isData = no ; then
+
+    drtmp_stableBranch=`echo $1 | sed -e 's|.*/stable/||'`
+    drtmp_baseURL=`echo $1 | sed -e 's|/stable/[0-9.]*||'`
+    drtmp_returnVal=
+
+    # List the existing releases and screen for releases matching stableBranch.
+
+    drtmp_svnlst=`svn list $drtmp_baseURL/releases/`
+
+    drtmp_release_vers=
+    for drtmp_i in $drtmp_svnlst ; do
+      case $drtmp_i in
+	$drtmp_stableBranch.*)
+	  drtmp_i=`echo $drtmp_i | sed -e 's|/$||'`
+	  drtmp_release_vers="$drtmp_release_vers $drtmp_i";;
+      esac;
+    done
+
+    # Are there any existing releases? If not, and the user didn't ask for the
+    # next release, we have an error.
+
+    if test -z "$drtmp_release_vers" ; then
+      if test $2 = 1 ; then
+	drtmp_returnVal="$drtmp_stableBranch.0"
+      else
+	drtmp_returnVal="Error"
+      fi
+    else
+
+    # There are releases. If we don't have one after the loop, we're confused.
+
+      drtmp_new_rel=-10000
+      for drtmp_i in $drtmp_release_vers; do
+	drtmp_rel=`echo $drtmp_i | sed -e "s|^$drtmp_stableBranch.||"`
+	if test $drtmp_rel -gt $drtmp_new_rel; then
+	  drtmp_new_rel=$drtmp_rel
+	fi
+      done
+
+      if test $drtmp_new_rel = -10000; then
+	drtmp_new_rel="Error"
+      elif test $2 = 1 ; then
+	drtmp_new_rel=`expr $drtmp_new_rel + 1`
+      fi
+      drtmp_returnVal="$drtmp_stableBranch.$drtmp_new_rel"
+    fi
+
+  else	# end normal and ThirdParty, begin Data
+
+    drtmp_stableBranch=`echo $1 | sed -e 's|.*/stable/\([0-9.]*\)/.*|\1|'`
+    drtmp_baseURL=`echo $1 | sed -e 's|\(.*\)/stable/[0-9.]*/.*|\1|'`
+    drtmp_proj=`echo $1 | sed -e 's|.*/stable/[0-9.]*/||`
+
+    # Screen for releases that match the stable branch and contain the project
+    # of interest. First, check for releases that match the stable branch. If
+    # there are none, we're release 0 for this stable branch. It's an error if
+    # there are no releases and the user did not ask for the next release. Sort
+    # by release number here, while we have newlines in the list from svn.
+
+    drtmp_svnlst=`svn list $drtmp_baseURL/releases | sort -nr -t. -k3,3`
+
+    drtmp_release_vers=
+    for drtmp_i in $drtmp_svnlst ; do
+      case $drtmp_i in
+	$drtmp_stableBranch.*)
+	  drtmp_i=`echo $drtmp_i | sed -e 's|/$||'`
+	  drtmp_release_vers="$drtmp_release_vers $drtmp_i";;
+      esac;
+    done
+
+    # Do we have releases that match the stable branch?
+
+    if test -z "$drtmp_release_vers" ; then
+      if test $2 = 1 ; then
+	drtmp_returnVal="$drtmp_stableBranch.0"
+      else
+	drtmp_returnVal="Error"
+      fi
+    else
+
+    # Releases exist that match stable; do any contain our project? Because
+    # we presorted by release, we can break here at the first success.
+
+      drtmp_svnlst=`echo $drtmp_release_vers`
+      drtmp_release_vers=
+      for drtmp_i in $drtmp_svnlst ; do
+	case $drtmp_i in
+	  $drtmp_stableBranch.*)
+	    drtmp_i=`echo $drtmp_i | sed -e 's|/$||'`
+	    drtmp_projlst=`2>&1 svn list $drtmp_baseURL/releases/$drtmp_i/$drtmp_proj`
+	    if expr "$drtmp_projlst" : '.*non-existent.*' 2>&1 >/dev/null ; then
+	      :
+	    else
+	      drtmp_release_vers="$drtmp_i"
+	      break
+	    fi
+	    ;;
+	esac;
+      done
+
+      # Are there any existing releases? If no, and the user didn't ask for
+      # the next release, it's an error. Otherwise, go for release 0 of
+      # proj in the current stable branch. If there are existing releases,
+      # return either the current or +1.
+
+      if test -z "$drtmp_release_vers" ; then
+	if test $2 = 0 ; then
+	  drtmp_returnVal="$drtmp_stableBranch.Error"
+	else
+	  drtmp_returnVal="$drtmp_stableBranch.0"
+	fi
+      else
+	drtmp_new_rel=-10000
+	for drtmp_i in $drtmp_release_vers; do
+	  drtmp_rel=`echo $drtmp_i | sed -e "s|^$drtmp_stableBranch.||"`
+	  if test $drtmp_rel -gt $drtmp_new_rel; then
+	    drtmp_new_rel=$drtmp_rel
+	  fi
+	done
+	drtmp_new_rel=`expr $drtmp_new_rel + 1`
+	drtmp_returnVal="$drtmp_stableBranch.$drtmp_new_rel"
+      fi
+
+    fi	# for releases matching stable branch
+
+  fi	# for normal/Data
+
+  echo $drtmp_returnVal
+}
+
+
+# Specify the COIN URL base for convenience.
+
+coinURL="https://projects.coin-or.org/svn"
+
+# Begin parameter processing.
+
+printHelp=0
+exitValue=0
+ignoreBuildToolsMismatch=0
+
+# stableURL will be the stable branch that is the parent for the release we
+# are building. We'll need to be able to distinguish ThirdParty and Data
+# builds; they require special handling.
+# buildToolsURL is required when stableURL specifies a ThirdParty or Data
+# project --- we'll need to assemble a temporary package while creating the
+# release candidate.
+
+stableURL=
+isThirdParty=no
+isData=no
+buildToolsURL=
+
+# stableExternals, on the other hand, specifies externals for which we are
+# doing simultaneous releases. We will use the stable branch of the external
+# while preparing and testing this release candidate, changing the Externals
+# file to specify a (nonexistent) release of the external at the last moment.
+
+stableExternals=
+
+# We need at least one parameter.
 
 if test "$#" -eq 0; then
-  cat <<EOF
-Usage: prepare_new_release stable_repos
+  printHelp=1
+else
 
-stable_repos is the URL for the stable branch of your project, for which
-you want to create a new release.  You can specify the entire URL, or you
-just enter what comes after "https://projects.coin-or.org/svn".  A typical
-example is
+# Process the parameters. A parameter without an opening `-' is assumed to be
+# the spec for the stable branch.
+
+  while test $# -gt 0 && test $exitValue = 0 && test $printHelp = 0 ; do
+    case "$1" in
+      -h* | --h*) printHelp=1 ;;
+      -i* | --i*) ignoreBuildToolsMismatch=1 ;;
+      -s* | --s*)
+	   if expr "$1" : '.*-s.*=.*' 2>&1 >/dev/null ; then
+	     stableExternals=`echo $1 | sed -n -e 's/[^=]*=\(.*\)/\1/p'`
+	   else
+	     shift
+	     stableExternals=$1
+	   fi
+	   ;;
+       -b* | --b*)
+	   if expr "$1" : '.*-b.*=.*' 2>&1 >/dev/null ; then
+	     buildToolsURL=`echo $1 | sed -n -e 's/[^=]*=\(.*\)/\1/p'`
+	   else
+	     shift
+	     buildToolsURL=$1
+	   fi
+	   if expr "$buildToolsURL" : '.*BuildTools.*' 2>&1 >/dev/null ; then
+	     case $buildToolsURL in
+	       http*) ;;
+		   *) buildToolsURL=${coinURL}/$buildToolsURL
+		      ;;
+	     esac
+	   else
+	     echo ''
+	     echo "URL $buildToolsURL does not point to BuildTools."
+	     echo ''
+	     printHelp=1
+	     exitValue=-3
+	    fi
+	   ;;
+           
+       -*) echo "$0: unrecognised command line switch '"$1"'."
+	   printHelp=1
+	   exitValue=-1
+	   ;;
+	*) stableURL=$1
+	   if expr "$stableURL" : '.*/stable/.*' 2>&1 >/dev/null ; then
+	     case $stableURL in
+	       http*) ;;
+		   *) stableURL=${coinURL}/$stableURL
+		      ;;
+	     esac
+	   else
+	     echo ''
+	     echo "URL $stableURL does not specify a stable release."
+	     echo ''
+	     printHelp=1
+	     exitValue=-2
+	   fi
+	   ;;
+    esac
+    shift
+  done
+
+# Consistency checks: Make sure that the stable URL exists. If we're building
+# a ThirdParty or Data release, we need a BuildTools URL.
+
+  if test $printHelp = 0 && test $exitValue = 0 ; then
+    if svn list $stableURL 2>&1 >/dev/null ; then
+      :
+    else
+      echo "Stable URL $stableURL does not seem to exist."
+      printHelp=1
+      exitValue=-5
+    fi
+  fi
+  if test $printHelp = 0 && test $exitValue = 0 ; then
+    case $stableURL in
+      *ThirdParty/* )
+	isThirdParty=yes
+	;;
+      *Data/* )
+	isData=yes
+	;;
+      *)
+	;;
+    esac
+    if test $isThirdParty = yes || test $isData = yes ; then
+      if test -z $buildToolsURL ; then
+        echo "You must provide a BuildTools URL to build a ThirdParty or Data project."
+	printHelp=1
+	exitValue=-4
+      else
+	if svn list $buildToolsURL 2>&1 >/dev/null ; then
+	  :
+	else
+	  echo "BuildTools URL $buildToolsURL does not seem to exist."
+	  printHelp=1
+	  exitValue=-6
+	fi
+      fi
+    fi
+  fi
+fi
+
+if test $printHelp = 1 ; then
+  cat <<EOF
+Usage: prepare_new_release <stableBranch> [options]
+
+COIN standard practice is to generate periodic releases by taking a snapshot
+of the stable branch of the project.  You can use this script to prepare
+a new release based on the specified stable branch.
+
+Stable_branch specifies the stable branch of your project to be used to
+create the new release.  You can specify the entire URL, or you just enter
+what comes after "https://projects.coin-or.org/svn".  A typical example is
 
   prepare_new_release Ipopt/stable/3.3
 
-You can use this script to prepare a new release based on the specified
-stable branch.
+Options:
+  -b <BuildToolsURL>	URL for BuildTools; required to generate a release
+  			for a ThirdParty or Data project.
+  -s <projectlist>	Comma-separated list of projects with circular
+  			dependencies on this project. The stable branch of
+			projects in this list will be used while testing, on
+			the assumption that simultaneous releases will be
+			created as the release candidates are committed.
+  -i			Ignore BuildTools version mismatches in externals.
 
 This script will do the following:
 
-- automatically determine the next release number
-- check out a clean copy of the stable version specified
-- update the externals to point to the latest releases in the dependencies
-  (for the same stable branch as specified in the Externals script)
-- update the version number in your configure.ac files
-- receive the code for the externals
-- use the "get.*" scripts to download ThirdParty code (if there are any)
-- rerun the autotools
-- check if all dependencies are using the same version of the BuildTools
-- run the configure script and compile the code
-- run the unit test
+  - Automatically determine the next release number (X.Y.0 if this is the
+    first release for stable/X.Y, otherwise one greater than any existing
+    release)
+  - Check out a clean copy of the specified stable branch, without externals
+  - Read the Externals file and create a new Externals file for the release
+    by converting references to stable branches to references to the most
+    recent release for that stable branch.
+  - Create a new package configure.ac file with the release version number
+    specified in the AC_INIT macro.
+  - Set the svn:externals property for the release package and check out the
+    code for the externals.
+  - Use the "get.*" scripts to download any ThirdParty code.
+  - Execute run_autotools to update configure, Makefile.in, etc., to reflect
+    the most recent release of BuildTools.
+  - Check that all dependencies are using the same version of the BuildTools
+  - Run the configure script, compile the code, and run the unit test.
+  - Replace any stable references in Externals (specified with -s) with the
+    appropriate (yet to be committed) release.
 
 If there is any error during these tasks the script will stop and you should
 examine the output.
 
-If the script terminates successfully, you could have a look at the output,
-particularly at the output of the unit test ('make test') and the
-chosen Externals.
+If the script completes without error, examine the output, particularly the
+output of the unit test ('make test') and the set of externals specified in
+the Externals file.
 
-So far, no changes will have been made to the repository.  If you want to
+This script does not make any changes to the repository.  If you want to
 commit the new release, run the "commit_new_release" script, as described
 at the end of the output.
 
 EOF
-  exit 0
 fi
 
-stable_url=$1
-if (echo $stable_url | grep -E 'stable/' >/dev/null); then :; else
-  echo ''
-  echo 'This URL is not for a stable release. Exiting.'
-  echo ''
-  exit -2
+if test $exitValue != 0 || test $printHelp = 1 ; then
+  exit $exitValue
 fi
 
-case $stable_url in
-  http*) ;;
-  *)
-    stable_url=https://projects.coin-or.org/svn/$stable_url
-    ;;
-esac
+# End of parameter parsing. We have a stable URL to work with.  Tell the
+# user what we've seen.
 
-base_url=`echo $stable_url | sed -e 's|/stable/[0-9\.]*||'`
-echo "Base URL..........: $base_url"
-echo "Stable URL........: $stable_url"
-stable_branch=`echo $stable_url | sed -e 's|.*/stable/]*||'`
-echo "Stable branch.....: $stable_branch"
-
-# finding out which releases already exist for that stable branch
-echo ''
-echo '===> Checking for current releases for this branch...'
-tmp=`svn list $base_url/releases/`
-release_vers=
-for i in $tmp; do
-  i=`echo $i | sed -e 's|/||g'`
-  case $i in
-    $stable_branch.*) release_vers="$release_vers $i";;
-  esac;
-done
-
-# Determine latest release number
-new_rel=-10000
-for i in $release_vers; do
-  echo "     $i"
-  rel=`echo $i | sed -e "s|^$stable_branch.||"`
-  if test $rel -gt $new_rel; then
-    new_rel=$rel
-  fi
-done
-
-if test $new_rel = -10000; then
-  new_rel=0
-elif test $new_rel = 0; then
-  new_rel=1
+stableURL=`echo $stableURL | sed -e 's|/$||'`
+if test $isData = yes ; then
+  stableProj=`echo $stableURL | sed -n -e 's|.*/[^/]*/stable/[0-9.]*/\(.*\)|\1|p'`
+  baseURL=`echo $stableURL | sed -e 's|\(.*\)/stable/[0-9.]*/\(.*\)|\1/_BB_/_RR_/\2|'`
+  stableBranch=`echo $stableURL | sed -e 's|.*/stable/\([0-9.]*\)/.*|\1|'`
 else
-  new_rel=`(expr $new_rel + 1)`
+  stableProj=`echo $stableURL | sed -n -e 's|.*/\([^/]*\)/stable/.*|\1|p'`
+  baseURL=`echo $stableURL | sed -e 's|/stable/[0-9.]*||'`
+  stableBranch=`echo $stableURL | sed -e 's|.*/stable/||'`
 fi
-new_ver="$stable_branch.$new_rel"
+echo "StableProj: $stableProj"
+echo "Base URL..........: $baseURL"
+echo "Stable URL........: $stableURL"
+echo "Stable branch.....: $stableBranch"
+if test -n "$stableExternals" ; then
+  echo "Stable externals..: $stableExternals."
+fi
+
+# Find out the most recent release (if any) for the stable branch. List the
+# existing releases and screen for releases matching stableBranch. The new
+# release should be one greater than any existing release, or 0 if the stable
+# branch has no releases.
+
+echo ''
+echo "===> Checking releases for stable branch $stableBranch ..."
+
+new_ver=`determine_release "$stableURL" 1`
 
 echo ''
 echo "New release.......: $new_ver"
-
-echo ''
-echo "===> Checking out stable release $stable_branch without externals..."
-echo ''
-
-case $base_url in
-  *ThirdParty/* )
-    is_thirdparty=yes
-    is_data=no
-    ;;
-  *Data )
-    is_thirdparty=no
-    is_data=yes
-    ;;
-  *)
-    is_thirdparty=no
-    is_data=no
-    ;;
-esac
-
-if test $is_thirdparty = yes || test $is_data = yes; then
-  buildtoolsurl=$2
-  if test "$buildtoolsurl" == ""; then
-    echo ''
-    echo 'For a ThirdParty project you need to provide a URL for BuildTools'
-    echo 'as second argument.  Exiting.'
-    echo ''
-    exit -3
-  fi
-  case $buildtoolsurl in
-    http*) ;;
-    *)
-      buildtoolsurl=https://projects.coin-or.org/svn/$buildtoolsurl
-      ;;
-  esac
-fi
-
-tmpbas=tmp_checkout
-if test $is_thirdparty = yes; then
-  tmpcodir=$tmpbas/a/b
-elif test $is_data = yes; then
-  tmpcodir=$tmpbas/a
+buildBase="${stableProj}-$new_ver"
+echo "Build directory...: $buildBase"
+if test $isData = yes ; then
+  releaseURL=`echo $baseURL | sed -e s/_BB_/releases/ -e s/_RR_/$new_ver/`
 else
-  tmpcodir=$tmpbas
+  releaseURL="$baseURL/releases/$new_ver"
 fi
+echo "Release URL.......: $releaseURL"
 
-rm -rf $tmpbas
-cmd="svn co --ignore-externals $stable_url $tmpcodir"
+# Check out the stable branch that'll be the base of the new release. No
+# externals at this point. Creating a release of a ThirdParty or Data project
+# requires a bit of work, as we need to assemble a temporary package with a
+# BuildTools external.
+
+echo ''
+echo "===> Checking out stable release $stableBranch without externals..."
+echo ''
+
+if test $isThirdParty = yes; then
+  coDir=$buildBase/a/b
+elif test $isData = yes; then
+  coDir=$buildBase/a/b
+else
+  coDir=$buildBase
+fi
+echo "Checkout directory: $coDir"
+
+rm -rf $buildBase
+cmd="svn co --ignore-externals $stableURL $coDir"
 echo $cmd
 eval $cmd
 
-if test $is_thirdparty = yes || test $is_data = yes; then
+if test $isThirdParty = yes || test $isData = yes; then
   echo ''
   echo '===> Checking out BuildTools for ThirdParty project...'
   echo ''
-  cmd="svn co $buildtoolsurl $tmpbas/BuildTools"
+  cmd="svn co $buildToolsURL $buildBase/BuildTools"
   echo $cmd
   eval $cmd
 fi
 
-tmpcodir=`cd $tmpcodir; pwd`
-tmpbas=`cd $tmpbas; pwd`
+coDir=`cd $coDir; pwd`
+buildBase=`cd $buildBase; pwd`
 
-cd $tmpcodir
+cd $coDir
+
+# Find configure.ac files for the package and project and update the version.
+# We have no externals at this point, so there will be two files for a
+# standard project, one for a ThirdParty project, and none for a Data project.
 
 echo ''
 conf_ac_files=`find . -name 'configure.ac' | grep -v -E 'ThirdParty/.*/.*/configure.ac'`
@@ -191,6 +460,11 @@ for i in $conf_ac_files; do
   svn di $i
 done
 
+# Now fix up the Externals file, if it exists. References to stable branches
+# will be converted to references to releases unless the reference is to a
+# project in the stableExternals list. Each line in an Externals file has the
+# format <ext_name> <ext_url>. The reference must be to a stable branch.
+
 if test -r Externals; then
 
   echo ''
@@ -205,53 +479,50 @@ if test -r Externals; then
       ext_name="$i"
     else
       ext_url=$i
-      if (echo $ext_url | grep -E 'stable/' >/dev/null); then :; else
+      if (echo $ext_name | grep -E '^#' >/dev/null); then
+        echo "Skip $ext_name $ext_url."
+        ext_name=
+        continue
+      fi                                    
+      if (echo $ext_url | grep -E 'stable/|releases/' >/dev/null); then
+	:;
+      else
         echo ''
-        echo "The external URL $ext_url is not for a stable branch. Exiting."
+        echo "The external URL $ext_url is not a stable branch or release. Exiting."
         echo ''
         exit -2
       fi
-    
+
       ext_base_front=`echo $ext_url | sed -e 's|/stable/.*||'`
-      ext_base_end=`echo $ext_url | sed -e 's|.*/stable/[0-9\.]*||'`
-      ext_stable_branch=`echo $ext_url | sed -e 's|.*/stable/]*||' -e s"|$ext_base_end||"`
+      ext_proj=`echo $ext_base_front | sed -e 's|.*/\([^/]*\)|\1|'`
 
-      echo "Determining release replacement for $ext_name:"
-      tmp=`svn list $ext_base_front/releases/`
-      ext_release_vers=
-      for i in $tmp; do
-        i=`echo $i | sed -e 's|/||g'`
-        case $i in
-          $ext_stable_branch.*) ext_release_vers="$ext_release_vers $i";;
-        esac;
-      done
-      # Determine latest release number
-      ext_latest=-10000
-      for i in $ext_release_vers; do
-        rel=`echo $i | sed -e "s|^$ext_stable_branch.||"`
-        if test $rel -gt $ext_latest; then
-          ext_latest=$rel
-        fi
-      done
-      if test $ext_latest = -10000; then
-        echo ''
-        echo "Error: No release for $ext_name for its stable defined in External"
-        echo ''
-        exit -5
-      fi
-
-      if test "$ext_base_end" = ""; then
-        ext_rel_url=$ext_base_front/releases/$ext_stable_branch.$ext_latest
+      if expr "$stableExternals" : '.*'"$ext_proj"'.*' 2>&1 >/dev/null ; then
+        echo "Using stable reference for $ext_name."
+        ext_rel_url=$ext_url
+      elif expr "$ext_url" : '.*releases/.*' 2>&1 >/dev/null ; then
+	echo "Using specified release for $ext_name."
+	ext_rel_url=$ext_url
       else
-        ext_rel_url=$ext_base_front/releases/$ext_stable_branch.$ext_latest$ext_base_end
+        ext_stable=`echo $ext_url | sed -e 's|\(.*/stable/[0-9\.]*\).*|\1|'`
+	ext_base_end=`echo $ext_url | sed -e 's|.*/stable/[0-9\.]*||'`
+
+	echo "Determining release replacement for $ext_name:"
+	ext_latest=`determine_release $ext_stable 0`
+
+	if test "$ext_base_end" = ""; then
+	  ext_rel_url=$ext_base_front/releases/$ext_latest
+	else
+	  ext_rel_url=$ext_base_front/releases/$ext_latest$ext_base_end
+	fi
       fi
 
       echo "  $ext_rel_url"
-      echo "$ext_name  $ext_rel_url" >> Externals.releases
+      echo "$ext_name  $ext_rel_url" >>Externals.releases
       ext_name=
     fi
   done
 
+  echo ''
   echo '===> Creating backup (.bak) for Externals'
   mv Externals Externals.bak
   mv Externals.releases Externals
@@ -284,11 +555,7 @@ if test -r Externals; then
 	    curdir=`pwd`
             cd $ext_name
             echo "Running $getfile -patch in `pwd`"
-#	    mv $getfile $getfile.orig
-#	    sed -e 's+ftp://+http://+g' $getfile.orig > $getfile
-#	    chmod +x $getfile
             eval ./$getfile -patch
-#	    mv $getfile.orig $getfile
             cd "$curdir"
           fi
           ;;
@@ -298,8 +565,8 @@ if test -r Externals; then
   done
 fi # if test -r Externals
 
-if test $is_thirdparty = yes; then
-  pkg=`echo $base_url | sed -e 's|.*/||g'`
+if test $isThirdParty = yes; then
+  pkg=`echo $baseURL | sed -e 's|.*/||g'`
   if test -r get.$pkg; then
     echo ''
     echo '===> Download third party code...'
@@ -312,14 +579,14 @@ echo ''
 echo '===> Running the autotools...'
 echo ''
 
-if test $is_thirdparty = yes; then
+if test $isThirdParty = yes; then
   curdir=`pwd`
   cd ../..
   BuildTools/run_autotools
   cd "$curdir"
-elif test $is_data = yes; then
+elif test $isData = yes; then
   curdir=`pwd`
-  cd ..
+  cd ../..
   BuildTools/run_autotools
   cd "$curdir"
 else
@@ -356,7 +623,7 @@ if test -r Externals; then
 
   if test -r problems.ext; then
     echo ''
-    echo 'PROBLEM DURING CONSITENCY CHECK:'
+    echo 'PROBLEM DURING CONSISTENCY CHECK:'
     echo ''
     echo 'Please contact the project manager(s) for the following project(s).'
     echo 'A new release needs to be made with your stable branch of BuildTools.'
@@ -364,19 +631,23 @@ if test -r Externals; then
     cat problems.ext
     echo ''
     rm -f problems.ext
-    exit -2
+    if test $ignoreBuildToolsMismatch = 0 ; then
+      exit -2
+    else
+      echo "Continuing in spite of BuildTools mismatch."
+    fi
   fi
   rm -f problems.ext
 fi # if test -r Externals
 
-if test $is_thirdparty != yes && test $is_data != yes; then
+if test $isThirdParty != yes && test $isData != yes; then
   (set -e
    echo ''
    echo '===> Creating build directory and running the configuration script...'
    echo ''
    mkdir build
    cd build
-   cmd="$tmpcodir/configure -C --enable-maintainer-mode"
+   cmd="$coDir/configure -C --enable-maintainer-mode"
    echo $cmd
    eval $cmd
    echo ''
@@ -414,29 +685,64 @@ fi
 
 echo ''
 echo '===> ALL TESTS PASSED'
-if test $is_thirdparty != yes && test $is_data != yes; then
+if test $isThirdParty != yes && test $isData != yes; then
   echo ''
   echo 'Please review the output above, particularly the one of make test'
 fi
+
+# Do we need to plug in nonexistent releases for circular dependencies tested
+# with the stable versions? If so, generate a new Externals.release. This is
+# the only reason stable references should appear in the Externals file for a
+# release, so we don't need to check further before removing them.
+
+if test -n "$stableExternals" ; then
+  echo "Grooming Externals to remove stable references used for testing."
+  rm -rf Externals.releases
+  ext_name=
+  ext_url=
+  for i in `cat Externals`; do
+    if test "$ext_name" = ""; then
+      ext_name="$i"
+    else
+      ext_url=$i
+      if (echo $ext_url | grep -E 'stable/' >/dev/null); then
+	echo "Determining release replacement for $ext_name:"
+        ext_stable=`echo $ext_url | sed -e 's|\(.*/stable/[0-9\.]*\).*|\1|'`
+	ext_latest=`determine_release $ext_stable 1`
+	ext_rel_url=`echo $ext_url | sed -e "s|stable/[0-9.]*|releases/$ext_latest|"`
+	echo "  $ext_rel_url"
+      else
+        ext_rel_url=$ext_url
+      fi
+      echo "$ext_name  $ext_rel_url" >>Externals.releases
+      ext_name=
+    fi
+  done
+  mv Externals.releases Externals
+  svn propset -F Externals svn:externals .
+fi
+
+
 if test -r Externals; then
   echo ''
-  echo 'Also, please check the Externals:'
-  cat Externals
+  echo 'Also, please confirm the Externals are correct:'
+  svn propget svn:externals
 fi
 
 echo ''
 echo 'After reviewing the output above, you can create a new release by going into'
 echo 'the directory'
 echo ''
-echo "          $tmpcodir"
+echo "          $coDir"
 echo ''
 echo "and run the commit_new_release script"
 
 cat >.new_release_data <<EOF
-tmpcodir=$tmpcodir
-tmpbas=$tmpbas
-base_url=$base_url
-stable_url=$stable_url
+isData=$isData
+coDir=$coDir
+buildBase=$buildBase
+releaseURL=$releaseURL
+stableURL=$stableURL
 new_ver=$new_ver
-stable_branch=$stable_branch
+stableBranch=$stableBranch
 EOF
