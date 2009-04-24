@@ -85,7 +85,7 @@ fi
 # to exclude configure.ac in the actual ThirdParty code base. Comments from
 # ThirdParty maintainers welcome.
 
-conf_ac_files=`find . -name 'configure.ac' | grep -v -E '.*/.*/configure.ac'`
+conf_ac_files=`find . -name 'configure.ac' | grep -v -E 'ThirdParty/.*/.*/configure.ac'`
 
 echo ''
 echo "===> Restoring version number (${stableBranch}stable) in configure.ac files"
