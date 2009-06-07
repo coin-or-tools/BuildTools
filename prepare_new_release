@@ -83,7 +83,7 @@ determine_release ()
 
     drtmp_stableBranch=`echo $1 | sed -e 's|.*/stable/\([0-9.]*\)/.*|\1|'`
     drtmp_baseURL=`echo $1 | sed -e 's|\(.*\)/stable/[0-9.]*/.*|\1|'`
-    drtmp_proj=`echo $1 | sed -e 's|.*/stable/[0-9.]*/||`
+    drtmp_proj=`echo $1 | sed -e 's|.*/stable/[0-9.]*/||'`
 
     # Screen for releases that match the stable branch and contain the project
     # of interest. First, check for releases that match the stable branch. If
