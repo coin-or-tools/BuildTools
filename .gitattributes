@@ -1,4 +1,18 @@
 * text=auto !eol
+BSP/Makemain.inc -text
+BSP/coin.m4 -text
+BSP/commit_new_release -text
+BSP/compile_f2c/INSTALL -text
+BSP/compile_f2c/README -text
+BSP/compile_f2c/compile_f2c -text
+BSP/config.guess -text
+BSP/config.sub -text
+BSP/depcomp -text
+BSP/install-sh -text
+BSP/missing -text
+BSP/prepare_new_release -text
+BSP/run_autotools -text
+BSP/share/config.site -text
 /Makemain.inc -text
 /coin.m4 -text
 /commit_new_release -text
