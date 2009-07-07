@@ -108,10 +108,9 @@ if test $printHelp = 0 && test $exitValue = 0; then
   if test -r $Dependencies; then
 
     echo ''
-    echo '===> Creating new Externals file with pointers to releases...'
+    echo '===> Creating new externals file with pointers to releases...'
     echo ''
 
-    rm -f Externals
     ext_name=
     ext_url=
     for i in `cat $Dependencies`; do
@@ -154,7 +153,7 @@ if test $printHelp = 0 && test $exitValue = 0; then
         fi
 
         echo "  $ext_rel_url"
-        echo "$ext_name  $ext_rel_url" >>Externals
+        echo "$ext_name  $ext_rel_url" >>xyz
         ext_name=
       fi
     done
@@ -163,7 +162,9 @@ if test $printHelp = 0 && test $exitValue = 0; then
     echo '===> Updating svn:externals property...'
     echo ''
 
-    svn pset svn:externals -F Externals .
+    svn pset svn:externals -F xyz .
+    
+    rm xyz
 
   else # if test -r Externals
     echo ""
