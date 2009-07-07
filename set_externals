@@ -160,7 +160,7 @@ if test $printHelp = 0 && test $exitValue = 0; then
     done
 
     echo ''
-    echo '===> Updating svn:externals properties, and checking out externals...'
+    echo '===> Updating svn:externals property...'
     echo ''
 
     svn pset svn:externals -F Externals .
