@@ -2466,7 +2466,7 @@ fi
 AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
                [test $m4_tolower(coin_has_$1) != notGiven &&
                 test $m4_tolower(coin_has_$1) != skipping])
-AM_CONDITIONAL(m4_toupper(COIN_HAS_$1_INSTALLED),
+AM_CONDITIONAL(m4_toupper(COIN_HAS_$1_PREINSTALLED),
                [test $m4_tolower(coin_has_$1) = installed])
 
 if test $m4_tolower(coin_has_$1) = installed; then
