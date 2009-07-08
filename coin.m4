@@ -26,7 +26,7 @@ m4_case($1,m4_bpatsubsts($1,[/],[_]),
 [# We have no "/" in the $1 argument
   AC_COIN_HAS_PROJECT($1)
   AC_MSG_CHECKING(whether directory $1 should be recursed into)
-  if test "$m4_tolower(coin_has_$1)" != skipped &&
+  if test "$m4_tolower(coin_has_$1)" != skipping &&
      test "$m4_tolower(coin_has_$1)" != installed; then
     if test -r $srcdir/$1/configure; then
       coin_subdirs="$coin_subdirs $1"
@@ -2423,12 +2423,10 @@ if test $m4_tolower(coin_has_$1) != skipping; then
                   [if test -d "$withval"; then : ; else
 		     AC_MSG_ERROR([argument for --with-coin-instdir not a directory])
 		   fi
-		   m4_ifvaln([$2],
-                     [if test -r $withval/include/coin/$2; then
-                        m4_tolower(coin_has_$1)=installed
-			m4_toupper($1INSTDIR)=`cd $withval; pwd`
-                      fi],
-		     [AC_MSG_WARN([Cannot verify availability of $1 with --with-coin-instdir flag.  Project manager needs to provide name of header to look for])])],
+		   if test -r $withval/share/doc/coin/$1/README; then
+		     m4_tolower(coin_has_$1)=installed
+		     m4_toupper($1INSTDIR)=`cd $withval; pwd`
+		   fi],
                    [])
     fi
 
@@ -2469,27 +2467,17 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1_PREINSTALLED),
 
 if test $m4_tolower(coin_has_$1) = installed; then
   AC_MSG_RESULT([installed in $m4_toupper($1INSTDIR)])
-  # Check for header
-  m4_ifvaln([$2],[tmp=$m4_toupper($1INSTDIR)/include/coin
-                  AC_MSG_CHECKING(whether header $2 is available in $tmp)
-                  if test -r $tmp/$2; then
-		    AC_MSG_RESULT([yes])
-		  else
-		    AC_MSG_RESULT([no])
-		    AC_MSG_ERROR([Header $2 not available in $1 installation directory])
-		  fi])
-  # Check for library (this is not qo reliable)
-  m4_ifvaln([$3],[tmp=$m4_toupper($1INSTDIR)/lib
-                  AC_MSG_CHECKING([whether library $3.* is available in $tmp])
-		  bla=`ls $tmp/$3.* 2>/dev/null | head -n 1`
-		  if test x"$bla" = x; then
-		    AC_MSG_RESULT([no])
-		    AC_MSG_ERROR([Library $3.* not available in $1 installation directory])
-		  else
-		    AC_MSG_RESULT([found $bla])
-		  fi])
+  AC_COIN_CHECK_FILE([$m4_toupper($1INSTDIR)/share/doc/coin/$1/README],
+                     [],[AC_MSG_ERROR([$m4_toupper($1INSTDIR)/share/doc/coin/$1/README should be available if $1 is installed])])
 else
   AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
+  if test $m4_tolower(coin_has_$1) != notGiven &&
+     test $m4_tolower(coin_has_$1) != skipping; then
+    AC_MSG_CHECKING([for source code location of $1])
+    AC_MSG_RESULT([$m4_toupper($1SRCDIR)])
+    AC_MSG_CHECKING([for object code location of $1])
+    AC_MSG_RESULT([$m4_toupper($1OBJDIR)])
+  fi
 fi
 ]) # AC_COIN_HAS_PROJECT
 
