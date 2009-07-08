@@ -178,7 +178,7 @@ AM_CONDITIONAL(ALWAYS_FALSE, false)
 coin_projectdir=yes
 
 # Check if a library version is set for libtool
-m4_ifvaln([$1],[coin_libversion=$1],[coin_libversion=unset])
+m4_ifvaln([$1],[coin_libversion=$1],[])
 ]) # AC_COIN_PROJECTDIR_INIT
 
 ###########################################################################
@@ -1708,7 +1708,7 @@ LT_LDFLAGS=
 
 # Check if we want to set the library version
 AC_MSG_CHECKING([if library version is set])
-if test "$coin_libversion" != unset; then
+if test x"$coin_libversion" != x; then
   LT_LDFLAGS="$LT_LDFLAGS -version-info $coin_libversion"
   AC_MSG_RESULT([$coin_libversion])
 else
