@@ -176,6 +176,9 @@ AM_CONDITIONAL(ALWAYS_FALSE, false)
 # We set the following variable so that we know later in AC_COIN_FINALIZE
 # that we are in a project main directory
 coin_projectdir=yes
+
+# Check if a library version is set for libtool
+m4_ifvaln([$1],[coin_libversion=$1],[coin_libversion=unset])
 ]) # AC_COIN_PROJECTDIR_INIT
 
 ###########################################################################
@@ -1702,6 +1705,16 @@ fi
 # not yet set up that way.  But we need to fix this, when we want
 # to comile DLLs under Windows.
 LT_LDFLAGS=
+
+# Check if we want to set the library version
+AC_MSG_CHECKING([if library version is set])
+if test "$coin_libversion" != unset; then
+  LT_LDFLAGS="$LT_LDFLAGS -version-info $coin_libversion"
+  AC_MSG_RESULT([$coin_libversion])
+else
+  AC_MSG_RESULT([no])
+fi
+
 AC_SUBST(LT_LDFLAGS)
 
 #END
