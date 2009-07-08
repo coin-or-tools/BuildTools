@@ -293,6 +293,10 @@ AC_DEFUN([AC_COIN_PROJECTDIR_INIT],
 ADDLIBS="-lm $LIBS"
 AC_SUBST(ADDLIBS)
 
+# As backup, we make sure we don't loose an FLIBS if it has been set
+# by the user
+save_FLIBS="$FLIBS"
+
 # Initialize the FADDLIBS variable (which is to be used with a fortran
 # compiler and will not include FLIBS)
 FADDLIBS="$LIBS"
@@ -1358,10 +1362,9 @@ AC_BEFORE([AC_PROG_F77],[$0])dnl
 
 AC_LANG_PUSH([Fortran 77])
 
-save_FLIBS="$FLIBS"
-
 AC_F77_WRAPPERS
 
+# If FLIBS has been set by the user, we just restore its value here
 if test x"$save_FLIBS" != x; then
   FLIBS="$save_FLIBS"
 else
@@ -1371,6 +1374,7 @@ else
     for flag in $FLIBS; do
       case $flag in
         -lcrt*.o) ;;
+        -lcygwin) ;;
                *) my_flibs="$my_flibs $flag" ;;
       esac
     done
