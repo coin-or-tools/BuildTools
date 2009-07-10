@@ -11,6 +11,8 @@
 # Modified: Lou Hafer	       SFU	2008-01-20
 #	Accommodate simultaneous creation of releases with circular
 #	dependencies.
+# Modified: Ted Ralphs	       Lehigh University 2009-07-10
+#	Set libtool version info automatically
 
 #set -x -v
 set -e
@@ -29,13 +31,15 @@ set -e
 # Data is a real pain in the **** and should be converted to the standard
 # nomenclature.
 
-determine_release ()
+#Determine revision number (patch release number--third digit in release 
+# version number
+
+determine_revision ()
 { 
   if test $isData = no ; then
 
     drtmp_stableBranch=`echo $1 | sed -e 's|.*/stable/||'`
     drtmp_baseURL=`echo $1 | sed -e 's|/stable/[0-9.]*||'`
-    drtmp_returnVal=
 
     # List the existing releases and screen for releases matching stableBranch.
 
@@ -55,29 +59,30 @@ determine_release ()
 
     if test -z "$drtmp_release_vers" ; then
       if test $2 = 1 ; then
-	drtmp_returnVal="$drtmp_stableBranch.0"
+	drtmp_revision=0
       else
-	drtmp_returnVal="Error"
+	drtmp_revision="Error"
       fi
     else
 
     # There are releases. If we don't have one after the loop, we're confused.
 
-      drtmp_new_rel=-10000
+      drtmp_revision=-10000
       for drtmp_i in $drtmp_release_vers; do
-	drtmp_rel=`echo $drtmp_i | sed -e "s|^$drtmp_stableBranch.||"`
-	if test $drtmp_rel -gt $drtmp_new_rel; then
-	  drtmp_new_rel=$drtmp_rel
+	drtmp_old_revision=`echo $drtmp_i | sed -e "s|^$drtmp_stableBranch.||"`
+	if test $drtmp_old_revision -gt $drtmp_revision; then
+	  drtmp_revision=$drtmp_old_revision
 	fi
       done
 
-      if test $drtmp_new_rel = -10000; then
-	drtmp_new_rel="Error"
+      if test $drtmp_revision = -10000; then
+	drtmp_revision="Error"
       elif test $2 = 1 ; then
-	drtmp_new_rel=`expr $drtmp_new_rel + 1`
+	drtmp_revision=`expr $drtmp_revision + 1`
       fi
-      drtmp_returnVal="$drtmp_stableBranch.$drtmp_new_rel"
     fi
+    
+    # determine current and age for the purposes of libtool versioning
 
   else	# end normal and ThirdParty, begin Data
 
@@ -106,9 +111,9 @@ determine_release ()
 
     if test -z "$drtmp_release_vers" ; then
       if test $2 = 1 ; then
-	drtmp_returnVal="$drtmp_stableBranch.0"
+	drtmp_revision=0
       else
-	drtmp_returnVal="Error"
+	drtmp_revision="Error"
       fi
     else
 
@@ -139,29 +144,68 @@ determine_release ()
 
       if test -z "$drtmp_release_vers" ; then
 	if test $2 = 0 ; then
-	  drtmp_returnVal="$drtmp_stableBranch.Error"
+	  drtmp_revision="Error"
 	else
-	  drtmp_returnVal="$drtmp_stableBranch.0"
+	  drtmp_revision=0
 	fi
       else
-	drtmp_new_rel=-10000
+	drtmp_revision=-10000
 	for drtmp_i in $drtmp_release_vers; do
-	  drtmp_rel=`echo $drtmp_i | sed -e "s|^$drtmp_stableBranch.||"`
-	  if test $drtmp_rel -gt $drtmp_new_rel; then
-	    drtmp_new_rel=$drtmp_rel
+	  drtmp_old_revision=`echo $drtmp_i | sed -e "s|^$drtmp_stableBranch.||"`
+	  if test $drtmp_old_revision -gt $drtmp_revision; then
+	    drtmp_revision=$drtmp_old_revision
 	  fi
 	done
-	drtmp_new_rel=`expr $drtmp_new_rel + 1`
-	drtmp_returnVal="$drtmp_stableBranch.$drtmp_new_rel"
+	drtmp_revision=`expr $drtmp_revision + 1`
       fi
 
     fi	# for releases matching stable branch
 
   fi	# for normal/Data
 
-  echo $drtmp_returnVal
+  echo $drtmp_revision
 }
 
+# Determine current (the total number of stable releases over all time)
+
+determine_current ()
+{ 
+  if test $isData = no ; then
+
+    dctmp_stableBranch=`echo $1 | sed -e 's|.*/stable/||'`
+    dctmp_baseURL=`echo $1 | sed -e 's|/stable/[0-9.]*||'`
+
+    dctmp_current=`svn list $dctmp_baseURL/stable | wc -w`
+
+  else
+
+    dctmp_current=0
+
+  fi
+
+  echo $dctmp_current
+}
+
+# Determine age (the number of backwards compatible stable releases (second 
+# number in stable version) 
+
+determine_age ()
+{
+  if test $isData = no ; then
+
+    datmp_stableBranch=`echo $1 | sed -e 's|.*/stable/||'`
+    datmp_baseURL=`echo $1 | sed -e 's|/stable/[0-9.]*||'`
+
+    datmp_age=`echo $datmp_stableBranch | sed -e 's|[0-9].||'`
+
+  else
+
+    datmp_age=0
+
+  fi
+
+  echo $datmp_age
+}
 
 # Specify the COIN URL base for convenience.
 
@@ -391,9 +435,16 @@ fi
 echo ''
 echo "===> Checking releases for stable branch $stableBranch ..."
 
-new_ver=`determine_release "$stableURL" 1`
+echo $stableURL
+new_current=`determine_current "$stableURL" 1`
+new_revision=`determine_revision "$stableURL" 1`
+new_age=`determine_age "$stableURL" 1`
+new_ver="$stableBranch.$new_revision"
 
 echo ''
+echo "New current.......: $new_current"
+echo "New revision......: $new_revision"
+echo "New age...........: $new_age"
 echo "New release.......: $new_ver"
 buildBase="${stableProj}-$new_ver"
 echo "Build directory...: $buildBase"
@@ -453,9 +504,11 @@ for i in $conf_ac_files; do
 done
 
 echo ''
-echo "===> Updating version number ($new_ver) in configure.ac files"
+echo "===> Updating version numbers in configure.ac files"
 for i in $conf_ac_files; do
   sed -e "s|AC_INIT\(.*\)\[[0-9A-Za-z\.]*\],\(.*\)|AC_INIT\1[$new_ver],\2|" $i > bla
+  mv bla $i
+  sed -e "s|AC_COIN_PROJECTDIR_INIT\(.*\)|AC_COIN_PROJECTDIR_INIT\($new_current:$new_revision:$new_age\)|" $i > bla
   mv bla $i
   svn di $i
 done
