@@ -3318,6 +3318,8 @@ if test x"$use_thirdpartyglpk" = xtry ; then
 	      [Define to 1 if $1 package is available])
     m4_tolower(coin_has_$1)=true
     m4_tolower($1_libcheck)=no
+    m4_toupper($1OBJDIR)=`cd $coin_glpkobjdir; pwd`
+    AC_SUBST(m4_toupper($1OBJDIR))
     AC_MSG_NOTICE([Using $1 in ThirdParty/Glpk])
   fi
 fi
