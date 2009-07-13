@@ -184,12 +184,13 @@ versions of COIN projects on separate lines in the form
 
  <name> <URL of stable version>
 
-Recommended practice is to keep this list in a file called "Dendencies" in 
-the project's root directory. An output file called "Externals" in the same 
-form, but with the URL of each stable version replaced by the URL of the 
-latest associated release. The script will also set the svn:externals 
-variable. It does not do an update or commit the change. After the script 
-runs, do an update and test build, then commit the change if you are happy.
+Recommended practice is to keep this list in a file called "Dendencies" in the
+project's root directory. A temporary file called "xyz" in the same form, but
+with the URL of each stable version replaced by the URL of the latest
+associated release is produced. From this file, the script will set the
+svn:externals variable. It does not do an update or commit the change. After
+the script runs, do an update and test build, then commit the change if you
+are happy.
 
 EOF
 fi
