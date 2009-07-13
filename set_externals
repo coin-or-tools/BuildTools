@@ -123,11 +123,11 @@ if test $printHelp = 0 && test $exitValue = 0; then
           ext_name=
           continue
         fi                                    
-        if (echo $ext_url | grep -E 'stable/|releases/' >/dev/null); then
+        if (echo $ext_url | grep -E 'trunk|stable/|releases/' >/dev/null); then
           :;
         else
           echo ''
-          echo "The external URL $ext_url is not a stable branch or release. Exiting."
+          echo "The external URL $ext_url is not valid. Exiting."
           echo ''
           exit -2
         fi
@@ -137,6 +137,9 @@ if test $printHelp = 0 && test $exitValue = 0; then
 
         if expr "$ext_url" : '.*releases/.*' 2>&1 >/dev/null ; then
           echo "Using specified release for $ext_name."
+          ext_rel_url=$ext_url
+        elif expr "$ext_url" : '.*trunk.*' 2>&1 >/dev/null; then
+          echo "Using specified trunk for $ext_name."
           ext_rel_url=$ext_url
         else
           ext_stable=`echo $ext_url | sed -e 's|\(.*/stable/[0-9\.]*\).*|\1|'`
@@ -193,6 +196,12 @@ the script runs, do an update and test build, then commit the change if you
 are happy.
 
 EOF
+else
+cat <<EOF 
+Externals set successfully. Please verify that the change is OK and then 
+commit to make the change permanent.
+EOF
+
 fi
 
 exit $exitValue
