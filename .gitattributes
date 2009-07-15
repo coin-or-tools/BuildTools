@@ -12,4 +12,5 @@ compile_f2c/compile_f2c -text
 /missing -text
 /prepare_new_release -text
 /run_autotools -text
+/set_externals -text
 share/config.site -text
