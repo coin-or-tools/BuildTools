@@ -1,0 +1,207 @@
+#!/bin/sh
+
+# Copyright (C) 2007 International Business Machines and
+# Copyright (c) 2009 Lehigh University
+# All Rights Reserved.
+# This file is distributed under the Common Public License.
+# It is part of the BuildTools project in COIN-OR (www.coin-or.org)
+#
+## $Id: prepare_new_release 1302 2009-06-07 18:17:53Z stefan $
+#
+# This script is based on prepare_new_release, which is authored by
+# Author: Andreas Waechter     IBM      2007-06-21
+# Modified: Lou Hafer	       SFU	2008-01-20
+#
+# The modifications to set_externals were made by 
+# Ted Ralphs Lehigh University          2009-07-07
+#
+
+#set -x -v
+set -e
+
+determine_release ()
+{ 
+  drtmp_stableBranch=`echo $1 | sed -e 's|.*/stable/||'`
+  drtmp_baseURL=`echo $1 | sed -e 's|/stable/[0-9.]*||'`
+  drtmp_returnVal=
+
+  # List the existing releases and screen for releases matching stableBranch.
+
+  drtmp_svnlst=`svn list $drtmp_baseURL/releases/`
+
+  drtmp_release_vers=
+  for drtmp_i in $drtmp_svnlst ; do
+    case $drtmp_i in
+      $drtmp_stableBranch.*)
+        drtmp_i=`echo $drtmp_i | sed -e 's|/$||'`
+        drtmp_release_vers="$drtmp_release_vers $drtmp_i";;
+    esac;
+  done
+
+  # Are there any existing releases? If not, and the user didn't ask for the
+  # next release, we have an error.
+
+  if test -z "$drtmp_release_vers" ; then
+    if test $2 = 1 ; then
+      drtmp_returnVal="$drtmp_stableBranch.0"
+    else
+      drtmp_returnVal="Error"
+    fi
+  else
+
+  # There are releases. If we don't have one after the loop, we're confused.
+
+    drtmp_new_rel=-10000
+    for drtmp_i in $drtmp_release_vers; do
+      drtmp_rel=`echo $drtmp_i | sed -e "s|^$drtmp_stableBranch.||"`
+      if test $drtmp_rel -gt $drtmp_new_rel; then
+        drtmp_new_rel=$drtmp_rel
+      fi
+    done
+
+    if test $drtmp_new_rel = -10000; then
+      drtmp_new_rel="Error"
+    elif test $2 = 1 ; then
+      drtmp_new_rel=`expr $drtmp_new_rel + 1`
+    fi
+      drtmp_returnVal="$drtmp_stableBranch.$drtmp_new_rel"
+  fi
+
+  echo $drtmp_returnVal
+}
+
+printHelp=0
+exitValue=0
+Dependencies=
+
+if test "$#" -eq 0; then
+  printHelp=1
+else
+
+# Process the parameters. A parameter without an opening `-' is assumed to be
+# the spec for the stable branch.
+
+  while test $# -gt 0 && test $exitValue = 0 && test $printHelp = 0 ; do
+    case "$1" in
+      -h* | --h*) printHelp=1 ;;
+           
+       -*) echo "$0: unrecognised command line switch '"$1"'."
+	   printHelp=1
+	   exitValue=-1
+	   ;;
+	*) Dependencies=$1
+	   ;;
+    esac
+    shift
+  done
+fi
+
+# End of parameter parsing. We have a stable URL to work with.  Tell the
+# user what we've seen.
+
+# Find out the most recent release (if any) for the stable branch. List the
+# existing releases and screen for releases matching stableBranch. The new
+# release should be one greater than any existing release, or 0 if the stable
+# branch has no releases.
+
+if test $printHelp = 0 && test $exitValue = 0; then
+  if test -r $Dependencies; then
+
+    echo ''
+    echo '===> Creating new externals file with pointers to releases...'
+    echo ''
+
+    ext_name=
+    ext_url=
+    for i in `cat $Dependencies`; do
+      if test "$ext_name" = ""; then
+        ext_name="$i"
+      else
+        ext_url=$i
+        if (echo $ext_name | grep -E '^#' >/dev/null); then
+          echo "Skip $ext_name."
+          ext_name=
+          continue
+        fi                                    
+        if (echo $ext_url | grep -E 'trunk|stable/|releases/' >/dev/null); then
+          :;
+        else
+          echo ''
+          echo "The external URL $ext_url is not valid. Exiting."
+          echo ''
+          exit -2
+        fi
+
+        ext_base_front=`echo $ext_url | sed -e 's|/stable/.*||'`
+        ext_proj=`echo $ext_base_front | sed -e 's|.*/\([^/]*\)|\1|'`
+
+        if expr "$ext_url" : '.*releases/.*' 2>&1 >/dev/null ; then
+          echo "Using specified release for $ext_name."
+          ext_rel_url=$ext_url
+        elif expr "$ext_url" : '.*trunk.*' 2>&1 >/dev/null; then
+          echo "Using specified trunk for $ext_name."
+          ext_rel_url=$ext_url
+        else
+          ext_stable=`echo $ext_url | sed -e 's|\(.*/stable/[0-9\.]*\).*|\1|'`
+          ext_base_end=`echo $ext_url | sed -e 's|.*/stable/[0-9\.]*||'`
+
+          echo "Determining release for $ext_name:"
+          ext_latest=`determine_release $ext_stable 0`
+ 
+          if test "$ext_base_end" = ""; then
+            ext_rel_url=$ext_base_front/releases/$ext_latest
+          else
+            ext_rel_url=$ext_base_front/releases/$ext_latest$ext_base_end
+          fi
+        fi
+
+        echo "  $ext_rel_url"
+        echo "$ext_name  $ext_rel_url" >>xyz
+        ext_name=
+      fi
+    done
+
+    echo ''
+    echo '===> Updating svn:externals property...'
+    echo ''
+
+    svn pset svn:externals -F xyz .
+    
+    rm xyz
+
+  else # if test -r Externals
+    echo ""
+    echo "Dependency file does not exist or is unspecified..."
+    echo ""
+    printHelp=1
+    exitvalue=-2
+  fi
+fi
+
+if test $printHelp = 1 ; then
+  cat <<EOF
+Usage: set_externals <Dependency File> 
+
+This script takes as input a dependency file containing a list of stable
+versions of COIN projects on separate lines in the form
+
+ <name> <URL of stable version>
+
+Recommended practice is to keep this list in a file called "Dendencies" in the
+project's root directory. A temporary file called "xyz" in the same form, but
+with the URL of each stable version replaced by the URL of the latest
+associated release is produced. From this file, the script will set the
+svn:externals variable. It does not do an update or commit the change. After
+the script runs, do an update and test build, then commit the change if you
+are happy.
+
+EOF
+else
+cat <<EOF 
+Externals set successfully. Please verify that the change is OK and then 
+commit to make the change permanent.
+EOF
+
+fi
+
+exit $exitValue
