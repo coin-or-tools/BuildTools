@@ -107,6 +107,8 @@ fi
 if test $printHelp = 0 && test $exitValue = 0; then
   if test -r $Dependencies; then
 
+    rm -f Externals.releases
+
     echo ''
     echo '===> Creating new externals file with pointers to releases...'
     echo ''
@@ -156,7 +158,7 @@ if test $printHelp = 0 && test $exitValue = 0; then
         fi
 
         echo "  $ext_rel_url"
-        echo "$ext_name  $ext_rel_url" >>xyz
+        echo "$ext_name  $ext_rel_url" >>Externals.releases
         ext_name=
       fi
     done
@@ -165,11 +167,11 @@ if test $printHelp = 0 && test $exitValue = 0; then
     echo '===> Updating svn:externals property...'
     echo ''
 
-    svn pset svn:externals -F xyz .
+    svn pset svn:externals -F Externals.releases .
     
-    rm xyz
+    rm Externals.releases
 
-  else # if test -r Externals
+  else # if test -r Dependencies
     echo ""
     echo "Dependency file does not exist or is unspecified..."
     echo ""
@@ -188,9 +190,9 @@ versions of COIN projects on separate lines in the form
  <name> <URL of stable version>
 
 Recommended practice is to keep this list in a file called "Dendencies" in the
-project's root directory. A temporary file called "xyz" in the same form, but
-with the URL of each stable version replaced by the URL of the latest
-associated release is produced. From this file, the script will set the
+project's root directory. A temporary file called "Externals.releases" in the
+same form, but with the URL of each stable version replaced by the URL of the
+latest associated release is produced. From this file, the script will set the
 svn:externals variable. It does not do an update or commit the change. After
 the script runs, do an update and test build, then commit the change if you
 are happy.
