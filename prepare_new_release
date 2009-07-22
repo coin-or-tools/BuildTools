@@ -524,7 +524,7 @@ if test -r Dependencies; then
   echo "$stableProj uses build tools stable version $buildtools_stable"
   echo ''
 
-  rm -f Externals
+  rm -f Externals.releases
   ext_name=
   ext_url=
   for i in `cat Dependencies`; do
@@ -603,7 +603,7 @@ if test -r Dependencies; then
       fi
 
       echo "     $ext_rel_url"
-      echo "$ext_name  $ext_rel_url" >>Externals
+      echo "$ext_name  $ext_rel_url" >>Externals.releases
       ext_name=
       echo ''
     fi
@@ -613,7 +613,7 @@ if test -r Dependencies; then
   echo '===> Updating svn:externals properties, and checking out externals...'
   echo ''
 
-  svn pset svn:externals -F Externals .
+  svn pset svn:externals -F Externals.releases .
 
   svn update
 
@@ -623,7 +623,7 @@ if test -r Dependencies; then
 
   ext_name=
   ext_url=
-  for i in `cat Externals`; do
+  for i in `cat Externals.releases`; do
     if test "$ext_name" = ""; then
       ext_name="$i"
     else
@@ -645,7 +645,7 @@ if test -r Dependencies; then
       ext_name=
     fi
   done
-fi # if test -r Externals
+fi # if test -r Externals.releases
 
 if test $isThirdParty = yes; then
   pkg=`echo $baseURL | sed -e 's|.*/||g'`
@@ -732,7 +732,7 @@ fi
 
 if test -n "$stableExternals" ; then
   echo "Grooming Externals to remove stable references used for testing."
-  rm -rf Externals.releases
+  mv Externals.releases Externals
   ext_name=
   ext_url=
   for i in `cat Externals`; do
@@ -753,12 +753,12 @@ if test -n "$stableExternals" ; then
       ext_name=
     fi
   done
-  mv Externals.releases Externals
-  svn propset -F Externals svn:externals .
+  svn propset -F Externals.releases svn:externals .
+  rm -rf Externals
 fi
 
 
-if test -r Externals; then
+if test -r Externals.releases; then
   echo ''
   echo 'Also, please confirm the Externals are correct:'
   svn propget svn:externals
@@ -772,7 +772,7 @@ echo "          $coDir"
 echo ''
 echo "and run the commit_new_release script"
 
-rm -rf Externals
+rm -rf Externals.releases
 
 cat >.new_release_data <<EOF
 isData=$isData
