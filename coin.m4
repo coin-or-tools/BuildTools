@@ -2301,6 +2301,9 @@ AC_COIN_LINKCOPY_FROM_FILELIST($1, $2, [cp])
 AC_DEFUN([AC_COIN_EXAMPLE_FILES],
 [AC_REQUIRE([AC_COIN_CHECK_GNU_ZLIB])
 AC_REQUIRE([AC_COIN_CHECK_VPATH])
+AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
+AC_REQUIRE([AC_PROG_LN_S])
+
 files=`cd $srcdir; ls $1`
 # We need to do the following loop to make sure that are no newlines
 # in the variable
@@ -2316,10 +2319,9 @@ if test $coin_vpath_config = yes; then
     cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
       lnkcmd=cp ;;
   esac
-  if test "$lnkcmd" = cp; then
+  if test "x$lnkcmd" = xcp; then
     AC_MSG_NOTICE([Copying example files ($1)])
   else
-    AC_PROG_LN_S
     AC_MSG_NOTICE([Creating links to the example files ($1)])
     lnkcmd="$LN_S"
   fi
