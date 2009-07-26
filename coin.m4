@@ -16,47 +16,33 @@ AC_PREREQ(2.59)
 #                           COIN_MAIN_SUBDIRS                             #
 ###########################################################################
 
-# This is the macro for AC_COIN_MAIN_SUBDIRS taking care of ONE argument
+# This is the macro for AC_COIN_MAIN_SUBDIRS taking care of ONE (or two) argument(s)
+# It calles AC_COIN_HAS_PROJECT for the project given in $1 and adds $1 to the CONFIG_SUBDIRS, if
+# either argument $2 is given and the file $1/$2 is available in $srcdir,
+# or $2 is not given and the file $1/configure is available in $srcdir
 AC_DEFUN([AC_COIN_MAIN_SUBDIR],
 [AC_ARG_VAR([COIN_SKIP_PROJECTS],[Set to the subdirectories of projects that should be skipped in the configuration])
 
-# This is a hack to find out if there is a "/" in the name, which would
-# break the AC_COIN_HAS_PROJECT macro
-m4_case($1,m4_bpatsubsts($1,[/],[_]),
-[# We have no "/" in the $1 argument
-  AC_COIN_HAS_PROJECT($1)
-  AC_MSG_CHECKING(whether directory $1 should be recursed into)
-  if test "$m4_tolower(coin_has_$1)" != skipping &&
-     test "$m4_tolower(coin_has_$1)" != installed; then
-    if test -r $srcdir/$1/configure; then
-      coin_subdirs="$coin_subdirs $1"
-      AC_MSG_RESULT(yes)
-      AC_CONFIG_SUBDIRS($1)
-    else
-      AC_MSG_RESULT(no)
-    fi
-  else
-    AC_MSG_RESULT(no)
-  fi],
-[# This must be Data/Simple or something else
-  AC_MSG_CHECKING(whether directory $1 should be recursed into)
-  coin_skip=no
-  if test x"$COIN_SKIP_PROJECTS" != x; then
-    for dir in $COIN_SKIP_PROJECTS; do
-      if test $dir = $1; then
-	coin_skip=yes
-      fi
-    done
-  fi
-  if test $coin_skip = yes; then
-    AC_MSG_RESULT(skipping)
-  elif test -r $srcdir/$1/configure; then
+#replace backslashes by underscore
+m4_define([escape], m4_bpatsubsts([$1],[/],[_]))
+
+# AC_COIN_HAS_PROJECT also checks whether $2 is available in $1, if not it sets coin_has... to notGiven
+AC_COIN_HAS_PROJECT($1,$2)
+AC_MSG_CHECKING(whether directory $1 should be recursed into)
+if test "$m4_tolower(coin_has_[]escape($1))" != skipping &&
+   test "$m4_tolower(coin_has_[]escape($1))" != notGiven &&
+   test "$m4_tolower(coin_has_[]escape($1))" != installed; then
+
+  if test -r $srcdir/$1/configure; then
     coin_subdirs="$coin_subdirs $1"
     AC_MSG_RESULT(yes)
     AC_CONFIG_SUBDIRS($1)
   else
     AC_MSG_RESULT(no)
-  fi])
+  fi
+else
+  AC_MSG_RESULT(no)
+fi
 ])
 
 # This macro sets up the recursion into configure scripts into
@@ -2452,7 +2438,12 @@ if test $m4_tolower(coin_has_[]escape($1)) != skipping; then
 
     if test "$m4_tolower(coin_has_[]escape($1))" = notGiven; then
       if test -d $srcdir/../$1; then
-        m4_tolower(coin_has_[]escape($1))=../$1
+        m4_ifvaln([$2],
+          [if test -r $srcdir/$1/$2; then
+            m4_tolower(coin_has_[]escape($1))=../$1
+          fi],
+          [ m4_tolower(coin_has_[]escape($1))=../$1 ]
+        )
       fi
     fi
   fi
