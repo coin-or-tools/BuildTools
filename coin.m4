@@ -29,7 +29,7 @@ AC_COIN_HAS_PROJECT($1,$2,$3)
 AC_MSG_CHECKING(whether project $1 need to be configured)
 if test "$m4_tolower(coin_has_$1)" != skipping &&
    test "$m4_tolower(coin_has_$1)" != notGiven &&
-   test "$m4_tolower(coin_has_$))" != installed; then
+   test "$m4_tolower(coin_has_$1)" != installed; then
 
   m4_ifvaln([$2], [projfulldir=$2/$1], [projfulldir=$1])
   if test -r $srcdir/$projfulldir/configure; then
