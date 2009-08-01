@@ -24,17 +24,14 @@ AC_PREREQ(2.59)
 AC_DEFUN([AC_COIN_MAIN_SUBDIR],
 [AC_ARG_VAR([COIN_SKIP_PROJECTS],[Set to the subdirectories of projects that should be skipped in the configuration])
 
-#replace backslashes by underscore
-#m4_define([escape], m4_bpatsubsts([$1],[/],[_]))
-
-# AC_COIN_HAS_PROJECT also checks whether $2 is available in $1, if not it sets coin_has... to notGiven
+# AC_COIN_HAS_PROJECT also checks whether $3 is available in $2/$1, if not it sets coin_has... to notGiven
 AC_COIN_HAS_PROJECT($1,$2,$3)
-m4_ifvaln([$2], [projfulldir=$2/$1], [projfulldir=$1])
-AC_MSG_CHECKING(whether directory $projfulldir should be recursed into)
+AC_MSG_CHECKING(whether project $1 need to be configured)
 if test "$m4_tolower(coin_has_$1)" != skipping &&
    test "$m4_tolower(coin_has_$1)" != notGiven &&
    test "$m4_tolower(coin_has_$))" != installed; then
 
+  m4_ifvaln([$2], [projfulldir=$2/$1], [projfulldir=$1])
   if test -r $srcdir/$projfulldir/configure; then
     coin_subdirs="$coin_subdirs $projfulldir"
     AC_MSG_RESULT(yes)
@@ -2435,7 +2432,10 @@ if test $m4_tolower(coin_has_$1) != skipping; then
                   [if test -d "$withval"; then : ; else
 		     AC_MSG_ERROR([argument for --with-coin-instdir not a directory])
 		   fi
-		   if test -r $withval/share/doc/coin/$1/README; then
+		   m4_ifvaln([$2],
+                     [if test -r $withval/share/doc/coin/$2/$1/README;],
+                     [if test -r $withval/share/doc/coin/$1/README;])
+                   then
 		     m4_tolower(coin_has_$1)=installed
 		     m4_toupper($1INSTDIR)=`cd $withval; pwd`
 		   fi],
@@ -2443,7 +2443,22 @@ if test $m4_tolower(coin_has_$1) != skipping; then
     fi
 
     # check if project can be found in $2/$1
+    # this is for the classic setup when this macro is called from AC_COIN_MAIN_SUBDIR
     m4_ifvaln([$2], [fulldir=$2/$1], [fulldir=$1])
+    if test "$m4_tolower(coin_has_$1)" = notGiven; then
+      if test -d $srcdir/$fulldir; then
+        m4_ifvaln([$3],
+          [if test -r $srcdir/$fulldir/$3; then
+            m4_tolower(coin_has_$1)=$fulldir
+          fi],
+          [ m4_tolower(coin_has_$1)=$fulldir ]
+        )
+      fi
+    fi
+
+    # check if project can be found in ../$2/$1
+    # this is for the classic setup when this macro is called from the project main directory
+    m4_ifvaln([$2], [fulldir=../$2/$1], [fulldir=../$1])
     if test "$m4_tolower(coin_has_$1)" = notGiven; then
       if test -d $srcdir/$fulldir; then
         m4_ifvaln([$3],
@@ -2463,19 +2478,27 @@ if test $m4_tolower(coin_has_$1) != notGiven &&
   AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 package is used])
 
   if test $m4_tolower(coin_has_$1) = installed; then
-    m4_toupper($1DOCDIR)=$m4_toupper($1INSTDIR)/share/doc/coin/$1
-    m4_toupper($1DATADIR)=$m4_toupper($1INSTDIR)/share/coin/$1
+    m4_ifvaln([$2],
+      [m4_toupper($1DOCDIR)=$m4_toupper($1INSTDIR)/share/doc/coin/$2/$1
+       m4_toupper($1DATADIR)=$m4_toupper($1INSTDIR)/share/coin/$2/$1],
+      [m4_toupper($1DOCDIR)=$m4_toupper($1INSTDIR)/share/doc/coin/$1
+       m4_toupper($1DATADIR)=$m4_toupper($1INSTDIR)/share/coin/$1])
   else
     if test "$m4_toupper($1OBJDIR)" = This_Variable_Is_Not_Set; then
       # Set the variables for source and object code location
       m4_toupper($1SRCDIR)=`cd $srcdir/$m4_tolower(coin_has_$1); pwd`
       m4_toupper($1OBJDIR)=`pwd`/$m4_tolower(coin_has_$1)
-      m4_toupper($1DOCDIR)=$abs_lib_dir/../share/doc/coin/$1
+      m4_ifvaln([$2],
+        [m4_toupper($1DOCDIR)=$abs_lib_dir/../share/doc/coin/$2/$1],
+        [m4_toupper($1DOCDIR)=$abs_lib_dir/../share/doc/coin/$1])
       m4_toupper($1DATADIR)=$m4_toupper($1OBJDIR)
     else
       # This is just a guess:
-      m4_toupper($1DOCDIR)=$m4_toupper($1OBJDIR)/../share/doc/coin/$1
-      m4_toupper($1DATADIR)=$m4_toupper($1OBJDIR)/../share/coin/$1
+      m4_ifvaln([$2],
+        [m4_toupper($1DOCDIR)=$m4_toupper($1OBJDIR)/../share/doc/coin/$2/$1
+         m4_toupper($1DATADIR)=$m4_toupper($1OBJDIR)/../share/coin/$2/$1],
+        [m4_toupper($1DOCDIR)=$m4_toupper($1OBJDIR)/../share/doc/coin/$1
+         m4_toupper($1DATADIR)=$m4_toupper($1OBJDIR)/../share/coin/$1])
     fi
   fi
 fi
@@ -2489,8 +2512,10 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1_PREINSTALLED),
 
 if test $m4_tolower(coin_has_$1) = installed; then
   AC_MSG_RESULT([installed in $m4_toupper($1INSTDIR)])
-  AC_COIN_CHECK_FILE([$m4_toupper($1INSTDIR)/share/doc/coin/$1/README],
-                     [],[AC_MSG_ERROR([$m4_toupper($1INSTDIR)/share/doc/coin/$1/README should be available if $1 is installed])])
+  m4_ifvaln([$2],
+    [AC_COIN_CHECK_FILE([$m4_toupper($1INSTDIR)/share/doc/coin/$2/$1/README],[],[AC_MSG_ERROR([$m4_toupper($1INSTDIR)/share/doc/coin/$2/$1/README should be available if $1 is installed])])],
+    [AC_COIN_CHECK_FILE([$m4_toupper($1INSTDIR)/share/doc/coin/$1/README],[],[AC_MSG_ERROR([$m4_toupper($1INSTDIR)/share/doc/coin/$1/README should be available if $1 is installed])])]
+  )
 else
   AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
   if test $m4_tolower(coin_has_$1) != notGiven &&
