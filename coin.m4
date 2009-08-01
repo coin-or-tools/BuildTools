@@ -2448,9 +2448,11 @@ if test $m4_tolower(coin_has_$1) != skipping; then
     if test "$m4_tolower(coin_has_$1)" = notGiven; then
       if test -d $srcdir/$fulldir; then
         m4_ifvaln([$3],
-          [if test -r $srcdir/$fulldir/$3; then
-            m4_tolower(coin_has_$1)=$fulldir
-          fi],
+          [for i in $srcdir/$fulldir/$3; do
+             if test -r $i; then
+               m4_tolower(coin_has_$1)=$fulldir
+             fi
+           done],
           [ m4_tolower(coin_has_$1)=$fulldir ]
         )
       fi
@@ -2462,9 +2464,11 @@ if test $m4_tolower(coin_has_$1) != skipping; then
     if test "$m4_tolower(coin_has_$1)" = notGiven; then
       if test -d $srcdir/$fulldir; then
         m4_ifvaln([$3],
-          [if test -r $srcdir/$fulldir/$3; then
-            m4_tolower(coin_has_$1)=$fulldir
-          fi],
+          [for i in $srcdir/$fulldir/$3; do
+             if test -r $i; then
+               m4_tolower(coin_has_$1)=$fulldir
+             fi
+           done],
           [ m4_tolower(coin_has_$1)=$fulldir ]
         )
       fi
