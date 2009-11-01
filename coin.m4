@@ -3429,6 +3429,30 @@ AC_COIN_PKG_CHECK_EXISTS([$1],
 ])# PKG_CHECK_MODULES
 
 ###########################################################################
+#                           COIN_PKG_CHECK_PROJECT_EXISTS                 #
+###########################################################################
+
+# COIN_PKG_CHECK_PROJECT_EXISTS(PROJECT, [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
+#
+# Check to see whether a particular project exists.  Similar
+# to PKG_CHECK_MODULES(), but set only the variables $1_VERSION and $1_PKG_ERRORS variables
+#
+AC_DEFUN([AC_COIN_PKG_CHECK_PROJECT_EXISTS],
+[AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
+if test -n "$PKG_CONFIG" ; then
+  if $PKG_CONFIG --exists "m4_tolower($1)"; then
+    m4_toupper($1)[]_VERSION=`$PKG_CONFIG --modversion "m4_tolower($1)" 2>/dev/null`
+    m4_ifval([$2], [$2], [:])
+  else
+    m4_toupper($1)_PKG_ERRORS=`$PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "m4_tolower($1)"`
+    $3
+  fi
+else
+  AC_MSG_ERROR("Cannot check for existance of module $1 without pkg-config")
+fi
+])
+
+###########################################################################
 #                           COIN_PKG_CHECK_MODULE_EXISTS                  #
 ###########################################################################
 
@@ -3468,9 +3492,9 @@ AC_DEFUN([AC_COIN_PKG_HAS_MODULE],
 [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
 
 AC_COIN_PKG_CHECK_MODULE_EXISTS([$1],[$2],
-  [ m4_toupper($1)[]_CFLAGS=`$PKG_CONFIG --cflags "m4_tolower($1)" 2>/dev/null`
-    m4_toupper($1)[]_LIBS=`$PKG_CONFIG --libs "m4_tolower($1)" 2>/dev/null`
-    m4_toupper($1)[]_DATA=`$PKG_CONFIG --variable=datadir "m4_tolower($1)" 2>/dev/null`
+  [ m4_toupper($1)[]_CFLAGS=`$PKG_CONFIG --cflags "m4_tolower($2)" 2>/dev/null`
+    m4_toupper($1)[]_LIBS=`$PKG_CONFIG --libs "m4_tolower($2)" 2>/dev/null`
+    m4_toupper($1)[]_DATA=`$PKG_CONFIG --variable=datadir "m4_tolower($2)" 2>/dev/null`
     $3
   ],
   [ $4 ])
@@ -3478,7 +3502,7 @@ AC_COIN_PKG_CHECK_MODULE_EXISTS([$1],[$2],
 ])# PKG_CHECK_MODULES
 
 ###########################################################################
-#                           COIN_MAIN_SUBDIR2                             #
+#                           COIN_MAIN_SUBDIR2 (deprecated)                #
 ###########################################################################
 
 # This is the macro for AC_COIN_MAIN_SUBDIRS taking care of ONE (or two or three) argument(s)
@@ -3487,9 +3511,9 @@ AC_COIN_PKG_CHECK_MODULE_EXISTS([$1],[$2],
 # or $3 is not given and the file $2/$1/configure is available in $srcdir,
 # where $2 = . if not given
 AC_DEFUN([AC_COIN_MAIN_SUBDIR2],
-[AC_ARG_VAR([COIN_SKIP_PROJECTS],[Set to the subdirectories of projects that should be skipped in the configuration])
+[AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
+AC_ARG_VAR([COIN_SKIP_PROJECTS],[Set to the subdirectories of projects that should be skipped in the configuration])
 
-AC_MSG_CHECKING([for project $1])
 # First check, if the sub-project is actually available
 
 m4_tolower(coin_has_$1)=notGiven
@@ -3562,6 +3586,117 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
   AC_COIN_PKG_CHECK_EXISTS([$1], [m4_tolower(coin_has_$1)="$m4_toupper($1)_VERSION"])
 
   PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
+fi
+
+# if not found yet, check if project is available in present directory
+if test "$m4_tolower(coin_has_$1)" = notGiven; then
+  if test -d $srcdir/$2/$1; then
+    coin_pkg_is_here=no
+    m4_ifvaln([$3],
+      [for i in $srcdir/$2/$1/$3; do
+         if test -r $i; then
+           coin_pkg_is_here=yes
+         fi
+       done],
+      [ coin_pkg_is_here=yes ])
+    if test $coin_pkg_is_here = yes; then
+      m4_tolower(coin_has_$1)=$2/$1
+    fi
+  fi
+fi
+
+AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
+
+AC_MSG_CHECKING(whether project $1 need to be configured)
+if test "$m4_tolower(coin_has_$1)" != skipping &&
+   test "$m4_tolower(coin_has_$1)" != notGiven &&
+   test "$m4_tolower(coin_has_$1)" != installed; then
+
+  if test -r $srcdir/$2/$1/configure; then
+    coin_subdirs="$coin_subdirs m4_ifval($2,[$2/],)$1"
+    AC_MSG_RESULT(yes)
+    AC_CONFIG_SUBDIRS(m4_ifval($2,[$2/],)$1)
+  else
+    AC_MSG_RESULT(no)
+  fi
+else
+  AC_MSG_RESULT(no)
+fi
+])
+
+###########################################################################
+#                           COIN_MAIN_PACKAGEDIR                          #
+###########################################################################
+
+# This is the macro for AC_COIN_MAIN_SUBDIRS taking care of ONE (or two or three) argument(s)
+# It calles AC_COIN_HAS_PROJECT with the given argument(s) and adds $1 to the CONFIG_SUBDIRS, if
+# either argument $3 is given and the file $2/$1/$3 is available in $srcdir,
+# or $3 is not given and the file $2/$1/configure is available in $srcdir,
+# where $2 = . if not given
+AC_DEFUN([AC_COIN_MAIN_PACKAGEDIR],
+[AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
+AC_MSG_CHECKING([whether project $1 is available])
+
+m4_tolower(coin_has_$1)=notGiven
+
+# check if user wants to skip project in any case
+AC_ARG_VAR([COIN_SKIP_PROJECTS],[Set to the subdirectories of projects that should be skipped in the configuration])
+if test x"$COIN_SKIP_PROJECTS" != x; then
+  for dir in $COIN_SKIP_PROJECTS; do
+    if test $dir = "$1"; then
+      m4_tolower(coin_has_$1)=skipping
+    fi
+    if test $dir = "$2/$1"; then
+      m4_tolower(coin_has_$1)=skipping
+    fi
+  done
+fi
+
+if test $m4_tolower(coin_has_$1) != skipping; then
+  if test $PACKAGE_TARNAME = m4_tolower($1); then
+    m4_tolower(coin_has_$1)=.
+  fi
+
+  AC_ARG_WITH([m4_tolower($1)-lib],
+    AC_HELP_STRING([--with-m4_tolower($1)-lib],
+                   [linker flags for using project $1]),
+      [m4_tolower(coin_has_$1)=installed],
+      [])
+
+  AC_ARG_WITH([m4_tolower($1)-incdir],
+    AC_HELP_STRING([--with-m4_tolower($1)-incdir],
+                   [directory with header files for using project $1]),
+    [m4_tolower(coin_has_$1)=installed],
+    [])
+
+  AC_ARG_WITH([m4_tolower($1)-datadir],
+    AC_HELP_STRING([--with-m4_tolower($1)-datadir],
+                   [directory with data files for using project $1]),
+    [m4_tolower(coin_has_$1)=installed],
+    [])
+fi
+
+if test $m4_tolower(coin_has_$1) = notGiven; then
+  #only if pkg-config is available:
+  #see if user gives directory where project might be installed: assemble search path for pkg-config
+  if test -n "$PKG_CONFIG" ; then
+    coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
+    AC_ARG_WITH([coin-instdir],
+      AC_HELP_STRING([--with-coin-instdir],
+                     [prefix of installation directory for precompiled COIN packages]),
+      [if test -d "$withval"; then : ; else
+         AC_MSG_ERROR([argument for --with-coin-instdir not a directory])
+       fi
+       PKG_CONFIG_PATH="$withval/lib/$2/pkgconfig:$PKG_CONFIG_PATH"
+      ],[])
+
+    # let pkgconfig check if the project is already installed somewhere
+    # need to export variable to be sure that the following pkg-config call gets these values
+    export PKG_CONFIG_PATH
+    AC_COIN_PKG_CHECK_PROJECT_EXISTS([$1], [m4_tolower(coin_has_$1)="$m4_toupper($1)_VERSION"])
+
+    PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
+  fi
 fi
 
 # if not found yet, check if project is available in present directory
@@ -3757,9 +3892,17 @@ pkgname=`echo "$1" | sed -e 's/ .*//g'`
 
 # check if directory $srcdir/../$1 exists and add ../$1 to the PKG_CONFIG_PATH
 # this is for the classic setup where an uninstalled project can be found in ../$1
+# we do the same for ThirdParty/$1 and Data/$1; it's not nice but the only way I see to easily get around these nonstandard locations
 if test -d $srcdir/../$pkgname; then
   PKG_CONFIG_PATH="../$pkgname:$PKG_CONFIG_PATH"
 fi
+if test -d $srcdir/../ThirdParty/$pkgname; then
+  PKG_CONFIG_PATH="../ThirdParty/$pkgname$PKG_CONFIG_PATH"
+fi
+if test -d $srcdir/../Data/$pkgname; then
+  PKG_CONFIG_PATH="../Data/$pkgname:$PKG_CONFIG_PATH"
+fi
+
 ]) # AC_COIN_HAS_MODULE_HELPER
 
 ###########################################################################
@@ -3800,6 +3943,7 @@ m4_toupper($1_DATA)=
 AC_SUBST(m4_toupper($1_LIBS))
 AC_SUBST(m4_toupper($1_CFLAGS))
 AC_SUBST(m4_toupper($1_DATA))
+AC_SUBST(REQUIREDPACKAGES)
 
 #check if user provided LIBS, CFLAGS, and DATA for module
 if test $m4_tolower(coin_has_$1) != skipping; then
@@ -3808,7 +3952,9 @@ if test $m4_tolower(coin_has_$1) != skipping; then
     AC_HELP_STRING([--with-m4_tolower($1)-lib],
                    [linker flags for using module $1]),
       [m4_tolower(coin_has_$1)=yes
-       m4_toupper($1_LIBS)="$withval"],
+       m4_toupper($1_LIBS)="$withval"
+       ADDLIBS="$ADDLIBS $withval"
+      ],
       [])
 
   AC_ARG_WITH([m4_tolower($1)-incdir],
@@ -3837,7 +3983,7 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
       [if test -d "$withval"; then : ; else
          AC_MSG_ERROR([argument for --with-coin-instdir not a directory])
        fi
-       PKG_CONFIG_PATH="$withval/lib/pkgconfig:$PKG_CONFIG_PATH",
+       PKG_CONFIG_PATH="$withval/lib/pkgconfig:$withval/lib/ThirdParty/pkgconfig:$withval/lib/Data/pkgconfig:$PKG_CONFIG_PATH",
       ],[])
 
     # go through $2 to ... and assemble PKG_CONFIG_PATH with ../$2 and module search string
@@ -3858,7 +4004,6 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
       [ m4_tolower(coin_has_$1)=yes
         AC_MSG_RESULT([yes: $m4_toupper($1)_VERSIONS])
         REQUIREDPACKAGES="$REQUIREDPACKAGES $module_content"
-        AC_SUBST(REQUIREDPACKAGES)
       ],
       [ m4_tolower(coin_has_$1)=notGiven
         AC_MSG_RESULT([not given: $m4_toupper($1)_PKG_ERRORS])
@@ -3875,13 +4020,13 @@ fi
 
 if test $m4_tolower(coin_has_$1) != skipping &&
    test $m4_tolower(coin_has_$1) != notGiven ; then
-  if test "x$m4_toupper($1)_CFLAGS" != x ; then
+  if test -n "$m4_toupper($1)_CFLAGS" ; then
     AC_MSG_NOTICE([$1 CFLAGS are $m4_toupper($1)_CFLAGS])
   fi
-  if test "x$m4_toupper($1)_LIBS" != x ; then
+  if test -n "$m4_toupper($1)_LIBS" ; then
     AC_MSG_NOTICE([$1 LIBS   are $m4_toupper($1)_LIBS])
   fi
-  if test "x$m4_toupper($1)_DATA" != x ; then
+  if test -n "$m4_toupper($1)_DATA" ; then
     AC_MSG_NOTICE([$1 DATA   is  $m4_toupper($1)_DATA])
   fi
   AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 module is available])
