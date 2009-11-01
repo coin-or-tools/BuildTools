@@ -3780,10 +3780,10 @@ done
 # It defines the MODULE_CFLAGS, MODULE_LIBS, and MODULE_DATA variables, refering to the compiler and linker
 # flags to use when linking against this module and the directories where the module data resists.
 # It also defines a COIN_HAS_MODULE preprocessor macro and makefile conditional.
+# Further, tolower(coin_has_$1) is set to "yes" and the packages of the module are added to
+# the REQUIREDPACKAGES variable, which can be used to setup a .pc file.
 # The argument should be the name (MODULE) of the module (in correct lower
 # and upper case), and a list of projects that belong to this module.
-#, optionally a directory where to look at it, and
-# optionally a file that need to be present in the package directory.
 #
 # It is also possible to specify a preinstalled version of this module
 # or to specify only the linker and compiler flags and data directory.
@@ -3866,6 +3866,8 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
     AC_COIN_PKG_HAS_MODULE([$1],[$module_content],
       [ m4_tolower(coin_has_$1)=yes
         AC_MSG_RESULT([yes: $m4_toupper($1)_VERSIONS])
+        REQUIREDPACKAGES="$REQUIREDPACKAGES $module_content"
+        AC_SUBST(REQUIREDPACKAGES)
       ],
       [ m4_tolower(coin_has_$1)=notGiven
         AC_MSG_RESULT([not given: $m4_toupper($1)_PKG_ERRORS])
@@ -3887,7 +3889,6 @@ if test $m4_tolower(coin_has_$1) != skipping &&
   fi
   if test "x$m4_toupper($1)_LIBS" != x ; then
     AC_MSG_NOTICE([$1 LIBS   are $m4_toupper($1)_LIBS])
-    ADDLIBS="$m4_toupper($1)_LIBS $ADDLIBS"
   fi
   if test "x$m4_toupper($1)_DATA" != x ; then
     AC_MSG_NOTICE([$1 DATA   is  $m4_toupper($1)_DATA])
