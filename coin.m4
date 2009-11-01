@@ -3751,24 +3751,15 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
 AC_DEFUN([AC_COIN_HAS_MODULE_HELPER],
 [
 module_content="$module_content m4_tolower($1)"
-for i in $1 ; do
-  # check if directory $srcdir/../$1 exists and add ../$1 to the PKG_CONFIG_PATH
-  # this is for the classic setup where an uninstalled project can be found in ../$1
-  if test -d $srcdir/../$1; then
-#    coin_pkg_is_here=no
-#    m4_ifvaln([$3],
-#      [for i in $srcdir/../$2/$1/$3; do
-#         if test -r $i; then
-#           coin_pkg_is_here=yes
-#         fi
-#       done],
-#      [ coin_pkg_is_here=yes ])
-#    if test $coin_pkg_is_here = yes; then
-      PKG_CONFIG_PATH="../$1:$PKG_CONFIG_PATH"
-#    fi
-  break;
-  fi
-done
+
+# extract the package name: get everything before first space
+pkgname=`echo "$1" | sed -e 's/ .*//g'`
+
+# check if directory $srcdir/../$1 exists and add ../$1 to the PKG_CONFIG_PATH
+# this is for the classic setup where an uninstalled project can be found in ../$1
+if test -d $srcdir/../$pkgname; then
+  PKG_CONFIG_PATH="../$pkgname:$PKG_CONFIG_PATH"
+fi
 ]) # AC_COIN_HAS_MODULE_HELPER
 
 ###########################################################################
