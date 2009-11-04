@@ -3736,7 +3736,7 @@ fi
 ])
 
 ###########################################################################
-#                            COIN_HAS_PROJECT2                            #
+#                            COIN_HAS_PROJECT2 (deprecated)               #
 ###########################################################################
 
 # This macro sets up usage of a Coin package.  It defines the
@@ -3883,28 +3883,6 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
 
 ]) # AC_COIN_HAS_PROJECT2
 
-AC_DEFUN([AC_COIN_HAS_MODULE_HELPER],
-[
-module_content="$module_content m4_tolower($1)"
-
-# extract the package name: get everything before first space
-pkgname=`echo "$1" | sed -e 's/ .*//g'`
-
-# check if directory $srcdir/../$1 exists and add ../$1 to the PKG_CONFIG_PATH
-# this is for the classic setup where an uninstalled project can be found in ../$1
-# we do the same for ThirdParty/$1 and Data/$1; it's not nice but the only way I see to easily get around these nonstandard locations
-if test -d $srcdir/../$pkgname; then
-  PKG_CONFIG_PATH="../$pkgname:$PKG_CONFIG_PATH"
-fi
-if test -d $srcdir/../ThirdParty/$pkgname; then
-  PKG_CONFIG_PATH="../ThirdParty/$pkgname$PKG_CONFIG_PATH"
-fi
-if test -d $srcdir/../Data/$pkgname; then
-  PKG_CONFIG_PATH="../Data/$pkgname:$PKG_CONFIG_PATH"
-fi
-
-]) # AC_COIN_HAS_MODULE_HELPER
-
 ###########################################################################
 #                            COIN_HAS_MODULE                              #
 ###########################################################################
@@ -3916,8 +3894,10 @@ fi
 # It also defines a COIN_HAS_MODULE preprocessor macro and makefile conditional.
 # Further, tolower(coin_has_$1) is set to "yes" and the packages of the module are added to
 # the REQUIREDPACKAGES variable, which can be used to setup a .pc file.
-# The argument should be the name (MODULE) of the module (in correct lower
-# and upper case), and a list of projects that belong to this module.
+# The first argument should be the name (MODULE) of the module (in correct lower
+# and upper case).
+# The second argument should be a (space separated) list of projects which this
+# module consists of. Optionally, required version numbers could be added.
 #
 # It is also possible to specify a preinstalled version of this module
 # or to specify only the linker and compiler flags and data directory.
@@ -3973,8 +3953,8 @@ if test $m4_tolower(coin_has_$1) != skipping; then
 fi
 
 if test $m4_tolower(coin_has_$1) = notGiven; then
-  #assemble search path for pkg-config
   if test -n "$PKG_CONFIG" ; then
+    # assemble search path for pkg-config
     coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
 
     AC_ARG_WITH([coin-instdir],
@@ -3986,24 +3966,19 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
        PKG_CONFIG_PATH="$withval/lib/pkgconfig:$withval/lib/ThirdParty/pkgconfig:$withval/lib/Data/pkgconfig:$PKG_CONFIG_PATH",
       ],[])
 
-    # go through $2 to ... and assemble PKG_CONFIG_PATH with ../$2 and module search string
-    module_content=""
-    m4_ifvaln([$2], AC_COIN_HAS_MODULE_HELPER([$2]))
-    m4_ifvaln([$3], AC_COIN_HAS_MODULE_HELPER([$3]))
-    m4_ifvaln([$4], AC_COIN_HAS_MODULE_HELPER([$4]))
-    m4_ifvaln([$5], AC_COIN_HAS_MODULE_HELPER([$5]))
-    m4_ifvaln([$6], AC_COIN_HAS_MODULE_HELPER([$6]))
-    m4_ifvaln([$7], AC_COIN_HAS_MODULE_HELPER([$7]))
-    m4_ifvaln([$8], AC_COIN_HAS_MODULE_HELPER([$8]))
-    m4_ifvaln([$9], AC_COIN_HAS_MODULE_HELPER([$9]))
+    if test -e ${prefix}/coin_subdirs.txt ; then
+      for i in `cat ${prefix}/coin_subdirs.txt` ; do
+        PKG_CONFIG_PATH="${prefix}/$i:$PKG_CONFIG_PATH"
+      done
+    fi
 
     # let pkg-config do it's magic
     # need to export variable to be sure that the following pkg-config gets these values
     export PKG_CONFIG_PATH
-    AC_COIN_PKG_HAS_MODULE([$1],[$module_content],
+    AC_COIN_PKG_HAS_MODULE([$1],[$2],
       [ m4_tolower(coin_has_$1)=yes
         AC_MSG_RESULT([yes: $m4_toupper($1)_VERSIONS])
-        REQUIREDPACKAGES="$REQUIREDPACKAGES $module_content"
+        REQUIREDPACKAGES="$REQUIREDPACKAGES $2"
       ],
       [ m4_tolower(coin_has_$1)=notGiven
         AC_MSG_RESULT([not given: $m4_toupper($1)_PKG_ERRORS])
@@ -4038,4 +4013,3 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
                 test $m4_tolower(coin_has_$1) != skipping])
 
 ]) # AC_COIN_HAS_MODULE
-
