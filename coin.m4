@@ -4143,7 +4143,9 @@ else
   LIBS="$SAVE_LIBS"
   
   # If we have no other ideas, consider building BLAS.
-  use_blas=BUILD
+  if test -z "$use_blas" ; then
+    use_blas=BUILD
+  fi
 fi
 
 if test "x$use_blas" = xBUILD ; then
@@ -4280,7 +4282,9 @@ else
   LIBS="$SAVE_LIBS"
 
   # If we have no other ideas, consider building LAPACK.
-  use_lapack=BUILD
+  if test -z "$use_lapack" ; then
+    use_lapack=BUILD
+  fi
 fi
 
 if test "x$use_lapack" = xBUILD ; then
