@@ -3354,28 +3354,34 @@ AM_CONDITIONAL([COIN_BUILD_GLPK],[test x"$use_thirdpartyglpk" = xbuild])
 AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
 [AC_ARG_VAR([PKG_CONFIG], [path to pkg-config utility])
 
-if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
-  AC_PATH_TOOL([PKG_CONFIG], [pkg-config])
-fi
-if test -n "$PKG_CONFIG"; then
-  _pkg_min_version=m4_default([$1], [0.9.0])
-  AC_MSG_CHECKING([pkg-config is at least version $_pkg_min_version])
-  if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
-    AC_MSG_RESULT([yes])
+AC_ARG_ENABLE([pkg-config],
+  [AC_HELP_STRING([--enable-pkg-config],[use pkg-config if available (default is yes)])],
+  [use_pkgconfig="$enableval"],
+  [use_pkgconfig=yes])
+
+if test $use_pkgconfig = yes ; then
+  if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
+    AC_PATH_TOOL([PKG_CONFIG], [pkg-config])
+  fi
+  if test -n "$PKG_CONFIG"; then
+    _pkg_min_version=m4_default([$1], [0.9.0])
+    AC_MSG_CHECKING([pkg-config is at least version $_pkg_min_version])
+    if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
+      AC_MSG_RESULT([yes])
+    else
+      AC_MSG_RESULT([no])
+      PKG_CONFIG=""
+    fi
+  fi
+
+  # check if pkg-config supports the short-errors flag
+  if test -n "$PKG_CONFIG" && \
+    $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+    pkg_short_errors=" --short-errors "
   else
-    AC_MSG_RESULT([no])
-    PKG_CONFIG=""
+    pkg_short_errors=""
   fi
 fi
-
-# check if pkg-config supports the short-errors flag
-if test -n "$PKG_CONFIG" && \
-  $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-  pkg_short_errors=" --short-errors "
-else
-  pkg_short_errors=""
-fi
-
 ])
 
 ###########################################################################
@@ -4013,3 +4019,283 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
                 test $m4_tolower(coin_has_$1) != skipping])
 
 ]) # AC_COIN_HAS_MODULE
+
+
+###########################################################################
+#                         COIN_HAS_MODULE_BLAS                            #
+###########################################################################
+
+# This macro checks for a library containing the BLAS library.  It
+# 1. checks the --with-blas argument
+# 2. if --with-blas=BUILD has been specified goes to point 5
+# 3. if --with-blas has been specified to a working library, sets BLAS_LIBS to its value
+# 4. tries standard libraries
+# 5. calls COIN_HAS_MODULE(Blas, [blas]) to check for ThirdParty/Blas
+# The makefile conditional and preprocessor macro COIN_HAS_BLAS is defined.
+# BLAS_LIBS is set to the flags required to link with a Blas library.
+# In case 3 and 4, the flags to link to Blas are added to ADDLIBS.
+# In case 5, Blas is added to REQUIREDPACKAGES
+
+AC_DEFUN([AC_COIN_HAS_MODULE_BLAS],
+[
+AC_ARG_WITH([blas],
+            AC_HELP_STRING([--with-blas],
+                           [specify BLAS library (or BUILD for compilation)]),
+            [use_blas="$withval"], [use_blas=])
+
+#if user specified --with-blas-lib, then we should give COIN_HAS_MODULE preference
+AC_ARG_WITH([blas-lib],,[use_blas=BUILD])
+
+# Check if user supplied option makes sense
+if test x"$use_blas" != x; then
+  if test "$use_blas" = "BUILD"; then
+    # we come to this later
+    :
+  elif test "$use_blas" != "no"; then
+    AC_MSG_CHECKING([whether user supplied BLASLIB=\"$use_blas\" works])
+    coin_save_LIBS="$LIBS"
+    LIBS="$use_blas $LIBS"
+    AC_COIN_TRY_FLINK([daxpy],
+                      [AC_MSG_RESULT([yes])
+                       ADDLIBS="$use_blas $ADDLIBS"],
+                      [AC_MSG_RESULT([no])
+                       AC_MSG_ERROR([user supplied BLAS library \"$use_blas\" does not work])])
+    LIBS="$coin_save_LIBS"
+  fi
+else
+# Try to autodetect the library for blas based on build system
+  #AC_MSG_CHECKING([default locations for BLAS])
+  skip_lblas_check=no
+  case $build in
+    *-sgi-*) 
+      AC_MSG_CHECKING([whether -lcomplib.sgimath has BLAS])
+      SAVE_LIBS="$LIBS"
+      LIBS="-lcomplib.sgimath $LIBS"
+      AC_COIN_TRY_FLINK([daxpy],
+                        [AC_MSG_RESULT([yes])
+                         use_blas=-lcomplib.sgimath;
+                         ADDLIBS="-lcomplib.sgimath $ADDLIBS"],
+                        [AC_MSG_RESULT([no])
+                         SAVE_LIBS="$LIBS"])
+      ;;
+
+# Ideally, we'd use -library=sunperf, but it's an imperfect world. Studio
+# cc doesn't recognise -library, it wants -xlic_lib. Studio 12 CC doesn't
+# recognise -xlic_lib. Libtool doesn't like -xlic_lib anyway. Sun claims
+# that CC and cc will understand -library in Studio 13. The main extra
+# function of -xlic_lib and -library is to arrange for the Fortran run-time
+# libraries to be linked for C++ and C. We can arrange that explicitly.
+    *-*-solaris*)
+      SAVE_LIBS="$LIBS"
+      AC_MSG_CHECKING([for BLAS in libsunperf])
+      LIBS="-lsunperf $FLIBS $LIBS"
+      AC_COIN_TRY_FLINK([daxpy],
+                        [AC_MSG_RESULT([yes])
+                         use_blas='-lsunperf'
+                         ADDLIBS="-lsunperf $ADDLIBS"
+			 coin_need_flibs=yes],
+                        [AC_MSG_RESULT([no])
+                         LIBS="$SAVE_LIBS"])
+      ;;
+    *-cygwin* | *-mingw*)
+# On cygwin, consider -lblas only if doscompile is disabled. The prebuilt
+# library will want to link with cygwin, hence won't run standalone in DOS.
+      if test "$enable_doscompile" = mingw; then
+	skip_lblas_check=yes
+      fi
+      case "$CC" in
+        cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+          SAVE_LIBS="$LIBS"
+          AC_MSG_CHECKING([for BLAS in MKL])
+          LIBS="mkl_intel_c.lib mkl_sequential.lib mkl_core.lib $LIBS"
+          AC_COIN_TRY_FLINK([daxpy],
+                            [AC_MSG_RESULT([yes])
+                             use_blas='mkl_intel_c.lib mkl_sequential.lib mkl_core.lib'
+                             ADDLIBS="mkl_intel_c.lib mkl_sequential.lib mkl_core.lib $ADDLIBS"],
+                            [AC_MSG_RESULT([no])
+                             LIBS="$SAVE_LIBS"])
+          ;;
+      esac
+      ;;
+  esac
+
+  if test -z "$use_blas" && test $skip_lblas_check = no; then
+    SAVE_LIBS="$LIBS"
+    AC_MSG_CHECKING([whether -lblas has BLAS])
+    LIBS="-lblas $LIBS"
+    AC_COIN_TRY_FLINK([daxpy],
+		      [AC_MSG_RESULT([yes])
+		       ADDLIBS="-lblas $ADDLIBS"
+		       use_blas='-lblas'],
+		      [AC_MSG_RESULT([no])
+	               LIBS="$SAVE_LIBS"])
+  fi
+  LIBS="$SAVE_LIBS"
+  
+  # If we have no other ideas, consider building BLAS.
+  use_blas=BUILD
+fi
+
+if test "x$use_blas" = xBUILD ; then
+  AC_COIN_HAS_MODULE(Blas, [blas])
+  
+elif test "x$use_blas" != x && test "$use_blas" != no; then
+  coin_has_blas=yes
+  AM_CONDITIONAL([COIN_HAS_BLAS],[test 0 = 0])
+  AC_DEFINE([COIN_HAS_BLAS],[1], [If defined, the BLAS Library is available.])
+  BLAS_LIBS="$use_blas"
+  BLAS_CFLAGS=
+  BLAS_DATA=
+  AC_SUBST(BLAS_LIBS)
+  AC_SUBST(BLAS_CFLAGS)
+  AC_SUBST(BLAS_DATA)
+  
+else
+  coin_has_blas=no
+  AM_CONDITIONAL([COIN_HAS_BLAS],[test 0 = 1])
+fi
+
+#if test "$use_blas" = BUILD; then
+#  coin_need_flibs=yes
+#fi
+
+#to make configure happy if fallback is used
+#AM_CONDITIONAL([COIN_BUILD_BLAS],[test "$use_blas" = BUILD])
+
+]) # AC_COIN_HAS_MODULE_BLAS
+
+###########################################################################
+#                       COIN_HAS_MODULE_LAPACK                            #
+###########################################################################
+
+# This macro checks for a library containing the LAPACK library.  It
+# 1. checks the --with-lapack argument
+# 2. if --with-lapack=BUILD has been specified goes to point 5
+# 3. if --with-lapack has been specified to a working library, sets LAPACK_LIBS to its value
+# 4. tries standard libraries
+# 5. calls COIN_HAS_MODULE(Lapack, [lapack]) to check for ThirdParty/Lapack
+# The makefile conditional and preprocessor macro COIN_HAS_LAPACK is defined.
+# LAPACK_LIBS is set to the flags required to link with a Lapack library.
+# In case 3 and 4, the flags to link to Lapack are added to ADDLIBS.
+# In case 5, Lapack is added to REQUIREDPACKAGES
+
+AC_DEFUN([AC_COIN_HAS_MODULE_LAPACK],
+[
+AC_ARG_WITH([lapack],
+            AC_HELP_STRING([--with-lapack],
+                           [specify LAPACK library (or BUILD for compilation)]),
+            [use_lapack=$withval], [use_lapack=])
+	    
+#if user specified --with-lapack-lib, then we should give COIN_HAS_MODULE preference
+AC_ARG_WITH([lapack-lib],,[use_lapack=BUILD])
+
+# Check if user supplied option makes sense
+if test x"$use_lapack" != x; then
+  if test "$use_lapack" = "BUILD"; then
+    # we come to this later
+    :
+  elif test "$use_lapack" != no; then
+    AC_MSG_CHECKING([whether user supplied LAPACKLIB=\"$use_lapack\" works])
+    coin_save_LIBS="$LIBS"
+    LIBS="$use_lapack $LIBS"
+    AC_COIN_TRY_FLINK([dsyev],
+                      [AC_MSG_RESULT([yes])
+                       ADDLIBS="$use_lapack $ADDLIBS"],
+                      [AC_MSG_RESULT([no])
+                       AC_MSG_ERROR([user supplied LAPACK library \"$use_lapack\" does not work])])
+    LIBS="$coin_save_LIBS"
+  fi
+else
+  if test x$coin_has_blas = xyes; then
+    # First try to see if LAPACK is already available with BLAS library
+    AC_MSG_CHECKING([whether LAPACK is already available with BLAS library])
+    coin_save_LIBS="$LIBS"
+    LIBS="$ADDLIBS $LIBS"
+    AC_COIN_TRY_FLINK([dsyev],
+                      [AC_MSG_RESULT([yes]); use_lapack=ok],
+                      [AC_MSG_RESULT([no])])
+    LIBS="$coin_save_LIBS"
+  fi
+  skip_llapack_check=no
+  if test -z "$use_lapack"; then
+    # Try to autodetect the library for lapack based on build system
+    case $build in
+      *-sgi-*) 
+        SAVE_LIBS="$LIBS"
+        AC_MSG_CHECKING([whether -lcomplib.sgimath has LAPACK])
+        LIBS="-lcomplib.sgimath $LIBS"
+        AC_COIN_TRY_FLINK([dsyev],
+                          [AC_MSG_RESULT([yes])
+                           use_lapack=-lcomplib.sgimath;
+                           ADDLIBS="-lcomplib.sgimath $ADDLIBS"],
+                          [AC_MSG_RESULT([no])
+                           SAVE_LIBS="$LIBS"])
+        ;;
+
+# See comments in COIN_HAS_BLAS.
+      *-*-solaris*)
+      SAVE_LIBS="$LIBS"
+      AC_MSG_CHECKING([for LAPACK in libsunperf])
+      LIBS="-lsunperf $FLIBS $LIBS"
+      AC_COIN_TRY_FLINK([dsyev],
+                        [AC_MSG_RESULT([yes])
+                         use_blas='-lsunperf'
+                         ADDLIBS="-lsunperf $ADDLIBS"
+			 coin_need_flibs=yes],
+                        [AC_MSG_RESULT([no])
+                         LIBS="$SAVE_LIBS"])
+        ;;
+# On cygwin, do this check only if doscompile is disabled. The prebuilt library
+# will want to link with cygwin, hence won't run standalone in DOS.
+      *-cygwin*)
+	if test "$enable_doscompile" = mingw; then
+	  skip_llapack_check=yes
+	fi
+	;;
+    esac
+  fi
+
+  if test -z "$use_lapack" && test $skip_llapack_check = no; then
+    SAVE_LIBS="$LIBS"
+    AC_MSG_CHECKING([whether -llapack has LAPACK])
+    LIBS="-llapack $LIBS"
+    AC_COIN_TRY_FLINK([dsyev],
+		      [AC_MSG_RESULT([yes])
+		       ADDLIBS="-llapack $ADDLIBS"
+		       use_lapack='-llapack'],
+		      [AC_MSG_RESULT([no])
+		       LIBS="$SAVE_LIBS"])
+  fi
+  
+  LIBS="$SAVE_LIBS"
+
+  # If we have no other ideas, consider building LAPACK.
+  use_lapack=BUILD
+fi
+
+if test "x$use_lapack" = xBUILD ; then
+  AC_COIN_HAS_MODULE(Lapack, [lapack])
+  
+elif test "x$use_lapack" != x && test "$use_lapack" != no; then
+  coin_has_lapack=yes
+  AM_CONDITIONAL([COIN_HAS_LAPACK],[test 0 = 0])
+  AC_DEFINE([COIN_HAS_LAPACK],[1], [If defined, the LAPACK Library is available.])
+  LAPACK_LIBS="$use_blas"
+  LAPACK_CFLAGS=
+  LAPACK_DATA=
+  AC_SUBST(LAPACK_LIBS)
+  AC_SUBST(LAPACK_CFLAGS)
+  AC_SUBST(LAPACK_DATA)
+  
+else
+  coin_has_lapack=no
+  AM_CONDITIONAL([COIN_HAS_LAPACK],[test 0 = 1])
+fi
+
+#if test "$use_lapack" = BUILD; then
+#  coin_need_flibs=yes
+#fi
+
+#AM_CONDITIONAL([COIN_BUILD_LAPACK],[test "$use_lapack" = BUILD])
+
+]) # AC_COIN_HAS_MODULE_LAPACK
