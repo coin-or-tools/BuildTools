@@ -2014,6 +2014,12 @@ if test x$coin_skip_ac_output != xyes; then
     done
     subdirs="$new_subdirs"
   fi
+  
+  # write coin_subdirs to a file so that project configuration knows where to find uninstalled projects
+  # need to come before AC_OUTPUT
+  if test x$coin_projectdir != xyes; then
+    echo $coin_subdirs > coin_subdirs.txt
+  fi
 
   AC_OUTPUT
 
