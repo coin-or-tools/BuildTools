@@ -3508,9 +3508,9 @@ AC_DEFUN([AC_COIN_PKG_HAS_MODULE],
 [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
 
 AC_COIN_PKG_CHECK_MODULE_EXISTS([$1],[$2],
-  [ m4_toupper($1)[]_CFLAGS=`$PKG_CONFIG --cflags "m4_tolower($2)" 2>/dev/null`
-    m4_toupper($1)[]_LIBS=`$PKG_CONFIG --libs "m4_tolower($2)" 2>/dev/null`
-    m4_toupper($1)[]_DATA=`$PKG_CONFIG --variable=datadir "m4_tolower($2)" 2>/dev/null`
+  [ m4_toupper($1)[]_CFLAGS=`$PKG_CONFIG --cflags "$2" 2>/dev/null`
+    m4_toupper($1)[]_LIBS=`$PKG_CONFIG --libs "$2" 2>/dev/null`
+    m4_toupper($1)[]_DATA=`$PKG_CONFIG --variable=datadir "$2" 2>/dev/null`
     $3
   ],
   [ $4 ])
@@ -3973,21 +3973,36 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
     # assemble search path for pkg-config
     coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
 
+    # let's assume that when installing into $prefix, then the user may have installed some other coin projects there before, so it's worth to have a look into there
+    if test -d "$prefix"; then
+      PKG_CONFIG_PATH="$prefix/lib/pkgconfig:$prefix/lib/ThirdParty/pkgconfig:$prefix/lib/Data/pkgconfig:$PKG_CONFIG_PATH"
+    fi
+
     AC_ARG_WITH([coin-instdir],
       AC_HELP_STRING([--with-coin-instdir],
                      [prefix of installation directory for precompiled COIN packages]),
       [if test -d "$withval"; then : ; else
          AC_MSG_ERROR([argument for --with-coin-instdir not a directory])
        fi
-       PKG_CONFIG_PATH="$withval/lib/pkgconfig:$withval/lib/ThirdParty/pkgconfig:$withval/lib/Data/pkgconfig:$PKG_CONFIG_PATH",
+       PKG_CONFIG_PATH="$withval/lib/pkgconfig:$withval/lib/ThirdParty/pkgconfig:$withval/lib/Data/pkgconfig:$PKG_CONFIG_PATH"
       ],[])
 
-    if test -e ${prefix}/coin_subdirs.txt ; then
-      for i in `cat ${prefix}/coin_subdirs.txt` ; do
-        PKG_CONFIG_PATH="${prefix}/$i:$PKG_CONFIG_PATH"
+    # in a classic setup, we want to find uninstalled projects
+    # their (relative) location is written to coin_subdirs.txt by the configure in the project base directory
+    # unfortunately, if the user set prefix, then we do not know where the project base directory is located
+    # but it is likely to be either .. (if we are a usual coin project) or ../.. (if we are a unusual coin project like ThirdParty or Data)
+    if test -e ../coin_subdirs.txt ; then
+      for i in `cat ../coin_subdirs.txt` ; do
+        PKG_CONFIG_PATH="../$i:$PKG_CONFIG_PATH"
       done
     fi
-
+    
+    if test -e ../../coin_subdirs.txt ; then
+      for i in `cat ../../coin_subdirs.txt` ; do
+        PKG_CONFIG_PATH="../../$i:$PKG_CONFIG_PATH"
+      done
+    fi
+    
     # let pkg-config do it's magic
     # need to export variable to be sure that the following pkg-config gets these values
     export PKG_CONFIG_PATH
