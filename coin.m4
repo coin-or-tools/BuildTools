@@ -3908,15 +3908,19 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
 # It defines the MODULE_CFLAGS, MODULE_LIBS, and MODULE_DATA variables, refering to the compiler and linker
 # flags to use when linking against this module and the directories where the module data resists.
 # It also defines a COIN_HAS_MODULE preprocessor macro and makefile conditional.
-# Further, tolower(coin_has_$1) is set to "yes" and the packages of the module are added to
+# Further, tolower(coin_has_$1) is set to "yes".
+# If the flag 'required' is set (which is on by default), then the packages of the module are added to
 # the REQUIREDPACKAGES variable, which can be used to setup a .pc file.
 # The first argument should be the name (MODULE) of the module (in correct lower
 # and upper case).
 # The second argument should be a (space separated) list of projects which this
 # module consists of. Optionally, required version numbers could be added.
+# The optional third argument can be used to overwrite default values for flags like 'required'.
 #
 # It is also possible to specify a preinstalled version of this module
 # or to specify only the linker and compiler flags and data directory.
+# If the flag 'required' (which is on by default), then the user-given linker flags are added to
+# the ADDLIBS variable, which can be used to setup a .pc file.
 
 AC_DEFUN([AC_COIN_HAS_MODULE],
 [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
@@ -3941,6 +3945,11 @@ AC_SUBST(m4_toupper($1_CFLAGS))
 AC_SUBST(m4_toupper($1_DATA))
 AC_SUBST(REQUIREDPACKAGES)
 
+required=1
+
+# execute third argument that can be used to overwrite flags like 'required'
+$3
+
 #check if user provided LIBS, CFLAGS, and DATA for module
 if test $m4_tolower(coin_has_$1) != skipping; then
 
@@ -3949,7 +3958,9 @@ if test $m4_tolower(coin_has_$1) != skipping; then
                    [linker flags for using module $1]),
       [m4_tolower(coin_has_$1)=yes
        m4_toupper($1_LIBS)="$withval"
-       ADDLIBS="$ADDLIBS $withval"
+       if test $required = 1; then
+         ADDLIBS="$ADDLIBS $withval"
+       fi
       ],
       [])
 
@@ -4009,7 +4020,9 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
     AC_COIN_PKG_HAS_MODULE([$1],[$2],
       [ m4_tolower(coin_has_$1)=yes
         AC_MSG_RESULT([yes: $m4_toupper($1)_VERSIONS])
-        REQUIREDPACKAGES="$REQUIREDPACKAGES $2"
+        if test $required = 1; then
+          REQUIREDPACKAGES="$REQUIREDPACKAGES $2"
+	fi
       ],
       [ m4_tolower(coin_has_$1)=notGiven
         AC_MSG_RESULT([not given: $m4_toupper($1)_PKG_ERRORS])
