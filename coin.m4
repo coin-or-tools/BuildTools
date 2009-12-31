@@ -3458,7 +3458,15 @@ AC_DEFUN([AC_COIN_PKG_HAS_MODULE],
 [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
 
 AC_COIN_PKG_CHECK_MODULE_EXISTS([$1],[$2],
-  [ m4_toupper($1)[]_CFLAGS=`$PKG_CONFIG --cflags "$2" 2>/dev/null`
+  [ cflags=`$PKG_CONFIG --cflags "$2" 2>/dev/null`
+    # pkg-config cannot handle spaces, so CYGPATH_W cannot be put into .pc files
+	# thus, we modify the cflags extracted from pkg-config by putting CYGPATH_W behind -I's
+	# but only do this if is not trivial
+    if test "$CYGPATH_W" != "echo" ; then
+      # need to put into brackets since otherwise autoconf replaces the brackets in the sed command
+	  [cflags=`echo $cflags | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`]
+	fi
+    m4_toupper($1)[]_CFLAGS="$cflags"
     m4_toupper($1)[]_LIBS=`$PKG_CONFIG --libs "$2" 2>/dev/null`
     m4_toupper($1)[]_DATA=`$PKG_CONFIG --variable=datadir "$2" 2>/dev/null`
     $3
@@ -3656,7 +3664,7 @@ if test $m4_tolower(coin_has_$1) != skipping; then
     AC_HELP_STRING([--with-m4_tolower($1)-incdir],
                    [directory with header files for using module $1]),
     [m4_tolower(coin_has_$1)=yes
-     m4_toupper($1_CFLAGS)="-I$withval"],
+     m4_toupper($1_CFLAGS)="-I`${CYGPATH_W} $withval`"],
     [])
 
   AC_ARG_WITH([m4_tolower($1)-datadir],
