@@ -3681,8 +3681,10 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
     coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
 
     # let's assume that when installing into $prefix, then the user may have installed some other coin projects there before, so it's worth to have a look into there
-    if test -d "${libdir}"; then
-      PKG_CONFIG_PATH="${libdir}/pkgconfig:$PKG_CONFIG_PATH"
+    # best would actually to use ${libdir}, since .pc files get installed into ${libdir}/pkgconfig,
+    # unfortunately, ${libdir} expands to ${exec_prefix}/lib and ${exec_prefix} to ${prefix}...
+    if test -d "${prefix}"; then
+      PKG_CONFIG_PATH="${prefix}/lib/pkgconfig:$PKG_CONFIG_PATH"
     fi
 
     AC_ARG_WITH([coin-instdir],
