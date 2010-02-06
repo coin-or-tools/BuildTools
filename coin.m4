@@ -3681,8 +3681,8 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
     coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
 
     # let's assume that when installing into $prefix, then the user may have installed some other coin projects there before, so it's worth to have a look into there
-    if test -d "$prefix"; then
-      PKG_CONFIG_PATH="$prefix/lib/pkgconfig:$prefix/lib/ThirdParty/pkgconfig:$prefix/lib/Data/pkgconfig:$PKG_CONFIG_PATH"
+    if test -d "${libdir}"; then
+      PKG_CONFIG_PATH="${libdir}/pkgconfig:$PKG_CONFIG_PATH"
     fi
 
     AC_ARG_WITH([coin-instdir],
@@ -3691,7 +3691,7 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
       [if test -d "$withval"; then : ; else
          AC_MSG_ERROR([argument for --with-coin-instdir not a directory])
        fi
-       PKG_CONFIG_PATH="$withval/lib/pkgconfig:$withval/lib/ThirdParty/pkgconfig:$withval/lib/Data/pkgconfig:$PKG_CONFIG_PATH"
+       PKG_CONFIG_PATH="$withval/lib/pkgconfig:$PKG_CONFIG_PATH"
       ],[])
 
     # in a classic setup, we want to find uninstalled projects
@@ -3873,7 +3873,7 @@ else
 fi
 
 if test "x$use_blas" = xBUILD ; then
-  AC_COIN_HAS_MODULE(Blas, [blas])
+  AC_COIN_HAS_MODULE(Blas, [coinblas])
   
 elif test "x$use_blas" != x && test "$use_blas" != no; then
   coin_has_blas=yes
@@ -4012,7 +4012,7 @@ else
 fi
 
 if test "x$use_lapack" = xBUILD ; then
-  AC_COIN_HAS_MODULE(Lapack, [lapack])
+  AC_COIN_HAS_MODULE(Lapack, [coinlapack])
   
 elif test "x$use_lapack" != x && test "$use_lapack" != no; then
   coin_has_lapack=yes
