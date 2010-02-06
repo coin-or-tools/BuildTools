@@ -3492,6 +3492,7 @@ AC_DEFUN([AC_COIN_MAIN_PACKAGEDIR],
 AC_MSG_CHECKING([whether project $1 is available])
 
 m4_tolower(coin_has_$1)=notGiven
+coin_have_project_dir=no
 
 # check if user wants to skip project in any case
 AC_ARG_VAR([COIN_SKIP_PROJECTS],[Set to the subdirectories of projects that should be skipped in the configuration])
@@ -3509,6 +3510,7 @@ fi
 if test $m4_tolower(coin_has_$1) != skipping; then
   if test $PACKAGE_TARNAME = m4_tolower($1); then
     m4_tolower(coin_has_$1)=.
+    coin_have_project_dir=yes
   fi
 
   AC_ARG_WITH([m4_tolower($1)-lib],
@@ -3538,7 +3540,7 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
     
     # let's assume that when installing into $prefix, then the user may have installed some other coin projects there before, so it's worth to have a look into there
     if test -d "$prefix"; then
-      PKG_CONFIG_PATH="$prefix/lib/$2/pkgconfig:$PKG_CONFIG_PATH"
+      PKG_CONFIG_PATH="$prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
     fi
     
     AC_ARG_WITH([coin-instdir],
@@ -3547,7 +3549,7 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
       [if test -d "$withval"; then : ; else
          AC_MSG_ERROR([argument for --with-coin-instdir not a directory])
        fi
-       PKG_CONFIG_PATH="$withval/lib/$2/pkgconfig:$PKG_CONFIG_PATH"
+       PKG_CONFIG_PATH="$withval/lib/pkgconfig:$PKG_CONFIG_PATH"
       ],[])
 
     # let pkgconfig check if the project is already installed somewhere
@@ -3562,15 +3564,14 @@ fi
 # if not found yet, check if project is available in present directory
 if test "$m4_tolower(coin_has_$1)" = notGiven; then
   if test -d $srcdir/$2/$1; then
-    coin_pkg_is_here=no
     m4_ifvaln([$3],
       [for i in $srcdir/$2/$1/$3; do
          if test -r $i; then
-           coin_pkg_is_here=yes
+           coin_have_project_dir=yes
          fi
        done],
-      [ coin_pkg_is_here=yes ])
-    if test $coin_pkg_is_here = yes; then
+      [ coin_have_project_dir=yes ])
+    if test $coin_have_project_dir = yes; then
       m4_tolower(coin_has_$1)=$2/$1
     fi
   fi
@@ -3579,9 +3580,7 @@ fi
 AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
 
 AC_MSG_CHECKING(whether project $1 need to be configured)
-if test "$m4_tolower(coin_has_$1)" != skipping &&
-   test "$m4_tolower(coin_has_$1)" != notGiven &&
-   test "$m4_tolower(coin_has_$1)" != installed; then
+if test "$coin_have_project_dir" = yes ; then
 
   if test -r $srcdir/$2/$1/configure; then
     coin_subdirs="$coin_subdirs m4_ifval($2,[$2/],)$1"
