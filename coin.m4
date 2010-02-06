@@ -3482,10 +3482,11 @@ AC_COIN_PKG_CHECK_MODULE_EXISTS([$1],[$2],
 # This macro substitutes COIN_MAIN_SUBDIR.
 # If $2/$1 or $1 is in COIN_SKIP_PROJECTS, do nothing.
 # If --with-$1-lib, --with-$1-incdir, or --with-$1-datadir is given, then assume that the package is installed.
-# Otherwise, if pkg-config is available, use it to check whether package is available.
-# Otherwise, if the directory subdir/package and the file subdir/package/file exist, check whether subdir/package/configure exists.
+# Otherwise, if pkg-config is available, use it to check whether the package is available.
+#   If $4 is given, then pkg-config is asked for the existance of $4, otherwise tolower($1) is used.
+# Otherwise, if the directory $2/$1 and the file $2/$1/$3 exist, check whether $2/$1/configure exists.
 #   If so, include this directory into the list of directories where configure and make recourse into.
-# tolower(coin_has_$1) is set to notGiven, skipping, installed, or the projects main directory (if uninstalled).
+# tolower(coin_has_$1) is set to notGiven, skipping, installed, the version of an installed project, or the projects main directory (if uninstalled).
 
 AC_DEFUN([AC_COIN_MAIN_PACKAGEDIR],
 [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
@@ -3555,7 +3556,7 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
     # let pkgconfig check if the project is already installed somewhere
     # need to export variable to be sure that the following pkg-config call gets these values
     export PKG_CONFIG_PATH
-    AC_COIN_PKG_CHECK_PROJECT_EXISTS([$1], [m4_tolower(coin_has_$1)="$m4_toupper($1)_VERSION"])
+    AC_COIN_PKG_CHECK_PROJECT_EXISTS(m4_ifval([$4],[$4],[$1]), [m4_tolower(coin_has_$1)="$m4_toupper(m4_ifval([$4],[$4],[$1]))_VERSION"])
 
     PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
   fi
