@@ -2158,6 +2158,16 @@ if test x$coin_skip_ac_output != xyes; then
     subdirs="$new_subdirs"
   fi
 
+  # need to come before AC_OUTPUT
+  if test x$coin_projectdir != xyes; then
+    # write coin_subdirs to a file so that project configuration knows where to find uninstalled projects
+    echo $coin_subdirs > coin_subdirs.txt
+  else
+    # substitute for OBJDIR, needed to setup .pc file for uninstalled project
+    ABSBUILDDIR="`pwd`"
+    AC_SUBST(ABSBUILDDIR)
+  fi
+  
   AC_OUTPUT
 
   if test x"$coin_vpath_link_files" = x; then : ; else
