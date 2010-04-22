@@ -2533,6 +2533,13 @@ if test $m4_tolower(coin_has_$1) != unavailable &&
   m4_toupper($1OBJDIR)=`pwd`/$m4_tolower(coin_has_$1)
   AC_SUBST(m4_toupper($1DOCDIR))
   m4_toupper($1DOCDIR)=$abs_lib_dir/../share/doc/coin/$1
+  AC_CHECK_PROG([have_svnversion],[svnversion],[yes],[no])
+  if test x$have_svnversion = xyes; then
+    AC_SUBST(m4_toupper($1_SVN_REV))
+    m4_toupper($1_SVN_REV)=`cd $srcdir/$m4_tolower(coin_has_$1) ; svnversion`
+    if test $m4_toupper($1_SVN_REV) != exported; then
+      AC_DEFINE_UNQUOTED(m4_toupper($1_SVN_REV), $m4_toupper($1_SVN_REV), [SVN revision number of project])
+    fi
 fi
 
   # Define the Makefile conditional
