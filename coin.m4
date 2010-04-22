@@ -305,6 +305,9 @@ AC_SUBST(FADDLIBS)
 # A useful makefile conditional that is always false
 AM_CONDITIONAL(ALWAYS_FALSE, false)
 
+#Set the project's version number
+AC_DEFINE_UNQUOTED(m4_toupper(${PACKAGE_NAME}_VERSION), "$PACKAGE_VERSION", "Project version string")
+
 # We set the following variable so that we know later in AC_COIN_FINALIZE
 # that we are in a project main directory
 coin_projectdir=yes
