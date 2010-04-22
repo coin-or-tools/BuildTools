@@ -306,8 +306,9 @@ AC_SUBST(FADDLIBS)
 AM_CONDITIONAL(ALWAYS_FALSE, false)
 
 #Set the project's version number
-AC_DEFINE_UNQUOTED(m4_toupper(${PACKAGE_NAME}_VERSION), "$PACKAGE_VERSION", "Project version string")
+AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION), ["$PACKAGE_VERSION"], [Version number of project])
 
+#Set the project's SVN revision number
 AC_CHECK_PROG([have_svnversion],[svnversion],[yes],[no])
 if test x$have_svnversion = xyes; then
   AC_SUBST(m4_toupper($1_SVN_REV))
