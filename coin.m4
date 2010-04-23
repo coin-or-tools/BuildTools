@@ -306,11 +306,13 @@ AC_SUBST(FADDLIBS)
 AM_CONDITIONAL(ALWAYS_FALSE, false)
 
 #Set the project's version number
-AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION), ["$PACKAGE_VERSION"], [Version number of project])
+if test "x$1" != x; then
+  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION), ["$PACKAGE_VERSION"], [Version number of project])
+fi
 
 #Set the project's SVN revision number
 AC_CHECK_PROG([have_svnversion],[svnversion],[yes],[no])
-if test x$have_svnversion = xyes; then
+if test "x$have_svnversion" = xyes && test "x$1" != x; then
   AC_SUBST(m4_toupper($1_SVN_REV))
   m4_toupper($1_SVN_REV)=`cd $srcdir/$m4_tolower(coin_has_$1) ; svnversion`
   if test $m4_toupper($1_SVN_REV) != exported; then
