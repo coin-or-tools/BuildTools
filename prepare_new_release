@@ -503,7 +503,7 @@ echo "===> Updating version numbers in configure.ac files"
 for i in $conf_ac_files; do
   sed -e "s|AC_INIT\(.*\)\[[0-9A-Za-z\.]*\],\(.*\)|AC_INIT\1[$new_ver],\2|" $i > bla
   mv bla $i
-  sed -e "s|AC_COIN_PROJECTDIR_INIT\(.*\)|AC_COIN_PROJECTDIR_INIT\($new_current:$new_revision:$new_age\)|" $i > bla
+  sed -e "s|AC_COIN_PROJECTDIR_INIT\(.*\)|AC_COIN_PROJECTDIR_INIT\($stableProj, $new_current:$new_revision:$new_age\)|" $i > bla
   mv bla $i
   svn di $i
 done

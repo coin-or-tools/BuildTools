@@ -323,7 +323,7 @@ fi
 coin_projectdir=yes
 
 # Check if a library version is set for libtool
-m4_ifvaln([$1],[coin_libversion=$1],[])
+m4_ifvaln([$2],[coin_libversion=$2],[])
 ]) # AC_COIN_PROJECTDIR_INIT
 
 ###########################################################################
