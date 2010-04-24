@@ -2493,7 +2493,7 @@ AC_SUBST(EXAMPLE_CLEAN_FILES)
 ]) #AC_COIN_EXAMPLE_FILES
 
 ###########################################################################
-#                            COIN_HAS_PROJECT                             #
+#                            COIN_HAS_PROJECT (deprecated)                #
 ###########################################################################
 
 # This macro sets up usage of a Coin package.  It defines the
@@ -3624,12 +3624,12 @@ fi
 #
 # It is also possible to specify a preinstalled version of this module
 # or to specify only the linker and compiler flags and data directory.
-# If the flag 'required' (which is on by default), then the user-given linker flags are added to
+# If the flag 'required' (which is on by default) is set, then the user-given linker flags are added to
 # the ADDLIBS variable, which can be used to setup a .pc file.
 
 AC_DEFUN([AC_COIN_HAS_MODULE],
 [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
-AC_MSG_CHECKING([for COIN module $1])
+AC_MSG_CHECKING([for COIN-OR module $1])
 
 m4_tolower(coin_has_$1)=notGiven
 
@@ -3650,11 +3650,6 @@ AC_SUBST(m4_toupper($1_CFLAGS))
 AC_SUBST(m4_toupper($1_DATA))
 AC_SUBST(REQUIREDPACKAGES)
 
-required=1
-
-# execute third argument that can be used to overwrite flags like 'required'
-$3
-
 #check if user provided LIBS, CFLAGS, and DATA for module
 if test $m4_tolower(coin_has_$1) != skipping; then
 
@@ -3663,9 +3658,7 @@ if test $m4_tolower(coin_has_$1) != skipping; then
                    [linker flags for using module $1]),
       [m4_tolower(coin_has_$1)=yes
        m4_toupper($1_LIBS)="$withval"
-       if test $required = 1; then
-         ADDLIBS="$ADDLIBS $withval"
-       fi
+       m4_bmatch($3, [required=0], [], [ADDLIBS="$ADDLIBS $withval"])
       ],
       [])
 
@@ -3727,9 +3720,7 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
     AC_COIN_PKG_HAS_MODULE([$1],[$2],
       [ m4_tolower(coin_has_$1)=yes
         AC_MSG_RESULT([yes: $m4_toupper($1)_VERSIONS])
-        if test $required = 1; then
-          REQUIREDPACKAGES="$REQUIREDPACKAGES $2"
-	fi
+        m4_bmatch($3, [required=0], [], [REQUIREDPACKAGES="$REQUIREDPACKAGES $2"])
       ],
       [ m4_tolower(coin_has_$1)=notGiven
         AC_MSG_RESULT([not given: $m4_toupper($1)_PKG_ERRORS])
@@ -3746,6 +3737,7 @@ fi
 
 if test $m4_tolower(coin_has_$1) != skipping &&
    test $m4_tolower(coin_has_$1) != notGiven ; then
+  if test 0 = 1 ; then  #change this test to enable a bit of debugging output
   if test -n "$m4_toupper($1)_CFLAGS" ; then
     AC_MSG_NOTICE([$1 CFLAGS are $m4_toupper($1)_CFLAGS])
   fi
@@ -3754,6 +3746,7 @@ if test $m4_tolower(coin_has_$1) != skipping &&
   fi
   if test -n "$m4_toupper($1)_DATA" ; then
     AC_MSG_NOTICE([$1 DATA   is  $m4_toupper($1)_DATA])
+  fi
   fi
   AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 module is available])
 fi
@@ -3765,6 +3758,85 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
 
 ]) # AC_COIN_HAS_MODULE
 
+###########################################################################
+#                       COIN_HAS_MODULE_FALLBACK                          #
+###########################################################################
+
+# This macro can be used if COIN_HAS_MODULE fails to find a module because pkg-config
+# was disabled or not available.
+# Here, the module can consist of only one package.
+#
+# It reads a project-uninstalled.pc file and defines the variables MODULE_CFLAGS, MODULE_LIBS, and MODULE_DATA,
+# refering to the compiler and linker flags to use when linking against this module
+# and the directory where the module data resists.
+# Further, tolower(coin_has_$1) is set to "yes" and a COIN_HAS_MODULE preprocessor macro and
+# makefile conditional are defined. Further, the linker flags are added to the ADDLIBS variable.
+# If the flag 'required' is set (which is on by default), then the module package is added to
+# the REQUIREDPACKAGES variable, which can be used to setup a .pc file.
+# If the flag 'dodefine' is set (which is on by default), then the compiler define COIN_HAS_MODULE is set.
+# If the flag 'doconditional' is set (which is on by default), then the makefile conditional COIN_HAS_MODULE is set.
+#
+# The first argument should be the name (MODULE) of the module (in correct lower and upper case).
+# The second argument should be the base name of the projects .pc file which defines this module.
+# The third argument should be the (relative) path under which the .pc file may be located.
+# The optional fourth argument can be used to overwrite default values for the flags 'required', 'dodefine', 'doconditional'.
+
+AC_DEFUN([AC_COIN_HAS_MODULE_FALLBACK],
+[
+if test $m4_tolower(coin_has_$1) != "yes" ; then
+AC_MSG_CHECKING([for COIN-OR module $1 (fallback)])
+
+m4_tolower(coin_has_$1)=notGiven
+
+# check if user wants to skip module in any case
+if test x"$COIN_SKIP_PROJECTS" != x; then
+  for dir in $COIN_SKIP_PROJECTS; do
+    if test $dir = "$1"; then
+      m4_tolower(coin_has_$1)=skipping
+    fi
+  done
+fi
+
+m4_toupper($1_LIBS)=
+m4_toupper($1_CFLAGS)=
+m4_toupper($1_DATA)=
+AC_SUBST(REQUIREDPACKAGES)
+
+if test $m4_tolower(coin_has_$1) != "skipping" ; then
+  # if the project is available and configured, then a project-uninstalled.pc file should have been created
+  if test -r $3/$2-uninstalled.pc ; then
+    # read CFLAGS and LIBS from $2-uninstalled.pc file
+    # add CYGPATH_W cludge into include flags
+    # replace -L${libdir} by absolute path to build directory in linker flags
+    m4_toupper($1_CFLAGS)=[`sed -n -e 's/Cflags://' -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/gp'] $3/$2-uninstalled.pc`
+    projectlibs=`sed -n -e 's/Libs://' -e 's/-L\${libdir}//p' $3/$2-uninstalled.pc`
+    if test "x$projectlibs" != x ; then
+      m4_toupper($1_LIBS)="-L`cd $3; pwd` $projectlibs"
+    fi
+    m4_toupper($1_DATA)=`sed -n -e 's/datadir=//gp' $3/$2-uninstalled.pc`
+
+    ADDLIBS="$ADDLIBS $m4_toupper($1_LIBS)"
+  
+    m4_bmatch($4, [required=0], [], [REQUIREDPACKAGES="$REQUIREDPACKAGES $2"])
+
+    m4_bmatch($4, [dodefine=0], [],
+      [AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 module is available])
+      ])
+
+    m4_tolower(coin_has_$1)=yes
+  fi
+fi
+
+#if user did not disable setting of makefile conditional, do it
+m4_bmatch($4, [doconditional=0], [],
+  [AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
+               [test $m4_tolower(coin_has_$1) != notGiven &&
+                test $m4_tolower(coin_has_$1) != skipping])
+  ])
+
+AC_MSG_RESULT($m4_tolower(coin_has_$1))
+fi
+]) # AC_COIN_HAS_MODULE_FALLBACK
 
 ###########################################################################
 #                         COIN_HAS_MODULE_BLAS                            #
@@ -3775,7 +3847,8 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
 # 2. if --with-blas=BUILD has been specified goes to point 5
 # 3. if --with-blas has been specified to a working library, sets BLAS_LIBS to its value
 # 4. tries standard libraries
-# 5. calls COIN_HAS_MODULE(Blas, [blas]) to check for ThirdParty/Blas
+# 5. calls COIN_HAS_MODULE(Blas, [coinblas]) to check for ThirdParty/Blas
+# 6. calls COIN_HAS_MODULE_FALLBACK(Blas, [coinblas], [../ThirdParty/Blas])
 # The makefile conditional and preprocessor macro COIN_HAS_BLAS is defined.
 # BLAS_LIBS is set to the flags required to link with a Blas library.
 # In case 3 and 4, the flags to link to Blas are added to ADDLIBS.
@@ -3902,6 +3975,9 @@ else
   AM_CONDITIONAL([COIN_HAS_BLAS],[test 0 = 1])
 fi
 
+#call fallback in case the previous failed, maybe because pkg-config was not available
+AC_COIN_HAS_MODULE_FALLBACK([Blas], [coinblas], [../ThirdParty/Blas])
+
 ]) # AC_COIN_HAS_MODULE_BLAS
 
 ###########################################################################
@@ -3914,6 +3990,7 @@ fi
 # 3. if --with-lapack has been specified to a working library, sets LAPACK_LIBS to its value
 # 4. tries standard libraries
 # 5. calls COIN_HAS_MODULE(Lapack, [lapack]) to check for ThirdParty/Lapack
+# 6. calls COIN_HAS_MODULE_FALLBACK(Lapack, [coinlapack], [../ThirdParty/Lapack])
 # The makefile conditional and preprocessor macro COIN_HAS_LAPACK is defined.
 # LAPACK_LIBS is set to the flags required to link with a Lapack library.
 # In case 3 and 4, the flags to link to Lapack are added to ADDLIBS.
@@ -4033,5 +4110,8 @@ else
   coin_has_lapack=no
   AM_CONDITIONAL([COIN_HAS_LAPACK],[test 0 = 1])
 fi
+
+#call fallback in case the previous failed, maybe because pkg-config was not available
+AC_COIN_HAS_MODULE_FALLBACK([Lapack], [coinlapack], [../ThirdParty/Lapack])
 
 ]) # AC_COIN_HAS_MODULE_LAPACK
