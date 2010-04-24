@@ -3817,6 +3817,8 @@ if test $m4_tolower(coin_has_$1) != "skipping" ; then
       else
         m4_toupper($1_LIBS)="-L`cd $3; pwd` $projectlibs"
       fi
+    else
+      m4_toupper($1_LIBS)=`sed -n -e 's/Libs://p' $3/$2-uninstalled.pc`
     fi
     m4_toupper($1_DATA)=`sed -n -e 's/datadir=//gp' $3/$2-uninstalled.pc`
 
