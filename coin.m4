@@ -3783,7 +3783,7 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
 
 AC_DEFUN([AC_COIN_HAS_MODULE_FALLBACK],
 [
-if test $m4_tolower(coin_has_$1) != "yes" ; then
+if test x$m4_tolower(coin_has_$1) != "xyes" ; then
 AC_MSG_CHECKING([for COIN-OR module $1 (fallback)])
 
 m4_tolower(coin_has_$1)=notGiven
@@ -3820,9 +3820,10 @@ if test $m4_tolower(coin_has_$1) != "skipping" ; then
     fi
     m4_toupper($1_DATA)=`sed -n -e 's/datadir=//gp' $3/$2-uninstalled.pc`
 
-    ADDLIBS="$ADDLIBS $m4_toupper($1_LIBS)"
-  
-    m4_bmatch($4, [required=0], [], [REQUIREDPACKAGES="$REQUIREDPACKAGES $2"])
+    m4_bmatch($4, [required=0], [],
+      [ADDLIBS="$ADDLIBS $m4_toupper($1_LIBS)"
+       REQUIREDPACKAGES="$REQUIREDPACKAGES $2"
+      ])
 
     m4_bmatch($4, [dodefine=0], [],
       [AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 module is available])
