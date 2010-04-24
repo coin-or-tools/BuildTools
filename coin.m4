@@ -3808,10 +3808,15 @@ if test $m4_tolower(coin_has_$1) != "skipping" ; then
     # read CFLAGS and LIBS from $2-uninstalled.pc file
     # add CYGPATH_W cludge into include flags
     # replace -L${libdir} by absolute path to build directory in linker flags
+    # we assume that the build directory is $3/src if this directory exists, otherwise we assume that it is $3
     m4_toupper($1_CFLAGS)=[`sed -n -e 's/Cflags://' -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/gp'] $3/$2-uninstalled.pc`
     projectlibs=`sed -n -e 's/Libs://' -e 's/-L\${libdir}//p' $3/$2-uninstalled.pc`
     if test "x$projectlibs" != x ; then
-      m4_toupper($1_LIBS)="-L`cd $3; pwd` $projectlibs"
+      if test -d $3/src ; then
+        m4_toupper($1_LIBS)="-L`cd $3/src; pwd` $projectlibs"
+      else
+        m4_toupper($1_LIBS)="-L`cd $3; pwd` $projectlibs"
+      fi
     fi
     m4_toupper($1_DATA)=`sed -n -e 's/datadir=//gp' $3/$2-uninstalled.pc`
 
