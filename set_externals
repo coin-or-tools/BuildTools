@@ -106,8 +106,6 @@ fi
 
 if test $printHelp = 0 && test $exitValue = 0; then
 
-  rm -f Externals
-
   if test -r $Dependencies; then
 
     rm -f Externals
