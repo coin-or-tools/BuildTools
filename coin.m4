@@ -316,7 +316,7 @@ if test "x$have_svnversion" = xyes && test "x$1" != x; then
   AC_SUBST(m4_toupper($1_SVN_REV))
   m4_toupper($1_SVN_REV)=`cd $srcdir/$m4_tolower(coin_has_$1) ; svnversion`
   if test $m4_toupper($1_SVN_REV) != exported; then
-    AC_DEFINE_UNQUOTED(m4_toupper($1_SVN_REV), $m4_toupper($1_SVN_REV), [SVN revision number of project])
+    AC_DEFINE_UNQUOTED(m4_toupper($1_SVN_REV), "$m4_toupper($1_SVN_REV)", [SVN revision number of project])
   fi
 fi
 
