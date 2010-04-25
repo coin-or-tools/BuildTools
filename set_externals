@@ -110,6 +110,8 @@ if test $printHelp = 0 && test $exitValue = 0; then
 
   if test -r $Dependencies; then
 
+    rm -f Externals
+
     echo ''
     echo '===> Creating new externals file with pointers to releases...'
     echo ''
@@ -170,7 +172,7 @@ if test $printHelp = 0 && test $exitValue = 0; then
 
     svn pset svn:externals -F Externals .
  
-    #Leave the new externals file there for no
+    #Leave the new externals file there for now
     #rm -f Externals
 
   else # if test -r Externals
