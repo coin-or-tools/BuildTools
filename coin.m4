@@ -1867,11 +1867,20 @@ AC_SUBST(LT_LDFLAGS)
 #END
 }])
 
-
 ###########################################################################
 #                      COIN_PATCH_LIBTOOL_CYGWIN                          #
 ###########################################################################
 
+# Patches to libtool for cygwin. Lots for cl, a few for GCC.
+# For cl:
+# - cygpath is not correctly quoted in fix_srcfile_path
+# - paths generated for .lib files is not run through cygpath -w
+
+
+AC_DEFUN([AC_COIN_PATCH_LIBTOOL_CYGWIN],
+[ case "$CXX" in
+    cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*) 
+=======
 # Patches to libtool for cygwin. Lots for cl, a few for GCC.
 # For cl:
 # - cygpath is not correctly quoted in fix_srcfile_path
