@@ -3736,7 +3736,9 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
     PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
   else
     #if 4th argument is given, try fallback - whereby we take the first word from $2 as basename for the .pc file
-    m4_ifvaln([$4], [AC_COIN_HAS_MODULE_FALLBACK([$1], [m4_bpatsubst($2, [ .*], [])], [$4], [$3 printmsgchecking=0])])
+    m4_ifvaln([$4],
+      [AC_COIN_HAS_MODULE_FALLBACK([$1], [m4_bpatsubst($2, [ .*], [])], [$4], [$3 printmsgchecking=0])],
+      [AC_MSG_RESULT([skipped check via pkg-config])])
   fi
 
 else
