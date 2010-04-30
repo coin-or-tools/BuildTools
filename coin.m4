@@ -3401,6 +3401,10 @@ if test $use_pkgconfig = yes ; then
     pkg_short_errors=""
   fi
 fi
+
+AM_CONDITIONAL([COIN_HAS_PKGCONFIG], [test -n "$PKG_CONFIG"])
+AC_SUBST(PKG_CONFIG)
+
 ])
 
 ###########################################################################
@@ -3974,10 +3978,11 @@ fi
 
 if test "x$use_blas" = xBUILD ; then
   if test -d ../ThirdParty/Blas ; then
-    AC_COIN_HAS_MODULE(Blas, [coinblas], [], [../ThirdParty/Blas])
-  elif test -d ../Blas ; then
-    AC_COIN_HAS_MODULE(Blas, [coinblas], [], [../Blas])
+    blasdir=../ThirdParty/Blas
+  else
+    blasdir=../Blas
   fi
+  AC_COIN_HAS_MODULE(Blas, [coinblas], [], [$blasdir])
   
 elif test "x$use_blas" != x && test "$use_blas" != no; then
   coin_has_blas=yes
@@ -4111,10 +4116,11 @@ fi
 
 if test "x$use_lapack" = xBUILD ; then
   if test -d ../ThirdParty/Lapack ; then
-    AC_COIN_HAS_MODULE(Lapack, [coinlapack], [], [../ThirdParty/Lapack])
-  elif test -d ../Lapack ; then
-    AC_COIN_HAS_MODULE(Lapack, [coinlapack], [], [../Lapack])
+    lapackdir=../ThirdParty/Lapack
+  else
+    lapackdir=../Lapack
   fi
+  AC_COIN_HAS_MODULE(Lapack, [coinlapack], [], [$lapackdir])
   
 elif test "x$use_lapack" != x && test "$use_lapack" != no; then
   coin_has_lapack=yes
