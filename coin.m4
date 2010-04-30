@@ -3621,6 +3621,9 @@ fi
 # The second argument should be a (space separated) list of projects which this
 # module consists of. Optionally, required version numbers could be added.
 # The optional third argument can be used to overwrite default values for flags like 'required'.
+# The optional fourth argument can be used to define a fallback for the case where pkg-config is not available.
+# It should contain the path under which a $2-uninstalled.pc file can be found.
+# If provided, then COIN_HAS_MODULE_FALLBACK($1, $2, $4, $3) is called.
 #
 # It is also possible to specify a preinstalled version of this module
 # or to specify only the linker and compiler flags and data directory.
@@ -3728,7 +3731,8 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
 
     PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
   else
-    AC_MSG_RESULT([skipped check via pkg-config])
+    #if 4th argument is given, try fallback - whereby we take the first word from $2 as basename for the .pc file
+    m4_ifvaln([$4], AC_COIN_HAS_MODULE_FALLBACK([$1], [m4_bpatsubst($2, [ .*], [])], [$4], [$3 printmsgchecking=0]))
   fi
 
 else
@@ -3784,7 +3788,8 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
 AC_DEFUN([AC_COIN_HAS_MODULE_FALLBACK],
 [
 if test x$m4_tolower(coin_has_$1) != "xyes" ; then
-AC_MSG_CHECKING([for COIN-OR module $1 (fallback)])
+
+m4_bmatch($4, [printmsgchecking=0], [], AC_MSG_CHECKING([for COIN-OR module $1 (fallback)]))
 
 m4_tolower(coin_has_$1)=notGiven
 
@@ -3832,7 +3837,12 @@ if test $m4_tolower(coin_has_$1) != "skipping" ; then
       ])
 
     m4_tolower(coin_has_$1)=yes
+    AC_MSG_RESULT([$3])
+  else
+    AC_MSG_RESULT($m4_tolower(coin_has_$1))
   fi
+else
+  AC_MSG_RESULT([skipping])
 fi
 
 #if user did not disable setting of makefile conditional, do it
@@ -3841,8 +3851,6 @@ m4_bmatch($4, [doconditional=0], [],
                [test $m4_tolower(coin_has_$1) != notGiven &&
                 test $m4_tolower(coin_has_$1) != skipping])
   ])
-
-AC_MSG_RESULT($m4_tolower(coin_has_$1))
 fi
 ]) # AC_COIN_HAS_MODULE_FALLBACK
 
@@ -3965,7 +3973,11 @@ else
 fi
 
 if test "x$use_blas" = xBUILD ; then
-  AC_COIN_HAS_MODULE(Blas, [coinblas])
+  if test -d ../ThirdParty/Blas ; then
+    AC_COIN_HAS_MODULE(Blas, [coinblas], [], [../ThirdParty/Blas])
+  elif test -d ../Blas ; then
+    AC_COIN_HAS_MODULE(Blas, [coinblas], [], [../Blas])
+  fi
   
 elif test "x$use_blas" != x && test "$use_blas" != no; then
   coin_has_blas=yes
@@ -3982,9 +3994,6 @@ else
   coin_has_blas=no
   AM_CONDITIONAL([COIN_HAS_BLAS],[test 0 = 1])
 fi
-
-#call fallback in case the previous failed, maybe because pkg-config was not available
-AC_COIN_HAS_MODULE_FALLBACK([Blas], [coinblas], [../ThirdParty/Blas])
 
 ]) # AC_COIN_HAS_MODULE_BLAS
 
@@ -4101,7 +4110,11 @@ else
 fi
 
 if test "x$use_lapack" = xBUILD ; then
-  AC_COIN_HAS_MODULE(Lapack, [coinlapack])
+  if test -d ../ThirdParty/Lapack ; then
+    AC_COIN_HAS_MODULE(Lapack, [coinlapack], [], [../ThirdParty/Lapack])
+  elif test -d ../Lapack ; then
+    AC_COIN_HAS_MODULE(Lapack, [coinlapack], [], [../Lapack])
+  fi
   
 elif test "x$use_lapack" != x && test "$use_lapack" != no; then
   coin_has_lapack=yes
@@ -4118,8 +4131,5 @@ else
   coin_has_lapack=no
   AM_CONDITIONAL([COIN_HAS_LAPACK],[test 0 = 1])
 fi
-
-#call fallback in case the previous failed, maybe because pkg-config was not available
-AC_COIN_HAS_MODULE_FALLBACK([Lapack], [coinlapack], [../ThirdParty/Lapack])
 
 ]) # AC_COIN_HAS_MODULE_LAPACK
