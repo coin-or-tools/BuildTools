@@ -3370,6 +3370,13 @@ AM_CONDITIONAL([COIN_BUILD_GLPK],[test x"$use_thirdpartyglpk" = xbuild])
 # If not, PKGCONFIG is set to "".
 # The minimal version number can be given as first parameter, by default it is 0.9.0.
 # This macro is a modified version of PKG_PROG_PKG_CONFIG in pkg.m4
+#
+# Further, the AM_CONDITIONAL COIN_HAS_PKGCONFIG is set and PKGCONFIG is AC_SUBST'ed.
+# Finally, if this setup belongs to a project directory, then the search path for .pc files
+# is assembled from the value of $PKG_CONFIG_PATH, the values of --prefix, --coin-instdir,
+# and the directory named in a file ../coin_subdirs.txt or ../../coin_subdirs.txt in a variable
+# COIN_PKG_CONFIG_PATH, which is also AC_SUBST'ed.
+
 AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
 [AC_ARG_VAR([PKG_CONFIG], [path to pkg-config utility])
 
@@ -3653,7 +3660,7 @@ fi
 
 # This macro sets up a COIN-OR module.
 # A module consists of one or more COIN-OR packages.
-# It defines the MODULE_CFLAGS, MODULE_LIBS, and MODULE_DATA variables, refering to the compiler and linker
+# It defines the MODULE_CFLAGS, MODULE_LIBS, and MODULE_DATA variables, referring to the compiler and linker
 # flags to use when linking against this module and the directories where the module data resists.
 # It also defines a COIN_HAS_MODULE preprocessor macro and makefile conditional.
 # Further, tolower(coin_has_$1) is set to "yes".
@@ -3786,7 +3793,7 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
 # Here, the module can consist of only one package.
 #
 # It reads a project-uninstalled.pc file and defines the variables MODULE_CFLAGS, MODULE_LIBS, and MODULE_DATA,
-# refering to the compiler and linker flags to use when linking against this module
+# referring to the compiler and linker flags to use when linking against this module
 # and the directory where the module data resists.
 # Further, tolower(coin_has_$1) is set to "yes" and a COIN_HAS_MODULE preprocessor macro and
 # makefile conditional are defined. Further, the linker flags are added to the ADDLIBS variable.
@@ -3879,7 +3886,7 @@ fi
 # 3. if --with-blas has been specified to a working library, sets BLAS_LIBS to its value
 # 4. tries standard libraries
 # 5. calls COIN_HAS_MODULE(Blas, [coinblas]) to check for ThirdParty/Blas
-# 6. calls COIN_HAS_MODULE_FALLBACK(Blas, [coinblas], [../ThirdParty/Blas])
+# 6. calls COIN_HAS_MODULE_FALLBACK(Blas, [coinblas], [../ThirdParty/Blas or ../Blas])
 # The makefile conditional and preprocessor macro COIN_HAS_BLAS is defined.
 # BLAS_LIBS is set to the flags required to link with a Blas library.
 # In case 3 and 4, the flags to link to Blas are added to ADDLIBS.
@@ -4023,7 +4030,7 @@ fi
 # 3. if --with-lapack has been specified to a working library, sets LAPACK_LIBS to its value
 # 4. tries standard libraries
 # 5. calls COIN_HAS_MODULE(Lapack, [lapack]) to check for ThirdParty/Lapack
-# 6. calls COIN_HAS_MODULE_FALLBACK(Lapack, [coinlapack], [../ThirdParty/Lapack])
+# 6. calls COIN_HAS_MODULE_FALLBACK(Lapack, [coinlapack], [../ThirdParty/Lapack or ../Lapack])
 # The makefile conditional and preprocessor macro COIN_HAS_LAPACK is defined.
 # LAPACK_LIBS is set to the flags required to link with a Lapack library.
 # In case 3 and 4, the flags to link to Lapack are added to ADDLIBS.
