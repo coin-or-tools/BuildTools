@@ -1404,16 +1404,18 @@ else
   # In its original version, it linked in libifcorert.lib or libifcorertd.lib on Windows/ifort explicitly.
   # However, this seem to create a dependency on libifcorert.dll (or libifcorertd.dll) in the executables.
   # This is seem to be unnecessary, libifcorert(d).lib has been removed from the link line.
+  # Further, excluding libc.lib from the default libs seemed to be necessary only for VS < 8.
+  # Since the corresponding flag seems to make more trouble that it avoid, it has been removed now.
      *-cygwin* | *-mingw*)
        case "$F77" in
-         ifort* | */ifort* | IFORT* | */IFORT*)
-           FLIBS="-link $LIBS /NODEFAULTLIB:libc.lib"
+#         ifort* | */ifort* | IFORT* | */IFORT*)
+#           FLIBS="-link $LIBS /NODEFAULTLIB:libc.lib"
 #           if "$coin_debug_compile" = true ; then
 #             FLIBS="-link $LIBS /NODEFAULTLIB:libc.lib /NODEFAULTLIB:libcmt.lib"
 #           else
 #             FLIBS="-link $LIBS /NODEFAULTLIB:libc.lib /NODEFAULTLIB:libcmtd.lib"
 #           fi
-           ;;
+#           ;;
          compile_f2c*)
            FLIBS=`$F77 -FLIBS` ;;
        esac;;
@@ -1425,7 +1427,7 @@ else
        case "$F77" in
          pgf77* | */pgf77* | pgf90* | */pgf90*)
 # ask linker to go through the archives multiple times
-# (the Fortran compiler seems to do that automatically...
+# (the Fortran compiler seems to do that automatically...)
            FLIBS="-Wl,--start-group $FLIBS -Wl,--end-group" ;;
        esac
   esac
