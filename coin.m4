@@ -2512,12 +2512,11 @@ AC_SUBST(EXAMPLE_CLEAN_FILES)
 #                            COIN_HAS_PROJECT (deprecated)                #
 ###########################################################################
 
-# This macro sets up usage of a Coin package.  It defines the
-# PKGSRCDIR and PKGOBJDIR variables, refering to the main source and
-# object directory of the package, respectively.  It also defines
-# a COIN_HAS_PKG preprocessor macro and makefile conditional.  The
-# argument should be the name (Pkg) of the project (in correct lower
-# and upper case)
+# This macro sets up usage of a Coin package.  It defines the PKGSRCDIR,
+# PKGOBJDIR, and PKGDOCDIR variables, referring to the main source, object, and
+# documentation directories of the package, respectively.  It also defines a
+# COIN_HAS_PKG preprocessor macro and makefile conditional.  The argument
+# should be the name (Pkg) of the project (in correct lower and upper case)
 
 AC_DEFUN([AC_COIN_HAS_PROJECT],
 [AC_MSG_CHECKING([for COIN project $1])
@@ -3376,6 +3375,50 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
 AM_CONDITIONAL([COIN_BUILD_GLPK],[test x"$use_thirdpartyglpk" = xbuild])
 
 ]) # AC_COIN_HAS_GLPK
+
+
+###########################################################################
+#                           COIN_DOXYGEN                                  #
+###########################################################################
+#
+# This macro determines the configuration information for doxygen, the tool
+# used to generate online documentation of COIN code.
+
+# This macro will define the following variables:
+#  coin_use_dot         determined based on presence/absence of dot (from
+#			graphviz package)
+#  COIN_DOXY_TGTDIR     target directory for doxygen documentation
+
+AC_DEFUN([AC_COIN_DOXYGEN],
+[
+
+AC_MSG_NOTICE([configuring doxygen documentation options])
+
+# Check to see if doxygen is available.
+
+AC_MSG_CHECKING([for doxygen])
+AC_CHECK_PROG([coin_cv_have_doxygen],[doxygen],[yes],[no])
+AC_MSG_RESULT([$coin_cv_have_doxygen])
+
+# Look for the dot tool from the graphviz package, unless the user has
+# disabled it.
+
+AC_ARG_WITH([dot],
+  AS_HELP_STRING([--with-dot],
+		 [use dot (from graphviz) when creating documentation with
+		  doxygen if available; disable with --without-dot]),
+  [],[withval=yes])
+  if test x$withval = xno ; then
+    coin_cv_use_dot=no
+    AC_MSG_RESULT([disabled])
+  else
+    AC_MSG_CHECKING([for dot])
+    AC_CHECK_PROG([coin_cv_use_dot],[$withval],[yes],[no])
+    AC_MSG_RESULT([$coin_cv_use_dot])
+  fi
+
+]) # AC_COIN_DOXYGEN
+
 
 ###########################################################################
 #                           COIN_HAS_PKGCONFIG                            #
