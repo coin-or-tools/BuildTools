@@ -1,0 +1,372 @@
+
+# Utility function definitions for the various COIN scripts.
+
+# Functions to disassemble svn URLs and extract relevant bits. Complicated
+# because we have to account for trunk/stable/release and for the variant
+# syntax of Data and ThirdParty URLs. For your normal project, it's
+#   https://projects.coin-or.org/svn/ProjName/trunk
+#   https://projects.coin-or.org/svn/ProjName/stable/M.m
+#   https://projects.coin-or.org/svn/ProjName/releases/M.m.r
+# For ThirdParty, it's just like a normal project, except the prefix string
+# is longer:
+#   https://projects.coin-or.org/svn/BuildTools/ThirdParty/ProjName
+# Data is the real pain, with this form:
+#  https://projects.coin-or.org/svn/Data/trunk/ProjName
+#  https://projects.coin-or.org/svn/Data/stable/M.m/ProjName
+#  https://projects.coin-or.org/svn/Data/releases/M.m.r/ProjName
+
+# Extract the COIN base from the URL, up to svn. Just in case it ever changes.
+# usage: baseURL=`extractBaseURL $svnURL`
+
+extractBaseURL ()
+{ 
+  exbu_baseURL=`echo $1 | sed -n -e 's|\(.*/svn\)/.*$|\1|p'`
+  echo "$exbu_baseURL"
+}
+
+
+# Extract branch type (trunk/stable/release) from the URL.
+# usage: branchType=`extractTypeFromURL $svnURL`
+
+extractTypeFromURL ()
+{
+  etfu_type="invalid"
+  case "$1" in
+    */trunk* ) etfu_type=trunk ;;
+    */stable/* ) etfu_type=stable ;;
+    */releases/* ) etfu_type=releases ;;
+  esac
+  echo $etfu_type
+}
+
+
+# Extract the project from a svn URL
+# usage: projName=`extractProjFromURL $svnURL`
+
+extractProjFromURL ()
+{ 
+  epfu_projPat='\([^/][^/]*\)'
+  epfu_sfxPat='.*$'
+  case "$1" in
+    */Data/trunk/* )
+        epfu_pfxPat=svn/Data/trunk/
+	;;
+    */Data/stable/* | */Data/releases/* )
+        epfu_pfxPat='svn/Data/[^/][^/]*/[0-9][0-9.]*/'
+	;;
+    */ThirdParty/* )
+        epfu_pfxPat=svn/BuildTools/ThirdParty/
+	;;
+    *)
+	epfu_pfxPat=svn/
+	;;
+  esac
+  epfu_projName=`echo $1 | sed -n -e 's|.*/'$epfu_pfxPat$epfu_projPat$epfu_sfxPat'|\1|p'`
+  echo "$epfu_projName"
+}
+
+
+# Extract the entire version string from a stable or release URL. Returns a
+# null string if handed a trunk URL or if there's no version in the URL.
+# usage: version=`extractVersionFromURL $svnURL`
+
+extractVersionFromURL ()
+{ 
+  if expr "$1" : '.*/stable/.*' 2>&1 >/dev/null ||
+     expr "$1" : '.*/releases/.*' 2>&1 >/dev/null ; then
+    evfu_verPat='\([0-9.][0-9.]*\)'
+    evfu_sfxPat='.*$'
+    case "$1" in
+      */Data/stable/* | */Data/releases/* )
+	  evfu_pfxPat='svn/Data/[^/][^/]*/'
+	  ;;
+      */ThirdParty/* )
+	  evfu_pfxPat='svn/BuildTools/ThirdParty/[^/][^/]*/[^/][^/]*/'
+	  ;;
+      *)
+	  evfu_pfxPat='svn/[^/][^/]*/[^/][^/]*/'
+	  ;;
+    esac
+    evfu_verVer=`echo $1 | sed -n -e 's|.*/'$evfu_pfxPat$evfu_verPat$evfu_sfxPat'|\1|p'`
+    echo "$evfu_verVer"
+  else
+    echo ""
+  fi
+}
+
+# Replace the entire version string from a stable or release URL. A trunk
+# URL will be unmodified. newRev will not be accessed unless the URL is a
+# release.
+# usage: newURL=`replaceVersionInURL $oldURL $newMajor $newMinor $newRev`
+
+replaceVersionInURL ()
+{
+  if expr "$1" : '.*/stable/.*' 2>&1 >/dev/null ; then
+    rviu_newVersion=$2.$3
+  elif expr "$1" : '.*/releases/.*' 2>&1 >/dev/null ; then
+    rviu_newVersion=$2.$3.$4
+  else
+    rviu_newVersion=
+    rviu_newURL=$1
+  fi
+  if test -n "$rviu_newVersion" ; then
+    rviu_newURL=`echo $1 | sed -n -e 's|^\(.*\)/[0-9][0-9.]*\(.*\)$|\1/'$rviu_newVersion'\2|p'`
+  fi
+  echo $rviu_newURL
+}
+
+# Extract the major version number from a stable or release URL. Returns -1 if
+# handed a trunk URL or if there's no version in the URL
+# usage: majVer=`extractMajorFromURL $svnURL`
+
+extractMajorFromURL ()
+{ 
+  if expr "$1" : '.*/stable/.*' 2>&1 >/dev/null ||
+     expr "$1" : '.*/releases/.*' 2>&1 >/dev/null ; then
+    ejfu_majPat='\([0-9][0-9]*\)'
+    ejfu_sfxPat='\.[0-9][0-9]*.*$'
+    case "$1" in
+      */Data/stable/* | */Data/releases/* )
+	  ejfu_pfxPat='svn/Data/[^/][^/]*/'
+	  ;;
+      */ThirdParty/* )
+	  ejfu_pfxPat='svn/BuildTools/ThirdParty/[^/][^/]*/[^/][^/]*/'
+	  ;;
+      *)
+	  ejfu_pfxPat='svn/[^/][^/]*/[^/][^/]*/'
+	  ;;
+    esac
+    ejfu_majVer=`echo $1 | sed -n -e 's|.*/'$ejfu_pfxPat$ejfu_majPat$ejfu_sfxPat'|\1|p'`
+    echo "$ejfu_majVer"
+  else
+    echo "-1"
+  fi
+}
+
+# Extract the minor version number from a stable or release URL. Returns -1 if
+# handed a trunk URL or if there's no version in the URL.
+# usage: minVer=`extractMinorFromURL $svnURL`
+
+extractMinorFromURL ()
+{ 
+  if expr "$1" : '.*/stable/.*' 2>&1 >/dev/null ||
+     expr "$1" : '.*/releases/.*' 2>&1 >/dev/null ; then
+    emfu_minPat='[0-9][0-9]*\.\([0-9][0-9]*\)'
+    emfu_sfxPat='.*$'
+    case "$1" in
+      */Data/stable/* | */Data/releases/* )
+	  emfu_pfxPat='svn/Data/[^/][^/]*/'
+	  ;;
+      */ThirdParty/* )
+	  emfu_pfxPat='svn/BuildTools/ThirdParty/[^/][^/]*/[^/][^/]*/'
+	  ;;
+      *)
+	  emfu_pfxPat='svn/[^/][^/]*/[^/][^/]*/'
+	  ;;
+    esac
+    emfu_minVer=`echo $1 | sed -n -e 's|.*/'$emfu_pfxPat$emfu_minPat$emfu_sfxPat'|\1|p'`
+    echo "$emfu_minVer"
+  else
+    echo "-1"
+  fi
+}
+
+# Extract the release (revision) number from a release URL. Returns -1 if
+# handed a trunk or stable URL
+# usage: minVer=`extractReleaseFromURL $svnURL`
+
+extractReleaseFromURL ()
+{ 
+  if expr "$1" : '.*/releases/.*' 2>&1 >/dev/null ; then
+    erfu_relPat='[0-9][0-9]*\.[0-9][0-9]*\.\([0-9][0-9]*\)'
+    erfu_sfxPat='.*$'
+    case "$1" in
+      */Data/releases/* )
+	  erfu_pfxPat='svn/Data/[^/][^/]*/'
+	  ;;
+      */ThirdParty/* )
+	  erfu_pfxPat='svn/BuildTools/ThirdParty/[^/][^/]*/[^/][^/]*/'
+	  ;;
+      *)
+	  erfu_pfxPat='svn/[^/][^/]*/[^/][^/]*/'
+	  ;;
+    esac
+    erfu_relVer=`echo $1 | sed -n -e 's|.*/'$erfu_pfxPat$erfu_relPat$erfu_sfxPat'|\1|p'`
+    echo "$erfu_relVer"
+  else
+    echo "-1"
+  fi
+}
+
+# Now some functions to locate the highest-numbered stable or release.
+
+# Return the URL of the most recent stable branch matching the parameters.
+# A value of -1 for major or minor version is interpreted as `highest number'
+# usage: stableURL=`bestStable <URL> <major>`
+
+bestStable ()
+{ bstb_URL=$1
+  bstb_majVer=$2
+
+  # Construct a URL to send to the repository to list the stable branches.
+
+  bstb_baseURL=`extractBaseURL $bstb_URL`
+  bstb_proj=`extractProjFromURL $bstb_URL`
+
+  case "$bstb_URL" in
+    */Data/* )
+	bstb_listURL=$bstb_baseURL/Data/stable
+	;;
+    */ThirdParty/* )
+	bstb_listURL=$bstb_baseURL/BuildTools/ThirdParty/$bstb_proj/stable
+	;;
+    * )
+	bstb_listURL=$bstb_baseURL/$bstb_proj/stable
+	;;
+  esac
+
+  bstb_rawls=`svn list $bstb_listURL | sort -nr -t. -k1,1 -k2,2`
+
+  # echo "Raw ls: $bstb_rawls"
+
+  # Filter the list of stable branches to remove any that do not match the
+  # requested major version.
+
+  bstb_verPat='[0-9][0-9]*/'
+  if test "$bstb_majVer" != "-1" ; then
+    bstb_verPat=$bstb_majVer'\.[0-9][0-9]*'
+  else
+    bstb_verPat='[0-9][0-9.]*'
+  fi
+  bstb_filter=
+  for bstb_ver in $bstb_rawls ; do
+    if  expr "$bstb_ver" : $bstb_verPat 2>&1 >/dev/null ; then
+      bstb_filter="$bstb_filter $bstb_ver"
+    fi
+  done
+
+  # echo "Filtered ls: $bstb_filter"
+
+  # If there are any candidates left ...
+
+  bstb_bestURL=
+  if test -n "$bstb_filter" ; then
+
+    # If we're dealing with Data, we have to work a bit harder to find our
+    # project. See if any of the filtered candidates contain the correct
+    # project.
+
+    if expr "$bstb_URL" : '.*/Data/.*' 2>&1 >/dev/null ; then
+      bstb_projPat='.*'$bstb_proj'/.*'
+      # echo "Pattern: $bstb_projPat"
+      for bstb_ver in $bstb_filter ; do
+	if  expr "$bstb_ver" : $bstb_verPat 2>&1 >/dev/null ; then
+	  # echo "  url: $bstb_listURL/$bstb_ver"
+	  bstb_svnls2="`svn list $bstb_listURL/$bstb_ver`"
+	  # echo "  result: $bstb_svnls2"
+	  if expr "$bstb_svnls2" : $bstb_projPat 2>&1 >/dev/null ; then
+	    bstb_best=$bstb_ver
+	    # echo "  best: $bstb_best"
+	    break
+	  fi
+	fi
+      done
+      bstb_bestURL=$bstb_listURL/$bstb_best$bstb_proj
+    else
+      bstb_bestURL=`echo $bstb_filter | sed -n -e 's|\([^/]*/\).*$|\1|p'`
+      bstb_bestURL=$bstb_listURL/$bstb_bestURL
+    fi
+
+  fi
+
+  echo $bstb_bestURL
+}
+
+# Return the URL of the most recent release matching the parameters.
+# A value of -1 for major or minor version is interpreted as `highest number'
+# usage: releaseURL=`bestRelease <URL> <major> <minor>`
+
+bestRelease ()
+{ bstb_URL=$1
+  bstb_majVer=$2
+  bstb_minVer=$3
+
+  # Construct a URL to send to the repository to list the releases.
+
+  bstb_baseURL=`extractBaseURL $bstb_URL`
+  bstb_proj=`extractProjFromURL $bstb_URL`
+
+  case "$bstb_URL" in
+    */Data/* )
+	bstb_listURL=$bstb_baseURL/Data/releases
+	;;
+    */ThirdParty/* )
+	bstb_listURL=$bstb_baseURL/BuildTools/ThirdParty/$bstb_proj/releases
+	;;
+    * )
+	bstb_listURL=$bstb_baseURL/$bstb_proj/releases
+	;;
+  esac
+
+  bstb_rawls=`svn list $bstb_listURL | sort -nr -t. -k1,1 -k2,2 -k3,3`
+
+  # echo "Raw ls: $bstb_rawls"
+
+  # Filter the list of releases to remove any that do not match the
+  # requested major and minor version.
+
+  if test "$bstb_majVer" != "-1" ; then
+    bstb_verPat=$bstb_majVer'\.'
+  else
+    bstb_verPat='[0-9][0-9]*\.'
+  fi
+  if test "$bstb_minVer" != "-1" ; then
+    bstb_verPat="${bstb_verPat}$bstb_minVer"
+  else
+    bstb_verPat="${bstb_verPat}"'[0-9][0-9]*'
+  fi
+  bstb_verPat="${bstb_verPat}"'\.[0-9][0-9]*'
+  # echo "Version pattern: $bstb_verPat"
+  bstb_filter=
+  for bstb_ver in $bstb_rawls ; do
+    if  expr "$bstb_ver" : $bstb_verPat 2>&1 >/dev/null ; then
+      bstb_filter="$bstb_filter $bstb_ver"
+    fi
+  done
+
+  # echo "Filtered ls: $bstb_filter"
+
+  # If there are any candidates left ...
+
+  bstb_bestURL=
+  if test -n "$bstb_filter" ; then
+
+    # If we're dealing with Data, we have to work a bit harder to find our
+    # project. See if any of the filtered candidates contain the correct
+    # project.
+
+    if expr "$bstb_URL" : '.*/Data/.*' 2>&1 >/dev/null ; then
+      bstb_projPat='.*'$bstb_proj'/.*'
+      # echo "Pattern: $bstb_projPat"
+      for bstb_ver in $bstb_filter ; do
+	if  expr "$bstb_ver" : $bstb_verPat 2>&1 >/dev/null ; then
+	  # echo "  url: $bstb_listURL/$bstb_ver"
+	  bstb_svnls2="`svn list $bstb_listURL/$bstb_ver`"
+	  # echo "  result: $bstb_svnls2"
+	  if expr "$bstb_svnls2" : $bstb_projPat 2>&1 >/dev/null ; then
+	    bstb_best=$bstb_ver
+	    # echo "  best: $bstb_best"
+	    break
+	  fi
+	fi
+      done
+      bstb_bestURL=$bstb_listURL/$bstb_best$bstb_proj
+    else
+      bstb_bestURL=`echo $bstb_filter | sed -n -e 's|\([^/]*/\).*$|\1|p'`
+      bstb_bestURL=$bstb_listURL/$bstb_bestURL
+    fi
+
+  fi
+
+  echo $bstb_bestURL
+}
