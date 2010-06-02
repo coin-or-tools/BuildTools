@@ -11,7 +11,7 @@
 
 # Set to 1 to suppress actions that actually modify the repository side.
 
-debug=0
+debug=1
 
 if test $debug = 1 ; then
   echo "Dry run by default. Commands that would modify the repository are"
@@ -150,8 +150,7 @@ echo ''
 echo "===> Creating new stable branch $newStableURLshort from $srcURLshort (r$rev_num)..."
 echo ''
 
-cmd="svn copy -m \"creating $newStableURLshort from $srcURLshort (r$rev_num).
-Final stable prior to split repo conversion. Reformatted code. Some bug fixes.\" $srcURL $newStableURL"
+cmd="svn copy -m \"creating $newStableURLshort from $srcURLshort (r$rev_num).\" $srcURL $newStableURL"
 echo $cmd
 if test $debug = 0 ; then
   eval $cmd
