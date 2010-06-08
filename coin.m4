@@ -3805,7 +3805,7 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
     AC_COIN_PKG_HAS_MODULE([$1],[$2],
       [ m4_tolower(coin_has_$1)=yes
         AC_MSG_RESULT([yes: $m4_toupper($1)_VERSIONS])
-        m4_bmatch($3, [required=0], [], [REQUIREDPACKAGES="$REQUIREDPACKAGES $2"])
+        m4_bmatch($3, [required=0], [], [REQUIREDPACKAGES="$2 $REQUIREDPACKAGES"])
       ],
       [ m4_tolower(coin_has_$1)=notGiven
         AC_MSG_RESULT([not given: $m4_toupper($1)_PKG_ERRORS])
@@ -3914,7 +3914,7 @@ if test $m4_tolower(coin_has_$1) != "skipping" ; then
 
     m4_bmatch($4, [required=0], [],
       [ADDLIBS="$ADDLIBS $m4_toupper($1_LIBS)"
-       REQUIREDPACKAGES="$REQUIREDPACKAGES $2"
+       REQUIREDPACKAGES="$2 $REQUIREDPACKAGES"
       ])
 
     m4_bmatch($4, [dodefine=0], [],
@@ -4207,7 +4207,7 @@ elif test "x$use_lapack" != x && test "$use_lapack" != no; then
   coin_has_lapack=yes
   AM_CONDITIONAL([COIN_HAS_LAPACK],[test 0 = 0])
   AC_DEFINE([COIN_HAS_LAPACK],[1], [If defined, the LAPACK Library is available.])
-  LAPACK_LIBS="$use_blas"
+  LAPACK_LIBS="$use_lapack"
   LAPACK_CFLAGS=
   LAPACK_DATA=
   AC_SUBST(LAPACK_LIBS)
