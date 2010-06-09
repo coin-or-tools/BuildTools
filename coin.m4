@@ -4132,7 +4132,7 @@ else
     coin_save_LIBS="$LIBS"
     LIBS="$ADDLIBS $LIBS"
     AC_COIN_TRY_FLINK([dsyev],
-                      [AC_MSG_RESULT([yes]); use_lapack=ok],
+                      [AC_MSG_RESULT([yes]); use_lapack="$BLAS_LIBS"],
                       [AC_MSG_RESULT([no])])
     LIBS="$coin_save_LIBS"
   fi
