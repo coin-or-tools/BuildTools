@@ -3396,9 +3396,7 @@ AC_MSG_NOTICE([configuring doxygen documentation options])
 
 # Check to see if doxygen is available.
 
-AC_MSG_CHECKING([for doxygen])
 AC_CHECK_PROG([coin_cv_have_doxygen],[doxygen],[yes],[no])
-AC_MSG_RESULT([$coin_cv_have_doxygen])
 
 # Look for the dot tool from the graphviz package, unless the user has
 # disabled it.
@@ -3407,15 +3405,12 @@ AC_ARG_WITH([dot],
   AS_HELP_STRING([--with-dot],
 		 [use dot (from graphviz) when creating documentation with
 		  doxygen if available; disable with --without-dot]),
-  [],[withval=yes])
-  if test x$withval = xno ; then
-    coin_cv_use_dot=no
-    AC_MSG_RESULT([disabled])
-  else
-    AC_MSG_CHECKING([for dot])
-    AC_CHECK_PROG([coin_cv_use_dot],[$withval],[yes],[no])
-    AC_MSG_RESULT([$coin_cv_use_dot])
-  fi
+  [],[withval=dot])
+if test x$withval = xno ; then
+  coin_cv_use_dot=no
+else
+  AC_CHECK_PROG([coin_cv_use_dot],[$withval],[yes],[no])
+fi
 
 ]) # AC_COIN_DOXYGEN
 
