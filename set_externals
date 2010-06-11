@@ -40,7 +40,7 @@ if test "$#" -eq 0; then
 else
 
 # Process the parameters. A parameter without an opening `-' is assumed to be
-# the spec for the stable branch.
+# the dependency file.
 
   while test $# -gt 0 && test $exitValue = 0 && test $printHelp = 0 ; do
     case "$1" in
@@ -97,12 +97,13 @@ if test $printHelp = 0 && test $exitValue = 0; then
 	    echo "There is no release for $ext_url"
 	    echo "Keeping $ext_url"
 	  else
-	    # Normal (not BuildTools/ThirdParty/Data) need a project name
+	    # Normal (not BuildTools/ThirdParty/Data) need a directory name,
+	    # and it may differ from the project name. Carefully preserve it.
 	    # ThirdParty URLs include BuildTools ; both named for emphasis
 	    case $ext_rel_url in
-	      *BuildTools* | *ThirdParty* | *Data* ) ;;
-	      *) ext_proj=`extractProjFromURL $ext_rel_url`
-		 ext_rel_url=${ext_rel_url}${ext_proj}
+	      */BuildTools/* | */ThirdParty/* | */Data/* ) ;;
+	      *) ext_tail=`extractTailFromExt $ext_url`
+		 ext_rel_url=${ext_rel_url}${ext_tail}
 		 ;;
 	    esac
 	    echo "Replacing $ext_url with $ext_rel_url"

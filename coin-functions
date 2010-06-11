@@ -65,6 +65,40 @@ extractProjFromURL ()
   echo "$epfu_projName"
 }
 
+# Extract the tail (directory) from an external URL. Relevant only for normal
+# projects, where the external will be a subdirectory of the project. Returns
+# null for Data/ThirdParty/BuildTools.
+# usage: projName=`extractTailFromExt $extURL`
+
+extractTailFromExt ()
+{ 
+  etfe_tail=
+  case "$1" in
+    */Data/* )
+	;;
+    */BuildTools/ThirdParty/* )
+	;;
+    */BuildTools/* )
+	;;
+    *)
+	etfe_pfxPat=
+	case "$1" in
+	  */trunk/* )
+	      etfe_pfxPat='.*/trunk/'
+	      ;;
+	  */stable/* )
+	      etfe_pfxPat='.*/stable/[0-9][0-9.]*/'
+	      ;;
+	  */releases/* )
+	      etfe_pfxPat='.*/releases/[0-9][0-9.]*/'
+	      ;;
+	esac
+	etfe_tail=`echo $1 | sed -n -e 's|'$etfe_pfxPat'\(.*\)|\1|p'`
+	;;
+  esac
+  echo "$etfe_tail"
+}
+
 
 # Extract the entire version string from a stable or release URL. Returns a
 # null string if handed a trunk URL or if there's no version in the URL.
@@ -72,8 +106,8 @@ extractProjFromURL ()
 
 extractVersionFromURL ()
 { 
-  if expr "$1" : '.*/stable/.*' 2>&1 >/dev/null ||
-     expr "$1" : '.*/releases/.*' 2>&1 >/dev/null ; then
+  if expr "$1" : '.*/stable/.*' >/dev/null 2>&1 ||
+     expr "$1" : '.*/releases/.*' >/dev/null 2>&1 ; then
     evfu_verPat='\([0-9.][0-9.]*\)'
     evfu_sfxPat='.*$'
     case "$1" in
@@ -101,9 +135,9 @@ extractVersionFromURL ()
 
 replaceVersionInURL ()
 {
-  if expr "$1" : '.*/stable/.*' 2>&1 >/dev/null ; then
+  if expr "$1" : '.*/stable/.*' >/dev/null 2>&1 ; then
     rviu_newVersion=$2.$3
-  elif expr "$1" : '.*/releases/.*' 2>&1 >/dev/null ; then
+  elif expr "$1" : '.*/releases/.*' >/dev/null 2>&1 ; then
     rviu_newVersion=$2.$3.$4
   else
     rviu_newVersion=
@@ -121,8 +155,8 @@ replaceVersionInURL ()
 
 extractMajorFromURL ()
 { 
-  if expr "$1" : '.*/stable/.*' 2>&1 >/dev/null ||
-     expr "$1" : '.*/releases/.*' 2>&1 >/dev/null ; then
+  if expr "$1" : '.*/stable/.*' >/dev/null 2>&1 ||
+     expr "$1" : '.*/releases/.*' >/dev/null 2>&1 ; then
     ejfu_majPat='\([0-9][0-9]*\)'
     ejfu_sfxPat='\.[0-9][0-9]*.*$'
     case "$1" in
@@ -149,8 +183,8 @@ extractMajorFromURL ()
 
 extractMinorFromURL ()
 { 
-  if expr "$1" : '.*/stable/.*' 2>&1 >/dev/null ||
-     expr "$1" : '.*/releases/.*' 2>&1 >/dev/null ; then
+  if expr "$1" : '.*/stable/.*' >/dev/null 2>&1 ||
+     expr "$1" : '.*/releases/.*' >/dev/null 2>&1 ; then
     emfu_minPat='[0-9][0-9]*\.\([0-9][0-9]*\)'
     emfu_sfxPat='.*$'
     case "$1" in
@@ -177,7 +211,7 @@ extractMinorFromURL ()
 
 extractReleaseFromURL ()
 { 
-  if expr "$1" : '.*/releases/.*' 2>&1 >/dev/null ; then
+  if expr "$1" : '.*/releases/.*' >/dev/null 2>&1 ; then
     erfu_relPat='[0-9][0-9]*\.[0-9][0-9]*\.\([0-9][0-9]*\)'
     erfu_sfxPat='.*$'
     case "$1" in
@@ -240,7 +274,7 @@ bestStable ()
   fi
   bstb_filter=
   for bstb_ver in $bstb_rawls ; do
-    if  expr "$bstb_ver" : $bstb_verPat 2>&1 >/dev/null ; then
+    if  expr "$bstb_ver" : $bstb_verPat >/dev/null 2>&1 ; then
       bstb_filter="$bstb_filter $bstb_ver"
     fi
   done
@@ -256,15 +290,15 @@ bestStable ()
     # project. See if any of the filtered candidates contain the correct
     # project.
 
-    if expr "$bstb_URL" : '.*/Data/.*' 2>&1 >/dev/null ; then
+    if expr "$bstb_URL" : '.*/Data/.*' >/dev/null 2>&1 ; then
       bstb_projPat='.*'$bstb_proj'/.*'
       # echo "Pattern: $bstb_projPat"
       for bstb_ver in $bstb_filter ; do
-	if  expr "$bstb_ver" : $bstb_verPat 2>&1 >/dev/null ; then
+	if  expr "$bstb_ver" : $bstb_verPat >/dev/null 2>&1 ; then
 	  # echo "  url: $bstb_listURL/$bstb_ver"
 	  bstb_svnls2="`svn list $bstb_listURL/$bstb_ver`"
 	  # echo "  result: $bstb_svnls2"
-	  if expr "$bstb_svnls2" : $bstb_projPat 2>&1 >/dev/null ; then
+	  if expr "$bstb_svnls2" : $bstb_projPat >/dev/null 2>&1 ; then
 	    bstb_best=$bstb_ver
 	    # echo "  best: $bstb_best"
 	    break
@@ -329,7 +363,7 @@ bestRelease ()
   # echo "Version pattern: $bstb_verPat"
   bstb_filter=
   for bstb_ver in $bstb_rawls ; do
-    if  expr "$bstb_ver" : $bstb_verPat 2>&1 >/dev/null ; then
+    if  expr "$bstb_ver" : $bstb_verPat >/dev/null 2>&1 ; then
       bstb_filter="$bstb_filter $bstb_ver"
     fi
   done
@@ -345,15 +379,15 @@ bestRelease ()
     # project. See if any of the filtered candidates contain the correct
     # project.
 
-    if expr "$bstb_URL" : '.*/Data/.*' 2>&1 >/dev/null ; then
+    if expr "$bstb_URL" : '.*/Data/.*' >/dev/null 2>&1 ; then
       bstb_projPat='.*'$bstb_proj'/.*'
       # echo "Pattern: $bstb_projPat"
       for bstb_ver in $bstb_filter ; do
-	if  expr "$bstb_ver" : $bstb_verPat 2>&1 >/dev/null ; then
+	if  expr "$bstb_ver" : $bstb_verPat >/dev/null 2>&1 ; then
 	  # echo "  url: $bstb_listURL/$bstb_ver"
 	  bstb_svnls2="`svn list $bstb_listURL/$bstb_ver`"
 	  # echo "  result: $bstb_svnls2"
-	  if expr "$bstb_svnls2" : $bstb_projPat 2>&1 >/dev/null ; then
+	  if expr "$bstb_svnls2" : $bstb_projPat >/dev/null 2>&1 ; then
 	    bstb_best=$bstb_ver
 	    # echo "  best: $bstb_best"
 	    break
@@ -370,3 +404,73 @@ bestRelease ()
 
   echo $bstb_bestURL
 }
+
+# Count the total number of stable branches for the project for the specified
+# major version number (libtool age). A major version number of -1 means all
+# stable branches (libtool current; see next function). Returns 0 if handed
+# a trunk url, or if the url is Data or BuildTools itself.
+# usage: calcLibtoolAge <svnURL> <major> 
+
+calcLibtoolAge ()
+{ cltc_URL=$1
+  cltc_majVer=$2
+
+  # Construct a URL to send to the repository to list the stable branches.
+
+  cltc_baseURL=`extractBaseURL $cltc_URL`
+  cltc_proj=`extractProjFromURL $cltc_URL`
+
+  case "$cltc_URL" in
+    */Data/* )
+	cltc_listURL=
+	;;
+    */ThirdParty/* )
+	cltc_listURL=$cltc_baseURL/BuildTools/ThirdParty/$cltc_proj/stable
+	;;
+    */BuildTools/* )
+	cltc_listURL=
+	;;
+    * )
+	cltc_listURL=$cltc_baseURL/$cltc_proj/stable
+	;;
+  esac
+
+  # Run an ls and filter for standard stable branches (M.m)
+  if test -n "$cltc_listURL" ; then
+    cltc_rawls=`svn list $cltc_listURL | sed -n -e '/[0-9]\.[0-9]/p'`
+
+    # echo "Raw ls: $cltc_rawls"
+
+    # Filter the list of stable branches to remove any that do not match the
+    # requested major version. -1 means `any major version', hence no filter.
+
+    cltc_verPat='[0-9][0-9]*/'
+    if test "$cltc_majVer" != "-1" ; then
+      cltc_verPat=$cltc_majVer'\.[0-9][0-9]*'
+    else
+      cltc_verPat='[0-9][0-9.]*'
+    fi
+    cltc_filter=
+    for cltc_ver in $cltc_rawls ; do
+      if  expr "$cltc_ver" : $cltc_verPat >/dev/null 2>&1 ; then
+	cltc_filter="$cltc_filter $cltc_ver"
+      fi
+    done
+
+    # echo "Filtered ls: $cltc_filter"
+
+    cltc_cnt=`echo $cltc_filter | wc -w | sed -e 's/ //g'`
+  else
+    cltc_cnt=0
+  fi
+
+  echo $cltc_cnt
+}
+
+# Count the total number of stable branches (libtool current). See comments
+# above for calcLibtoolAge.
+# usage: calcLibtoolCurrent <url>
+calcLibtoolCurrent ()
+{ calcLibtoolAge $1 -1
+}
+

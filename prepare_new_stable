@@ -468,9 +468,14 @@ if test -n "$srcDepFile" ; then
 	else
 	  ext_oldurl=$ext_url
 	  ext_url=`bestStable $ext_url -1`
-	  case "$ext_url" in
-	    */Data/* | */BuildTools/* ) ;;
-	    *) ext_url="${ext_url}${ext_proj}"
+	  # Normal (not BuildTools/ThirdParty/Data) need a directory name,
+	  # and it may differ from the project name. Carefully preserve it.
+	  # ThirdParty URLs include BuildTools ; both named for emphasis
+	  case $ext_url in
+	    */BuildTools/* | */ThirdParty/* | */Data/* ) ;;
+	    *) ext_tail=`extractTailFromExt $ext_oldurl`
+	       ext_url=${ext_url}${ext_tail}
+	       ;;
 	  esac
 	  echo "    $ext_name $ext_oldurl ==> $ext_url"
 	fi
