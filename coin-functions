@@ -1,6 +1,13 @@
 
 # Utility function definitions for the various COIN scripts.
 
+# Copyright (c) 2010 Lou Hafer	Simon Fraser University
+# All Rights Reserved.
+# This file is distributed under the Common Public License.
+# It is part of the BuildTools project in COIN-OR (www.coin-or.org)
+#
+# $Id$
+
 # Functions to disassemble svn URLs and extract relevant bits. Complicated
 # because we have to account for trunk/stable/release and for the variant
 # syntax of Data and ThirdParty URLs. For your normal project, it's
