@@ -284,9 +284,11 @@ AC_MSG_RESULT($coin_vpath_config)
 ###########################################################################
 
 # This macro does everything that is required in the early part in the
-# configure script, such as defining a few variables.  This should only
-# be used in the main directory of a project directory (the one under
-# which src is)
+# configure script, such as defining a few variables.  This should only be used
+# in the main directory of a project directory (the one which holds the src
+# directory for the project). The first parameter is the project name. The
+# second (optional) is the libtool library version (important for releases,
+# less so for stable or trunk).
 
 AC_DEFUN([AC_COIN_PROJECTDIR_INIT],
 [# Initialize the ADDLIBS variable
@@ -305,26 +307,28 @@ AC_SUBST(FADDLIBS)
 # A useful makefile conditional that is always false
 AM_CONDITIONAL(ALWAYS_FALSE, false)
 
-#Set the project's version number
+# We set the following variable so that we know later in AC_COIN_FINALIZE
+# that we are in a project main directory
+coin_projectdir=yes
+
+# Set the project's version number
 if test "x$1" != x; then
-  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION), ["$PACKAGE_VERSION"], [Version number of project])
+  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION), ["$PACKAGE_VERSION"],
+		     [Version number of project])
 fi
 
-#Set the project's SVN revision number
+# Set the project's SVN revision number
 AC_CHECK_PROG([have_svnversion],[svnversion],[yes],[no])
 if test "x$have_svnversion" = xyes && test "x$1" != x; then
   AC_SUBST(m4_toupper($1_SVN_REV))
   m4_toupper($1_SVN_REV)=`cd $srcdir/$m4_tolower(coin_has_$1) ; svnversion`
   if test $m4_toupper($1_SVN_REV) != exported; then
-    AC_DEFINE_UNQUOTED(m4_toupper($1_SVN_REV), "$m4_toupper($1_SVN_REV)", [SVN revision number of project])
+    AC_DEFINE_UNQUOTED(m4_toupper($1_SVN_REV), "$m4_toupper($1_SVN_REV)",
+		       [SVN revision number of project])
   fi
 fi
 
-# We set the following variable so that we know later in AC_COIN_FINALIZE
-# that we are in a project main directory
-coin_projectdir=yes
-
-# Check if a library version is set for libtool
+# Capture libtool library version, if given.
 m4_ifvaln([$2],[coin_libversion=$2],[])
 ]) # AC_COIN_PROJECTDIR_INIT
 
