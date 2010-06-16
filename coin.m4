@@ -284,9 +284,11 @@ AC_MSG_RESULT($coin_vpath_config)
 ###########################################################################
 
 # This macro does everything that is required in the early part in the
-# configure script, such as defining a few variables.  This should only
-# be used in the main directory of a project directory (the one under
-# which src is)
+# configure script, such as defining a few variables.  This should only be used
+# in the main directory of a project directory (the one which holds the src
+# directory for the project). The first parameter is the project name. The
+# second (optional) is the libtool library version (important for releases,
+# less so for stable or trunk).
 
 AC_DEFUN([AC_COIN_PROJECTDIR_INIT],
 [# Initialize the ADDLIBS variable
@@ -309,8 +311,20 @@ AM_CONDITIONAL(ALWAYS_FALSE, false)
 # that we are in a project main directory
 coin_projectdir=yes
 
-# Check if a library version is set for libtool
-m4_ifvaln([$1],[coin_libversion=$1],[])
+# Set the project's version number.
+if test "x$1" != x; then
+  # temporary hack to avoid breaking lapack 1.0.20;
+  # do not propagate to BuildTools trunk!  --lh, 100615--
+  if expr "$1" : '.*:.*' >/dev/null 2>&1 ; then
+    coin_libversion="$1"
+  else
+    AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION), ["$PACKAGE_VERSION"],
+		       [Version number of project])
+  fi
+fi
+
+# Capture libtool library version, if given.
+m4_ifvaln([$2],[coin_libversion=$2],[])
 ]) # AC_COIN_PROJECTDIR_INIT
 
 ###########################################################################
