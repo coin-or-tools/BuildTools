@@ -17,7 +17,7 @@ set -e
 # Remember what was done during release generation.
 
 if test -r .new_release_data; then
-  . .new_release_data
+  . ./.new_release_data
 else
   echo ''
   echo 'Error: You need to run prepare_new_release first.'
