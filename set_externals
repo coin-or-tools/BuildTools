@@ -10,7 +10,7 @@
 #
 
 # Adapted from prepare_new_release by Ted Ralphs, Lehigh Univ., 2009-07-07
-# Modified: Lou Hafer	       SFU	2010-06-02
+# Modified:     Lou Hafer    SFU    2010-06-02
 
 #set -x -v
 set -e
@@ -145,13 +145,13 @@ versions of COIN projects on separate lines in the form
 
  <name> <URL of stable version>
 
-Recommended practice is to keep this list in a file called "Dendencies" in the
-project's root directory. A temporary file called "Externals.releases" in the
-same form, but with the URL of each stable version replaced by the URL of the
-latest associated release is produced. From this file, the script will set the
-svn:externals variable. It does not do an update or commit the change. After
-the script runs, do an update and test build, then commit the change if you
-are happy.
+Recommended practice is to keep this list in a file called "Dependencies" in
+the project's root directory. A temporary file called "Externals.releases" in
+the same form, but with the URL of each stable version replaced by the URL of
+the latest associated release is produced. From this file, the script will
+set the svn:externals variable. It does not do an update or commit the
+change. After the script runs, do an update and test build, then commit the
+change if you are happy.
 
 EOF
 else

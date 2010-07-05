@@ -13,7 +13,7 @@
 set -e
 
 # Know thy self. If there are no '/' chars in the command name, we're running
-# in the currrent directory. Otherwise, strip the command name, leaving the
+# in the current directory. Otherwise, strip the command name, leaving the
 # prefix.  Coin-functions is expected to live in the same directory.
 
 if expr "$0" : '.*/.*' >/dev/null 2>&1 ; then
@@ -314,7 +314,8 @@ newVersion=${majVer}.${minVer}
 
 # Construct a build directory name.
 
-topBuildDir=${srcProj}-${newVersion}
+topBuildDir=`echo $srcProj | sed -e 's|.*/\([^/]*\)$|\1|'`
+topBuildDir=${topBuildDir}-${newVersion}
 echo "Build directory.....: $topBuildDir"
 
 # Now decide where to check out code.
@@ -327,6 +328,8 @@ else
   coDir=$topBuildDir
 fi
 echo "Checkout directory..: $coDir"
+
+exit
 
 echo ''
 echo "===> Checking out source $srcURL without externals ..."
@@ -361,20 +364,26 @@ topBuildDir=`cd $topBuildDir; pwd`
 cd $coDir
 
 # Find configure.ac files for the package and project and update the version.
-# We have no externals at this point, so there will be two files for a
-# standard project, one for a ThirdParty or Data project.
+# We have no externals at this point, and no third-party code, so there will
+# be two files for a standard project, one for a ThirdParty or Data project.
 
 echo ''
-bak_files=`find . -name 'configure.ac' | grep -v -E 'ThirdParty/.*/.*/configure.ac'`
+bak_files=`find . -name 'configure.ac'`
 echo "===> Creating backup (.bak) for configure.ac files..."
 for i in $bak_files; do
   cp $i $i.bak
 done
 
+# Take the attitude that [] around parameters in AC_INIT is optional,
+# it's the commas that count. This does make for a surpassing ugly regular
+# expression.  A comma in the version string will cause a spectacular failure.
+# In AC_COIN_PROJECTDIR_INIT, take the attitude that the existing parameters
+# don't matter, we know what the release parameters should be.
+
 echo ''
-echo "===> Updating version number in configure.ac files"
+echo "===> Updating version numbers in configure.ac files"
 for i in $bak_files; do
-  sed -e "s|AC_INIT\(.*\),\[[^]]*\],\(.*\)|AC_INIT\1,[$newVersion],\2|" $i > bla
+  sed -e "s|AC_INIT\(.*\),\(\[*\)[^],]*\(\]*\),\(.*\)|AC_INIT\1,\2$newVersion\3,\4|" $i > bla
   mv bla $i
   svn diff $i
 done
@@ -425,11 +434,12 @@ if test -n "$srcDepFile" ; then
   echo ''
 
 # We've just checked this out, no sense going back to the server for the
-# BuildTools version.
+# BuildTools version. Because of the intermediate variable, newline has
+# become space.
 
   srcExternals=`svn propget svn:externals .`
   srcBTURL=`echo $srcExternals | \
-    sed -n -e 's/.*BuildTools https:\([^ ]*\) .*/https:\1/p'`
+	    sed -n -e 's/.*BuildTools *https:\([^ ]*\) .*/https:\1/p'`
   if test -z "$srcBTURL" ; then
     srcBTURL="none"
   fi
@@ -460,6 +470,8 @@ if test -n "$srcDepFile" ; then
 	continue
       fi
 
+      ext_isNormalURL=`isNormalURL $ext_url`
+
 # Convert a trunk URL to stable unless it's listed in trunkExternals.
 
       if test $ext_urltype = trunk ; then
@@ -470,13 +482,10 @@ if test -n "$srcDepFile" ; then
 	  ext_url=`bestStable $ext_url -1`
 	  # Normal (not BuildTools/ThirdParty/Data) need a directory name,
 	  # and it may differ from the project name. Carefully preserve it.
-	  # ThirdParty URLs include BuildTools ; both named for emphasis
-	  case $ext_url in
-	    */BuildTools/* | */ThirdParty/* | */Data/* ) ;;
-	    *) ext_tail=`extractTailFromExt $ext_oldurl`
-	       ext_url=${ext_url}${ext_tail}
-	       ;;
-	  esac
+	  if test $ext_isNormalURL = yes ; then
+	    ext_tail=`extractTailFromExt $ext_oldurl`
+	    ext_url=${ext_url}${ext_tail}
+	  fi
 	  echo "    $ext_name $ext_oldurl ==> $ext_url"
 	fi
       else
@@ -486,14 +495,19 @@ if test -n "$srcDepFile" ; then
 # Get the BuildTools URL for the external and compare to the BuildTools URL
 # for the source, assuming we have one and the external has one.
 
-      if test $ext_proj != BuildTools && test $srcBTURL != none ; then
-	extBTURL=`svn propget svn:externals $ext_url`
+      if test $ext_isNormalURL = yes &&
+         test $ext_proj != BuildTools && test $srcBTURL != none ; then
+        ext_url_notail=`echo $ext_url | sed -e 's,/[^/]*$,,'`
+	extBTURL=`svn propget svn:externals $ext_url_notail`
 	extBTURL=`echo $extBTURL | \
 	  sed -n -e 's/.*BuildTools https:\([^ ]*\) .*/https:\1/p'`
-	if test -n "$extBTURL" && test "$srcBTURL" != "$extBTURL" ; then
-	  echo "    WARNING: BuildTools mismatch: $ext_url uses $extBTURL"
-	  if test $ignoreBuildToolsMismatch = 0 ; then
-	     buildtoolsMismatch=1
+	if test -n "$extBTURL" ; then
+	  testResult=`compareURLVersions "$srcBTURL" "$extBTURL"`
+	  if test $testResult = no ; then
+	    echo "    WARNING: BuildTools mismatch: $ext_url_notail uses $extBTURL"
+	    if test $ignoreBuildToolsMismatch = 0 ; then
+	       buildtoolsMismatch=1
+	    fi
 	  fi
 	fi
       fi
@@ -503,6 +517,9 @@ if test -n "$srcDepFile" ; then
       echo ''
     fi
   done
+
+# If we have a BuildTools mismatch, and mismatch is not permitted, exit.
+
   if test $buildtoolsMismatch -gt $ignoreBuildToolsMismatch ; then
     echo "Exiting due to BuildTools mismatches; use -i to ignore."
     exit 2
@@ -567,10 +584,10 @@ echo ''
 
 if test $isThirdParty = yes || test $isData = yes ; then
   cd ../..
-  BuildTools/run_autotools
+  ./BuildTools/run_autotools
   cd "$coDir"
 else
-  BuildTools/run_autotools
+  ./BuildTools/run_autotools
 fi
 
 # Let's see if it works. We only run tests for non-ThirdParty, non-Data. DO NOT
@@ -633,9 +650,9 @@ fi
 echo ''
 
 # Do we need to plug in nonexistent stable branches for circular dependencies
-# tested with the trunk? If so, generate a new Externals.release. This is
-# the only reason trunk references should appear in the externals for a
-# stable branch, so we don't need to check further before removing them.
+# tested with the trunk? If so, generate a new Dependencies. This is the only
+# reason trunk references should appear in the externals for a stable branch,
+# so we don't need to check further before removing them.
 
 if test -n "$trunkExternals" ; then
   echo ''
