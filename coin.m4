@@ -1806,7 +1806,7 @@ if test "x$LIBTOOL" = x; then
 # AC_MSG_NOTICE([Finished COIN_PROG_LIBTOOL.])
   # set RPATH_FLAGS to the compiler link flags required to hardcode location
   # of the shared objects
-  AC_COIN_RPATH_FLAGS($abs_lib_dir)
+  AC_COIN_RPATH_FLAGS([$abs_lib_dir $abs_lib_dir/ThirdParty])
 
 else
 
