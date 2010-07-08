@@ -81,14 +81,13 @@ done
 createLink=0
 if test -d BuildTools || test -L BuildTools ; then
   toolsDir=BuildTools
-  echo toolsDir is $toolsDir
 else
   createLink=1
   toolsDir=$runautotoolDir
 fi
 
 # Create an absolute path if we don't have one, because we'll be moving
-# around. Clean up the path by removing `XXX/..' sequences.
+# around. Clean up the path by removing `XXX/..', '/./', '//' sequences.
 
 if expr "$toolsDir" : '/.*' >/dev/null 2>&1 ; then
   :
@@ -98,6 +97,7 @@ fi
 while expr "$toolsDir" : '.*/\.\./.*' >/dev/null 2>&1 ; do
   toolsDir=`echo $toolsDir | sed -e 's,/[^/][^/]*/\.\./,/,'`
 done
+toolsDir=`echo $toolsDir | sed -e 's,/\./,/,g' -e 's,//,/,g'`
 
 # Test to be sure that run_autotools is coming from the BuildTools directory.
 
@@ -171,55 +171,124 @@ if $EGREP $grep_version $ltfile >/dev/null 2>&1; then :; else
   echo WARNING: You are not using the correct version of libtool
 fi
 
-# Find directories which contain a file configure.ac. When all is said and
-# done, each entry in dirs will be of the form `./path/to/directory'
+# Set up to process parameters. No parameters is the default.
 
-if test $# != 0; then
-  srchDirs="$*"
-else
-  srchDirs='.'
+printHelp=0
+doRecurse=1
+userSpecifiedDirs=0
+dirsToProcess=
+
+# Process the parameters. A parameter without an opening `-' is assumed to be
+# a spec for a directory to be processed.
+
+while test $# -gt 0 && test $printHelp = 0 ; do
+  case "$1" in
+    -h* | --h* )
+	 printHelp=1
+	 ;;
+    -nr* | --no-recursion )
+	 doRecurse=0
+	 ;;
+     -* ) echo "$0: unrecognised command line switch '"$1"'."
+	  printHelp=1
+	  ;;
+      * ) dirsToProcess="$dirsToProcess $1"
+	  userSpecifiedDirs=1
+	  ;;
+  esac
+  shift
+done
+
+# Help?
+
+if test $printHelp = 1 ; then
+  cat <<EOF
+usage: run_autotools [-h] [-nr] [ directory directory ... ]
+
+  -h  | --help           print help message and exit
+  -nr | --no-recursion   do not do recursive search for configure.ac files
+
+  If no directories are specified, the tree rooted at the current directory
+  is searched recursively for directories with configure.ac files containing
+  COIN configuration macros (AC_COIN_*) and autotools is run in those
+  directories. Directories listed in COIN_SKIP_PROJECTS are skipped.
+  If directories are specified on the command line, the search for configure.ac
+  files is restricted to the specified directories.
+
+  If directories are specified on the command line *and* --no-recursion is
+  given, the specified directories are processed with no checks.
+EOF
+  exit
 fi
+
+# Did the user give directories on the command line? If not, assume the current
+# directory.
+
+if test -z "$dirsToProcess" ; then
+  dirsToProcess='.'
+fi
+
+# If recursion is permitted, find directories which contain a file
+# configure.ac. When all is said and done, each entry in dirs will be of the
+# form `./path/to/directory'
+
 candDirs=
-for dir in $srchDirs ; do
-  tmp=`find $dir -name configure.ac | sed -e s%/configure.ac%%g`
-  candDirs="$candDirs $tmp"
-done
+if test $doRecurse = 1 ; then
+  for dir in $dirsToProcess ; do
+    tmp=`find $dir -name configure.ac | sed -e s%/configure.ac%%g`
+    case "$candDirs" in
+      *"$tmp"* )
+	  ;;
+      * )
+	  candDirs="$candDirs $tmp"
+	  ;;
+      esac
+  done
+else
+  candDirs=$dirsToProcess
+fi
 
-# Winnow the candidates. Process a directory only if the configure.ac file
-# contains at least one macro that starts with AC_COIN_
+# Did the user specify these directories *and* forbid recursion? In that case,
+# use the directories exactly as given. If not, winnow the candidates.
+# Process a directory only if the configure.ac file contains at least one
+# macro that starts with AC_COIN_, and it's not listed in COIN_SKIP_PROJECTS.
 
-dirs=
-for dir in $candDirs; do
-  if grep AC_COIN_ $dir/configure.ac >/dev/null 2>&1 ; then
-    dirs="$dirs $dir"
-  else
-    echo "  Skipping foreign configure.ac in $dir."
-  fi
-done
+if test $userSpecifiedDirs = 1 && test $doRecurse = 0 ; then
+  dirs=$candDirs
+else
+  dirs=
+  for dir in $candDirs; do
+    if grep AC_COIN_ $dir/configure.ac >/dev/null 2>&1 ; then
+      dirs="$dirs $dir"
+    else
+      echo "  Skipping foreign configure.ac in $dir."
+    fi
+  done
 
 # Now compare against the skip entries in COIN_SKIP_PROJECTS. To match the
 # entries we just collected, add `./' to the front of each skip entry.
 
-candDirs=$dirs
-if test x${COIN_SKIP_PROJECTS+set} = xset ; then
-  dirs=
-  for dir in $COIN_SKIP_PROJECTS ; do
-    skip_dirs="$skip_dirs ./$dir"
-  done
-  for dir in $candDirs ; do
-    skip=0
-    for skipdir in $skip_dirs ; do
-      if test $dir = $skipdir ; then
-	skip=1
-	break
+  candDirs=$dirs
+  if test x${COIN_SKIP_PROJECTS+set} = xset ; then
+    dirs=
+    for dir in $COIN_SKIP_PROJECTS ; do
+      skip_dirs="$skip_dirs ./$dir"
+    done
+    for dir in $candDirs ; do
+      skip=0
+      for skipdir in $skip_dirs ; do
+	if test $dir = $skipdir ; then
+	  skip=1
+	  break
+	fi
+      done
+      if test $skip = 0 ; then
+	dirs="$dirs $dir"
+      else
+	echo "  Skipping $dir listed in COIN_SKIP_PROJECTS."
       fi
     done
-    if test $skip = 0 ; then
-      dirs="$dirs $dir"
-    else
-      echo "  Skipping $dir listed in COIN_SKIP_PROJECTS."
-    fi
-  done
+  fi
 fi
 
 # Set a trap so that we'll clean up any links on exit, for whatever reason.
