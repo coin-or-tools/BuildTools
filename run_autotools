@@ -390,7 +390,7 @@ done
 # Remove the links. Yeah, the trap will do this, but it never hurts to clean
 # up properly.
 
-if test -n $buildtoolsLinks ; then
+if test -n "$buildtoolsLinks" ; then
   echo "Removing temporary links to BuildTools."
   for link in $buildtoolsLinks ; do
     # echo "  removing temporary link for BuildTools: $link"
