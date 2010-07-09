@@ -289,10 +289,6 @@ trap 'exit_status=$?
   cleanupOnErrorExit
   exit $exit_status' 0
 
-# Get down to business
-
-echo "Running autotools in $dirs"
-
 # And now the main event. Process each directory.
 
 echo "Running autotools in $dirs"
