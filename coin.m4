@@ -3796,7 +3796,7 @@ if test $m4_tolower(coin_has_$1) != skipping; then
                    [linker flags for using module $1]),
       [m4_tolower(coin_has_$1)=yes
        m4_toupper($1_LIBS)="$withval"
-       m4_bmatch($3, [required=0], [], [ADDLIBS="$ADDLIBS $withval"])
+       m4_bmatch($3, [required=0], [], [ADDLIBS="$withval $ADDLIBS"])
       ],
       [])
 
@@ -3935,7 +3935,7 @@ if test $m4_tolower(coin_has_$1) != "skipping" ; then
     m4_toupper($1_DATA)=`sed -n -e 's/datadir=//gp' $3/$2-uninstalled.pc`
 
     m4_bmatch($4, [required=0], [],
-      [ADDLIBS="$ADDLIBS $m4_toupper($1_LIBS)"
+      [ADDLIBS="$m4_toupper($1_LIBS) $ADDLIBS"
        REQUIREDPACKAGES="$2 $REQUIREDPACKAGES"
       ])
 
