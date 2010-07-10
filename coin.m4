@@ -1806,7 +1806,7 @@ if test "x$LIBTOOL" = x; then
 # AC_MSG_NOTICE([Finished COIN_PROG_LIBTOOL.])
   # set RPATH_FLAGS to the compiler link flags required to hardcode location
   # of the shared objects
-  AC_COIN_RPATH_FLAGS([$abs_lib_dir $abs_lib_dir/ThirdParty])
+  AC_COIN_RPATH_FLAGS([$abs_lib_dir/coin $abs_lib_dir/coin/ThirdParty])
 
 else
 
@@ -3652,6 +3652,29 @@ if test $m4_tolower(coin_has_$1) != skipping; then
                    [directory with data files for using project $1]),
     [m4_tolower(coin_has_$1)=installed],
     [])
+
+  m4_if(m4_tolower($1), blas, [
+    #--with-blas can overwrite --with-blas-lib, and can be set to BUILD to enforce building blas
+    AC_ARG_WITH([blas],
+      AC_HELP_STRING([--with-blas], [specify BLAS library (or BUILD for compilation)]),
+        [if test x$withval = "xBUILD" ; then
+           coin_has_blas=notGiven
+         else
+           coin_has_blas=installed
+         fi],
+        [])])
+
+  m4_if(m4_tolower($1), lapack, [
+    #--with-lapack can overwrite --with-lapack-lib, and can be set to BUILD to enforce building lapack
+    AC_ARG_WITH([lapack],
+      AC_HELP_STRING([--with-lapack], [specify LAPACK library (or BUILD for compilation)]),
+        [if test x$withval = "xBUILD" ; then
+           coin_has_lapack=notGiven
+         else
+           coin_has_lapack=installed
+         fi],
+        [])])
+
 fi
 
 if test $m4_tolower(coin_has_$1) = notGiven; then
