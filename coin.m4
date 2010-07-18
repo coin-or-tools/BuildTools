@@ -3709,15 +3709,18 @@ fi
 # if not found yet, check if project is available in present directory
 if test "$m4_tolower(coin_has_$1)" = notGiven; then
   if test -d $srcdir/$2/$1; then
+    # If a third argument is given, then we have to check if one one the files given in that third argument is present.
+    # If none of the files in the third argument is available, then we consider the project directory as non-existing.
+    # However, if no third argument is given, then this means that there should be no check, and existence of the directory is sufficient.
     m4_ifvaln([$3],
-      [for i in $srcdir/$2/$1/$3; do
+      [for i in $srcdir/m4_ifval($2,[$2/],)$1/$3; do
          if test -r $i; then
            coin_have_project_dir=yes
          fi
        done],
       [ coin_have_project_dir=yes ])
     if test $coin_have_project_dir = yes; then
-      m4_tolower(coin_has_$1)=$2/$1
+      m4_tolower(coin_has_$1)=m4_ifval($2,[$2/],)$1
     fi
   fi
 fi
@@ -3727,7 +3730,7 @@ AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
 AC_MSG_CHECKING(whether project $1 need to be configured)
 if test "$coin_have_project_dir" = yes ; then
 
-  if test -r $srcdir/$2/$1/configure; then
+  if test -r $srcdir/m4_ifval($2,[$2/],)$1/configure; then
     coin_subdirs="$coin_subdirs m4_ifval($2,[$2/],)$1"
     AC_MSG_RESULT(yes)
     AC_CONFIG_SUBDIRS(m4_ifval($2,[$2/],)$1)
