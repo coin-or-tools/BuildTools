@@ -295,6 +295,12 @@ AC_DEFUN([AC_COIN_PROJECTDIR_INIT],
 ADDLIBS="-lm $LIBS"
 AC_SUBST(ADDLIBS)
 
+# Initialize the PCADDLIBS variable.
+# This variable is used to setup library flags for the "Libs:" section in a .pc file.
+# In certain cases, it may contain more flags than the ADDLIBS variable.
+PCADDLIBS=""
+AC_SUBST(PCADDLIBS)
+
 # As backup, we make sure we don't loose an FLIBS if it has been set
 # by the user
 save_FLIBS="$FLIBS"
@@ -2146,6 +2152,7 @@ if test x$coin_skip_ac_output != xyes; then
   if test x"$coin_need_flibs" = xyes; then
     ADDLIBS="$ADDLIBS $FLIBS"
   fi
+  PCADDLIBS="$PCADDLIBS $ADDLIBS"
 
   # library extension
   AC_SUBST(LIBEXT)
@@ -3765,8 +3772,8 @@ fi
 #
 # It is also possible to specify a preinstalled version of this module
 # or to specify only the linker and compiler flags and data directory.
-# If the flag 'required' (which is on by default) is set, then the user-given linker flags are added to
-# the ADDLIBS variable, which can be used to setup a .pc file.
+# If the flag 'required' (which is on by default) is set, then user-given linker flags are added to
+# the PCADDLIBS variable, which can be used to setup a .pc file.
 
 AC_DEFUN([AC_COIN_HAS_MODULE],
 [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
@@ -3791,7 +3798,7 @@ AC_SUBST(m4_toupper($1_CFLAGS))
 AC_SUBST(m4_toupper($1_DATA))
 AC_SUBST(REQUIREDPACKAGES)
 
-#check if user provided LIBS, CFLAGS, and DATA for module
+#check if user provided LIBS, CFLAGS, or DATA for module
 if test $m4_tolower(coin_has_$1) != skipping; then
 
   AC_ARG_WITH([m4_tolower($1)-lib],
@@ -3799,7 +3806,7 @@ if test $m4_tolower(coin_has_$1) != skipping; then
                    [linker flags for using module $1]),
       [m4_tolower(coin_has_$1)=yes
        m4_toupper($1_LIBS)="$withval"
-       m4_bmatch($3, [required=0], [], [ADDLIBS="$withval $ADDLIBS"])
+       m4_bmatch($3, [required=0], [], [PCADDLIBS="$withval $PCADDLIBS"])
       ],
       [])
 
@@ -3884,7 +3891,7 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
 # referring to the compiler and linker flags to use when linking against this module
 # and the directory where the module data resists.
 # Further, tolower(coin_has_$1) is set to "yes" and a COIN_HAS_MODULE preprocessor macro and
-# makefile conditional are defined. Further, the linker flags are added to the ADDLIBS variable.
+# makefile conditional are defined.
 # If the flag 'required' is set (which is on by default), then the module package is added to
 # the REQUIREDPACKAGES variable, which can be used to setup a .pc file.
 # If the flag 'dodefine' is set (which is on by default), then the compiler define COIN_HAS_MODULE is set.
@@ -3938,8 +3945,7 @@ if test $m4_tolower(coin_has_$1) != "skipping" ; then
     m4_toupper($1_DATA)=`sed -n -e 's/datadir=//gp' $3/$2-uninstalled.pc`
 
     m4_bmatch($4, [required=0], [],
-      [ADDLIBS="$m4_toupper($1_LIBS) $ADDLIBS"
-       REQUIREDPACKAGES="$2 $REQUIREDPACKAGES"
+      [REQUIREDPACKAGES="$2 $REQUIREDPACKAGES"
       ])
 
     m4_bmatch($4, [dodefine=0], [],
@@ -3977,7 +3983,7 @@ fi
 # 6. calls COIN_HAS_MODULE_FALLBACK(Blas, [coinblas], [../ThirdParty/Blas or ../Blas])
 # The makefile conditional and preprocessor macro COIN_HAS_BLAS is defined.
 # BLAS_LIBS is set to the flags required to link with a Blas library.
-# In case 3 and 4, the flags to link to Blas are added to ADDLIBS.
+# In case 3 and 4, the flags to link to Blas are added to PCADDLIBS too.
 # In case 5, Blas is added to REQUIREDPACKAGES
 
 AC_DEFUN([AC_COIN_HAS_MODULE_BLAS],
@@ -4000,8 +4006,7 @@ if test x"$use_blas" != x; then
     coin_save_LIBS="$LIBS"
     LIBS="$use_blas $LIBS"
     AC_COIN_TRY_FLINK([daxpy],
-                      [AC_MSG_RESULT([yes])
-                       ADDLIBS="$use_blas $ADDLIBS"],
+                      [AC_MSG_RESULT([yes])],
                       [AC_MSG_RESULT([no])
                        AC_MSG_ERROR([user supplied BLAS library \"$use_blas\" does not work])])
     LIBS="$coin_save_LIBS"
@@ -4017,8 +4022,7 @@ else
       LIBS="-lcomplib.sgimath $LIBS"
       AC_COIN_TRY_FLINK([daxpy],
                         [AC_MSG_RESULT([yes])
-                         use_blas=-lcomplib.sgimath;
-                         ADDLIBS="-lcomplib.sgimath $ADDLIBS"],
+                         use_blas="-lcomplib.sgimath"],
                         [AC_MSG_RESULT([no])
                          SAVE_LIBS="$LIBS"])
       ;;
@@ -4036,7 +4040,6 @@ else
       AC_COIN_TRY_FLINK([daxpy],
                         [AC_MSG_RESULT([yes])
                          use_blas='-lsunperf'
-                         ADDLIBS="-lsunperf $ADDLIBS"
 			 coin_need_flibs=yes],
                         [AC_MSG_RESULT([no])
                          LIBS="$SAVE_LIBS"])
@@ -4054,8 +4057,7 @@ else
           LIBS="mkl_intel_c.lib mkl_sequential.lib mkl_core.lib $LIBS"
           AC_COIN_TRY_FLINK([daxpy],
                             [AC_MSG_RESULT([yes])
-                             use_blas='mkl_intel_c.lib mkl_sequential.lib mkl_core.lib'
-                             ADDLIBS="mkl_intel_c.lib mkl_sequential.lib mkl_core.lib $ADDLIBS"],
+                             use_blas='mkl_intel_c.lib mkl_sequential.lib mkl_core.lib'],
                             [AC_MSG_RESULT([no])
                              LIBS="$SAVE_LIBS"])
           ;;
@@ -4069,7 +4071,6 @@ else
     LIBS="-lblas $LIBS"
     AC_COIN_TRY_FLINK([daxpy],
 		      [AC_MSG_RESULT([yes])
-		       ADDLIBS="-lblas $ADDLIBS"
 		       use_blas='-lblas'],
 		      [AC_MSG_RESULT([no])
 	               LIBS="$SAVE_LIBS"])
@@ -4100,6 +4101,7 @@ elif test "x$use_blas" != x && test "$use_blas" != no; then
   AC_SUBST(BLAS_LIBS)
   AC_SUBST(BLAS_CFLAGS)
   AC_SUBST(BLAS_DATA)
+  PCADDLIBS="$use_blas $PCADDLIBS"
   
 else
   coin_has_blas=no
@@ -4121,7 +4123,7 @@ fi
 # 6. calls COIN_HAS_MODULE_FALLBACK(Lapack, [coinlapack], [../ThirdParty/Lapack or ../Lapack])
 # The makefile conditional and preprocessor macro COIN_HAS_LAPACK is defined.
 # LAPACK_LIBS is set to the flags required to link with a Lapack library.
-# In case 3 and 4, the flags to link to Lapack are added to ADDLIBS.
+# In case 3 and 4, the flags to link to Lapack are added to PCADDLIBS too.
 # In case 5, Lapack is added to REQUIREDPACKAGES
 
 AC_DEFUN([AC_COIN_HAS_MODULE_LAPACK],
@@ -4144,8 +4146,7 @@ if test x"$use_lapack" != x; then
     coin_save_LIBS="$LIBS"
     LIBS="$use_lapack $LIBS"
     AC_COIN_TRY_FLINK([dsyev],
-                      [AC_MSG_RESULT([yes])
-                       ADDLIBS="$use_lapack $ADDLIBS"],
+                      [AC_MSG_RESULT([yes])],
                       [AC_MSG_RESULT([no])
                        AC_MSG_ERROR([user supplied LAPACK library \"$use_lapack\" does not work])])
     LIBS="$coin_save_LIBS"
@@ -4155,7 +4156,7 @@ else
     # First try to see if LAPACK is already available with BLAS library
     AC_MSG_CHECKING([whether LAPACK is already available with BLAS library])
     coin_save_LIBS="$LIBS"
-    LIBS="$ADDLIBS $LIBS"
+    LIBS="$BLAS_LIBS $LIBS"
     AC_COIN_TRY_FLINK([dsyev],
                       [AC_MSG_RESULT([yes]); use_lapack="$BLAS_LIBS"],
                       [AC_MSG_RESULT([no])])
@@ -4171,8 +4172,7 @@ else
         LIBS="-lcomplib.sgimath $LIBS"
         AC_COIN_TRY_FLINK([dsyev],
                           [AC_MSG_RESULT([yes])
-                           use_lapack=-lcomplib.sgimath;
-                           ADDLIBS="-lcomplib.sgimath $ADDLIBS"],
+                           use_lapack="-lcomplib.sgimath;"],
                           [AC_MSG_RESULT([no])
                            SAVE_LIBS="$LIBS"])
         ;;
@@ -4184,8 +4184,7 @@ else
       LIBS="-lsunperf $FLIBS $LIBS"
       AC_COIN_TRY_FLINK([dsyev],
                         [AC_MSG_RESULT([yes])
-                         use_blas='-lsunperf'
-                         ADDLIBS="-lsunperf $ADDLIBS"
+                         use_lapack='-lsunperf'
 			 coin_need_flibs=yes],
                         [AC_MSG_RESULT([no])
                          LIBS="$SAVE_LIBS"])
@@ -4206,7 +4205,6 @@ else
     LIBS="-llapack $LIBS"
     AC_COIN_TRY_FLINK([dsyev],
 		      [AC_MSG_RESULT([yes])
-		       ADDLIBS="-llapack $ADDLIBS"
 		       use_lapack='-llapack'],
 		      [AC_MSG_RESULT([no])
 		       LIBS="$SAVE_LIBS"])
@@ -4238,6 +4236,9 @@ elif test "x$use_lapack" != x && test "$use_lapack" != no; then
   AC_SUBST(LAPACK_LIBS)
   AC_SUBST(LAPACK_CFLAGS)
   AC_SUBST(LAPACK_DATA)
+  if test "x$LAPACK_LIBS" != "x$BLAS_LIBS"; then
+    PCADDLIBS="$LAPACK_LIBS $PCADDLIBS"
+  fi
   
 else
   coin_has_lapack=no
