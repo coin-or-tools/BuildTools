@@ -2236,7 +2236,8 @@ fi
 AC_DEFUN([AC_COIN_VPATH_LINK],
 [AC_REQUIRE([AC_COIN_CHECK_VPATH])
 if test $coin_vpath_config = yes; then
-  coin_vpath_link_files="$coin_vpath_link_files $1"
+  # echo converts newlines in parameter to spaces
+  coin_vpath_link_files="$coin_vpath_link_files `echo $1`"
 fi
 ]) #AC_COIN_VPATH_LINK
 
