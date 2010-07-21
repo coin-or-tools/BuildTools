@@ -3478,27 +3478,27 @@ fi
 AM_CONDITIONAL([COIN_HAS_PKGCONFIG], [test -n "$PKG_CONFIG"])
 AC_SUBST(PKG_CONFIG)
 
-# assemble search path for pkg-config, if we are in a project setup
+# assemble search path for pkg-config
+COIN_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
+
+# let's assume that when installing into $prefix, then the user may have installed some other coin projects there before, so it's worth to have a look into there
+# best would actually to use ${libdir}, since .pc files get installed into ${libdir}/pkgconfig,
+# unfortunately, ${libdir} expands to ${exec_prefix}/lib and ${exec_prefix} to ${prefix}...
+if test -d "${prefix}"; then
+  COIN_PKG_CONFIG_PATH="${prefix}/lib/pkgconfig:${COIN_PKG_CONFIG_PATH}"
+fi
+
+AC_ARG_WITH([coin-instdir],
+  AC_HELP_STRING([--with-coin-instdir],
+                 [prefix of installation directory for precompiled COIN packages]),
+  [if test -d "$withval"; then : ; else
+     AC_MSG_ERROR([argument for --with-coin-instdir not a directory])
+   fi
+   COIN_PKG_CONFIG_PATH="$withval/lib/pkgconfig:${COIN_PKG_CONFIG_PATH}"
+  ],[])
+
 if test x$coin_projectdir = xyes ; then
-  COIN_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
-
-  # let's assume that when installing into $prefix, then the user may have installed some other coin projects there before, so it's worth to have a look into there
-  # best would actually to use ${libdir}, since .pc files get installed into ${libdir}/pkgconfig,
-  # unfortunately, ${libdir} expands to ${exec_prefix}/lib and ${exec_prefix} to ${prefix}...
-  if test -d "${prefix}"; then
-    COIN_PKG_CONFIG_PATH="${prefix}/lib/pkgconfig:${COIN_PKG_CONFIG_PATH}"
-  fi
-
-  AC_ARG_WITH([coin-instdir],
-    AC_HELP_STRING([--with-coin-instdir],
-                   [prefix of installation directory for precompiled COIN packages]),
-    [if test -d "$withval"; then : ; else
-       AC_MSG_ERROR([argument for --with-coin-instdir not a directory])
-     fi
-     COIN_PKG_CONFIG_PATH="$withval/lib/pkgconfig:${COIN_PKG_CONFIG_PATH}"
-    ],[])
-
-  # in a classic setup, we want to find uninstalled projects
+  # if we are in a project setup, then in a classic setup, we want to find uninstalled projects
   # their (relative) location is written to coin_subdirs.txt by the configure in the project base directory
   # unfortunately, if the user set prefix, then we do not know where the project base directory is located
   # but it is likely to be either .. (if we are a usual coin project) or ../.. (if we are a unusual coin project like ThirdParty or Data)
@@ -3509,7 +3509,7 @@ if test x$coin_projectdir = xyes ; then
       fi
     done
   fi
-    
+
   if test -e ../../coin_subdirs.txt ; then
     for i in `cat ../../coin_subdirs.txt` ; do
       if test -d ../../$i ; then
@@ -3518,9 +3518,9 @@ if test x$coin_projectdir = xyes ; then
     done
   fi
 
-  AC_SUBST(COIN_PKG_CONFIG_PATH)
 fi
 
+AC_SUBST(COIN_PKG_CONFIG_PATH)
 ])
 
 ###########################################################################
@@ -3561,7 +3561,7 @@ AC_DEFUN([AC_COIN_PKG_CHECK_MODULE_EXISTS],
 if test -n "$PKG_CONFIG" ; then
   if $PKG_CONFIG --exists "$2"; then
     m4_toupper($1)[]_VERSIONS="`$PKG_CONFIG --modversion $2 2>/dev/null`"
-    m4_ifval([$3], [$3], [:])
+    $3
   else
     m4_toupper($1)_PKG_ERRORS=`$PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors $2`
     $4
@@ -3686,31 +3686,14 @@ if test $m4_tolower(coin_has_$1) != skipping; then
 fi
 
 if test $m4_tolower(coin_has_$1) = notGiven; then
-  #only if pkg-config is available:
-  #see if user gives directory where project might be installed: assemble search path for pkg-config
+  #check for project by using pkg-config, if pkg-config is available
   if test -n "$PKG_CONFIG" ; then
-    coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
-    
-    # let's assume that when installing into $prefix, then the user may have installed some other coin projects there before, so it's worth to have a look into there
-    if test -d "$prefix"; then
-      PKG_CONFIG_PATH="$prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
-    fi
-    
-    AC_ARG_WITH([coin-instdir],
-      AC_HELP_STRING([--with-coin-instdir],
-                     [prefix of installation directory for precompiled COIN packages]),
-      [if test -d "$withval"; then : ; else
-         AC_MSG_ERROR([argument for --with-coin-instdir not a directory])
-       fi
-       PKG_CONFIG_PATH="$withval/lib/pkgconfig:$PKG_CONFIG_PATH"
-      ],[])
-
-    # let pkgconfig check if the project is already installed somewhere
-    # need to export variable to be sure that the following pkg-config call gets these values
-    export PKG_CONFIG_PATH
-    AC_COIN_PKG_CHECK_PROJECT_EXISTS(m4_ifval([$4],[$4],[$1]), [m4_tolower(coin_has_$1)="$m4_toupper(m4_ifval([$4],[$4],[$1]))_VERSION"])
-
-    PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
+    ( PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" ; export PKG_CONFIG_PATH
+      m4_ifval([$4],
+        [AC_COIN_PKG_CHECK_PROJECT_EXISTS([$4],
+	        [m4_tolower(coin_has_$1)="$m4_toupper([$4])_VERSION"])],
+	      [AC_COIN_PKG_CHECK_PROJECT_EXISTS([$1],
+	        [m4_tolower(coin_has_$1)="$m4_toupper([$1])_VERSION"])]) )
   fi
 fi
 
