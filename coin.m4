@@ -3693,12 +3693,15 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
   #check for project by using pkg-config, if pkg-config is available
   #we are only interested in installed packages here, so we do not search in $COIN_PKG_CONFIG_PATH_UNINSTALLED
   if test -n "$PKG_CONFIG" ; then
-    ( PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" ; export PKG_CONFIG_PATH
+    coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
+    PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" ; export PKG_CONFIG_PATH
       m4_ifval([$4],
         [AC_COIN_PKG_CHECK_PROJECT_EXISTS([$4],
 	        [m4_tolower(coin_has_$1)="$m4_toupper([$4])_VERSION"])],
 	      [AC_COIN_PKG_CHECK_PROJECT_EXISTS([$1],
-	        [m4_tolower(coin_has_$1)="$m4_toupper([$1])_VERSION"])]) )
+	        [m4_tolower(coin_has_$1)="$m4_toupper([$1])_VERSION"])])
+    PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
+    export PKG_CONFIG_PATH
   fi
 fi
 
