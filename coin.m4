@@ -3478,7 +3478,7 @@ fi
 AM_CONDITIONAL([COIN_HAS_PKGCONFIG], [test -n "$PKG_CONFIG"])
 AC_SUBST(PKG_CONFIG)
 
-# assemble search path for pkg-config
+# assemble pkg-config search path for installed projects
 COIN_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
 
 # let's assume that when installing into $prefix, then the user may have installed some other coin projects there before, so it's worth to have a look into there
@@ -3497,15 +3497,19 @@ AC_ARG_WITH([coin-instdir],
    COIN_PKG_CONFIG_PATH="$withval/lib/pkgconfig:${COIN_PKG_CONFIG_PATH}"
   ],[])
 
+AC_SUBST(COIN_PKG_CONFIG_PATH)
+
+# assemble additional pkg-config search paths for uninstalled projects
 if test x$coin_projectdir = xyes ; then
   # if we are in a project setup, then in a classic setup, we want to find uninstalled projects
   # their (relative) location is written to coin_subdirs.txt by the configure in the project base directory
   # unfortunately, if the user set prefix, then we do not know where the project base directory is located
   # but it is likely to be either .. (if we are a usual coin project) or ../.. (if we are a unusual coin project like ThirdParty or Data)
+  COIN_PKG_CONFIG_PATH_UNINSTALLED=
   if test -e ../coin_subdirs.txt ; then
     for i in `cat ../coin_subdirs.txt` ; do
       if test -d ../$i ; then
-        COIN_PKG_CONFIG_PATH="`cd ../$i; pwd`:${COIN_PKG_CONFIG_PATH}"
+        COIN_PKG_CONFIG_PATH_UNINSTALLED="`cd ../$i; pwd`:${COIN_PKG_CONFIG_PATH_UNINSTALLED}"
       fi
     done
   fi
@@ -3513,14 +3517,14 @@ if test x$coin_projectdir = xyes ; then
   if test -e ../../coin_subdirs.txt ; then
     for i in `cat ../../coin_subdirs.txt` ; do
       if test -d ../../$i ; then
-        COIN_PKG_CONFIG_PATH="`cd ../../$i; pwd`:${COIN_PKG_CONFIG_PATH}"
+        COIN_PKG_CONFIG_PATH_UNINSTALLED="`cd ../../$i; pwd`:${COIN_PKG_CONFIG_PATH_UNINSTALLED}"
       fi
     done
   fi
 
+  AC_SUBST(COIN_PKG_CONFIG_PATH_UNINSTALLED)
 fi
 
-AC_SUBST(COIN_PKG_CONFIG_PATH)
 ])
 
 ###########################################################################
@@ -3687,6 +3691,7 @@ fi
 
 if test $m4_tolower(coin_has_$1) = notGiven; then
   #check for project by using pkg-config, if pkg-config is available
+  #we are only interested in installed packages here, so we do not search in $COIN_PKG_CONFIG_PATH_UNINSTALLED
   if test -n "$PKG_CONFIG" ; then
     ( PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" ; export PKG_CONFIG_PATH
       m4_ifval([$4],
@@ -3814,7 +3819,7 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
     # set search path for pkg-config
     # need to export variable to be sure that the following pkg-config gets these values
     coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
-    PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH"
+    PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH:$COIN_PKG_CONFIG_PATH_UNINSTALLED"
     export PKG_CONFIG_PATH
     
     # let pkg-config do it's magic
@@ -3829,6 +3834,7 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
 
     # reset PKG_CONFIG_PATH variable 
     PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
+    export PKG_CONFIG_PATH
   else
     #if 4th argument is given, try fallback - whereby we take the first word from $2 as basename for the .pc file
     m4_ifvaln([$4],
