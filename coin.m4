@@ -3756,16 +3756,16 @@ fi
 # The first argument should be the name (MODULE) of the module (in correct lower
 # and upper case).
 # The second argument should be a (space separated) list of projects which this
-# module consists of. Optionally, required version numbers could be added.
+# module consists of. Optionally, required version numbers can be added.
 # The optional third argument can be used to overwrite default values for flags like 'required'.
-# The optional fourth argument can be used to define a fallback for the case where pkg-config is not available.
-# It should contain the path under which a $2-uninstalled.pc file can be found.
-# If provided, then COIN_HAS_MODULE_FALLBACK($1, $2, $4, $3) is called.
 #
 # It is also possible to specify a preinstalled version of this module
 # or to specify only the linker and compiler flags and data directory.
 # If the flag 'required' (which is on by default) is set, then user-given linker flags are added to
 # the PCADDLIBS variable, which can be used to setup a .pc file.
+#
+# If the user did not specify --with-$1-... flags and pkg-config is not available,
+# COIN_HAS_MODULE_FALLBACK($1, $2, $3) is called.
 
 AC_DEFUN([AC_COIN_HAS_MODULE],
 [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
@@ -3839,10 +3839,8 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
     PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
     export PKG_CONFIG_PATH
   else
-    #if 4th argument is given, try fallback - whereby we take the first word from $2 as basename for the .pc file
-    m4_ifvaln([$4],
-      [AC_COIN_HAS_MODULE_FALLBACK([$1], [m4_bpatsubst($2, [ .*], [])], [$4], [$3 printmsgchecking=0])],
-      [AC_MSG_RESULT([skipped check via pkg-config])])
+    AC_MSG_RESULT([skipped check via pkg-config, redirect to fallback])
+    AC_COIN_HAS_MODULE_FALLBACK([$1], [$2], [$3])
   fi
 
 else
@@ -3876,91 +3874,139 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
 #                       COIN_HAS_MODULE_FALLBACK                          #
 ###########################################################################
 
-# This macro can be used if COIN_HAS_MODULE fails to find a module because pkg-config
-# was disabled or not available.
-# Here, the module can consist of only one package.
+# This macro is used if COIN_HAS_MODULE fails to find a module because pkg-config was disabled or is not available.
 #
-# It reads a project-uninstalled.pc file and defines the variables MODULE_CFLAGS, MODULE_LIBS, and MODULE_DATA,
+# For each project xxx specified in $2, it searches for a xxx-uninstalled.pc file in the directories specified in
+# $COIN_PKG_CONFIG_PATH_UNINSTALLED. The latter variable is setup by COIN_HAS_PKGCONFIG and
+# consists of the content of the coin_subdirs.txt file which has been created by configure in the base directory.
+# The content of xxx-uninstalled.pc is parsed in order to defines the variables MODULE_CFLAGS, MODULE_LIBS, and MODULE_DATA,
 # referring to the compiler and linker flags to use when linking against this module
 # and the directory where the module data resists.
-# Further, tolower(coin_has_$1) is set to "yes" and a COIN_HAS_MODULE preprocessor macro and
-# makefile conditional are defined.
+# Further, the Required field of each .pc file is parsed and -uninstalled.pc files for these projects are searched for.
+# The MODULE_CFLAGS and MODULE_LIBS variables are augmented with the information from these .pc files.
+# Thus, the macros checks also dependencies of $2.
+# Note that the MODULE_DATA variable is set to the content of datadir of the first .pc file that is parsed.
+#
+# If .pc files for all projects in $2 and their dependencies is found, tolower(coin_has_$1) is set to "yes".
+# Otherwise, if some dependency is not found, tolower(coin_has_$1) is set to no.
+# Further, a COIN_HAS_MODULE preprocessor macro and a makefile conditional are defined.
 # If the flag 'required' is set (which is on by default), then the module package is added to
 # the REQUIREDPACKAGES variable, which can be used to setup a .pc file.
-# If the flag 'dodefine' is set (which is on by default), then the compiler define COIN_HAS_MODULE is set.
-# If the flag 'doconditional' is set (which is on by default), then the makefile conditional COIN_HAS_MODULE is set.
 #
 # The first argument should be the name (MODULE) of the module (in correct lower and upper case).
-# The second argument should be the base name of the projects .pc file which defines this module.
-# The third argument should be the (relative) path under which the .pc file may be located.
-# The optional fourth argument can be used to overwrite default values for the flags 'required', 'dodefine', 'doconditional'.
+# The second argument should be the base names of the projects .pc file which define this module.
+# The optional third argument can be used to overwrite default values for flags like 'required'.
+
+# $1 is not checked for $COIN_SKIP_PROJECTS, since we only look into $COIN_PKG_CONFIG_PATH_UNINSTALLED.
+# When the content of this variable was setup in the base directory, $COIN_SKIP_PROJECTS has already been considered.
 
 AC_DEFUN([AC_COIN_HAS_MODULE_FALLBACK],
-[
-if test x$m4_tolower(coin_has_$1) != "xyes" ; then
-
-m4_bmatch($4, [printmsgchecking=0], [], AC_MSG_CHECKING([for COIN-OR module $1 (fallback)]))
+[AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
+AC_MSG_CHECKING([for COIN-OR module $1 (fallback)])
 
 m4_tolower(coin_has_$1)=notGiven
-
-# check if user wants to skip module in any case
-if test x"$COIN_SKIP_PROJECTS" != x; then
-  for dir in $COIN_SKIP_PROJECTS; do
-    if test $dir = "$1"; then
-      m4_tolower(coin_has_$1)=skipping
-    fi
-  done
-fi
-
 m4_toupper($1_LIBS)=
 m4_toupper($1_CFLAGS)=
 m4_toupper($1_DATA)=
 AC_SUBST(REQUIREDPACKAGES)
 
-if test $m4_tolower(coin_has_$1) != "skipping" ; then
-  # if the project is available and configured, then a project-uninstalled.pc file should have been created
-  if test -r $3/$2-uninstalled.pc ; then
-    # read CFLAGS and LIBS from $2-uninstalled.pc file
-    # add CYGPATH_W cludge into include flags
-    # replace -L${libdir} by absolute path to build directory in linker flags
-    # we assume that the build directory is $3/src if this directory exists, otherwise we assume that it is $3
-    m4_toupper($1_CFLAGS)=[`sed -n -e 's/Cflags://' -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/gp'] $3/$2-uninstalled.pc`
-    projectlibs=`sed -n -e 's/Libs://' -e 's/-L\${libdir}//p' $3/$2-uninstalled.pc`
-    if test "x$projectlibs" != x ; then
-      if test -d $3/src ; then
-        m4_toupper($1_LIBS)="-L`cd $3/src; pwd` $projectlibs"
-      else
-        m4_toupper($1_LIBS)="-L`cd $3; pwd` $projectlibs"
-      fi
-    else
-      m4_toupper($1_LIBS)=`sed -n -e 's/Libs://p' $3/$2-uninstalled.pc`
+# initial list of dependencies is "$2", but we need to filter out version number specifications (= x, <= x, >= x)
+projtoprocess="m4_bpatsubsts([$2], [<?>?=[ 	]*[^ 	]+])"
+projprocessed=""
+
+while test $m4_tolower(coin_has_$1) = notGiven ; do
+  # setup list of projects that need to be processed in the next round
+  nextprojtoprocess=""
+
+  for proj in $projtoprocess ; do
+    # if $proj has been processed already, skip this round
+    if test "x$projprocessed" != x ; then
+      for projdone in $projprocessed ; do
+        if test $projdone = $proj ; then
+	  continue 2
+	fi
+      done
     fi
-    m4_toupper($1_DATA)=`sed -n -e 's/datadir=//gp' $3/$2-uninstalled.pc`
 
-    m4_bmatch($4, [required=0], [],
-      [REQUIREDPACKAGES="$2 $REQUIREDPACKAGES"
-      ])
+    # if $proj is available and configured, then a project-uninstalled.pc file should have been created, so search for it
+    pcfile=""
+    save_IFS="$IFS"
+    IFS=":"
+    for dir in $COIN_PKG_CONFIG_PATH_UNINSTALLED ; do
+      # the base directory configure should have setup coin_subdirs.txt in a way that it does not contain projects that should be skipped, so we do not need to test this here again
+      if test -r "$dir/$proj-uninstalled.pc" ; then
+        pcfile="$dir/$proj-uninstalled.pc"
+        pcfiledir="$dir"
+        break
+      fi
+    done
+    IFS="$save_IFS"
 
-    m4_bmatch($4, [dodefine=0], [],
-      [AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 module is available])
-      ])
+    if test "x$pcfile" != x ; then
+      # read CFLAGS from $pcfile and add CYGPATH_W cludge into include flags
+      projcflags=[`sed -n -e 's/Cflags://' -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/gp' "$pcfile"`]
+      m4_toupper($1_CFLAGS)="$projcflags $m4_toupper($1_CFLAGS)"
+      
+      # read LIBS from $pcfile and replace -L${libdir} by absolute path to build directory in linker flags
+      # we assume that the build directory is $pcfiledir/src if this directory exists, otherwise we assume that it is $pcfiledir
+      projlibs=`sed -n -e 's/Libs://' -e 's/-L\${libdir}//p' "$pcfile"`
+      if test "x$projlibs" != x ; then
+        if test -d "${pcfiledir}/src" ; then
+          projlibs="-L`cd "${pcfiledir}/src"; pwd` $projlibs"
+        else
+          projlibs="-L`cd "$pcfiledir"; pwd` $projlibs"
+        fi
+      else
+        projlibs=`sed -n -e 's/Libs://p' "$pcfile"`
+      fi
+      m4_toupper($1_LIBS)="$projlibs $m4_toupper($1_LIBS)"
+      
+      # read DATA from $pcfile, if this is the first .pc file we are processing (so assume that its the main one)
+      if test "x$projprocessed" = x ; then
+        m4_toupper($1_DATA)=`sed -n -e 's/datadir=//gp' "$pcfile"`
+      fi
+      
+      # read dependencies from $pcfile, filter it, and add to list of projects that need to be processed next
+      projrequires=[`sed -n -e 's/Requires://gp' "$pcfile" | sed -e 's/<\?>\?=[ 	]*[^ 	]\+//g'`]
+      nextprojtoprocess="$nextprojtoprocess $projrequires"
+      
+      # remember that we have processed $proj
+      projprocessed="$projprocessed $proj"
+      
+    else
+      AC_MSG_RESULT([no, dependency $proj not available])
+      break 2
+    fi
 
+  done
+  
+  projtoprocess="$nextprojtoprocess"
+  
+  if test "x$projtoprocess" = x ; then
     m4_tolower(coin_has_$1)=yes
-    AC_MSG_RESULT([$3])
-  else
-    AC_MSG_RESULT($m4_tolower(coin_has_$1))
+    AC_MSG_RESULT([yes, dependencies are$projprocessed])
+    
+    m4_bmatch($3, [required=0], [], [REQUIREDPACKAGES="$2 $REQUIREDPACKAGES"])
+    AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 module is available])
+    
+    if test 1 = 0 ; then  #change this test to enable a bit of debugging output
+    if test -n "$m4_toupper($1)_CFLAGS" ; then
+      AC_MSG_NOTICE([$1 CFLAGS are $m4_toupper($1)_CFLAGS])
+    fi
+    if test -n "$m4_toupper($1)_LIBS" ; then
+      AC_MSG_NOTICE([$1 LIBS   are $m4_toupper($1)_LIBS])
+    fi
+    if test -n "$m4_toupper($1)_DATA" ; then
+      AC_MSG_NOTICE([$1 DATA   is  $m4_toupper($1)_DATA])
+    fi
+    fi
   fi
-else
-  AC_MSG_RESULT([skipping])
-fi
+done
 
-#if user did not disable setting of makefile conditional, do it
-m4_bmatch($4, [doconditional=0], [],
-  [AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
+AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
                [test $m4_tolower(coin_has_$1) != notGiven &&
                 test $m4_tolower(coin_has_$1) != skipping])
-  ])
-fi
+
 ]) # AC_COIN_HAS_MODULE_FALLBACK
 
 ###########################################################################
@@ -4077,12 +4123,7 @@ else
 fi
 
 if test "x$use_blas" = xBUILD ; then
-  if test -d ../ThirdParty/Blas ; then
-    blasdir=../ThirdParty/Blas
-  else
-    blasdir=../Blas
-  fi
-  AC_COIN_HAS_MODULE(Blas, [coinblas], [], [$blasdir])
+  AC_COIN_HAS_MODULE(Blas, [coinblas])
   
 elif test "x$use_blas" != x && test "$use_blas" != no; then
   coin_has_blas=yes
@@ -4212,12 +4253,7 @@ else
 fi
 
 if test "x$use_lapack" = xBUILD ; then
-  if test -d ../ThirdParty/Lapack ; then
-    lapackdir=../ThirdParty/Lapack
-  else
-    lapackdir=../Lapack
-  fi
-  AC_COIN_HAS_MODULE(Lapack, [coinlapack], [], [$lapackdir])
+  AC_COIN_HAS_MODULE(Lapack, [coinlapack])
   
 elif test "x$use_lapack" != x && test "$use_lapack" != no; then
   coin_has_lapack=yes
