@@ -269,8 +269,10 @@ fi
 
 # This macro sets the variable coin_vpath_config to true if this is a
 # VPATH configuration, otherwise it sets it to false.
+
 AC_DEFUN([AC_COIN_CHECK_VPATH],
-[AC_MSG_CHECKING(whether this is a VPATH configuration)
+[
+AC_MSG_CHECKING(whether this is a VPATH configuration)
 if test `cd $srcdir; pwd` != `pwd`; then
   coin_vpath_config=yes;
 else
@@ -2229,15 +2231,22 @@ fi
 #                             COIN_VPATH_LINK                             #
 ###########################################################################
 
-# This macro makes sure that a symbolic link is created to a file in
-# the source code directory tree if we are in a VPATH compilation, and
-# if this package is the main package to be installed
+# This macro queues source files that need to be available in the build
+# directory. In a VPATH configuration, the files will be made available by
+# symbolic link or copy (when the platform does not support links). The list
+# is processed by COIN_FINALIZE. The parameter is a whitespace-separated
+# list of files.
 
 AC_DEFUN([AC_COIN_VPATH_LINK],
-[AC_REQUIRE([AC_COIN_CHECK_VPATH])
+[
+AC_REQUIRE([AC_COIN_CHECK_VPATH])
+# Allow for newlines in the parameter
 if test $coin_vpath_config = yes; then
-  # echo converts newlines in parameter to spaces
-  coin_vpath_link_files="$coin_vpath_link_files `echo $1`"
+  cvl_tmp="$1"
+  coin_vpath_link_files=
+  for file in $cvl_tmp ; do
+    coin_vpath_link_files="$coin_vpath_link_files $file"
+  done
 fi
 ]) #AC_COIN_VPATH_LINK
 
@@ -3394,12 +3403,19 @@ AM_CONDITIONAL([COIN_BUILD_GLPK],[test x"$use_thirdpartyglpk" = xbuild])
 ###########################################################################
 #
 # This macro determines the configuration information for doxygen, the tool
-# used to generate online documentation of COIN code.
-
+# used to generate online documentation of COIN code. It takes one parameter,
+# a list of projects (mixed-case, to match the directory names) that should
+# be processed as external tag files. E.g., COIN_DOXYGEN([Clp Osi]).
+#
 # This macro will define the following variables:
-#  coin_use_dot         determined based on presence/absence of dot (from
-#			graphviz package)
-#  COIN_DOXY_TGTDIR     target directory for doxygen documentation
+#  coin_have_doxygen	Yes if doxygen is found, no otherwise
+#  coin_doxy_usedot     Defaults to `no'; --with-dot will check to see if
+#			dot is available
+#  coin_doxy_tagname	Name of doxygen tag file (placed in doxydoc directory)
+#  coin_doxy_logname    Name of doxygen log file (placed in doxydoc directory)
+#  coin_doxy_tagfiles   List of doxygen tag files used to reference other
+#                       doxygen documentation
+#  coin_doxy_excludes	Directories to exclude from doxygen processing
 
 AC_DEFUN([AC_COIN_DOXYGEN],
 [
@@ -3408,7 +3424,7 @@ AC_MSG_NOTICE([configuring doxygen documentation options])
 
 # Check to see if doxygen is available.
 
-AC_CHECK_PROG([coin_cv_have_doxygen],[doxygen],[yes],[no])
+AC_CHECK_PROG([coin_have_doxygen],[doxygen],[yes],[no])
 
 # Look for the dot tool from the graphviz package, unless the user has
 # disabled it.
@@ -3416,13 +3432,74 @@ AC_CHECK_PROG([coin_cv_have_doxygen],[doxygen],[yes],[no])
 AC_ARG_WITH([dot],
   AS_HELP_STRING([--with-dot],
 		 [use dot (from graphviz) when creating documentation with
-		  doxygen if available; disable with --without-dot]),
-  [],[withval=dot])
+		  doxygen if available; --without-dot to disable]),
+  [],[withval=yes])
 if test x$withval = xno ; then
-  coin_cv_use_dot=no
+  coin_doxy_usedot=NO
+  AC_MSG_CHECKING([for dot ])
+  AC_MSG_RESULT([disabled])
 else
-  AC_CHECK_PROG([coin_cv_use_dot],[$withval],[yes],[no])
+  AC_CHECK_PROG([coin_doxy_usedot],[dot],[YES],[NO])
 fi
+
+# Generate a tag file name and a log file name
+
+AC_SUBST([coin_doxy_tagname],[doxydoc/${PACKAGE}_doxy.tag])
+AC_SUBST([coin_doxy_logname],[doxydoc/${PACKAGE}_doxy.log])
+
+# Process the list of project names and massage them into possible doxygen
+# doc'n directories. Prefer 1) classic external, source processed using
+# a project-specific doxygen.conf, we use the tag file; 2) classic
+# external, source processed using package doxygen.conf; 3) installed
+# doxydoc. Alternatives 1) and 2) are only possible if the directory will be
+# configured, which we can't know unless this is the package base configure,
+# since coin_subdirs is only set there. Hence it's sufficient to check for
+# membership. If we use a tag file from a classic external, exclude the
+# source from doxygen processing when doxygen runs in the base directory.
+
+coin_doxy_tagfiles=
+coin_doxy_excludes=
+tmp="$1"
+for proj in $tmp ; do
+  lc_proj=`echo $proj | [tr [A-Z] [a-z]]`
+  AC_MSG_CHECKING([for doxygen doc'n for $proj ])
+  doxytag=${lc_proj}_doxy.tag
+  doxyfound=no
+  for chkProj in $coin_subdirs ; do
+    if test "$chkProj" = "$proj" ; then
+      # proj will be configured, hence doxydoc present in build tree
+      doxysrcdir="${srcdir}/${proj}"
+      AC_MSG_NOTICE([Considering $doxysrcdir (base)])
+      if test -d "$doxysrcdir" ; then
+	# with a doxydoc directory?
+	doxydir="$doxysrcdir/doxydoc"
+	AC_MSG_NOTICE([Considering $doxydir (base)])
+	AC_MSG_NOTICE([Subdirs: $coin_subdirs)])
+	if test -d "$doxydir" ; then
+	  # use tag file; don't process source
+	  eval doxydir="`pwd`/${proj}/doxydoc"
+	  coin_doxy_tagfiles="$coin_doxy_tagfiles $doxydir/$doxytag=$doxydir/html"
+	  AC_MSG_RESULT([$doxydir (tag)])
+	  coin_doxy_excludes="$coin_doxy_excludes */${proj}*"
+	else
+	  # will process the source -- nothing further to be done here
+	  AC_MSG_RESULT([$doxysrcdir (src)])
+	fi
+	doxyfound=yes
+      fi
+    fi
+  done
+  # Not built, fall back to installed tag file
+  if test $doxyfound = no ; then
+    eval doxydir="${datadir}/coin/doc/${proj}/doxydoc"
+    AC_MSG_NOTICE([Considering $doxydir (install)])
+    AC_MSG_NOTICE([Subdirs: $coin_subdirs)])
+    coin_doxy_tagfiles="$coin_doxy_tagfiles $doxydir/$doxytag=$doxydir/html"
+    AC_MSG_RESULT([$doxydir (tag)])
+  fi
+done
+AC_SUBST([coin_doxy_tagfiles])
+AC_SUBST([coin_doxy_excludes])
 
 ]) # AC_COIN_DOXYGEN
 
