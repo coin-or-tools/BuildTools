@@ -2,7 +2,7 @@
  * system and compiler dependent configuration macros */
 
 /* Define to 64bit integer types */
-#if _MSC_VER==1200
+#if _MSC_VER >= 1200
 #define COIN_INT64_T __int64
 #define COIN_UINT64_T __uint64
 #else
@@ -11,7 +11,7 @@
 #endif
 
 /* Define to integer type capturing pointer */
-#define COIN_INTPTR_T long
+#define COIN_INTPTR_T ULONG_PTR
 
 /* Define to dummy `main' function (if any) required to link to the Fortran
    libraries. */
