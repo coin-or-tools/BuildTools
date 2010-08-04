@@ -3434,7 +3434,7 @@ AC_ARG_WITH([dot],
 		 [use dot (from graphviz) when creating documentation with
 		  doxygen if available; --without-dot to disable]),
   [],[withval=yes])
-if test x$withval = xno ; then
+if test x"$withval" = xno ; then
   coin_doxy_usedot=NO
   AC_MSG_CHECKING([for dot ])
   AC_MSG_RESULT([disabled])
@@ -3746,7 +3746,7 @@ if test $m4_tolower(coin_has_$1) != skipping; then
     #--with-blas can overwrite --with-blas-lib, and can be set to BUILD to enforce building blas
     AC_ARG_WITH([blas],
       AC_HELP_STRING([--with-blas], [specify BLAS library (or BUILD for compilation)]),
-        [if test x$withval = "xBUILD" ; then
+        [if test x"$withval" = "xBUILD" ; then
            coin_has_blas=notGiven
          else
            coin_has_blas=installed
@@ -3757,7 +3757,7 @@ if test $m4_tolower(coin_has_$1) != skipping; then
     #--with-lapack can overwrite --with-lapack-lib, and can be set to BUILD to enforce building lapack
     AC_ARG_WITH([lapack],
       AC_HELP_STRING([--with-lapack], [specify LAPACK library (or BUILD for compilation)]),
-        [if test x$withval = "xBUILD" ; then
+        [if test x"$withval" = "xBUILD" ; then
            coin_has_lapack=notGiven
          else
            coin_has_lapack=installed
