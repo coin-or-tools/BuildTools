@@ -3469,12 +3469,12 @@ for proj in $tmp ; do
     if test "$chkProj" = "$proj" ; then
       # proj will be configured, hence doxydoc present in build tree
       doxysrcdir="${srcdir}/${proj}"
-      AC_MSG_NOTICE([Considering $doxysrcdir (base)])
+      # AC_MSG_NOTICE([Considering $doxysrcdir (base)])
       if test -d "$doxysrcdir" ; then
 	# with a doxydoc directory?
 	doxydir="$doxysrcdir/doxydoc"
-	AC_MSG_NOTICE([Considering $doxydir (base)])
-	AC_MSG_NOTICE([Subdirs: $coin_subdirs)])
+	# AC_MSG_NOTICE([Considering $doxydir (base)])
+	# AC_MSG_NOTICE([Subdirs: $coin_subdirs)])
 	if test -d "$doxydir" ; then
 	  # use tag file; don't process source
 	  eval doxydir="`pwd`/${proj}/doxydoc"
@@ -3492,8 +3492,8 @@ for proj in $tmp ; do
   # Not built, fall back to installed tag file
   if test $doxyfound = no ; then
     eval doxydir="${datadir}/coin/doc/${proj}/doxydoc"
-    AC_MSG_NOTICE([Considering $doxydir (install)])
-    AC_MSG_NOTICE([Subdirs: $coin_subdirs)])
+    # AC_MSG_NOTICE([Considering $doxydir (install)])
+    # AC_MSG_NOTICE([Subdirs: $coin_subdirs)])
     coin_doxy_tagfiles="$coin_doxy_tagfiles $doxydir/$doxytag=$doxydir/html"
     AC_MSG_RESULT([$doxydir (tag)])
   fi
