@@ -4019,7 +4019,8 @@ while test $m4_tolower(coin_has_$1) = notGiven ; do
 
     if test "x$pcfile" != x ; then
       # read CFLAGS from $pcfile and add CYGPATH_W cludge into include flags
-      projcflags=[`sed -n -e 's/Cflags://' -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/gp' "$pcfile"`]
+      projcflags=`sed -n -e 's/Cflags://p' "$pcfile"`
+      projcflags=[`echo "$projcflags" | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`]
       m4_toupper($1_CFLAGS)="$projcflags $m4_toupper($1_CFLAGS)"
       
       # read LIBS from $pcfile and replace -L${libdir} by absolute path to build directory in linker flags
@@ -4034,7 +4035,7 @@ while test $m4_tolower(coin_has_$1) = notGiven ; do
       else
         projlibs=`sed -n -e 's/Libs://p' "$pcfile"`
       fi
-      m4_toupper($1_LIBS)="$projlibs $m4_toupper($1_LIBS)"
+      m4_toupper($1_LIBS)="$m4_toupper($1_LIBS) $projlibs"
       
       # read DATA from $pcfile, if this is the first .pc file we are processing (so assume that its the main one)
       if test "x$projprocessed" = x ; then
