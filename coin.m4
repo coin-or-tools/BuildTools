@@ -2243,7 +2243,6 @@ AC_REQUIRE([AC_COIN_CHECK_VPATH])
 # Allow for newlines in the parameter
 if test $coin_vpath_config = yes; then
   cvl_tmp="$1"
-  coin_vpath_link_files=
   for file in $cvl_tmp ; do
     coin_vpath_link_files="$coin_vpath_link_files $file"
   done
