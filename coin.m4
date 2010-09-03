@@ -325,13 +325,16 @@ if test "x$1" != x; then
 		     [Version number of project])
 fi
 
-# Set the project's SVN revision number
+# Set the project's SVN revision number. The complicated sed expression
+# (made worse by quadrigraphs) ensures that things like 4123:4168MS end up
+# as a single number.
 AC_CHECK_PROG([have_svnversion],[svnversion],[yes],[no])
 if test "x$have_svnversion" = xyes && test "x$1" != x; then
   AC_SUBST(m4_toupper($1_SVN_REV))
-  m4_toupper($1_SVN_REV)=`cd $srcdir/$m4_tolower(coin_has_$1) ; svnversion`
+  svn_rev_tmp=`cd $srcdir/$m4_tolower(coin_has_$1) ; svnversion`
+  m4_toupper($1_SVN_REV)=`echo $svn_rev_tmp | sed -n -e 's/^@<:@0-9@:>@*://' -e 's/\(@<:@0-9@:>@\)@<:@^0-9@:>@*$/\1/p'`
   if test $m4_toupper($1_SVN_REV) != exported; then
-    AC_DEFINE_UNQUOTED(m4_toupper($1_SVN_REV), "$m4_toupper($1_SVN_REV)",
+    AC_DEFINE_UNQUOTED(m4_toupper($1_SVN_REV), $m4_toupper($1_SVN_REV),
 		       [SVN revision number of project])
   fi
 fi
