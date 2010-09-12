@@ -4548,7 +4548,7 @@ if test $m4_tolower(coin_has_$1) != skipping &&
    test $m4_tolower(coin_has_$1) != notGiven ; then
   AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 package is available])
    
-  if test 1 = 1 ; then  #change this test to enable a bit of debugging output
+  if test 1 = 0 ; then  #change this test to enable a bit of debugging output
     if test -n "$m4_toupper($1)_CFLAGS" ; then
       AC_MSG_NOTICE([$1 CFLAGS are $m4_toupper($1)_CFLAGS])
     fi
@@ -4699,7 +4699,7 @@ while test $m4_tolower(coin_has_$1) = notGiven ; do
       m4_toupper(myvar)_LIBS="$m4_toupper($1)_LIBS $m4_toupper(myvar)_LIBS"
     ])
     
-    if test 1 = 1 ; then  #change this test to enable a bit of debugging output
+    if test 1 = 0 ; then  #change this test to enable a bit of debugging output
       if test -n "$m4_toupper($1)_CFLAGS" ; then
         AC_MSG_NOTICE([$1 CFLAGS are $m4_toupper($1)_CFLAGS])
       fi
