@@ -38,4 +38,8 @@
 		Name="BuildToolsIncludeDir"
 		Value="$(CoinRoot)\BuildTools\headers"
 	/>
+	<UserMacro
+		Name="CoinRootEscaped"
+		Value="%COIN_ROOT_ESCAPED%"
+	/>
 </VisualStudioPropertySheet>
