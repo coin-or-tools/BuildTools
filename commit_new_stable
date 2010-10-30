@@ -1,15 +1,13 @@
 #!/bin/sh
 
-# Copyright (C) 2010  International Business Machines and others.
+# Copyright (C) 2010 International Business Machines and others.
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 # It is part of the BuildTools project in COIN-OR (www.coin-or.org)
 #
 # $Id$
 #
-# Author: Andreas Waechter     IBM      2007-06-21
-# Modified by: Lou Hafer       SFU	2008-04-17
-#              Lou Hafer       SFU	2010-06-29	major rewrite
+# Adapted from commit_new_release by Lou Hafer, SFU, 100507.
 
 #set -x -v
 
@@ -72,24 +70,24 @@ fi
 
 if test $printHelp = 1 ; then
   cat <<EOF
-usage: commit_new_release [-c] <directory_to_commit>
+usage: commit_new_stable [-c] <directory_to_commit>
 
-  By default, commit_new_release is a dry run, printing the commands that
+  By default, commit_new_stable is a dry run, printing the commands that
   will be executed. When you're confident that everything looks right, use
-  the -c (--commit) flag to commit the release.
+  the -c (--commit) flag to commit the new stable branch.
 EOF
   exit 1
 fi
 
-# Remember what was done during generation of the new release.
+# Remember what was done during generation of the new stable.
 
-if test -r $dirToCommit/.new_release_data; then
-  . $dirToCommit/.new_release_data
+if test -r $dirToCommit/.new_stable_data; then
+  . $dirToCommit/.new_stable_data
 else
   echo ''
-  echo "Error: the file .new_release_data is not present in $dirToCommit."
-  echo 'Are you running commit_new_release in the same directory where you'
-  echo 'ran prepare_new_release?'
+  echo "Error: the file .new_stable_data is not present in $dirToCommit."
+  echo 'Are you running commit_new_stable in the same directory where you'
+  echo 'ran prepare_new_stable?'
   echo ''
   exit 1
 fi
@@ -98,17 +96,11 @@ fi
 
 currDir=`pwd`
 if test "$currDir/$dirToCommit" != "$topBuildDir" ; then
-  echo "According to $dirToCommit/.new_release_data, the release candidate was assembled"
+  echo "According to $dirToCommit/.new_stable_data, the stable candidate was assembled"
   echo "in $topBuildDir."
   echo "You have asked to commit $currDir/$dirToCommit."
   echo "There is some confusion. Repository is unchanged."
   exit 1
-fi
-
-if test $dryRun = 1 ; then
-  echo "Dry run; testing commit of $dirToCommit."
-else
-  echo "Committing $dirToCommit."
 fi
 
 # Change to the checkout directory.
@@ -118,8 +110,8 @@ cd $coDir
 # If there are externals set on this directory, confirm that
 # .Externals.original is present so that we can restore them later.
 
-releaseExternals=`svn propget svn:externals .`
-if test -n "$releaseExternals" ; then
+newStableExternals=`svn propget svn:externals .`
+if test -n "$newStableExternals" ; then
   if test -r .Externals.original ; then
     :
   else
@@ -131,8 +123,8 @@ fi
 
 # Make some short-form URLs by stripping the COIN URL base.
 
-stableURLshort=`echo $stableURL | sed -e "s,$coinURL/\(.*\),\1,"`
-releaseURLshort=`echo $releaseURL | sed -e "s,$coinURL/\(.*\),\1,"`
+srcURLshort=`echo $srcURL | sed -e "s,$coinURL/\(.*\),\1,"`
+newStableURLshort=`echo $newStableURL | sed -e "s,$coinURL/\(.*\),\1,"`
 
 # Do we have to svn add Dependencies? If this query comes up with a leading
 # `?', the answer is yes. If Dependencies is entirely absent or unchanged,
@@ -159,26 +151,26 @@ fi
 
 if test $doCommit = yes ; then
 
-# Commit the release to stable so we can do a repository-side copy to create
-# the release.
+# Commit the stable back to its source URL so we can do a repository-side copy
+# to create the release.
 
   echo ''
-  echo "===> Temporarily committing release candidate to $stableURLshort ..."
+  echo "===> Temporarily committing stable candidate to $srcURLshort ..."
   echo ''
 
   rev_num_before=`svn info . | grep -E '^Revision:' | sed -e 's|Revision: ||'`
   echo "Revision number before commit: $rev_num_before"
 
-  cmd="svn ci -m \"temporarily committing release candidate\""
+  cmd="svn ci -m \"temporarily committing stable candidate\""
   echo $cmd
   if test $dryRun = 0 ; then
     eval $cmd
   fi
 
-# Update to confirm the commit. Avoid pulling in externals --- if we're doing
-# multiple commits of new releases, they may not exist. As it stands, the
-# main purpose of this call is to allow us to easily obtain the current
-# revision.
+# Update to confirm the commit. Avoid pulling in externals --- if we're
+# doing multiple commits of new stable branches, they may not exist. As it
+# stands, the main purpose of this call is to allow us to easily obtain the
+# current revision.
 # It might be useful to strengthen this and check that the value
 # is what we're expecting --- one greater than the revision before
 # commit. `--ignore-externals' could be made provisional on the existence
@@ -197,25 +189,25 @@ if test $doCommit = yes ; then
 
 fi
 
-# End preparatory commit.
+# End of preparatory commit.
 
-# Create the release with a repository-side copy.
+# Create the new stable branch with a repository-side copy.
 
 echo ''
-echo "===> Creating new release $releaseURLshort from $stableURLshort (rev $rev_num) ..."
+echo "===> Creating new stable branch $newStableURLshort from $srcURLshort (r$rev_num) ..."
 echo ''
 
-cmd="svn copy -m \"creating $releaseURLshort from $stableURLshort (rev $rev_num)\" $stableURL $releaseURL"
+cmd="svn copy -m \"creating $newStableURLshort from $srcURLshort (r$rev_num).\" $srcURL $newStableURL"
 echo $cmd
 if test $dryRun = 0 ; then
   eval $cmd
 fi
 
-# Restore the original stable branch.
+# Now restore the original stable branch.
 
 if test $doCommit = yes ; then
 
-# And restore the stable branch to its original condition. Start by reverting
+# And restore the source to its original condition. Start by reverting
 # to the original externals.
 
   if test -r .Externals.original ; then
@@ -246,7 +238,7 @@ if test $doCommit = yes ; then
     done
   fi
 
-# Rebuild configure and Makefile.in files.
+# Rebuild configure and Makefile.in files
 
   echo ''
   echo '===> Executing run_autotools to restore configuration files ...'
@@ -260,13 +252,13 @@ if test $doCommit = yes ; then
   fi
   cd "$curdir"
 
-# Commit the restored stable branch.
+# Commit the restored source URL.
 
   echo ''
-  echo "===> Committing restored $stableURLshort ..."
+  echo "===> Committing restored $srcURLshort ..."
   echo ''
 
-  cmd="svn ci -m \"restoring $stableURLshort\""
+  cmd="svn ci -m \"restoring $srcURLshort\""
   echo $cmd
   if test $dryRun = 0 ; then
     eval $cmd
@@ -274,17 +266,19 @@ if test $doCommit = yes ; then
 
 fi
 
-# End restorative commit.
+# End of restorative commit.
 
 cd $topBuildDir
-cmd="rm .new_release_data"
+cmd="rm .new_stable_data"
+echo $cmd
 if test $dryRun = 0 ; then
   eval $cmd
 fi
 
 cd $startDir
+
 echo ''
-echo "Done, new release $releaseURLshort created."
+echo "Done, new stable $newStableURLshort created."
 echo ''
 echo "You can now delete the directory $topBuildDir including subdirectories"
 

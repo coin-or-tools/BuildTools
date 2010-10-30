@@ -13,6 +13,16 @@
 AC_PREREQ(2.59)
 
 ###########################################################################
+#                           coin_foreach_w                                #
+###########################################################################
+
+# the autoconf version used by COIN-OR is so old that it does not have the M4 macro foreach_w.
+# thus, we define our own one which applies the foreach macro to the same arguments but with
+# all spaces replaced by ',' in the second argument.
+# further, we run the loop only if the second argument is not empty
+AC_DEFUN([coin_foreach_w], [m4_ifval([$2], [m4_foreach([$1], [m4_bpatsubsts([$2],[[ 	]+],[, ])], [$3])])])
+
+###########################################################################
 #                           COIN_MAIN_SUBDIRS                             #
 ###########################################################################
 
@@ -269,8 +279,10 @@ fi
 
 # This macro sets the variable coin_vpath_config to true if this is a
 # VPATH configuration, otherwise it sets it to false.
+
 AC_DEFUN([AC_COIN_CHECK_VPATH],
-[AC_MSG_CHECKING(whether this is a VPATH configuration)
+[
+AC_MSG_CHECKING(whether this is a VPATH configuration)
 if test `cd $srcdir; pwd` != `pwd`; then
   coin_vpath_config=yes;
 else
@@ -284,14 +296,22 @@ AC_MSG_RESULT($coin_vpath_config)
 ###########################################################################
 
 # This macro does everything that is required in the early part in the
-# configure script, such as defining a few variables.  This should only
-# be used in the main directory of a project directory (the one under
-# which src is)
+# configure script, such as defining a few variables.  This should only be used
+# in the main directory of a project directory (the one which holds the src
+# directory for the project). The first parameter is the project name. The
+# second (optional) is the libtool library version (important for releases,
+# less so for stable or trunk).
 
 AC_DEFUN([AC_COIN_PROJECTDIR_INIT],
 [# Initialize the ADDLIBS variable
 ADDLIBS="-lm $LIBS"
 AC_SUBST(ADDLIBS)
+
+# Initialize the PCADDLIBS variable.
+# This variable is used to setup library flags for the "Libs:" section in a .pc file.
+# In certain cases, it may contain more flags than the ADDLIBS variable.
+PCADDLIBS=""
+AC_SUBST(PCADDLIBS)
 
 # As backup, we make sure we don't loose an FLIBS if it has been set
 # by the user
@@ -309,8 +329,28 @@ AM_CONDITIONAL(ALWAYS_FALSE, false)
 # that we are in a project main directory
 coin_projectdir=yes
 
-# Check if a library version is set for libtool
-m4_ifvaln([$1],[coin_libversion=$1],[])
+# Set the project's version number
+if test "x$1" != x; then
+  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION), ["$PACKAGE_VERSION"],
+		     [Version number of project])
+fi
+
+# Set the project's SVN revision number. The complicated sed expression
+# (made worse by quadrigraphs) ensures that things like 4123:4168MS end up
+# as a single number.
+AC_CHECK_PROG([have_svnversion],[svnversion],[yes],[no])
+if test "x$have_svnversion" = xyes && test "x$1" != x; then
+  AC_SUBST(m4_toupper($1_SVN_REV))
+  svn_rev_tmp=`cd $srcdir/$m4_tolower(coin_has_$1) ; svnversion`
+  m4_toupper($1_SVN_REV)=`echo $svn_rev_tmp | sed -n -e 's/^@<:@0-9@:>@*://' -e 's/\(@<:@0-9@:>@\)@<:@^0-9@:>@*$/\1/p'`
+  if test $m4_toupper($1_SVN_REV) != exported; then
+    AC_DEFINE_UNQUOTED(m4_toupper($1_SVN_REV), $m4_toupper($1_SVN_REV),
+		       [SVN revision number of project])
+  fi
+fi
+
+# Capture libtool library version, if given.
+m4_ifvaln([$2],[coin_libversion=$2],[])
 ]) # AC_COIN_PROJECTDIR_INIT
 
 ###########################################################################
@@ -586,7 +626,7 @@ if test x"$CXXFLAGS" = x; then
         ;;
       *)
 # ToDo decide about unroll-loops
-        coin_opt_cxxflags="-O3 -fomit-frame-pointer"
+        coin_opt_cxxflags="-O3"
         coin_add_cxxflags="-pipe"
         coin_dbg_cxxflags="-g"
         coin_warn_cxxflags="-Wimplicit -Wparentheses -Wreturn-type -Wcast-qual -Wall -Wpointer-arith -Wwrite-strings -Wconversion -Wno-unknown-pragmas"
@@ -971,7 +1011,7 @@ if test x"$CFLAGS" = x; then
       icc* | */icc*)
         ;;
       *)
-        coin_opt_cflags="-O3 -fomit-frame-pointer"
+        coin_opt_cflags="-O3"
         coin_add_cflags="-pipe"
         coin_dbg_cflags="-g"
         coin_warn_cflags="-Wimplicit -Wparentheses -Wsequence-point -Wreturn-type -Wcast-qual -Wall -Wno-unknown-pragmas"
@@ -1197,7 +1237,7 @@ if test "$F77" != "unavailable" && test x"$FFLAGS" = x ; then
   coin_warn_fflags=
 
   if test "$G77" = "yes"; then
-    coin_opt_fflags="-O3 -fomit-frame-pointer"
+    coin_opt_fflags="-O3"
     coin_add_fflags="-pipe"
     coin_dbg_fflags="-g"
     case $enable_doscompile in
@@ -1389,16 +1429,18 @@ else
   # In its original version, it linked in libifcorert.lib or libifcorertd.lib on Windows/ifort explicitly.
   # However, this seem to create a dependency on libifcorert.dll (or libifcorertd.dll) in the executables.
   # This is seem to be unnecessary, libifcorert(d).lib has been removed from the link line.
+  # Further, excluding libc.lib from the default libs seemed to be necessary only for VS < 8.
+  # Since the corresponding flag seems to make more trouble that it avoid, it has been removed now.
      *-cygwin* | *-mingw*)
        case "$F77" in
-         ifort* | */ifort* | IFORT* | */IFORT*)
-           FLIBS="-link $LIBS /NODEFAULTLIB:libc.lib"
+#         ifort* | */ifort* | IFORT* | */IFORT*)
+#           FLIBS="-link $LIBS /NODEFAULTLIB:libc.lib"
 #           if "$coin_debug_compile" = true ; then
 #             FLIBS="-link $LIBS /NODEFAULTLIB:libc.lib /NODEFAULTLIB:libcmt.lib"
 #           else
 #             FLIBS="-link $LIBS /NODEFAULTLIB:libc.lib /NODEFAULTLIB:libcmtd.lib"
 #           fi
-           ;;
+#           ;;
          compile_f2c*)
            FLIBS=`$F77 -FLIBS` ;;
        esac;;
@@ -1410,7 +1452,7 @@ else
        case "$F77" in
          pgf77* | */pgf77* | pgf90* | */pgf90*)
 # ask linker to go through the archives multiple times
-# (the Fortran compiler seems to do that automatically...
+# (the Fortran compiler seems to do that automatically...)
            FLIBS="-Wl,--start-group $FLIBS -Wl,--end-group" ;;
        esac
   esac
@@ -1661,7 +1703,7 @@ else
 fi
 full_prefix=`cd $full_prefix ; pwd`
 AC_SUBST(abs_lib_dir)
-abs_lib_dir=$full_prefix/lib
+abs_lib_dir=$full_prefix/lib/coin
 AC_SUBST(abs_include_dir)
 abs_include_dir=$full_prefix/include
 AC_SUBST(abs_bin_dir)
@@ -1785,7 +1827,7 @@ if test "x$LIBTOOL" = x; then
 # AC_MSG_NOTICE([Finished COIN_PROG_LIBTOOL.])
   # set RPATH_FLAGS to the compiler link flags required to hardcode location
   # of the shared objects
-  AC_COIN_RPATH_FLAGS($abs_lib_dir)
+  AC_COIN_RPATH_FLAGS([$abs_lib_dir $abs_lib_dir/ThirdParty])
 
 else
 
@@ -1851,7 +1893,6 @@ AC_SUBST(LT_LDFLAGS)
 
 #END
 }])
-
 
 ###########################################################################
 #                      COIN_PATCH_LIBTOOL_CYGWIN                          #
@@ -2126,6 +2167,7 @@ if test x$coin_skip_ac_output != xyes; then
   if test x"$coin_need_flibs" = xyes; then
     ADDLIBS="$ADDLIBS $FLIBS"
   fi
+  PCADDLIBS="$PCADDLIBS $ADDLIBS"
 
   # library extension
   AC_SUBST(LIBEXT)
@@ -2158,6 +2200,16 @@ if test x$coin_skip_ac_output != xyes; then
     subdirs="$new_subdirs"
   fi
 
+  # need to come before AC_OUTPUT
+  if test x$coin_projectdir != xyes; then
+    # write coin_subdirs to a file so that project configuration knows where to find uninstalled projects
+    echo $coin_subdirs > coin_subdirs.txt
+  else
+    # substitute for OBJDIR, needed to setup .pc file for uninstalled project
+    ABSBUILDDIR="`pwd`"
+    AC_SUBST(ABSBUILDDIR)
+  fi
+  
   AC_OUTPUT
 
   if test x"$coin_vpath_link_files" = x; then : ; else
@@ -2192,14 +2244,21 @@ fi
 #                             COIN_VPATH_LINK                             #
 ###########################################################################
 
-# This macro makes sure that a symbolic link is created to a file in
-# the source code directory tree if we are in a VPATH compilation, and
-# if this package is the main package to be installed
+# This macro queues source files that need to be available in the build
+# directory. In a VPATH configuration, the files will be made available by
+# symbolic link or copy (when the platform does not support links). The list
+# is processed by COIN_FINALIZE. The parameter is a whitespace-separated
+# list of files.
 
 AC_DEFUN([AC_COIN_VPATH_LINK],
-[AC_REQUIRE([AC_COIN_CHECK_VPATH])
+[
+AC_REQUIRE([AC_COIN_CHECK_VPATH])
+# Allow for newlines in the parameter
 if test $coin_vpath_config = yes; then
-  coin_vpath_link_files="$coin_vpath_link_files $1"
+  cvl_tmp="$1"
+  for file in $cvl_tmp ; do
+    coin_vpath_link_files="$coin_vpath_link_files $file"
+  done
 fi
 ]) #AC_COIN_VPATH_LINK
 
@@ -2220,11 +2279,36 @@ AC_DEFUN([AC_COIN_ENABLE_GNU_PACKAGES],
 	       [coin_enable_gnu=no])
 ]) # AC_COIN_ENABLE_GNU_PACKAGES
 
+#######################################################################
+#                           COIN_CHECK_LIBM                           #
+#######################################################################
+
+# For a (space separated) list of arguments X, this macro adds the flags
+# for linking against the math library to a X_LIBS and X_PCLIBS.
+
+AC_DEFUN([AC_COIN_CHECK_LIBM],
+[AC_BEFORE([AC_COIN_PROG_CC],[$0])
+
+case "$CC" in
+  cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+    ;;
+  *)
+    coin_foreach_w([myvar], [$1], [
+      m4_toupper(myvar)_LIBS="-lm $m4_toupper(myvar)_LIBS"
+      m4_toupper(myvar)_PCLIBS="-lm $m4_toupper(myvar)_PCLIBS"
+    ])
+  ;;
+esac
+
+]) # AC_COIN_CHECK_LIBM
+
 ###########################################################################
 #                           COIN_CHECK_GNU_ZLIB                           #
 ###########################################################################
 
 # This macro checks for the libz library.
+# If found, it sets the automake conditional COIN_HAS_ZLIB and defines the C preprocessor variable COIN_HAS_ZLIB.
+# Further, for a (space separated) list of arguments X, it adds the linker flag to the variables X_LIBS and X_PCLIBS.
 
 AC_DEFUN([AC_COIN_CHECK_GNU_ZLIB],
 [AC_REQUIRE([AC_COIN_ENABLE_GNU_PACKAGES])
@@ -2239,7 +2323,12 @@ if test $coin_enable_gnu = yes; then
 
   if test $coin_has_zlib = yes; then
     AC_CHECK_LIB([z],[gzopen],
-                 [ADDLIBS="-lz $ADDLIBS"],
+                 [ADDLIBS="-lz $ADDLIBS"
+                  coin_foreach_w([myvar], [$1], [
+                    m4_toupper(myvar)_LIBS="-lz $m4_toupper(myvar)_LIBS"
+                    m4_toupper(myvar)_PCLIBS="-lz $m4_toupper(myvar)_PCLIBS"
+                  ])
+                 ],
                  [coin_has_zlib=no])
   fi
 
@@ -2257,6 +2346,8 @@ AM_CONDITIONAL(COIN_HAS_ZLIB,test x$coin_has_zlib = xyes)
 ###########################################################################
 
 # This macro checks for the libbz2 library.
+# If found, it defines the C preprocessor variable COIN_HAS_BZLIB.
+# Further, for a (space separated) list of arguments X, it adds the linker flag to the variables X_LIBS and X_PCLIBS.
 
 AC_DEFUN([AC_COIN_CHECK_GNU_BZLIB],
 [AC_REQUIRE([AC_COIN_ENABLE_GNU_PACKAGES])
@@ -2271,7 +2362,12 @@ if test $coin_enable_gnu = yes; then
 
   if test $coin_has_bzlib = yes; then
     AC_CHECK_LIB([bz2],[BZ2_bzReadOpen],
-                 [ADDLIBS="-lbz2 $ADDLIBS"],
+                 [ADDLIBS="-lbz2 $ADDLIBS"
+                  coin_foreach_w([myvar], [$1], [
+                    m4_toupper(myvar)_LIBS="-lbz2 $m4_toupper(myvar)_LIBS"
+                    m4_toupper(myvar)_PCLIBS="-lbz2 $m4_toupper(myvar)_PCLIBS"
+                  ])
+                 ],
                  [coin_has_bzlib=no])
   fi
 
@@ -2290,6 +2386,8 @@ fi
 # readline/readline.h is available, and that the -lreadline library
 # contains "readline".  It is assumed that #include <stdio.h> is included
 # in the source file before the #include<readline/readline.h>
+# If found, it defines the C preprocessor variable COIN_HAS_READLINE.
+# Further, for a (space separated) list of arguments X, it adds the linker flag to the variable X_LIBS and X_PCLIBS.
 
 AC_DEFUN([AC_COIN_CHECK_GNU_READLINE],
 [AC_REQUIRE([AC_COIN_ENABLE_GNU_PACKAGES])
@@ -2315,7 +2413,12 @@ if test $coin_enable_gnu = yes; then
   # Now we check for readline
   if test $coin_has_readline = yes; then
     AC_CHECK_LIB([readline],[readline],
-                 [ADDLIBS="-lreadline $LIBS $ADDLIBS"],
+                 [ADDLIBS="-lreadline $LIBS $ADDLIBS"
+                  coin_foreach_w([myvar], [$1], [
+                    m4_toupper(myvar)_LIBS="-lreadline $LIBS $m4_toupper(myvar)_LIBS"
+                    m4_toupper(myvar)_PCLIBS="-lreadline $LIBS $m4_toupper(myvar)_PCLIBS"
+                  ])
+                 ],
                  [coin_has_readline=no])
   fi
 
@@ -2433,6 +2536,9 @@ AC_COIN_LINKCOPY_FROM_FILELIST($1, $2, [cp])
 AC_DEFUN([AC_COIN_EXAMPLE_FILES],
 [AC_REQUIRE([AC_COIN_CHECK_GNU_ZLIB])
 AC_REQUIRE([AC_COIN_CHECK_VPATH])
+AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
+AC_REQUIRE([AC_PROG_LN_S])
+
 files=`cd $srcdir; ls $1`
 # We need to do the following loop to make sure that are no newlines
 # in the variable
@@ -2448,10 +2554,9 @@ if test $coin_vpath_config = yes; then
     cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
       lnkcmd=cp ;;
   esac
-  if test "$lnkcmd" = cp; then
+  if test "x$lnkcmd" = xcp; then
     AC_MSG_NOTICE([Copying example files ($1)])
   else
-    AC_PROG_LN_S
     AC_MSG_NOTICE([Creating links to the example files ($1)])
     lnkcmd="$LN_S"
   fi
@@ -2481,15 +2586,14 @@ AC_SUBST(EXAMPLE_CLEAN_FILES)
 ]) #AC_COIN_EXAMPLE_FILES
 
 ###########################################################################
-#                            COIN_HAS_PROJECT                             #
+#                            COIN_HAS_PROJECT (deprecated)                #
 ###########################################################################
 
-# This macro sets up usage of a Coin package.  It defines the
-# PKGSRCDIR and PKGOBJDIR variables, refering to the main source and
-# object directory of the package, respectively.  It also defines
-# a COIN_HAS_PKG preprocessor macro and makefile conditional.  The
-# argument should be the name (Pkg) of the project (in correct lower
-# and upper case)
+# This macro sets up usage of a Coin package.  It defines the PKGSRCDIR,
+# PKGOBJDIR, and PKGDOCDIR variables, referring to the main source, object, and
+# documentation directories of the package, respectively.  It also defines a
+# COIN_HAS_PKG preprocessor macro and makefile conditional.  The argument
+# should be the name (Pkg) of the project (in correct lower and upper case)
 
 AC_DEFUN([AC_COIN_HAS_PROJECT],
 [AC_MSG_CHECKING([for COIN project $1])
@@ -2527,7 +2631,7 @@ if test $m4_tolower(coin_has_$1) != unavailable &&
   AC_SUBST(m4_toupper($1OBJDIR))
   m4_toupper($1OBJDIR)=`pwd`/$m4_tolower(coin_has_$1)
   AC_SUBST(m4_toupper($1DOCDIR))
-  m4_toupper($1DOCDIR)=$abs_lib_dir/../share/doc/coin/$1
+  m4_toupper($1DOCDIR)=$abs_lib_dir/../../share/doc/coin/$1
 fi
 
   # Define the Makefile conditional
@@ -2578,6 +2682,12 @@ AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
 # library, you're on your own unless the library declares some function with
 # extern "C" linkage. Otherwise, you'll have to somehow find the mangled C++
 # name.
+# A fifth argument can be specified to include linker flags that may be required
+# to sucessfully perform the linking check.
+#
+# An optional sixth argument can be given to specify a list of targets.
+# For each target X, the variables X_LIBS and X_PCLIBS will be extended by $LBRYLIB,
+# if the library has been found and seems to work.
 
 AC_DEFUN([AC_COIN_HAS_USER_LIBRARY],
 [ AC_REQUIRE([AC_COIN_PROJECTDIR_INIT])
@@ -2641,7 +2751,7 @@ AC_DEFUN([AC_COIN_HAS_USER_LIBRARY],
     m4_ifvaln([$4],
         [if test x"$m4_tolower($1)_libcheck" != xno; then
 	   coin_save_LIBS="$LIBS"
-	   LIBS="$$2LIB $ADDLIBS"
+	   LIBS="$$2LIB $ADDLIBS $5"
 	   coin_$2_link=no
 	   AC_LANG_PUSH(C)
 	   for fnm in $4 ; do
@@ -2653,18 +2763,22 @@ AC_DEFUN([AC_COIN_HAS_USER_LIBRARY],
 		 [AC_MSG_RESULT(no)])
 	   done
 	   AC_LANG_POP(C)
-	   if test x"$coin_$2_link" = xyes ; then
-	     LIBS="$coin_save_LIBS"
-	   else
+           LIBS="$coin_save_LIBS"
+	   if test x"$coin_$2_link" != xyes ; then
 	     AC_MSG_ERROR([Cannot find symbol(s) $4 with $2])
 	   fi
 	 fi])
 
 # If we make it this far, we've verified the file and linked the function. Add
-# the necessary link flags to ADDLIBS and define the preprocessor symbol
+# the necessary link flags to ADDLIBS and $6_{PC}LIBS and define the preprocessor symbol
 # COIN_HAS_LBRY.
 
     ADDLIBS="$$2LIB $ADDLIBS"
+    coin_foreach_w([myvar], [$6], [
+      m4_toupper(myvar)_LIBS="$$2LIB $m4_toupper(myvar)_LIBS"
+      m4_toupper(myvar)_PCLIBS="$$2LIB $m4_toupper(myvar)_PCLIBS"
+    ])
+    
     AC_DEFINE(COIN_HAS_$2,[1],[Define to 1 if the $1 package is available])
   fi
 
@@ -3348,3 +3462,1542 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
 AM_CONDITIONAL([COIN_BUILD_GLPK],[test x"$use_thirdpartyglpk" = xbuild])
 
 ]) # AC_COIN_HAS_GLPK
+
+
+###########################################################################
+#                           COIN_DOXYGEN                                  #
+###########################################################################
+#
+# This macro determines the configuration information for doxygen, the tool
+# used to generate online documentation of COIN code. It takes one parameter,
+# a list of projects (mixed-case, to match the directory names) that should
+# be processed as external tag files. E.g., COIN_DOXYGEN([Clp Osi]).
+#
+# This macro will define the following variables:
+#  coin_have_doxygen	Yes if doxygen is found, no otherwise
+#  coin_doxy_usedot     Defaults to `yes'; --with-dot will still check to see
+#			if dot is available
+#  coin_doxy_tagname	Name of doxygen tag file (placed in doxydoc directory)
+#  coin_doxy_logname    Name of doxygen log file (placed in doxydoc directory)
+#  coin_doxy_tagfiles   List of doxygen tag files used to reference other
+#                       doxygen documentation
+#  coin_doxy_excludes	Directories to exclude from doxygen processing
+
+AC_DEFUN([AC_COIN_DOXYGEN],
+[
+
+AC_MSG_NOTICE([configuring doxygen documentation options])
+
+# Check to see if doxygen is available.
+
+AC_CHECK_PROG([coin_have_doxygen],[doxygen],[yes],[no])
+
+# Look for the dot tool from the graphviz package, unless the user has
+# disabled it.
+
+AC_ARG_WITH([dot],
+  AS_HELP_STRING([--with-dot],
+		 [use dot (from graphviz) when creating documentation with
+		  doxygen if available; --without-dot to disable]),
+  [],[withval=yes])
+if test x"$withval" = xno ; then
+  coin_doxy_usedot=NO
+  AC_MSG_CHECKING([for dot ])
+  AC_MSG_RESULT([disabled])
+else
+  AC_CHECK_PROG([coin_doxy_usedot],[dot],[YES],[NO])
+fi
+
+# Generate a tag file name and a log file name
+
+AC_SUBST([coin_doxy_tagname],[doxydoc/${PACKAGE}_doxy.tag])
+AC_SUBST([coin_doxy_logname],[doxydoc/${PACKAGE}_doxy.log])
+
+# Process the list of project names and massage them into possible doxygen
+# doc'n directories. Prefer 1) classic external, source processed using
+# a project-specific doxygen.conf, we use the tag file; 2) classic
+# external, source processed using package doxygen.conf; 3) installed
+# doxydoc. Alternatives 1) and 2) are only possible if the directory will be
+# configured, which we can't know unless this is the package base configure,
+# since coin_subdirs is only set there. Hence it's sufficient to check for
+# membership. If we use a tag file from a classic external, exclude the
+# source from doxygen processing when doxygen runs in the base directory.
+
+coin_doxy_tagfiles=
+coin_doxy_excludes=
+tmp="$1"
+for proj in $tmp ; do
+  lc_proj=`echo $proj | [tr [A-Z] [a-z]]`
+  AC_MSG_CHECKING([for doxygen doc'n for $proj ])
+  doxytag=${lc_proj}_doxy.tag
+  doxyfound=no
+  for chkProj in $coin_subdirs ; do
+    if test "$chkProj" = "$proj" ; then
+      # proj will be configured, hence doxydoc present in build tree
+      doxysrcdir="${srcdir}/${proj}"
+      # AC_MSG_NOTICE([Considering $doxysrcdir (base)])
+      if test -d "$doxysrcdir" ; then
+	# with a doxydoc directory?
+	doxydir="$doxysrcdir/doxydoc"
+	# AC_MSG_NOTICE([Considering $doxydir (base)])
+	# AC_MSG_NOTICE([Subdirs: $coin_subdirs)])
+	if test -d "$doxydir" ; then
+	  # use tag file; don't process source
+	  eval doxydir="`pwd`/${proj}/doxydoc"
+	  coin_doxy_tagfiles="$coin_doxy_tagfiles $doxydir/$doxytag=$doxydir/html"
+	  AC_MSG_RESULT([$doxydir (tag)])
+	  coin_doxy_excludes="$coin_doxy_excludes */${proj}*"
+	else
+	  # will process the source -- nothing further to be done here
+	  AC_MSG_RESULT([$doxysrcdir (src)])
+	fi
+	doxyfound=yes
+      fi
+    fi
+  done
+  # Not built, fall back to installed tag file
+  if test $doxyfound = no ; then
+    eval doxydir="${datadir}/coin/doc/${proj}/doxydoc"
+    # AC_MSG_NOTICE([Considering $doxydir (install)])
+    # AC_MSG_NOTICE([Subdirs: $coin_subdirs)])
+    coin_doxy_tagfiles="$coin_doxy_tagfiles $doxydir/$doxytag=$doxydir/html"
+    AC_MSG_RESULT([$doxydir (tag)])
+  fi
+done
+AC_SUBST([coin_doxy_tagfiles])
+AC_SUBST([coin_doxy_excludes])
+
+]) # AC_COIN_DOXYGEN
+
+
+###########################################################################
+#                           COIN_HAS_PKGCONFIG                            #
+###########################################################################
+
+# This macro checks whether a pkg-config tool with a minimal version number is available.
+# If so, then the variable PKGCONFIG is set to its path.
+# If not, PKGCONFIG is set to "".
+# The minimal version number can be given as first parameter, by default it is 0.9.0.
+# This macro is a modified version of PKG_PROG_PKG_CONFIG in pkg.m4
+#
+# Further, the AM_CONDITIONAL COIN_HAS_PKGCONFIG is set and PKGCONFIG is AC_SUBST'ed.
+# Finally, if this setup belongs to a project directory, then the search path for .pc files
+# is assembled from the value of $PKG_CONFIG_PATH, the values of --prefix, --coin-instdir,
+# and the directory named in a file ../coin_subdirs.txt or ../../coin_subdirs.txt in a variable
+# COIN_PKG_CONFIG_PATH, which is also AC_SUBST'ed.
+
+AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
+[AC_ARG_VAR([PKG_CONFIG], [path to pkg-config utility])
+
+AC_ARG_ENABLE([pkg-config],
+  [AC_HELP_STRING([--enable-pkg-config],[use pkg-config if available (default is yes)])],
+  [use_pkgconfig="$enableval"],
+  [use_pkgconfig=yes])
+
+if test $use_pkgconfig = yes ; then
+  if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
+    AC_PATH_TOOL([PKG_CONFIG], [pkg-config])
+  fi
+  if test -n "$PKG_CONFIG"; then
+    _pkg_min_version=m4_default([$1], [0.9.0])
+    AC_MSG_CHECKING([pkg-config is at least version $_pkg_min_version])
+    if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
+      AC_MSG_RESULT([yes])
+    else
+      AC_MSG_RESULT([no])
+      PKG_CONFIG=""
+    fi
+  fi
+
+  # check if pkg-config supports the short-errors flag
+  if test -n "$PKG_CONFIG" && \
+    $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+    pkg_short_errors=" --short-errors "
+  else
+    pkg_short_errors=""
+  fi
+fi
+
+AM_CONDITIONAL([COIN_HAS_PKGCONFIG], [test -n "$PKG_CONFIG"])
+AC_SUBST(PKG_CONFIG)
+
+# assemble pkg-config search path for installed projects
+COIN_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
+
+# let's assume that when installing into $prefix, then the user may have installed some other coin projects there before, so it's worth to have a look into there
+# best would actually to use ${libdir}, since .pc files get installed into ${libdir}/pkgconfig,
+# unfortunately, ${libdir} expands to ${exec_prefix}/lib and ${exec_prefix} to ${prefix}...
+COIN_PKG_CONFIG_PATH="${prefix}/lib/pkgconfig:${COIN_PKG_CONFIG_PATH}"
+
+AC_ARG_WITH([coin-instdir],
+  AC_HELP_STRING([--with-coin-instdir],
+                 [prefix of installation directory for precompiled COIN packages]),
+  [if test -d "$withval"; then : ; else
+     AC_MSG_ERROR([argument for --with-coin-instdir not a directory])
+   fi
+   COIN_PKG_CONFIG_PATH="$withval/lib/pkgconfig:${COIN_PKG_CONFIG_PATH}"
+  ],[])
+
+AC_SUBST(COIN_PKG_CONFIG_PATH)
+
+# assemble additional pkg-config search paths for uninstalled projects
+if test x$coin_projectdir = xyes ; then
+  # if we are in a project setup, then in a classic setup, we want to find uninstalled projects
+  # their (relative) location is written to coin_subdirs.txt by the configure in the project base directory
+  # unfortunately, if the user set prefix, then we do not know where the project base directory is located
+  # but it is likely to be either .. (if we are a usual coin project) or ../.. (if we are a unusual coin project like ThirdParty or Data)
+  COIN_PKG_CONFIG_PATH_UNINSTALLED=
+  if test -e ../coin_subdirs.txt ; then
+    for i in `cat ../coin_subdirs.txt` ; do
+      if test -d ../$i ; then
+        COIN_PKG_CONFIG_PATH_UNINSTALLED="`cd ../$i; pwd`:${COIN_PKG_CONFIG_PATH_UNINSTALLED}"
+      fi
+    done
+  fi
+
+  if test -e ../../coin_subdirs.txt ; then
+    for i in `cat ../../coin_subdirs.txt` ; do
+      if test -d ../../$i ; then
+        COIN_PKG_CONFIG_PATH_UNINSTALLED="`cd ../../$i; pwd`:${COIN_PKG_CONFIG_PATH_UNINSTALLED}"
+      fi
+    done
+  fi
+
+  AC_SUBST(COIN_PKG_CONFIG_PATH_UNINSTALLED)
+fi
+
+])
+
+###########################################################################
+#                           COIN_PKG_CHECK_PROJECT_EXISTS                 #
+###########################################################################
+
+# COIN_PKG_CHECK_PROJECT_EXISTS(PROJECT, [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
+#
+# Check to see whether a particular project exists.  Similar
+# to PKG_CHECK_MODULES(), but set only the variables $1_VERSION and $1_PKG_ERRORS variables
+#
+AC_DEFUN([AC_COIN_PKG_CHECK_PROJECT_EXISTS],
+[AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
+if test -n "$PKG_CONFIG" ; then
+  if $PKG_CONFIG --exists "m4_tolower($1)"; then
+    m4_toupper($1)[]_VERSION=`$PKG_CONFIG --modversion "m4_tolower($1)" 2>/dev/null`
+    m4_ifval([$2], [$2], [:])
+  else
+    m4_toupper($1)_PKG_ERRORS=`$PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "m4_tolower($1)"`
+    $3
+  fi
+else
+  AC_MSG_ERROR("Cannot check for existance of module $1 without pkg-config")
+fi
+])
+
+###########################################################################
+#                           COIN_PKG_CHECK_MODULE_EXISTS                  #
+###########################################################################
+
+# COIN_PKG_CHECK_MODULES_EXISTS(MODULE, PACKAGES, [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
+#
+# Check to see whether a particular set of packages exists.
+# Similar to PKG_CHECK_MODULES(), but set only the variable $1_VERSIONS and $1_PKG_ERRORS
+#
+AC_DEFUN([AC_COIN_PKG_CHECK_MODULE_EXISTS],
+[AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
+if test -n "$PKG_CONFIG" ; then
+  if $PKG_CONFIG --exists "$2"; then
+    m4_toupper($1)[]_VERSIONS="`$PKG_CONFIG --modversion $2 2>/dev/null`"
+    $3
+  else
+    m4_toupper($1)_PKG_ERRORS=`$PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors $2`
+    $4
+  fi
+else
+  AC_MSG_ERROR("Cannot check for existance of module $1 without pkg-config")
+fi
+])
+
+###########################################################################
+#                           COIN_PKG_HAS_MODULE                           #
+###########################################################################
+
+# COIN_PKG_HAS_MODULE(MODULE, PACKAGES, [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
+#
+# Checks whether pkg-config files for a given set of packages is available.
+# If so, sets MODULE_CFLAGS, MODULE_LIBS, and MODULES_DATA and executes ACTION-IF-FOUND.
+# If not, then ACTION-IF-NOT-FOUND is executed.
+# A reason for not finding a package is stored in MODULE_PKG_ERRORS
+#
+# --------------------------------------------------------------
+AC_DEFUN([AC_COIN_PKG_HAS_MODULE],
+[AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
+
+AC_COIN_PKG_CHECK_MODULE_EXISTS([$1],[$2],
+  [ cflags=`$PKG_CONFIG --cflags "$2" 2>/dev/null`
+    # pkg-config cannot handle spaces, so CYGPATH_W cannot be put into .pc files
+	# thus, we modify the cflags extracted from pkg-config by putting CYGPATH_W behind -I's
+	# but only do this if is not trivial
+    if test "$CYGPATH_W" != "echo" ; then
+      # need to put into brackets since otherwise autoconf replaces the brackets in the sed command
+	  [cflags=`echo $cflags | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`]
+	fi
+    m4_toupper($1)[]_CFLAGS="$cflags"
+    m4_toupper($1)[]_LIBS=`$PKG_CONFIG --libs "$2" 2>/dev/null`
+    m4_toupper($1)[]_DATA=`$PKG_CONFIG --variable=datadir "$2" 2>/dev/null`
+    $3
+  ],
+  [ $4 ])
+
+])# PKG_CHECK_MODULES
+
+###########################################################################
+#                           COIN_MAIN_PACKAGEDIR                          #
+###########################################################################
+
+# This macro substitutes COIN_MAIN_SUBDIR.
+# If $2/$1 or $1 is in COIN_SKIP_PROJECTS, do nothing.
+# If --with-$1-lib, --with-$1-incdir, or --with-$1-datadir is given, then assume that the package is installed.
+# Otherwise, if pkg-config is available, use it to check whether the package is available.
+#   If $4 is given, then pkg-config is asked for the existance of $4, otherwise tolower($1) is used.
+# Otherwise, if the directory $2/$1 and the file $2/$1/$3 exist, check whether $2/$1/configure exists.
+#   If so, include this directory into the list of directories where configure and make recourse into.
+# tolower(coin_has_$1) is set to notGiven, skipping, installed, the version of an installed project, or the projects main directory (if uninstalled).
+
+AC_DEFUN([AC_COIN_MAIN_PACKAGEDIR],
+[AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
+AC_MSG_CHECKING([whether project $1 is available])
+
+m4_tolower(coin_has_$1)=notGiven
+coin_have_project_dir=no
+
+# check if user wants to skip project in any case
+AC_ARG_VAR([COIN_SKIP_PROJECTS],[Set to the subdirectories of projects that should be skipped in the configuration])
+if test x"$COIN_SKIP_PROJECTS" != x; then
+  for dir in $COIN_SKIP_PROJECTS; do
+    if test $dir = "$1"; then
+      m4_tolower(coin_has_$1)=skipping
+    fi
+    if test $dir = "$2/$1"; then
+      m4_tolower(coin_has_$1)=skipping
+    fi
+  done
+fi
+
+if test $m4_tolower(coin_has_$1) != skipping; then
+  if test $PACKAGE_TARNAME = m4_tolower($1); then
+    m4_tolower(coin_has_$1)=.
+    coin_have_project_dir=yes
+  fi
+
+  AC_ARG_WITH([m4_tolower($1)-lib],
+    AC_HELP_STRING([--with-m4_tolower($1)-lib],
+                   [linker flags for using project $1]),
+      [m4_tolower(coin_has_$1)=installed],
+      [])
+
+  AC_ARG_WITH([m4_tolower($1)-incdir],
+    AC_HELP_STRING([--with-m4_tolower($1)-incdir],
+                   [directory with header files for using project $1]),
+    [m4_tolower(coin_has_$1)=installed],
+    [])
+
+  AC_ARG_WITH([m4_tolower($1)-datadir],
+    AC_HELP_STRING([--with-m4_tolower($1)-datadir],
+                   [directory with data files for using project $1]),
+    [m4_tolower(coin_has_$1)=installed],
+    [])
+
+  m4_if(m4_tolower($1), blas, [
+    #--with-blas can overwrite --with-blas-lib, and can be set to BUILD to enforce building blas
+    AC_ARG_WITH([blas],
+      AC_HELP_STRING([--with-blas], [specify BLAS library (or BUILD for compilation)]),
+        [if test x"$withval" = "xBUILD" ; then
+           coin_has_blas=notGiven
+         else
+           coin_has_blas=installed
+         fi],
+        [])])
+
+  m4_if(m4_tolower($1), lapack, [
+    #--with-lapack can overwrite --with-lapack-lib, and can be set to BUILD to enforce building lapack
+    AC_ARG_WITH([lapack],
+      AC_HELP_STRING([--with-lapack], [specify LAPACK library (or BUILD for compilation)]),
+        [if test x"$withval" = "xBUILD" ; then
+           coin_has_lapack=notGiven
+         else
+           coin_has_lapack=installed
+         fi],
+        [])])
+
+fi
+
+if test $m4_tolower(coin_has_$1) = notGiven; then
+  #check for project by using pkg-config, if pkg-config is available
+  #we are only interested in installed packages here, so we do not search in $COIN_PKG_CONFIG_PATH_UNINSTALLED
+  if test -n "$PKG_CONFIG" ; then
+    coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
+    PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" ; export PKG_CONFIG_PATH
+      m4_ifval([$4],
+        [AC_COIN_PKG_CHECK_PROJECT_EXISTS([$4],
+	        [m4_tolower(coin_has_$1)="$m4_toupper([$4])_VERSION"])],
+	      [AC_COIN_PKG_CHECK_PROJECT_EXISTS([$1],
+	        [m4_tolower(coin_has_$1)="$m4_toupper([$1])_VERSION"])])
+    PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
+    export PKG_CONFIG_PATH
+  fi
+fi
+
+# if not found yet, check if project is available in present directory
+if test "$m4_tolower(coin_has_$1)" = notGiven; then
+  if test -d $srcdir/$2/$1; then
+    # If a third argument is given, then we have to check if one one the files given in that third argument is present.
+    # If none of the files in the third argument is available, then we consider the project directory as non-existing.
+    # However, if no third argument is given, then this means that there should be no check, and existence of the directory is sufficient.
+    m4_ifvaln([$3],
+      [for i in $srcdir/m4_ifval($2,[$2/],)$1/$3; do
+         if test -r $i; then
+           coin_have_project_dir=yes
+         fi
+       done],
+      [ coin_have_project_dir=yes ])
+    if test $coin_have_project_dir = yes; then
+      m4_tolower(coin_has_$1)=m4_ifval($2,[$2/],)$1
+    fi
+  fi
+fi
+
+AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
+
+AC_MSG_CHECKING(whether project $1 need to be configured)
+if test "$coin_have_project_dir" = yes ; then
+
+  if test -r $srcdir/m4_ifval($2,[$2/],)$1/configure; then
+    coin_subdirs="$coin_subdirs m4_ifval($2,[$2/],)$1"
+    AC_MSG_RESULT(yes)
+    AC_CONFIG_SUBDIRS(m4_ifval($2,[$2/],)$1)
+  else
+    AC_MSG_RESULT(no)
+  fi
+else
+  AC_MSG_RESULT(no)
+fi
+])
+
+###########################################################################
+#                            COIN_HAS_MODULE                              #
+###########################################################################
+
+# This macro sets up a COIN-OR module.
+# A module consists of one or more COIN-OR packages.
+# It defines the MODULE_CFLAGS, MODULE_LIBS, and MODULE_DATA variables, referring to the compiler and linker
+# flags to use when linking against this module and the directories where the module data resists.
+# It also defines a COIN_HAS_MODULE preprocessor macro and makefile conditional.
+# Further, tolower(coin_has_$1) is set to "yes".
+# If the flag 'required' is set (which is on by default), then the packages of the module are added to
+# the REQUIREDPACKAGES variable, which can be used to setup a .pc file.
+# The first argument should be the name (MODULE) of the module (in correct lower
+# and upper case).
+# The second argument should be a (space separated) list of projects which this
+# module consists of. Optionally, required version numbers can be added.
+# The optional third argument can be used to overwrite default values for flags like 'required'.
+#
+# It is also possible to specify a preinstalled version of this module
+# or to specify only the linker and compiler flags and data directory.
+# If the flag 'required' (which is on by default) is set, then user-given linker flags are added to
+# the PCADDLIBS variable, which can be used to setup a .pc file.
+#
+# If the user did not specify --with-$1-... flags and pkg-config is not available,
+# COIN_HAS_MODULE_FALLBACK($1, $2, $3) is called.
+
+AC_DEFUN([AC_COIN_HAS_MODULE],
+[AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
+AC_MSG_CHECKING([for COIN-OR module $1])
+
+m4_tolower(coin_has_$1)=notGiven
+
+# check if user wants to skip module in any case
+if test x"$COIN_SKIP_PROJECTS" != x; then
+  for dir in $COIN_SKIP_PROJECTS; do
+    if test $dir = "$1"; then
+      m4_tolower(coin_has_$1)=skipping
+    fi
+  done
+fi
+
+m4_toupper($1_LIBS)=
+m4_toupper($1_CFLAGS)=
+m4_toupper($1_DATA)=
+AC_SUBST(m4_toupper($1_LIBS))
+AC_SUBST(m4_toupper($1_CFLAGS))
+AC_SUBST(m4_toupper($1_DATA))
+AC_SUBST(REQUIREDPACKAGES)
+
+#check if user provided LIBS, CFLAGS, or DATA for module
+if test $m4_tolower(coin_has_$1) != skipping; then
+
+  AC_ARG_WITH([m4_tolower($1)-lib],
+    AC_HELP_STRING([--with-m4_tolower($1)-lib],
+                   [linker flags for using module $1]),
+      [m4_tolower(coin_has_$1)=yes
+       m4_toupper($1_LIBS)="$withval"
+       m4_bmatch($3, [required=0], [], [PCADDLIBS="$withval $PCADDLIBS"])
+      ],
+      [])
+
+  AC_ARG_WITH([m4_tolower($1)-incdir],
+    AC_HELP_STRING([--with-m4_tolower($1)-incdir],
+                   [directory with header files for using module $1]),
+    [m4_tolower(coin_has_$1)=yes
+     m4_toupper($1_CFLAGS)="-I`${CYGPATH_W} $withval`"],
+    [])
+
+  AC_ARG_WITH([m4_tolower($1)-datadir],
+    AC_HELP_STRING([--with-m4_tolower($1)-datadir],
+                   [directory with data files for using module $1]),
+    [m4_tolower(coin_has_$1)=yes
+     m4_toupper($1_DATA)="$withval"],
+    [])
+fi
+
+if test $m4_tolower(coin_has_$1) = notGiven; then
+  if test -n "$PKG_CONFIG" ; then
+    # set search path for pkg-config
+    # need to export variable to be sure that the following pkg-config gets these values
+    coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
+    PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH:$COIN_PKG_CONFIG_PATH_UNINSTALLED"
+    export PKG_CONFIG_PATH
+    
+    # let pkg-config do it's magic
+    AC_COIN_PKG_HAS_MODULE([$1],[$2],
+      [ m4_tolower(coin_has_$1)=yes
+        AC_MSG_RESULT([yes: $m4_toupper($1)_VERSIONS])
+        m4_bmatch($3, [required=0], [], [REQUIREDPACKAGES="$2 $REQUIREDPACKAGES"])
+      ],
+      [ m4_tolower(coin_has_$1)=notGiven
+        AC_MSG_RESULT([not given: $m4_toupper($1)_PKG_ERRORS])
+      ])
+
+    # reset PKG_CONFIG_PATH variable 
+    PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
+    export PKG_CONFIG_PATH
+  else
+    AC_MSG_RESULT([skipped check via pkg-config, redirect to fallback])
+    AC_COIN_HAS_MODULE_FALLBACK([$1], [$2], [$3])
+  fi
+
+else
+  AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
+fi
+
+if test $m4_tolower(coin_has_$1) != skipping &&
+   test $m4_tolower(coin_has_$1) != notGiven ; then
+  if test 0 = 1 ; then  #change this test to enable a bit of debugging output
+  if test -n "$m4_toupper($1)_CFLAGS" ; then
+    AC_MSG_NOTICE([$1 CFLAGS are $m4_toupper($1)_CFLAGS])
+  fi
+  if test -n "$m4_toupper($1)_LIBS" ; then
+    AC_MSG_NOTICE([$1 LIBS   are $m4_toupper($1)_LIBS])
+  fi
+  if test -n "$m4_toupper($1)_DATA" ; then
+    AC_MSG_NOTICE([$1 DATA   is  $m4_toupper($1)_DATA])
+  fi
+  fi
+  AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 module is available])
+fi
+
+# Define the Makefile conditional
+AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
+               [test $m4_tolower(coin_has_$1) != notGiven &&
+                test $m4_tolower(coin_has_$1) != skipping])
+
+]) # AC_COIN_HAS_MODULE
+
+###########################################################################
+#                       COIN_HAS_MODULE_FALLBACK                          #
+###########################################################################
+
+# This macro is used if COIN_HAS_MODULE fails to find a module because pkg-config was disabled or is not available.
+#
+# For each project xxx specified in $2, it searches for a xxx-uninstalled.pc file in the directories specified in
+# $COIN_PKG_CONFIG_PATH_UNINSTALLED. The latter variable is setup by COIN_HAS_PKGCONFIG and
+# consists of the content of the coin_subdirs.txt file which has been created by configure in the base directory.
+# The content of xxx-uninstalled.pc is parsed in order to defines the variables MODULE_CFLAGS, MODULE_LIBS, and MODULE_DATA,
+# referring to the compiler and linker flags to use when linking against this module
+# and the directory where the module data resists.
+# Further, the Required field of each .pc file is parsed and -uninstalled.pc files for these projects are searched for.
+# The MODULE_CFLAGS and MODULE_LIBS variables are augmented with the information from these .pc files.
+# Thus, the macros checks also dependencies of $2.
+# Note that the MODULE_DATA variable is set to the content of datadir of the first .pc file that is parsed.
+#
+# If .pc files for all projects in $2 and their dependencies is found, tolower(coin_has_$1) is set to "yes".
+# Otherwise, if some dependency is not found, tolower(coin_has_$1) is set to no.
+# Further, a COIN_HAS_MODULE preprocessor macro and a makefile conditional are defined.
+# If the flag 'required' is set (which is on by default), then the module package is added to
+# the REQUIREDPACKAGES variable, which can be used to setup a .pc file.
+#
+# The first argument should be the name (MODULE) of the module (in correct lower and upper case).
+# The second argument should be the base names of the projects .pc file which define this module.
+# The optional third argument can be used to overwrite default values for flags like 'required'.
+
+# $1 is not checked for $COIN_SKIP_PROJECTS, since we only look into $COIN_PKG_CONFIG_PATH_UNINSTALLED.
+# When the content of this variable was setup in the base directory, $COIN_SKIP_PROJECTS has already been considered.
+
+AC_DEFUN([AC_COIN_HAS_MODULE_FALLBACK],
+[AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
+AC_MSG_CHECKING([for COIN-OR module $1 (fallback)])
+
+m4_tolower(coin_has_$1)=notGiven
+m4_toupper($1_LIBS)=
+m4_toupper($1_CFLAGS)=
+m4_toupper($1_DATA)=
+AC_SUBST(REQUIREDPACKAGES)
+
+# initial list of dependencies is "$2", but we need to filter out version number specifications (= x, <= x, >= x)
+projtoprocess="m4_bpatsubsts([$2], [<?>?=[ 	]*[^ 	]+])"
+projprocessed=""
+
+while test $m4_tolower(coin_has_$1) = notGiven ; do
+  # setup list of projects that need to be processed in the next round
+  nextprojtoprocess=""
+
+  for proj in $projtoprocess ; do
+    # if $proj has been processed already, skip this round
+    if test "x$projprocessed" != x ; then
+      for projdone in $projprocessed ; do
+        if test $projdone = $proj ; then
+	  continue 2
+	fi
+      done
+    fi
+
+    # if $proj is available and configured, then a project-uninstalled.pc file should have been created, so search for it
+    pcfile=""
+    save_IFS="$IFS"
+    IFS=":"
+    for dir in $COIN_PKG_CONFIG_PATH_UNINSTALLED ; do
+      # the base directory configure should have setup coin_subdirs.txt in a way that it does not contain projects that should be skipped, so we do not need to test this here again
+      if test -r "$dir/$proj-uninstalled.pc" ; then
+        pcfile="$dir/$proj-uninstalled.pc"
+        pcfiledir="$dir"
+        break
+      fi
+    done
+    IFS="$save_IFS"
+
+    if test "x$pcfile" != x ; then
+      # read CFLAGS from $pcfile and add CYGPATH_W cludge into include flags
+      projcflags=`sed -n -e 's/Cflags://p' "$pcfile"`
+      projcflags=[`echo "$projcflags" | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`]
+      m4_toupper($1_CFLAGS)="$projcflags $m4_toupper($1_CFLAGS)"
+      
+      # read LIBS from $pcfile and replace -L${libdir} by absolute path to build directory in linker flags
+      # we assume that the build directory is $pcfiledir/src if this directory exists, otherwise we assume that it is $pcfiledir
+      projlibs=`sed -n -e 's/Libs://' -e 's/-L\${libdir}//p' "$pcfile"`
+      if test "x$projlibs" != x ; then
+        if test -d "${pcfiledir}/src" ; then
+          projlibs="-L`cd "${pcfiledir}/src"; pwd` $projlibs"
+        else
+          projlibs="-L`cd "$pcfiledir"; pwd` $projlibs"
+        fi
+      else
+        projlibs=`sed -n -e 's/Libs://p' "$pcfile"`
+      fi
+      m4_toupper($1_LIBS)="$m4_toupper($1_LIBS) $projlibs"
+      
+      # read DATA from $pcfile, if this is the first .pc file we are processing (so assume that its the main one)
+      if test "x$projprocessed" = x ; then
+        m4_toupper($1_DATA)=`sed -n -e 's/datadir=//gp' "$pcfile"`
+      fi
+      
+      # read dependencies from $pcfile, filter it, and add to list of projects that need to be processed next
+      projrequires=[`sed -n -e 's/Requires://gp' "$pcfile" | sed -e 's/<\?>\?=[ 	]*[^ 	]\+//g'`]
+      nextprojtoprocess="$nextprojtoprocess $projrequires"
+      
+      # remember that we have processed $proj
+      projprocessed="$projprocessed $proj"
+      
+    else
+      AC_MSG_RESULT([no, dependency $proj not available])
+      break 2
+    fi
+
+  done
+  
+  projtoprocess="$nextprojtoprocess"
+  
+  if test "x$projtoprocess" = x ; then
+    m4_tolower(coin_has_$1)=yes
+    AC_MSG_RESULT([yes, dependencies are$projprocessed])
+    
+    m4_bmatch($3, [required=0], [], [REQUIREDPACKAGES="$2 $REQUIREDPACKAGES"])
+    AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 module is available])
+    
+    if test 1 = 0 ; then  #change this test to enable a bit of debugging output
+    if test -n "$m4_toupper($1)_CFLAGS" ; then
+      AC_MSG_NOTICE([$1 CFLAGS are $m4_toupper($1)_CFLAGS])
+    fi
+    if test -n "$m4_toupper($1)_LIBS" ; then
+      AC_MSG_NOTICE([$1 LIBS   are $m4_toupper($1)_LIBS])
+    fi
+    if test -n "$m4_toupper($1)_DATA" ; then
+      AC_MSG_NOTICE([$1 DATA   is  $m4_toupper($1)_DATA])
+    fi
+    fi
+  fi
+done
+
+AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
+               [test $m4_tolower(coin_has_$1) != notGiven &&
+                test $m4_tolower(coin_has_$1) != skipping])
+
+]) # AC_COIN_HAS_MODULE_FALLBACK
+
+###########################################################################
+#                         COIN_HAS_MODULE_BLAS                            #
+###########################################################################
+
+# This macro checks for a library containing the BLAS library.  It
+# 1. checks the --with-blas argument
+# 2. if --with-blas=BUILD has been specified goes to point 5
+# 3. if --with-blas has been specified to a working library, sets BLAS_LIBS to its value
+# 4. tries standard libraries
+# 5. calls COIN_HAS_MODULE(Blas, [coinblas]) to check for ThirdParty/Blas
+# 6. calls COIN_HAS_MODULE_FALLBACK(Blas, [coinblas], [../ThirdParty/Blas or ../Blas])
+# The makefile conditional and preprocessor macro COIN_HAS_BLAS is defined.
+# BLAS_LIBS is set to the flags required to link with a Blas library.
+# In case 3 and 4, the flags to link to Blas are added to PCADDLIBS too.
+# In case 5, Blas is added to REQUIREDPACKAGES
+
+AC_DEFUN([AC_COIN_HAS_MODULE_BLAS],
+[
+AC_ARG_WITH([blas],
+            AC_HELP_STRING([--with-blas],
+                           [specify BLAS library (or BUILD for compilation)]),
+            [use_blas="$withval"], [use_blas=])
+
+#if user specified --with-blas-lib, then we should give COIN_HAS_MODULE preference
+AC_ARG_WITH([blas-lib],,[use_blas=BUILD])
+
+# Check if user supplied option makes sense
+if test x"$use_blas" != x; then
+  if test "$use_blas" = "BUILD"; then
+    # we come to this later
+    :
+  elif test "$use_blas" != "no"; then
+    AC_MSG_CHECKING([whether user supplied BLASLIB=\"$use_blas\" works])
+    coin_save_LIBS="$LIBS"
+    LIBS="$use_blas $LIBS"
+    AC_COIN_TRY_FLINK([daxpy],
+                      [AC_MSG_RESULT([yes])],
+                      [AC_MSG_RESULT([no])
+                       AC_MSG_ERROR([user supplied BLAS library \"$use_blas\" does not work])])
+    LIBS="$coin_save_LIBS"
+  fi
+else
+# Try to autodetect the library for blas based on build system
+  #AC_MSG_CHECKING([default locations for BLAS])
+  skip_lblas_check=no
+  case $build in
+    *-sgi-*) 
+      AC_MSG_CHECKING([whether -lcomplib.sgimath has BLAS])
+      SAVE_LIBS="$LIBS"
+      LIBS="-lcomplib.sgimath $LIBS"
+      AC_COIN_TRY_FLINK([daxpy],
+                        [AC_MSG_RESULT([yes])
+                         use_blas="-lcomplib.sgimath"],
+                        [AC_MSG_RESULT([no])
+                         SAVE_LIBS="$LIBS"])
+      ;;
+
+# Ideally, we'd use -library=sunperf, but it's an imperfect world. Studio
+# cc doesn't recognise -library, it wants -xlic_lib. Studio 12 CC doesn't
+# recognise -xlic_lib. Libtool doesn't like -xlic_lib anyway. Sun claims
+# that CC and cc will understand -library in Studio 13. The main extra
+# function of -xlic_lib and -library is to arrange for the Fortran run-time
+# libraries to be linked for C++ and C. We can arrange that explicitly.
+    *-*-solaris*)
+      SAVE_LIBS="$LIBS"
+      AC_MSG_CHECKING([for BLAS in libsunperf])
+      LIBS="-lsunperf $FLIBS $LIBS"
+      AC_COIN_TRY_FLINK([daxpy],
+                        [AC_MSG_RESULT([yes])
+                         use_blas='-lsunperf'
+			 coin_need_flibs=yes],
+                        [AC_MSG_RESULT([no])
+                         LIBS="$SAVE_LIBS"])
+      ;;
+    *-cygwin* | *-mingw*)
+# On cygwin, consider -lblas only if doscompile is disabled. The prebuilt
+# library will want to link with cygwin, hence won't run standalone in DOS.
+      if test "$enable_doscompile" = mingw; then
+	skip_lblas_check=yes
+      fi
+      case "$CC" in
+        cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+          SAVE_LIBS="$LIBS"
+          AC_MSG_CHECKING([for BLAS in MKL])
+          LIBS="mkl_intel_c.lib mkl_sequential.lib mkl_core.lib $LIBS"
+          AC_COIN_TRY_FLINK([daxpy],
+                            [AC_MSG_RESULT([yes])
+                             use_blas='mkl_intel_c.lib mkl_sequential.lib mkl_core.lib'],
+                            [AC_MSG_RESULT([no])
+                             LIBS="$SAVE_LIBS"])
+          ;;
+      esac
+      ;;
+  esac
+
+  if test -z "$use_blas" && test $skip_lblas_check = no; then
+    SAVE_LIBS="$LIBS"
+    AC_MSG_CHECKING([whether -lblas has BLAS])
+    LIBS="-lblas $LIBS"
+    AC_COIN_TRY_FLINK([daxpy],
+		      [AC_MSG_RESULT([yes])
+		       use_blas='-lblas'],
+		      [AC_MSG_RESULT([no])
+	               LIBS="$SAVE_LIBS"])
+  fi
+  LIBS="$SAVE_LIBS"
+  
+  # If we have no other ideas, consider building BLAS.
+  if test -z "$use_blas" ; then
+    use_blas=BUILD
+  fi
+fi
+
+if test "x$use_blas" = xBUILD ; then
+  AC_COIN_HAS_MODULE(Blas, [coinblas])
+  
+elif test "x$use_blas" != x && test "$use_blas" != no; then
+  coin_has_blas=yes
+  AM_CONDITIONAL([COIN_HAS_BLAS],[test 0 = 0])
+  AC_DEFINE([COIN_HAS_BLAS],[1], [If defined, the BLAS Library is available.])
+  BLAS_LIBS="$use_blas"
+  BLAS_CFLAGS=
+  BLAS_DATA=
+  AC_SUBST(BLAS_LIBS)
+  AC_SUBST(BLAS_CFLAGS)
+  AC_SUBST(BLAS_DATA)
+  PCADDLIBS="$use_blas $PCADDLIBS"
+  
+else
+  coin_has_blas=no
+  AM_CONDITIONAL([COIN_HAS_BLAS],[test 0 = 1])
+fi
+
+]) # AC_COIN_HAS_MODULE_BLAS
+
+###########################################################################
+#                       COIN_HAS_MODULE_LAPACK                            #
+###########################################################################
+
+# This macro checks for a library containing the LAPACK library.  It
+# 1. checks the --with-lapack argument
+# 2. if --with-lapack=BUILD has been specified goes to point 5
+# 3. if --with-lapack has been specified to a working library, sets LAPACK_LIBS to its value
+# 4. tries standard libraries
+# 5. calls COIN_HAS_MODULE(Lapack, [lapack]) to check for ThirdParty/Lapack
+# 6. calls COIN_HAS_MODULE_FALLBACK(Lapack, [coinlapack], [../ThirdParty/Lapack or ../Lapack])
+# The makefile conditional and preprocessor macro COIN_HAS_LAPACK is defined.
+# LAPACK_LIBS is set to the flags required to link with a Lapack library.
+# In case 3 and 4, the flags to link to Lapack are added to PCADDLIBS too.
+# In case 5, Lapack is added to REQUIREDPACKAGES
+
+AC_DEFUN([AC_COIN_HAS_MODULE_LAPACK],
+[
+AC_ARG_WITH([lapack],
+            AC_HELP_STRING([--with-lapack],
+                           [specify LAPACK library (or BUILD for compilation)]),
+            [use_lapack=$withval], [use_lapack=])
+	    
+#if user specified --with-lapack-lib, then we should give COIN_HAS_MODULE preference
+AC_ARG_WITH([lapack-lib],,[use_lapack=BUILD])
+
+# Check if user supplied option makes sense
+if test x"$use_lapack" != x; then
+  if test "$use_lapack" = "BUILD"; then
+    # we come to this later
+    :
+  elif test "$use_lapack" != no; then
+    AC_MSG_CHECKING([whether user supplied LAPACKLIB=\"$use_lapack\" works])
+    coin_save_LIBS="$LIBS"
+    LIBS="$use_lapack $LIBS"
+    AC_COIN_TRY_FLINK([dsyev],
+                      [AC_MSG_RESULT([yes])],
+                      [AC_MSG_RESULT([no])
+                       AC_MSG_ERROR([user supplied LAPACK library \"$use_lapack\" does not work])])
+    LIBS="$coin_save_LIBS"
+  fi
+else
+  if test x$coin_has_blas = xyes; then
+    # First try to see if LAPACK is already available with BLAS library
+    AC_MSG_CHECKING([whether LAPACK is already available with BLAS library])
+    coin_save_LIBS="$LIBS"
+    LIBS="$BLAS_LIBS $LIBS"
+    AC_COIN_TRY_FLINK([dsyev],
+                      [AC_MSG_RESULT([yes]); use_lapack="$BLAS_LIBS"],
+                      [AC_MSG_RESULT([no])])
+    LIBS="$coin_save_LIBS"
+  fi
+  skip_llapack_check=no
+  if test -z "$use_lapack"; then
+    # Try to autodetect the library for lapack based on build system
+    case $build in
+      *-sgi-*) 
+        SAVE_LIBS="$LIBS"
+        AC_MSG_CHECKING([whether -lcomplib.sgimath has LAPACK])
+        LIBS="-lcomplib.sgimath $LIBS"
+        AC_COIN_TRY_FLINK([dsyev],
+                          [AC_MSG_RESULT([yes])
+                           use_lapack="-lcomplib.sgimath;"],
+                          [AC_MSG_RESULT([no])
+                           SAVE_LIBS="$LIBS"])
+        ;;
+
+# See comments in COIN_HAS_BLAS.
+      *-*-solaris*)
+      SAVE_LIBS="$LIBS"
+      AC_MSG_CHECKING([for LAPACK in libsunperf])
+      LIBS="-lsunperf $FLIBS $LIBS"
+      AC_COIN_TRY_FLINK([dsyev],
+                        [AC_MSG_RESULT([yes])
+                         use_lapack='-lsunperf'
+			 coin_need_flibs=yes],
+                        [AC_MSG_RESULT([no])
+                         LIBS="$SAVE_LIBS"])
+        ;;
+# On cygwin, do this check only if doscompile is disabled. The prebuilt library
+# will want to link with cygwin, hence won't run standalone in DOS.
+      *-cygwin*)
+	if test "$enable_doscompile" = mingw; then
+	  skip_llapack_check=yes
+	fi
+	;;
+    esac
+  fi
+
+  if test -z "$use_lapack" && test $skip_llapack_check = no; then
+    SAVE_LIBS="$LIBS"
+    AC_MSG_CHECKING([whether -llapack has LAPACK])
+    LIBS="-llapack $LIBS"
+    AC_COIN_TRY_FLINK([dsyev],
+		      [AC_MSG_RESULT([yes])
+		       use_lapack='-llapack'],
+		      [AC_MSG_RESULT([no])
+		       LIBS="$SAVE_LIBS"])
+  fi
+  
+  LIBS="$SAVE_LIBS"
+
+  # If we have no other ideas, consider building LAPACK.
+  if test -z "$use_lapack" ; then
+    use_lapack=BUILD
+  fi
+fi
+
+if test "x$use_lapack" = xBUILD ; then
+  AC_COIN_HAS_MODULE(Lapack, [coinlapack])
+  
+elif test "x$use_lapack" != x && test "$use_lapack" != no; then
+  coin_has_lapack=yes
+  AM_CONDITIONAL([COIN_HAS_LAPACK],[test 0 = 0])
+  AC_DEFINE([COIN_HAS_LAPACK],[1], [If defined, the LAPACK Library is available.])
+  LAPACK_LIBS="$use_lapack"
+  LAPACK_CFLAGS=
+  LAPACK_DATA=
+  AC_SUBST(LAPACK_LIBS)
+  AC_SUBST(LAPACK_CFLAGS)
+  AC_SUBST(LAPACK_DATA)
+  if test "x$LAPACK_LIBS" != "x$BLAS_LIBS"; then
+    PCADDLIBS="$LAPACK_LIBS $PCADDLIBS"
+  fi
+  
+else
+  coin_has_lapack=no
+  AM_CONDITIONAL([COIN_HAS_LAPACK],[test 0 = 1])
+fi
+
+]) # AC_COIN_HAS_MODULE_LAPACK
+
+###########################################################################
+#                            COIN_HAS_PACKAGE                             #
+###########################################################################
+
+# This macro checks for the existance of a COIN-OR package and provides compiler and linker flags to compile against this package.
+# A package can consists of one or more COIN-OR or other projects.
+# It defines the PACKAGE_CFLAGS, PACKAGE_LIBS, and PACKAGE_DATA variables, referring to the compiler and linker
+# flags to use when linking against this module and the directories where the module data resists.
+# It also defines a COIN_HAS_PACKAGE preprocessor macro and makefile conditional.
+# Further, tolower(coin_has_$1) is set to "yes".
+# If a list of build targets using this projects is given in the third argument,
+# then the compiler and linker variables and .pc file setup variable corresponding to this build target
+# are extended with the values for this package.
+# That is, for each build target X, the variables X_CFLAGS, X_LIBS, X_PCLIBS, X_PCREQUIRES are setup,
+# whereas the last two specify the values to put into the "Libs:" and "Requires:" fields of the .pc file, resp.
+#
+# The first argument should be the name (PACKAGE) of the package (in correct lower
+# and upper case).
+# The second argument should be a (space separated) list of projects which this
+# package consists of. Optionally, required version numbers can be added.
+# The optional third argument should be a (space separated) list of build targets
+# which use this package, if available.
+#
+# It is also possible to specify a preinstalled version of this package
+# or to specify only the linker and compiler flags and data directory.
+#
+# If the user did not specify --with-$1-... flags and pkg-config is not available,
+# COIN_HAS_PACKAGE_FALLBACK($1, $2, $3) is called.
+
+AC_DEFUN([AC_COIN_HAS_PACKAGE],
+[AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
+AC_MSG_CHECKING([for COIN-OR package $1])
+
+m4_tolower(coin_has_$1)=notGiven
+
+# check if user wants to skip package in any case
+if test x"$COIN_SKIP_PROJECTS" != x; then
+  for dir in $COIN_SKIP_PROJECTS; do
+    if test $dir = "$1"; then
+      m4_tolower(coin_has_$1)=skipping
+    fi
+  done
+fi
+
+m4_toupper($1_LIBS)=
+m4_toupper($1_CFLAGS)=
+m4_toupper($1_DATA)=
+AC_SUBST(m4_toupper($1_LIBS))
+AC_SUBST(m4_toupper($1_CFLAGS))
+AC_SUBST(m4_toupper($1_DATA))
+coin_foreach_w([myvar], [$3], [
+  AC_SUBST(m4_toupper(myvar)_CFLAGS)
+  AC_SUBST(m4_toupper(myvar)_LIBS)
+  AC_SUBST(m4_toupper(myvar)_PCLIBS)
+  AC_SUBST(m4_toupper(myvar)_PCREQUIRES)
+])
+
+#check if user provided LIBS, CFLAGS, or DATA for module
+if test $m4_tolower(coin_has_$1) != skipping; then
+
+  AC_ARG_WITH([m4_tolower($1)-lib],
+    AC_HELP_STRING([--with-m4_tolower($1)-lib],
+                   [linker flags for using package $1]),
+      [m4_tolower(coin_has_$1)=yes
+       m4_toupper($1_LIBS)="$withval"
+       coin_foreach_w([myvar], [$3], [
+         m4_toupper(myvar)_PCLIBS="$withval $m4_toupper(myvar)_PCLIBS"
+         m4_toupper(myvar)_LIBS="$withval $m4_toupper(myvar)_LIBS"
+       ])
+      ],
+      [])
+
+  AC_ARG_WITH([m4_tolower($1)-incdir],
+    AC_HELP_STRING([--with-m4_tolower($1)-incdir],
+                   [directory with header files for using package $1]),
+    [m4_tolower(coin_has_$1)=yes
+     m4_toupper($1_CFLAGS)="-I`${CYGPATH_W} $withval`"
+     coin_foreach_w([myvar], [$3], [m4_toupper(myvar)_CFLAGS="$withval $m4_toupper(myvar)_CFLAGS"
+     ])
+    ],
+    [])
+
+  AC_ARG_WITH([m4_tolower($1)-datadir],
+    AC_HELP_STRING([--with-m4_tolower($1)-datadir],
+                   [directory with data files for using package $1]),
+    [m4_tolower(coin_has_$1)=yes
+     m4_toupper($1_DATA)="$withval"],
+    [])
+fi
+
+if test $m4_tolower(coin_has_$1) = notGiven; then
+  if test -n "$PKG_CONFIG" ; then
+    # set search path for pkg-config
+    # need to export variable to be sure that the following pkg-config gets these values
+    coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
+    PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH:$COIN_PKG_CONFIG_PATH_UNINSTALLED"
+    export PKG_CONFIG_PATH
+    
+    # let pkg-config do it's magic
+    AC_COIN_PKG_HAS_MODULE([$1],[$2],
+      [ m4_tolower(coin_has_$1)=yes
+        AC_MSG_RESULT([yes: $m4_toupper($1)_VERSIONS])
+        coin_foreach_w([myvar], [$3], [m4_toupper(myvar)_PCREQUIRES="$2 $m4_toupper(myvar)_PCREQUIRES"
+        ])
+      ],
+      [ m4_tolower(coin_has_$1)=notGiven
+        AC_MSG_RESULT([not given: $m4_toupper($1)_PKG_ERRORS])
+      ])
+
+    # reset PKG_CONFIG_PATH variable 
+    PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
+    export PKG_CONFIG_PATH
+    
+    # augment X_CFLAGS and X_LIBS for each build target X in $3
+    coin_foreach_w([myvar], [$3], [
+      m4_toupper(myvar)_CFLAGS="$m4_toupper($1)_CFLAGS $m4_toupper(myvar)_CFLAGS"
+      m4_toupper(myvar)_LIBS="$m4_toupper($1)_LIBS $m4_toupper(myvar)_LIBS"
+    ])
+  else
+    AC_MSG_RESULT([skipped check via pkg-config, redirect to fallback])
+    AC_COIN_HAS_PACKAGE_FALLBACK([$1], [$2], [$3])
+  fi
+
+else
+  AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
+fi
+
+if test $m4_tolower(coin_has_$1) != skipping &&
+   test $m4_tolower(coin_has_$1) != notGiven ; then
+  AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 package is available])
+   
+  if test 1 = 0 ; then  #change this test to enable a bit of debugging output
+    if test -n "$m4_toupper($1)_CFLAGS" ; then
+      AC_MSG_NOTICE([$1 CFLAGS are $m4_toupper($1)_CFLAGS])
+    fi
+    if test -n "$m4_toupper($1)_LIBS" ; then
+      AC_MSG_NOTICE([$1 LIBS   are $m4_toupper($1)_LIBS])
+    fi
+    if test -n "$m4_toupper($1)_DATA" ; then
+      AC_MSG_NOTICE([$1 DATA   is  $m4_toupper($1)_DATA])
+    fi
+    if test -n "$m4_toupper($1)_CFLAGS" ; then
+      AC_MSG_NOTICE([$1 CFLAGS are $m4_toupper($1)_CFLAGS])
+    fi
+    coin_foreach_w([myvar], [$3], [
+      AC_MSG_NOTICE([myvar CFLAGS are $m4_toupper(myvar)_CFLAGS])
+      AC_MSG_NOTICE([myvar LIBS   are $m4_toupper(myvar)_LIBS])
+    ])
+  fi
+fi
+
+# Define the Makefile conditional
+AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
+               [test $m4_tolower(coin_has_$1) != notGiven &&
+                test $m4_tolower(coin_has_$1) != skipping])
+
+]) # AC_COIN_HAS_MODULE
+
+###########################################################################
+#                       COIN_HAS_PACKAGE_FALLBACK                         #
+###########################################################################
+
+# This macro is used if COIN_HAS_PACKAGE fails to find a module because pkg-config was disabled or is not available.
+#
+# For each project xxx specified in $2, it searches for a xxx-uninstalled.pc file in the directories specified in
+# $COIN_PKG_CONFIG_PATH_UNINSTALLED. The latter variable is setup by COIN_HAS_PKGCONFIG and
+# consists of the content of the coin_subdirs.txt file which has been created by configure in the base directory.
+# The content of xxx-uninstalled.pc is parsed in order to defines the variables PACKAGE_CFLAGS, PACKAGE_LIBS, and PACKAGE_DATA,
+# referring to the compiler and linker flags to use when linking against this package
+# and the directory where the package data resists.
+# Further, for each build target X specified in the third argument, the variables X_CFLAGS and X_LIBS are
+# extended with the compiler and linker flags of this package and the variables X_PCLIBS and X_PCREQUIRES are extended by the list
+# of linker flags and dependent projects as needed to setup a .pc file.
+# The macros checks also dependencies of $2.
+# Note that the PACKAGE_DATA variable is set to the content of datadir of the first .pc file that is parsed.
+#
+# If .pc files for all projects in $2 and their dependencies is found, tolower(coin_has_$1) is set to "yes".
+# Otherwise, if some dependency is not found, tolower(coin_has_$1) is set to "notGiven".
+# Further, a COIN_HAS_PACKAGE preprocessor macro and a makefile conditional are defined.
+#
+# The first argument should be the name (PACKAGE) of the package (in correct lower and upper case).
+# The second argument should be the base names of the projects .pc file which define this package.
+# The optional third argument should be a (space separated) list of build targets
+# which use this package, if available.
+
+# $1 is not checked for $COIN_SKIP_PROJECTS, since we only look into $COIN_PKG_CONFIG_PATH_UNINSTALLED.
+# When the content of this variable was setup in the base directory, $COIN_SKIP_PROJECTS has already been considered.
+
+AC_DEFUN([AC_COIN_HAS_PACKAGE_FALLBACK],
+[AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
+AC_MSG_CHECKING([for COIN-OR package $1 (fallback)])
+
+m4_tolower(coin_has_$1)=notGiven
+m4_toupper($1_LIBS)=
+m4_toupper($1_CFLAGS)=
+m4_toupper($1_DATA)=
+
+# initial list of dependencies is "$2", but we need to filter out version number specifications (= x, <= x, >= x)
+projtoprocess="m4_bpatsubsts([$2], [<?>?=[ 	]*[^ 	]+])"
+projprocessed=""
+
+while test $m4_tolower(coin_has_$1) = notGiven ; do
+  # setup list of projects that need to be processed in the next round
+  nextprojtoprocess=""
+
+  for proj in $projtoprocess ; do
+    # if $proj has been processed already, skip this round
+    if test "x$projprocessed" != x ; then
+      for projdone in $projprocessed ; do
+        if test $projdone = $proj ; then
+	  continue 2
+	fi
+      done
+    fi
+
+    # if $proj is available and configured, then a project-uninstalled.pc file should have been created, so search for it
+    pcfile=""
+    save_IFS="$IFS"
+    IFS=":"
+    for dir in $COIN_PKG_CONFIG_PATH_UNINSTALLED ; do
+      # the base directory configure should have setup coin_subdirs.txt in a way that it does not contain projects that should be skipped, so we do not need to test this here again
+      if test -r "$dir/$proj-uninstalled.pc" ; then
+        pcfile="$dir/$proj-uninstalled.pc"
+        pcfiledir="$dir"
+        break
+      fi
+    done
+    IFS="$save_IFS"
+
+    if test "x$pcfile" != x ; then
+      # read CFLAGS from $pcfile and add CYGPATH_W cludge into include flags
+      projcflags=`sed -n -e 's/Cflags://p' "$pcfile"`
+      projcflags=[`echo "$projcflags" | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`]
+      m4_toupper($1_CFLAGS)="$projcflags $m4_toupper($1_CFLAGS)"
+      
+      # read LIBS from $pcfile and replace -L${libdir} by absolute path to build directory in linker flags
+      # we assume that the build directory is $pcfiledir/src if this directory exists, otherwise we assume that it is $pcfiledir
+      projlibs=`sed -n -e 's/Libs://' -e 's/-L\${libdir}//p' "$pcfile"`
+      if test "x$projlibs" != x ; then
+        if test -d "${pcfiledir}/src" ; then
+          projlibs="-L`cd "${pcfiledir}/src"; pwd` $projlibs"
+        else
+          projlibs="-L`cd "$pcfiledir"; pwd` $projlibs"
+        fi
+      else
+        projlibs=`sed -n -e 's/Libs://p' "$pcfile"`
+      fi
+      m4_toupper($1_LIBS)="$m4_toupper($1_LIBS) $projlibs"
+      
+      # read DATA from $pcfile, if this is the first .pc file we are processing (so assume that its the main one)
+      if test "x$projprocessed" = x ; then
+        m4_toupper($1_DATA)=`sed -n -e 's/datadir=//gp' "$pcfile"`
+      fi
+      
+      # read dependencies from $pcfile, filter it, and add to list of projects that need to be processed next
+      projrequires=[`sed -n -e 's/Requires://gp' "$pcfile" | sed -e 's/<\?>\?=[ 	]*[^ 	]\+//g'`]
+      nextprojtoprocess="$nextprojtoprocess $projrequires"
+      
+      # remember that we have processed $proj
+      projprocessed="$projprocessed $proj"
+      
+    else
+      AC_MSG_RESULT([no, dependency $proj not available])
+      break 2
+    fi
+
+  done
+  
+  projtoprocess="$nextprojtoprocess"
+  
+  # if there are no more projects to search for, finish up
+  if test "x$projtoprocess" = x ; then
+    m4_tolower(coin_has_$1)=yes
+    AC_MSG_RESULT([yes, dependencies are$projprocessed])
+    AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 package is available])
+    
+    coin_foreach_w([myvar], [$3], [
+      m4_toupper(myvar)_PCREQUIRES="$2 $m4_toupper(myvar)_PCREQUIRES"
+      m4_toupper(myvar)_CFLAGS="$m4_toupper($1)_CFLAGS $m4_toupper(myvar)_CFLAGS"
+      m4_toupper(myvar)_LIBS="$m4_toupper($1)_LIBS $m4_toupper(myvar)_LIBS"
+    ])
+    
+    if test 1 = 0 ; then  #change this test to enable a bit of debugging output
+      if test -n "$m4_toupper($1)_CFLAGS" ; then
+        AC_MSG_NOTICE([$1 CFLAGS are $m4_toupper($1)_CFLAGS])
+      fi
+      if test -n "$m4_toupper($1)_LIBS" ; then
+        AC_MSG_NOTICE([$1 LIBS   are $m4_toupper($1)_LIBS])
+      fi
+      if test -n "$m4_toupper($1)_DATA" ; then
+        AC_MSG_NOTICE([$1 DATA   is  $m4_toupper($1)_DATA])
+      fi
+      coin_foreach_w([myvar], [$3], [
+        AC_MSG_NOTICE([myvar CFLAGS are $m4_toupper(myvar)_CFLAGS])
+        AC_MSG_NOTICE([myvar LIBS   are $m4_toupper(myvar)_LIBS])
+      ])
+    fi
+  fi
+done
+
+AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
+               [test $m4_tolower(coin_has_$1) != notGiven &&
+                test $m4_tolower(coin_has_$1) != skipping])
+
+]) # AC_COIN_HAS_PACKAGE_FALLBACK
+
+###########################################################################
+#                         COIN_HAS_PACKAGE_BLAS                           #
+###########################################################################
+
+# This macro checks for a library containing the BLAS library.  It
+# 1. checks the --with-blas argument
+# 2. if --with-blas=BUILD has been specified goes to point 5
+# 3. if --with-blas has been specified to a working library, sets BLAS_LIBS to its value
+# 4. tries standard libraries
+# 5. calls COIN_HAS_PACKAGE(Blas, [coinblas], [$1]) to check for ThirdParty/Blas
+# The makefile conditional and preprocessor macro COIN_HAS_BLAS is defined.
+# BLAS_LIBS is set to the flags required to link with a Blas library.
+# For each build target X in $1, X_LIBS is extended with $BLAS_LIBS.
+# In case 3 and 4, the flags to link to Blas are added to X_PCLIBS too.
+# In case 5, Blas is added to X_PCREQUIRES.
+
+AC_DEFUN([AC_COIN_HAS_PACKAGE_BLAS],
+[
+AC_ARG_WITH([blas],
+            AC_HELP_STRING([--with-blas],
+                           [specify BLAS library (or BUILD for compilation)]),
+            [use_blas="$withval"], [use_blas=])
+
+#if user specified --with-blas-lib, then we should give COIN_HAS_PACKAGE preference
+AC_ARG_WITH([blas-lib],,[use_blas=BUILD])
+
+# Check if user supplied option makes sense
+if test x"$use_blas" != x; then
+  if test "$use_blas" = "BUILD"; then
+    # we come to this later
+    :
+  elif test "$use_blas" != "no"; then
+    AC_MSG_CHECKING([whether user supplied BLASLIB=\"$use_blas\" works])
+    coin_save_LIBS="$LIBS"
+    LIBS="$use_blas $LIBS"
+    AC_COIN_TRY_FLINK([daxpy],
+                      [AC_MSG_RESULT([yes])],
+                      [AC_MSG_RESULT([no])
+                       AC_MSG_ERROR([user supplied BLAS library \"$use_blas\" does not work])])
+    LIBS="$coin_save_LIBS"
+  fi
+else
+# Try to autodetect the library for blas based on build system
+  #AC_MSG_CHECKING([default locations for BLAS])
+  skip_lblas_check=no
+  case $build in
+    *-sgi-*) 
+      AC_MSG_CHECKING([whether -lcomplib.sgimath has BLAS])
+      coin_save_LIBS="$LIBS"
+      LIBS="-lcomplib.sgimath $LIBS"
+      AC_COIN_TRY_FLINK([daxpy],
+                        [AC_MSG_RESULT([yes])
+                         use_blas="-lcomplib.sgimath"],
+                        [AC_MSG_RESULT([no])])
+      LIBS="$coin_save_LIBS"
+      ;;
+
+# Ideally, we'd use -library=sunperf, but it's an imperfect world. Studio
+# cc doesn't recognise -library, it wants -xlic_lib. Studio 12 CC doesn't
+# recognise -xlic_lib. Libtool doesn't like -xlic_lib anyway. Sun claims
+# that CC and cc will understand -library in Studio 13. The main extra
+# function of -xlic_lib and -library is to arrange for the Fortran run-time
+# libraries to be linked for C++ and C. We can arrange that explicitly.
+    *-*-solaris*)
+      AC_MSG_CHECKING([for BLAS in libsunperf])
+      coin_save_LIBS="$LIBS"
+      LIBS="-lsunperf $FLIBS $LIBS"
+      AC_COIN_TRY_FLINK([daxpy],
+                        [AC_MSG_RESULT([yes])
+                         use_blas='-lsunperf'
+			 coin_need_flibs=yes],
+                        [AC_MSG_RESULT([no])])
+      LIBS="$coin_save_LIBS"
+      ;;
+    *-cygwin* | *-mingw*)
+# On cygwin, consider -lblas only if doscompile is disabled. The prebuilt
+# library will want to link with cygwin, hence won't run standalone in DOS.
+      if test "$enable_doscompile" = mingw; then
+	skip_lblas_check=yes
+      fi
+      case "$CC" in
+        cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+          AC_MSG_CHECKING([for BLAS in MKL])
+          coin_save_LIBS="$LIBS"
+          LIBS="mkl_intel_c.lib mkl_sequential.lib mkl_core.lib $LIBS"
+          AC_COIN_TRY_FLINK([daxpy],
+                            [AC_MSG_RESULT([yes])
+                             use_blas='mkl_intel_c.lib mkl_sequential.lib mkl_core.lib'],
+                            [AC_MSG_RESULT([no])])
+          LIBS="$coin_save_LIBS"
+          ;;
+      esac
+      ;;
+  esac
+
+  if test -z "$use_blas" && test $skip_lblas_check = no; then
+    AC_MSG_CHECKING([whether -lblas has BLAS])
+    coin_save_LIBS="$LIBS"
+    LIBS="-lblas $LIBS"
+    AC_COIN_TRY_FLINK([daxpy],
+		      [AC_MSG_RESULT([yes])
+		       use_blas='-lblas'],
+		      [AC_MSG_RESULT([no])])
+    LIBS="$coin_save_LIBS"
+  fi
+  
+  # If we have no other ideas, consider building BLAS.
+  if test -z "$use_blas" ; then
+    use_blas=BUILD
+  fi
+fi
+
+if test "x$use_blas" = xBUILD ; then
+  AC_COIN_HAS_PACKAGE(Blas, [coinblas], [$1])
+  
+elif test "x$use_blas" != x && test "$use_blas" != no; then
+  coin_has_blas=yes
+  AM_CONDITIONAL([COIN_HAS_BLAS],[test 0 = 0])
+  AC_DEFINE([COIN_HAS_BLAS],[1], [If defined, the BLAS Library is available.])
+  BLAS_LIBS="$use_blas"
+  BLAS_CFLAGS=
+  BLAS_DATA=
+  AC_SUBST(BLAS_LIBS)
+  AC_SUBST(BLAS_CFLAGS)
+  AC_SUBST(BLAS_DATA)
+  coin_foreach_w([myvar], [$1], [
+    m4_toupper(myvar)_PCLIBS="$BLAS_LIBS $m4_toupper(myvar)_PCLIBS"
+    m4_toupper(myvar)_LIBS="$BLAS_LIBS $m4_toupper(myvar)_LIBS"
+  ])
+  
+else
+  coin_has_blas=no
+  AM_CONDITIONAL([COIN_HAS_BLAS],[test 0 = 1])
+fi
+
+coin_foreach_w([myvar], [$1], [
+  AC_SUBST(m4_toupper(myvar)_PCLIBS)
+  AC_SUBST(m4_toupper(myvar)_LIBS)
+])
+
+]) # AC_COIN_HAS_PACKAGE_BLAS
+
+###########################################################################
+#                       COIN_HAS_PACKAGE_LAPACK                           #
+###########################################################################
+
+# This macro checks for a library containing the LAPACK library.  It
+# 1. checks the --with-lapack argument
+# 2. if --with-lapack=BUILD has been specified goes to point 5
+# 3. if --with-lapack has been specified to a working library, sets LAPACK_LIBS to its value
+# 4. tries standard libraries
+# 5. calls COIN_HAS_PACKAGE(Lapack, [lapack], [$1]) to check for ThirdParty/Lapack
+# The makefile conditional and preprocessor macro COIN_HAS_LAPACK is defined.
+# LAPACK_LIBS is set to the flags required to link with a Lapack library.
+# For each build target X in $1, X_LIBS is extended with $LAPACK_LIBS.
+# In case 3 and 4, the flags to link to Lapack are added to X_PCLIBS too.
+# In case 5, Lapack is added to X_PCREQUIRES.
+
+AC_DEFUN([AC_COIN_HAS_PACKAGE_LAPACK],
+[
+AC_ARG_WITH([lapack],
+            AC_HELP_STRING([--with-lapack],
+                           [specify LAPACK library (or BUILD for compilation)]),
+            [use_lapack=$withval], [use_lapack=])
+	    
+#if user specified --with-lapack-lib, then we should give COIN_HAS_PACKAGE preference
+AC_ARG_WITH([lapack-lib],,[use_lapack=BUILD])
+
+# Check if user supplied option makes sense
+if test x"$use_lapack" != x; then
+  if test "$use_lapack" = "BUILD"; then
+    # we come to this later
+    :
+  elif test "$use_lapack" != no; then
+    AC_MSG_CHECKING([whether user supplied LAPACKLIB=\"$use_lapack\" works])
+    coin_save_LIBS="$LIBS"
+    LIBS="$use_lapack $LIBS"
+    AC_COIN_TRY_FLINK([dsyev],
+                      [AC_MSG_RESULT([yes])],
+                      [AC_MSG_RESULT([no])
+                       AC_MSG_ERROR([user supplied LAPACK library \"$use_lapack\" does not work])])
+    LIBS="$coin_save_LIBS"
+  fi
+else
+  if test x$coin_has_blas = xyes; then
+    # First try to see if LAPACK is already available with BLAS library
+    AC_MSG_CHECKING([whether LAPACK is already available with BLAS library])
+    coin_save_LIBS="$LIBS"
+    LIBS="$BLAS_LIBS $LIBS"
+    AC_COIN_TRY_FLINK([dsyev],
+                      [AC_MSG_RESULT([yes]); use_lapack="$BLAS_LIBS"],
+                      [AC_MSG_RESULT([no])])
+    LIBS="$coin_save_LIBS"
+  fi
+  skip_llapack_check=no
+  if test -z "$use_lapack"; then
+    # Try to autodetect the library for lapack based on build system
+    case $build in
+      *-sgi-*) 
+        AC_MSG_CHECKING([whether -lcomplib.sgimath has LAPACK])
+        coin_save_LIBS="$LIBS"
+        LIBS="-lcomplib.sgimath $LIBS"
+        AC_COIN_TRY_FLINK([dsyev],
+                          [AC_MSG_RESULT([yes])
+                           use_lapack="-lcomplib.sgimath;"],
+                          [AC_MSG_RESULT([no])])
+        LIBS="$coin_save_LIBS"
+        ;;
+
+      # See comments in COIN_HAS_BLAS.
+      *-*-solaris*)
+        AC_MSG_CHECKING([for LAPACK in libsunperf])
+        coin_save_LIBS="$LIBS"
+        LIBS="-lsunperf $FLIBS $LIBS"
+        AC_COIN_TRY_FLINK([dsyev],
+                          [AC_MSG_RESULT([yes])
+                           use_lapack='-lsunperf'
+                           coin_need_flibs=yes],
+                          [AC_MSG_RESULT([no])])
+        LIBS="$coin_save_LIBS"
+        ;;
+        # On cygwin, do this check only if doscompile is disabled. The prebuilt library
+        # will want to link with cygwin, hence won't run standalone in DOS.
+      *-cygwin*)
+	if test "$enable_doscompile" = mingw; then
+	  skip_llapack_check=yes
+	fi
+	;;
+    esac
+  fi
+
+  if test -z "$use_lapack" && test $skip_llapack_check = no; then
+    AC_MSG_CHECKING([whether -llapack has LAPACK])
+    coin_save_LIBS="$LIBS"
+    LIBS="-llapack $LIBS"
+    AC_COIN_TRY_FLINK([dsyev],
+		      [AC_MSG_RESULT([yes])
+		       use_lapack='-llapack'],
+		      [AC_MSG_RESULT([no])])
+    LIBS="$coin_save_LIBS"
+  fi
+
+  # If we have no other ideas, consider building LAPACK.
+  if test -z "$use_lapack" ; then
+    use_lapack=BUILD
+  fi
+fi
+
+if test "x$use_lapack" = xBUILD ; then
+  AC_COIN_HAS_PACKAGE(Lapack, [coinlapack], [$1])
+  
+elif test "x$use_lapack" != x && test "$use_lapack" != no; then
+  coin_has_lapack=yes
+  AM_CONDITIONAL([COIN_HAS_LAPACK],[test 0 = 0])
+  AC_DEFINE([COIN_HAS_LAPACK],[1], [If defined, the LAPACK Library is available.])
+  LAPACK_LIBS="$use_lapack"
+  LAPACK_CFLAGS=
+  LAPACK_DATA=
+  AC_SUBST(LAPACK_LIBS)
+  AC_SUBST(LAPACK_CFLAGS)
+  AC_SUBST(LAPACK_DATA)
+  coin_foreach_w([myvar], [$1], [
+    m4_toupper(myvar)_PCLIBS="$LAPACK_LIBS $m4_toupper(myvar)_PCLIBS"
+    m4_toupper(myvar)_LIBS="$LAPACK_LIBS $m4_toupper(myvar)_LIBS"
+  ])
+  
+else
+  coin_has_lapack=no
+  AM_CONDITIONAL([COIN_HAS_LAPACK],[test 0 = 1])
+fi
+
+coin_foreach_w([myvar], [$1], [
+  AC_SUBST(m4_toupper(myvar)_PCLIBS)
+  AC_SUBST(m4_toupper(myvar)_LIBS)
+])
+
+]) # AC_COIN_HAS_PACKAGE_LAPACK

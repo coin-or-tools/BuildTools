@@ -11,7 +11,7 @@
 ########################################################################
 
 DocFiles =  README AUTHORS LICENSE
-DocInstallDir = $(prefix)/share/doc/coin/$(PACKAGE_NAME)
+DocInstallDir = $(datadir)/coin/doc/$(PACKAGE_NAME)
 
 install-doc: $(DocFiles)
 	test -z "$(DocInstallDir)" || $(mkdir_p) "$(DESTDIR)$(DocInstallDir)"
