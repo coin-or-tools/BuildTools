@@ -21,12 +21,12 @@ if expr "$0" : '.*/.*' >/dev/null 2>&1 ; then
 else
   cmdDir='.'
 fi
+cmdDir=`cd $cmdDir ; pwd`
 if test -r $cmdDir/coin-functions ; then
   . $cmdDir/coin-functions
 else
   echo "Cannot find utility functions file coin-functions; exiting."
 fi
-
 #################### end of function definitions ##########################
 
 
