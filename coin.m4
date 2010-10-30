@@ -3475,8 +3475,8 @@ AM_CONDITIONAL([COIN_BUILD_GLPK],[test x"$use_thirdpartyglpk" = xbuild])
 #
 # This macro will define the following variables:
 #  coin_have_doxygen	Yes if doxygen is found, no otherwise
-#  coin_doxy_usedot     Defaults to `no'; --with-dot will check to see if
-#			dot is available
+#  coin_doxy_usedot     Defaults to `yes'; --with-dot will still check to see
+#			if dot is available
 #  coin_doxy_tagname	Name of doxygen tag file (placed in doxydoc directory)
 #  coin_doxy_logname    Name of doxygen log file (placed in doxydoc directory)
 #  coin_doxy_tagfiles   List of doxygen tag files used to reference other
