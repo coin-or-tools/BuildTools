@@ -693,7 +693,7 @@ if test -r Dependencies ; then
 fi
 
 echo ''
-echo 'After reviewing the output above, you can create a new release by going into'
+echo 'After reviewing the output above, you can create a new stable by going into'
 echo 'the directory'
 echo ''
 echo "          $startDir"
