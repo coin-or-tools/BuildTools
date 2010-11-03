@@ -391,31 +391,33 @@ bestStable ()
   bstb_bestURL=
   if test -n "$bstb_filter" ; then
 
-    # If we're dealing with Data, we have to work a bit harder to find our
+    # If we're dealing with old-style Data, we have to work a bit harder to find our
     # project. See if any of the filtered candidates contain the correct
     # project.
 
-    if expr "$bstb_URL" : '.*/Data/.*' >/dev/null 2>&1 ; then
-      bstb_projPat='.*'$bstb_proj'/.*'
-      # echo "Pattern: $bstb_projPat"
-      for bstb_ver in $bstb_filter ; do
-	if  expr "$bstb_ver" : $bstb_verPat >/dev/null 2>&1 ; then
-	  # echo "  url: $bstb_listURL/$bstb_ver"
-	  bstb_svnls2="`svn list $bstb_listURL/$bstb_ver`"
-	  # echo "  result: $bstb_svnls2"
-	  if expr "$bstb_svnls2" : $bstb_projPat >/dev/null 2>&1 ; then
-	    bstb_best=$bstb_ver
-	    # echo "  best: $bstb_best"
-	    break
+    case "$bstb_URL" in
+      */Data/trunk/* | */Data/stable/* | */Data/releases/* )
+        bstb_projPat='.*'$bstb_proj'/.*'
+        # echo "Pattern: $bstb_projPat"
+        for bstb_ver in $bstb_filter ; do
+	  if  expr "$bstb_ver" : $bstb_verPat >/dev/null 2>&1 ; then
+	    # echo "  url: $bstb_listURL/$bstb_ver"
+	    bstb_svnls2="`svn list $bstb_listURL/$bstb_ver`"
+	    # echo "  result: $bstb_svnls2"
+	    if expr "$bstb_svnls2" : $bstb_projPat >/dev/null 2>&1 ; then
+	      bstb_best=$bstb_ver
+	      # echo "  best: $bstb_best"
+	      break
+	    fi
 	  fi
-	fi
-      done
-      bstb_bestURL=$bstb_listURL/$bstb_best$bstb_proj
-    else
-      bstb_bestURL=`echo $bstb_filter | sed -n -e 's|\([^/]*/\).*$|\1|p'`
-      bstb_bestURL=$bstb_listURL/$bstb_bestURL
-    fi
-
+        done
+        bstb_bestURL=$bstb_listURL/$bstb_best$bstb_proj
+      ;;
+      *)
+        bstb_bestURL=`echo $bstb_filter | sed -n -e 's|\([^/]*/\).*$|\1|p'`
+        bstb_bestURL=$bstb_listURL/$bstb_bestURL
+      ;;
+    esac
   fi
 
   echo $bstb_bestURL
@@ -488,30 +490,33 @@ bestRelease ()
   bstb_bestURL=
   if test -n "$bstb_filter" ; then
 
-    # If we're dealing with Data, we have to work a bit harder to find our
+    # If we're dealing with old-style Data, we have to work a bit harder to find our
     # project. See if any of the filtered candidates contain the correct
     # project.
 
-    if expr "$bstb_URL" : '.*/Data/.*' >/dev/null 2>&1 ; then
-      bstb_projPat='.*'$bstb_proj'/.*'
-      # echo "Pattern: $bstb_projPat"
-      for bstb_ver in $bstb_filter ; do
-	if  expr "$bstb_ver" : $bstb_verPat >/dev/null 2>&1 ; then
-	  # echo "  url: $bstb_listURL/$bstb_ver"
-	  bstb_svnls2="`svn list $bstb_listURL/$bstb_ver`"
-	  # echo "  result: $bstb_svnls2"
-	  if expr "$bstb_svnls2" : $bstb_projPat >/dev/null 2>&1 ; then
-	    bstb_best=$bstb_ver
-	    # echo "  best: $bstb_best"
-	    break
+    case "$bstb_URL" in
+      */Data/trunk/* | */Data/stable/* | */Data/releases/* )
+        bstb_projPat='.*'$bstb_proj'/.*'
+        # echo "Pattern: $bstb_projPat"
+        for bstb_ver in $bstb_filter ; do
+	  if  expr "$bstb_ver" : $bstb_verPat >/dev/null 2>&1 ; then
+	    # echo "  url: $bstb_listURL/$bstb_ver"
+	    bstb_svnls2="`svn list $bstb_listURL/$bstb_ver`"
+	    # echo "  result: $bstb_svnls2"
+	    if expr "$bstb_svnls2" : $bstb_projPat >/dev/null 2>&1 ; then
+	      bstb_best=$bstb_ver
+	      # echo "  best: $bstb_best"
+	      break
+	    fi
 	  fi
-	fi
-      done
-      bstb_bestURL=$bstb_listURL/$bstb_best$bstb_proj
-    else
-      bstb_bestURL=`echo $bstb_filter | sed -n -e 's|\([^/]*/\).*$|\1|p'`
-      bstb_bestURL=$bstb_listURL/$bstb_bestURL
-    fi
+        done
+        bstb_bestURL=$bstb_listURL/$bstb_best$bstb_proj
+      ;;
+      *)
+        bstb_bestURL=`echo $bstb_filter | sed -n -e 's|\([^/]*/\).*$|\1|p'`
+        bstb_bestURL=$bstb_listURL/$bstb_bestURL
+      ;;
+    esac
 
   fi
 
