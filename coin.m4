@@ -2306,9 +2306,10 @@ esac
 #                           COIN_CHECK_GNU_ZLIB                           #
 ###########################################################################
 
-# This macro checks for the libz library.
-# If found, it sets the automake conditional COIN_HAS_ZLIB and defines the C preprocessor variable COIN_HAS_ZLIB.
-# Further, for a (space separated) list of arguments X, it adds the linker flag to the variables X_LIBS and X_PCLIBS.
+# This macro checks for the libz library.  If found, it sets the automake
+# conditional COIN_HAS_ZLIB and defines the C preprocessor variable
+# COIN_HAS_ZLIB.  Further, for a (space separated) list of arguments X,
+# it adds the linker flag to the variables X_LIBS and X_PCLIBS.
 
 AC_DEFUN([AC_COIN_CHECK_GNU_ZLIB],
 [AC_REQUIRE([AC_COIN_ENABLE_GNU_PACKAGES])
@@ -2345,9 +2346,9 @@ AM_CONDITIONAL(COIN_HAS_ZLIB,test x$coin_has_zlib = xyes)
 #                          COIN_CHECK_GNU_BZLIB                           #
 ###########################################################################
 
-# This macro checks for the libbz2 library.
-# If found, it defines the C preprocessor variable COIN_HAS_BZLIB.
-# Further, for a (space separated) list of arguments X, it adds the linker flag to the variables X_LIBS and X_PCLIBS.
+# This macro checks for the libbz2 library.  If found, it defines the C
+# preprocessor variable COIN_HAS_BZLIB.  Further, for a (space separated) list
+# of arguments X, it adds the linker flag to the variables X_LIBS and X_PCLIBS.
 
 AC_DEFUN([AC_COIN_CHECK_GNU_BZLIB],
 [AC_REQUIRE([AC_COIN_ENABLE_GNU_PACKAGES])
@@ -2470,7 +2471,7 @@ if test -r $m4_toupper(COIN_DATA_$1_PATH); then
 else
   AC_MSG_ERROR(Directory $m4_toupper(COIN_DATA_$1_PATH) does not exist)
 fi
-]) # AC_COIN_HAS_DATA
+]) # AC_COIN_DATA_PATH
 
 ###########################################################################
 #                       COIN_LINK_FROM_FILELIST                           #
@@ -2791,10 +2792,11 @@ AC_DEFUN([AC_COIN_CHECK_USER_LIBRARY],
 ]) #AC_COIN_CHECK_USER_LIBRARY 
 
 ###########################################################################
-#                      COIN_CHECK_USER_LIBRARY (deprecated)               #
+#                       COIN_HAS_USER_LIBRARY (deprecated)                #
 ###########################################################################
 
-AC_DEFUN([AC_COIN_HAS_USER_LIBRARY], [AC_COIN_CHECK_USER_LIBRARY([$1],[$2], [$3], [$4], [$5], [$6])])
+AC_DEFUN([AC_COIN_HAS_USER_LIBRARY],
+	 [AC_COIN_CHECK_USER_LIBRARY([$1],[$2], [$3], [$4], [$5], [$6])])
 
 ###########################################################################
 #                               COIN_HAS_ASL (deprecated)                 #
@@ -3580,17 +3582,17 @@ AC_SUBST([coin_doxy_excludes])
 #                           COIN_HAS_PKGCONFIG                            #
 ###########################################################################
 
-# This macro checks whether a pkg-config tool with a minimal version number is available.
-# If so, then the variable PKGCONFIG is set to its path.
-# If not, PKGCONFIG is set to "".
-# The minimal version number can be given as first parameter, by default it is 0.9.0.
-# This macro is a modified version of PKG_PROG_PKG_CONFIG in pkg.m4
-#
-# Further, the AM_CONDITIONAL COIN_HAS_PKGCONFIG is set and PKGCONFIG is AC_SUBST'ed.
-# Finally, if this setup belongs to a project directory, then the search path for .pc files
-# is assembled from the value of $PKG_CONFIG_PATH, the values of --prefix, --coin-instdir,
-# and the directory named in a file ../coin_subdirs.txt or ../../coin_subdirs.txt in a variable
-# COIN_PKG_CONFIG_PATH, which is also AC_SUBST'ed.
+# This macro checks whether a pkg-config tool with a minimal version number
+# is available.  If so, then the variable PKGCONFIG is set to its path.
+# If not, PKGCONFIG is set to "".  The minimal version number can be given
+# as first parameter, by default it is 0.9.0.  This macro is a modified
+# version of PKG_PROG_PKG_CONFIG in pkg.m4.  Further, the AM_CONDITIONAL
+# COIN_HAS_PKGCONFIG is set and PKGCONFIG is AC_SUBST'ed.  Finally, if this
+# setup belongs to a project directory, then the search path for .pc files
+# is assembled from the value of $PKG_CONFIG_PATH, the values of --prefix,
+# --coin-instdir, and the directory named in a file ../coin_subdirs.txt
+# or ../../coin_subdirs.txt in a variable COIN_PKG_CONFIG_PATH, which is
+# also AC_SUBST'ed.
 
 AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
 [AC_ARG_VAR([PKG_CONFIG], [path to pkg-config utility])
@@ -4050,31 +4052,38 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
 #                       COIN_CHECK_PACKAGE_FALLBACK                       #
 ###########################################################################
 
-# This macro is used by COIN_CHECK_PACKAGE, if it fails to find a package because pkg-config was disabled or is not available.
+# This macro is used by COIN_CHECK_PACKAGE, if it fails to find a package
+# because pkg-config was disabled or is not available.
 #
-# For each project xxx specified in $2, it searches for a xxx-uninstalled.pc file in the directories specified in
-# $COIN_PKG_CONFIG_PATH_UNINSTALLED. The latter variable is setup by COIN_HAS_PKGCONFIG and
-# consists of the content of the coin_subdirs.txt file which has been created by configure in the base directory.
-# The content of xxx-uninstalled.pc is parsed in order to defines the variables PACKAGE_CFLAGS, PACKAGE_LIBS, and PACKAGE_DATA,
-# referring to the compiler and linker flags to use when linking against this package
-# and the directory where the package data resists.
-# Further, for each build target X specified in the third argument, the variables X_CFLAGS and X_LIBS are
-# extended with the compiler and linker flags of this package and the variables X_PCLIBS and X_PCREQUIRES are extended by the list
-# of linker flags and dependent projects as needed to setup a .pc file.
-# The macros checks also dependencies of $2.
-# Note that the PACKAGE_DATA variable is set to the content of datadir of the first .pc file that is parsed.
+# For each project xxx specified in $2, it searches for a xxx-uninstalled.pc
+# file in the directories specified in $COIN_PKG_CONFIG_PATH_UNINSTALLED. The
+# latter variable is setup by COIN_HAS_PKGCONFIG and consists of the content
+# of the coin_subdirs.txt file which has been created by configure in the
+# base directory.  The content of xxx-uninstalled.pc is parsed in order
+# to defines the variables PACKAGE_CFLAGS, PACKAGE_LIBS, and PACKAGE_DATA,
+# referring to the compiler and linker flags to use when linking against this
+# package and the directory where the package data resists.  Further, for each
+# build target X specified in the third argument, the variables X_CFLAGS and
+# X_LIBS are extended with the compiler and linker flags of this package and
+# the variables X_PCLIBS and X_PCREQUIRES are extended by the list of linker
+# flags and dependent projects as needed to setup a .pc file.  The macros
+# checks also dependencies of $2.  Note that the PACKAGE_DATA variable is
+# set to the content of datadir of the first .pc file that is parsed.
 #
-# If .pc files for all projects in $2 and their dependencies is found, tolower(coin_has_$1) is set to "yes".
-# Otherwise, if some dependency is not found, tolower(coin_has_$1) is set to "notGiven".
-# Further, a COIN_HAS_PACKAGE preprocessor macro and a makefile conditional are defined.
+# If .pc files for all projects in $2 and their dependencies is found,
+# tolower(coin_has_$1) is set to "yes".  Otherwise, if some dependency
+# is not found, tolower(coin_has_$1) is set to "notGiven".  Further, a
+# COIN_HAS_PACKAGE preprocessor macro and a makefile conditional are defined.
 #
-# The first argument should be the name (PACKAGE) of the package (in correct lower and upper case).
-# The second argument should be the base names of the projects .pc file which define this package.
-# The optional third argument should be a (space separated) list of build targets
-# which use this package, if available.
-
-# $1 is not checked for $COIN_SKIP_PROJECTS, since we only look into $COIN_PKG_CONFIG_PATH_UNINSTALLED.
-# When the content of this variable was setup in the base directory, $COIN_SKIP_PROJECTS has already been considered.
+# The first argument should be the name (PACKAGE) of the package (in correct
+# lower and upper case).  The second argument should be the base names of the
+# projects .pc file which define this package.  The optional third argument
+# should be a (space separated) list of build targets which use this package,
+# if available.
+#
+# $1 is not checked for $COIN_SKIP_PROJECTS, since we only look into
+# $COIN_PKG_CONFIG_PATH_UNINSTALLED.  When the content of this variable was
+# setup in the base directory, $COIN_SKIP_PROJECTS has already been considered.
 
 AC_DEFUN([AC_COIN_CHECK_PACKAGE_FALLBACK],
 [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
@@ -4201,9 +4210,11 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
 # This macro checks for a library containing the BLAS library.  It
 # 1. checks the --with-blas argument
 # 2. if --with-blas=BUILD has been specified goes to point 5
-# 3. if --with-blas has been specified to a working library, sets BLAS_LIBS to its value
+# 3. if --with-blas has been specified to a working library, sets BLAS_LIBS
+#    to its value
 # 4. tries standard libraries
-# 5. calls COIN_CHECK_PACKAGE(Blas, [coinblas], [$1]) to check for ThirdParty/Blas
+# 5. calls COIN_CHECK_PACKAGE(Blas, [coinblas], [$1]) to check for
+#    ThirdParty/Blas
 # The makefile conditional and preprocessor macro COIN_HAS_BLAS is defined.
 # BLAS_LIBS is set to the flags required to link with a Blas library.
 # For each build target X in $1, X_LIBS is extended with $BLAS_LIBS.
@@ -4217,7 +4228,8 @@ AC_ARG_WITH([blas],
                            [specify BLAS library (or BUILD for compilation)]),
             [use_blas="$withval"], [use_blas=])
 
-#if user specified --with-blas-lib, then we should give COIN_HAS_PACKAGE preference
+# if user specified --with-blas-lib, then we should give COIN_HAS_PACKAGE
+# preference
 AC_ARG_WITH([blas-lib],,[use_blas=BUILD])
 
 # Check if user supplied option makes sense
@@ -4343,9 +4355,11 @@ coin_foreach_w([myvar], [$1], [
 # This macro checks for a library containing the LAPACK library.  It
 # 1. checks the --with-lapack argument
 # 2. if --with-lapack=BUILD has been specified goes to point 5
-# 3. if --with-lapack has been specified to a working library, sets LAPACK_LIBS to its value
+# 3. if --with-lapack has been specified to a working library, sets
+#    LAPACK_LIBS to its value
 # 4. tries standard libraries
-# 5. calls COIN_CHECK_PACKAGE(Lapack, [lapack], [$1]) to check for ThirdParty/Lapack
+# 5. calls COIN_CHECK_PACKAGE(Lapack, [lapack], [$1]) to check for
+#    ThirdParty/Lapack
 # The makefile conditional and preprocessor macro COIN_HAS_LAPACK is defined.
 # LAPACK_LIBS is set to the flags required to link with a Lapack library.
 # For each build target X in $1, X_LIBS is extended with $LAPACK_LIBS.
