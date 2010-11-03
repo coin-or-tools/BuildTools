@@ -23,10 +23,13 @@
 # For ThirdParty, it's just like a normal project, except the prefix string
 # is longer:
 #   https://projects.coin-or.org/svn/BuildTools/ThirdParty/ProjName
-# Data is the real pain, with this form:
+# Data is the real pain. Prior to 20101103 (1.0.x series), it had this form:
 #  https://projects.coin-or.org/svn/Data/trunk/ProjName
 #  https://projects.coin-or.org/svn/Data/stable/M.m/ProjName
 #  https://projects.coin-or.org/svn/Data/releases/M.m.r/ProjName
+# After 20101103 (1.1 and subsequent), it uses the same layout as ThirdParty,
+# namely <svn prefix>/Data/Projname/<trunk, stable, releases>. Macros below
+# will cope, but really you should be using pre-1.1 Data anyway.
 
 # Extract the COIN base from the URL, up to svn. Just in case it ever changes.
 # usage: baseURL=`extractBaseURL $svnURL`
@@ -338,7 +341,7 @@ extractReleaseFromURL ()
 # Now some functions to locate the highest-numbered stable or release.
 
 # Return the URL of the most recent stable branch matching the parameters.
-# A value of -1 for major or minor version is interpreted as `highest number'
+# A value of -1 for major version is interpreted as `highest number'
 # Returns an empty string if no suitable stable branch exists.
 # usage: stableURL=`bestStable <URL> <major>`
 
@@ -352,8 +355,11 @@ bestStable ()
   bstb_proj=`extractProjFromURL $bstb_URL`
 
   case "$bstb_URL" in
-    */Data/* )
+    */Data/trunk/* )
 	bstb_listURL=$bstb_baseURL/Data/stable
+	;;
+    */Data/* )
+	bstb_listURL=$bstb_baseURL/Data/$bstb_proj/stable
 	;;
     */ThirdParty/* )
 	bstb_listURL=$bstb_baseURL/BuildTools/ThirdParty/$bstb_proj/stable
@@ -391,9 +397,9 @@ bestStable ()
   bstb_bestURL=
   if test -n "$bstb_filter" ; then
 
-    # If we're dealing with old-style Data, we have to work a bit harder to find our
-    # project. See if any of the filtered candidates contain the correct
-    # project.
+    # If we're dealing with old-style Data, we have to work a bit harder
+    # to find our project. See if any of the filtered candidates contain
+    # the correct project.
 
     case "$bstb_URL" in
       */Data/trunk/* | */Data/stable/* | */Data/releases/* )
