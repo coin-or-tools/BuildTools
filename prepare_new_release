@@ -59,6 +59,7 @@ suppressCheckout=0
 # are building. We'll need to be able to distinguish ThirdParty and Data
 # builds, and BuildTools itself; they require special handling. If a project
 # is not BuildTools, ThirdParty, or Data, it's `normal'.
+# SV: I think also ThirdParty projects should be treated as 'normal', so I changed that.
 
 stableURL=
 isThirdParty=no
@@ -184,7 +185,6 @@ else
     case $stableURL in
       *ThirdParty/* )
 	isThirdParty=yes
-	isNormal=no
 	;;
       *Data/* )
 	isData=yes
