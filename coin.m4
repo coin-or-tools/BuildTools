@@ -3657,7 +3657,8 @@ if test x$coin_projectdir = xyes ; then
   # if we are in a project setup, then in a classic setup, we want to find uninstalled projects
   # their (relative) location is written to coin_subdirs.txt by the configure in the project base directory
   # unfortunately, if the user set prefix, then we do not know where the project base directory is located
-  # but it is likely to be either .. (if we are a usual coin project) or ../.. (if we are a unusual coin project like ThirdParty or Data)  COIN_PKG_CONFIG_PATH_UNINSTALLED=
+  # but it is likely to be either .. (if we are a usual coin project) or ../.. (if we are a unusual coin project like ThirdParty or Data)
+  COIN_PKG_CONFIG_PATH_UNINSTALLED=
   if test -e ../coin_subdirs.txt ; then
     for i in `cat ../coin_subdirs.txt` ; do
       if test -d ../$i ; then
