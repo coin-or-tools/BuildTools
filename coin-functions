@@ -23,10 +23,13 @@
 # For ThirdParty, it's just like a normal project, except the prefix string
 # is longer:
 #   https://projects.coin-or.org/svn/BuildTools/ThirdParty/ProjName
-# Data is the real pain, with this form:
+# Data is the real pain. Prior to 20101103 (1.0.x series), it had this form:
 #  https://projects.coin-or.org/svn/Data/trunk/ProjName
 #  https://projects.coin-or.org/svn/Data/stable/M.m/ProjName
 #  https://projects.coin-or.org/svn/Data/releases/M.m.r/ProjName
+# After 20101103 (1.1 and subsequent), it uses the same layout as ThirdParty,
+# namely <svn prefix>/Data/Projname/<trunk, stable, releases>. Macros below
+# will cope, but really you should be using pre-1.1 Data anyway.
 
 # Extract the COIN base from the URL, up to svn. Just in case it ever changes.
 # usage: baseURL=`extractBaseURL $svnURL`
@@ -84,6 +87,9 @@ extractProjFromURL ()
 	;;
     */Data/stable/* | */Data/releases/* )
         epfu_pfxPat='svn/Data/[^/][^/]*/[0-9][0-9.]*/'
+	;;
+    */Data/* )
+        epfu_pfxPat='svn/Data/'
 	;;
     */ThirdParty/* )
         epfu_pfxPat=svn/BuildTools/ThirdParty/
@@ -167,6 +173,9 @@ extractVersionFromURL ()
       */ThirdParty/* )
 	  evfu_pfxPat='svn/BuildTools/ThirdParty/[^/][^/]*/[^/][^/]*/'
 	  ;;
+      */Data/* )
+	  evfu_pfxPat='svn/Data/'$evfu_proj'/[^/][^/]*/'
+	  ;;
       *)
 	  evfu_pfxPat='svn/'$evfu_proj'/[^/][^/]*/'
 	  ;;
@@ -243,6 +252,9 @@ extractMajorFromURL ()
       */ThirdParty/* )
 	  ejfu_pfxPat='svn/BuildTools/ThirdParty/[^/][^/]*/[^/][^/]*/'
 	  ;;
+      */Data/* )
+	  ejfu_pfxPat='svn/Data/'$ejfu_proj'/[^/][^/]*/'
+	  ;;
       *)
 	  ejfu_pfxPat='svn/'$ejfu_proj'/[^/][^/]*/'
 	  ;;
@@ -275,6 +287,9 @@ extractMinorFromURL ()
 	  ;;
       */ThirdParty/* )
 	  emfu_pfxPat='svn/BuildTools/ThirdParty/[^/][^/]*/[^/][^/]*/'
+	  ;;
+      */Data/* )
+	  emfu_pfxPat='svn/Data/'$emfu_proj'/[^/][^/]*/'
 	  ;;
       *)
 	  emfu_pfxPat='svn/'$emfu_proj'/[^/][^/]*/'
@@ -309,6 +324,9 @@ extractReleaseFromURL ()
       */ThirdParty/* )
 	  erfu_pfxPat='svn/BuildTools/ThirdParty/[^/][^/]*/[^/][^/]*/'
 	  ;;
+      */Data/*)
+	  erfu_pfxPat='svn/Data/'$erfu_proj'/[^/][^/]*/'
+	  ;;
       *)
 	  erfu_pfxPat='svn/'$erfu_proj'/[^/][^/]*/'
 	  ;;
@@ -323,7 +341,7 @@ extractReleaseFromURL ()
 # Now some functions to locate the highest-numbered stable or release.
 
 # Return the URL of the most recent stable branch matching the parameters.
-# A value of -1 for major or minor version is interpreted as `highest number'
+# A value of -1 for major version is interpreted as `highest number'
 # Returns an empty string if no suitable stable branch exists.
 # usage: stableURL=`bestStable <URL> <major>`
 
@@ -337,8 +355,11 @@ bestStable ()
   bstb_proj=`extractProjFromURL $bstb_URL`
 
   case "$bstb_URL" in
-    */Data/* )
+    */Data/trunk/* )
 	bstb_listURL=$bstb_baseURL/Data/stable
+	;;
+    */Data/* )
+	bstb_listURL=$bstb_baseURL/Data/$bstb_proj/stable
 	;;
     */ThirdParty/* )
 	bstb_listURL=$bstb_baseURL/BuildTools/ThirdParty/$bstb_proj/stable
@@ -376,31 +397,33 @@ bestStable ()
   bstb_bestURL=
   if test -n "$bstb_filter" ; then
 
-    # If we're dealing with Data, we have to work a bit harder to find our
-    # project. See if any of the filtered candidates contain the correct
-    # project.
+    # If we're dealing with old-style Data, we have to work a bit harder
+    # to find our project. See if any of the filtered candidates contain
+    # the correct project.
 
-    if expr "$bstb_URL" : '.*/Data/.*' >/dev/null 2>&1 ; then
-      bstb_projPat='.*'$bstb_proj'/.*'
-      # echo "Pattern: $bstb_projPat"
-      for bstb_ver in $bstb_filter ; do
-	if  expr "$bstb_ver" : $bstb_verPat >/dev/null 2>&1 ; then
-	  # echo "  url: $bstb_listURL/$bstb_ver"
-	  bstb_svnls2="`svn list $bstb_listURL/$bstb_ver`"
-	  # echo "  result: $bstb_svnls2"
-	  if expr "$bstb_svnls2" : $bstb_projPat >/dev/null 2>&1 ; then
-	    bstb_best=$bstb_ver
-	    # echo "  best: $bstb_best"
-	    break
+    case "$bstb_URL" in
+      */Data/trunk/* | */Data/stable/* | */Data/releases/* )
+        bstb_projPat='.*'$bstb_proj'/.*'
+        # echo "Pattern: $bstb_projPat"
+        for bstb_ver in $bstb_filter ; do
+	  if  expr "$bstb_ver" : $bstb_verPat >/dev/null 2>&1 ; then
+	    # echo "  url: $bstb_listURL/$bstb_ver"
+	    bstb_svnls2="`svn list $bstb_listURL/$bstb_ver`"
+	    # echo "  result: $bstb_svnls2"
+	    if expr "$bstb_svnls2" : $bstb_projPat >/dev/null 2>&1 ; then
+	      bstb_best=$bstb_ver
+	      # echo "  best: $bstb_best"
+	      break
+	    fi
 	  fi
-	fi
-      done
-      bstb_bestURL=$bstb_listURL/$bstb_best$bstb_proj
-    else
-      bstb_bestURL=`echo $bstb_filter | sed -n -e 's|\([^/]*/\).*$|\1|p'`
-      bstb_bestURL=$bstb_listURL/$bstb_bestURL
-    fi
-
+        done
+        bstb_bestURL=$bstb_listURL/$bstb_best$bstb_proj
+      ;;
+      *)
+        bstb_bestURL=`echo $bstb_filter | sed -n -e 's|\([^/]*/\).*$|\1|p'`
+        bstb_bestURL=$bstb_listURL/$bstb_bestURL
+      ;;
+    esac
   fi
 
   echo $bstb_bestURL
@@ -424,7 +447,7 @@ bestRelease ()
 
   case "$bstb_URL" in
     */Data/* )
-	bstb_listURL=$bstb_baseURL/Data/releases
+	bstb_listURL=$bstb_baseURL/Data/$bstb_proj/releases
 	;;
     */ThirdParty/* )
 	bstb_listURL=$bstb_baseURL/BuildTools/ThirdParty/$bstb_proj/releases
@@ -473,30 +496,33 @@ bestRelease ()
   bstb_bestURL=
   if test -n "$bstb_filter" ; then
 
-    # If we're dealing with Data, we have to work a bit harder to find our
+    # If we're dealing with old-style Data, we have to work a bit harder to find our
     # project. See if any of the filtered candidates contain the correct
     # project.
 
-    if expr "$bstb_URL" : '.*/Data/.*' >/dev/null 2>&1 ; then
-      bstb_projPat='.*'$bstb_proj'/.*'
-      # echo "Pattern: $bstb_projPat"
-      for bstb_ver in $bstb_filter ; do
-	if  expr "$bstb_ver" : $bstb_verPat >/dev/null 2>&1 ; then
-	  # echo "  url: $bstb_listURL/$bstb_ver"
-	  bstb_svnls2="`svn list $bstb_listURL/$bstb_ver`"
-	  # echo "  result: $bstb_svnls2"
-	  if expr "$bstb_svnls2" : $bstb_projPat >/dev/null 2>&1 ; then
-	    bstb_best=$bstb_ver
-	    # echo "  best: $bstb_best"
-	    break
+    case "$bstb_URL" in
+      */Data/trunk/* | */Data/stable/* | */Data/releases/* )
+        bstb_projPat='.*'$bstb_proj'/.*'
+        # echo "Pattern: $bstb_projPat"
+        for bstb_ver in $bstb_filter ; do
+	  if  expr "$bstb_ver" : $bstb_verPat >/dev/null 2>&1 ; then
+	    # echo "  url: $bstb_listURL/$bstb_ver"
+	    bstb_svnls2="`svn list $bstb_listURL/$bstb_ver`"
+	    # echo "  result: $bstb_svnls2"
+	    if expr "$bstb_svnls2" : $bstb_projPat >/dev/null 2>&1 ; then
+	      bstb_best=$bstb_ver
+	      # echo "  best: $bstb_best"
+	      break
+	    fi
 	  fi
-	fi
-      done
-      bstb_bestURL=$bstb_listURL/$bstb_best$bstb_proj
-    else
-      bstb_bestURL=`echo $bstb_filter | sed -n -e 's|\([^/]*/\).*$|\1|p'`
-      bstb_bestURL=$bstb_listURL/$bstb_bestURL
-    fi
+        done
+        bstb_bestURL=$bstb_listURL/$bstb_best$bstb_proj
+      ;;
+      *)
+        bstb_bestURL=`echo $bstb_filter | sed -n -e 's|\([^/]*/\).*$|\1|p'`
+        bstb_bestURL=$bstb_listURL/$bstb_bestURL
+      ;;
+    esac
 
   fi
 
