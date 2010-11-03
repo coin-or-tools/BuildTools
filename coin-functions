@@ -85,6 +85,9 @@ extractProjFromURL ()
     */Data/stable/* | */Data/releases/* )
         epfu_pfxPat='svn/Data/[^/][^/]*/[0-9][0-9.]*/'
 	;;
+    */Data/* )
+        epfu_pfxPat='svn/Data/'
+	;;
     */ThirdParty/* )
         epfu_pfxPat=svn/BuildTools/ThirdParty/
 	;;
@@ -167,6 +170,9 @@ extractVersionFromURL ()
       */ThirdParty/* )
 	  evfu_pfxPat='svn/BuildTools/ThirdParty/[^/][^/]*/[^/][^/]*/'
 	  ;;
+      */Data/* )
+	  evfu_pfxPat='svn/Data/'$evfu_proj'/[^/][^/]*/'
+	  ;;
       *)
 	  evfu_pfxPat='svn/'$evfu_proj'/[^/][^/]*/'
 	  ;;
@@ -243,6 +249,9 @@ extractMajorFromURL ()
       */ThirdParty/* )
 	  ejfu_pfxPat='svn/BuildTools/ThirdParty/[^/][^/]*/[^/][^/]*/'
 	  ;;
+      */Data/* )
+	  ejfu_pfxPat='svn/Data/'$ejfu_proj'/[^/][^/]*/'
+	  ;;
       *)
 	  ejfu_pfxPat='svn/'$ejfu_proj'/[^/][^/]*/'
 	  ;;
@@ -276,6 +285,9 @@ extractMinorFromURL ()
       */ThirdParty/* )
 	  emfu_pfxPat='svn/BuildTools/ThirdParty/[^/][^/]*/[^/][^/]*/'
 	  ;;
+      */Data/* )
+	  emfu_pfxPat='svn/Data/'$emfu_proj'/[^/][^/]*/'
+	  ;;
       *)
 	  emfu_pfxPat='svn/'$emfu_proj'/[^/][^/]*/'
 	  ;;
@@ -308,6 +320,9 @@ extractReleaseFromURL ()
 	  ;;
       */ThirdParty/* )
 	  erfu_pfxPat='svn/BuildTools/ThirdParty/[^/][^/]*/[^/][^/]*/'
+	  ;;
+      */Data/*)
+	  erfu_pfxPat='svn/Data/'$erfu_proj'/[^/][^/]*/'
 	  ;;
       *)
 	  erfu_pfxPat='svn/'$erfu_proj'/[^/][^/]*/'
@@ -424,7 +439,7 @@ bestRelease ()
 
   case "$bstb_URL" in
     */Data/* )
-	bstb_listURL=$bstb_baseURL/Data/releases
+	bstb_listURL=$bstb_baseURL/Data/$bstb_proj/releases
 	;;
     */ThirdParty/* )
 	bstb_listURL=$bstb_baseURL/BuildTools/ThirdParty/$bstb_proj/releases
