@@ -3635,7 +3635,11 @@ COIN_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
 # let's assume that when installing into $prefix, then the user may have installed some other coin projects there before, so it's worth to have a look into there
 # best would actually to use ${libdir}, since .pc files get installed into ${libdir}/pkgconfig,
 # unfortunately, ${libdir} expands to ${exec_prefix}/lib and ${exec_prefix} to ${prefix}...
-COIN_PKG_CONFIG_PATH="${prefix}/lib/pkgconfig:${COIN_PKG_CONFIG_PATH}"
+if test "x${prefix}" = xNONE ; then
+  COIN_PKG_CONFIG_PATH="${ac_default_prefix}/lib/pkgconfig:${COIN_PKG_CONFIG_PATH}"
+else
+  COIN_PKG_CONFIG_PATH="${prefix}/lib/pkgconfig:${COIN_PKG_CONFIG_PATH}"
+fi
 
 AC_ARG_WITH([coin-instdir],
   AC_HELP_STRING([--with-coin-instdir],
@@ -3653,8 +3657,7 @@ if test x$coin_projectdir = xyes ; then
   # if we are in a project setup, then in a classic setup, we want to find uninstalled projects
   # their (relative) location is written to coin_subdirs.txt by the configure in the project base directory
   # unfortunately, if the user set prefix, then we do not know where the project base directory is located
-  # but it is likely to be either .. (if we are a usual coin project) or ../.. (if we are a unusual coin project like ThirdParty or Data)
-  COIN_PKG_CONFIG_PATH_UNINSTALLED=
+  # but it is likely to be either .. (if we are a usual coin project) or ../.. (if we are a unusual coin project like ThirdParty or Data)  COIN_PKG_CONFIG_PATH_UNINSTALLED=
   if test -e ../coin_subdirs.txt ; then
     for i in `cat ../coin_subdirs.txt` ; do
       if test -d ../$i ; then
