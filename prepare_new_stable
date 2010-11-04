@@ -674,7 +674,7 @@ if test -n "$trunkExternals" ; then
 	ext_minVer=`expr $ext_minVer + 1`
 	ext_url=`replaceVersionInURL $ext_url $ext_majVer $ext_minVer`
 	ext_isNormal=`isNormalURL $ext_url`
-	if $ext_isNormal = yes ; then
+	if test $ext_isNormal = yes ; then
 	  ext_url="${ext_url}${ext_proj}"
 	fi
 	echo "    $ext_name $ext_oldurl ==> $ext_url"
