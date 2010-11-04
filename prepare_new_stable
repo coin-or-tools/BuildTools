@@ -673,8 +673,8 @@ if test -n "$trunkExternals" ; then
 	ext_minVer=`extractMinorFromURL $ext_url`
 	ext_minVer=`expr $ext_minVer + 1`
 	ext_url=`replaceVersionInURL $ext_url $ext_majVer $ext_minVer`
-	# pre-1.1 Data configuration
-	if ! expr "$ext_url" : '.*/Data/trunk/.*' >/dev/null 2>&1 ; then
+	ext_isNormal=`isNormalURL $ext_url`
+	if $ext_isNormal = yes ; then
 	  ext_url="${ext_url}${ext_proj}"
 	fi
 	echo "    $ext_name $ext_oldurl ==> $ext_url"
