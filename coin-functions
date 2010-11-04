@@ -588,7 +588,6 @@ calcLibtoolAge ()
     # echo "Filtered ls: $cltc_filter"
 
     cltc_cnt=`echo $cltc_filter | wc -w | sed -e 's/ //g'`
-    cltc_cnt=`expr $cltc_cnt - 1`
   else
     cltc_cnt=0
   fi
