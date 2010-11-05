@@ -127,6 +127,8 @@ extractTailFromExt ()
 	;;
     */BuildTools/* )
 	;;
+    */CoinBazaar/* )
+        ;;
     *)
 	etfe_pfxPat=
 	case "$1" in
