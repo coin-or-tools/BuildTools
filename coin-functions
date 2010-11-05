@@ -58,11 +58,13 @@ extractTypeFromURL ()
 # Determine if this is a `normal' URL, defined as not Data, ThirdParty, or
 # BuildTools itself. ThirdParty lives in BuildTools as of 100628, so the
 # condition is redundant. Returns yes or no.
+# 101105 Exclude CoinBazaar, which follows the Data pattern. May not be the
+#        correct choice if any CoinBazaar projects use BuildTools
 # usage: isNormal=`isNormalURL $svnURL`
 
 isNormalURL ()
 { case $1 in
-    */BuildTools/* | */ThirdParty/* | */Data/* )
+    */BuildTools/* | */ThirdParty/* | */Data/* | */CoinBazaar/* )
        echo "no"
        ;;
     *) echo "yes"
@@ -127,6 +129,8 @@ extractTailFromExt ()
 	;;
     */BuildTools/* )
 	;;
+    */CoinBazaar/* )
+        ;;
     *)
 	etfe_pfxPat=
 	case "$1" in

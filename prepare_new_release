@@ -408,7 +408,8 @@ if test -n "$bak_files" ; then
   for i in $bak_files; do
     sed -e "s|AC_INIT\(.*\),\(\[*\)[^],]*\(\]*\),\(.*\)|AC_INIT\1,\2$newVer\3,\4|" $i > bla
     mv bla $i
-    sed -e "s|AC_COIN_PROJECTDIR_INIT(.*)|AC_COIN_PROJECTDIR_INIT\($stableProj,$newLTCurrent:$newLTRevision:$newLTAge\)|" $i > bla
+    lastComponent=`echo $stableProj | sed -e 's|.*/\([^/][^/]*\)|\1|'`
+    sed -e "s|AC_COIN_PROJECTDIR_INIT(.*)|AC_COIN_PROJECTDIR_INIT\($lastComponent,$newLTCurrent:$newLTRevision:$newLTAge\)|" $i > bla
     mv bla $i
     svn diff $i
   done
