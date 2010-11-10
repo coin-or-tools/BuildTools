@@ -3842,23 +3842,7 @@ if test $m4_tolower(coin_has_$1) != skipping; then
 
 fi
 
-if test $m4_tolower(coin_has_$1) = notGiven; then
-  #check for project by using pkg-config, if pkg-config is available
-  #we are only interested in installed packages here, so we do not search in $COIN_PKG_CONFIG_PATH_UNINSTALLED
-  if test -n "$PKG_CONFIG" ; then
-    coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
-    PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" ; export PKG_CONFIG_PATH
-      m4_ifval([$4],
-        [AC_COIN_PKG_CHECK_PROJECT_EXISTS([$4],
-	        [m4_tolower(coin_has_$1)="$m4_toupper([$4])_VERSION"])],
-	      [AC_COIN_PKG_CHECK_PROJECT_EXISTS([$1],
-	        [m4_tolower(coin_has_$1)="$m4_toupper([$1])_VERSION"])])
-    PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
-    export PKG_CONFIG_PATH
-  fi
-fi
-
-# if not found yet, check if project is available in present directory
+# check if project is available in present directory
 if test "$m4_tolower(coin_has_$1)" = notGiven; then
   if test -d $srcdir/$2/$1; then
     # If a third argument is given, then we have to check if one one the files given in that third argument is present.
@@ -3877,9 +3861,25 @@ if test "$m4_tolower(coin_has_$1)" = notGiven; then
   fi
 fi
 
+# check for project by using pkg-config, if pkg-config is available
+if test $m4_tolower(coin_has_$1) = notGiven; then
+  #we are only interested in installed packages here, so we do not search in $COIN_PKG_CONFIG_PATH_UNINSTALLED
+  if test -n "$PKG_CONFIG" ; then
+    coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
+    PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" ; export PKG_CONFIG_PATH
+      m4_ifval([$4],
+        [AC_COIN_PKG_CHECK_PROJECT_EXISTS([$4],
+	        [m4_tolower(coin_has_$1)="$m4_toupper([$4])_VERSION"])],
+	      [AC_COIN_PKG_CHECK_PROJECT_EXISTS([$1],
+	        [m4_tolower(coin_has_$1)="$m4_toupper([$1])_VERSION"])])
+    PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
+    export PKG_CONFIG_PATH
+  fi
+fi
+
 AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
 
-AC_MSG_CHECKING(whether project $1 need to be configured)
+AC_MSG_CHECKING(whether project $1 needs to be configured)
 if test "$coin_have_project_dir" = yes ; then
 
   if test -r $srcdir/m4_ifval($2,[$2/],)$1/configure; then
@@ -4232,7 +4232,7 @@ AC_ARG_WITH([blas],
                            [specify BLAS library (or BUILD for compilation)]),
             [use_blas="$withval"], [use_blas=])
 
-# if user specified --with-blas-lib, then we should give COIN_HAS_PACKAGE
+# if user specified --with-blas-lib, then we should give COIN_CHECK_PACKAGE
 # preference
 AC_ARG_WITH([blas-lib],,[use_blas=BUILD])
 
@@ -4388,7 +4388,7 @@ if test x"$use_lapack" != x; then
   elif test "$use_lapack" != no; then
     AC_MSG_CHECKING([whether user supplied LAPACKLIB=\"$use_lapack\" works])
     coin_save_LIBS="$LIBS"
-    LIBS="$use_lapack $LIBS"
+    LIBS="$use_lapack $BLAS_LIBS $LIBS"
     AC_COIN_TRY_FLINK([dsyev],
                       [AC_MSG_RESULT([yes])],
                       [AC_MSG_RESULT([no])
@@ -4413,7 +4413,7 @@ else
       *-sgi-*) 
         AC_MSG_CHECKING([whether -lcomplib.sgimath has LAPACK])
         coin_save_LIBS="$LIBS"
-        LIBS="-lcomplib.sgimath $LIBS"
+        LIBS="-lcomplib.sgimath $BLAS_LIBS $LIBS"
         AC_COIN_TRY_FLINK([dsyev],
                           [AC_MSG_RESULT([yes])
                            use_lapack="-lcomplib.sgimath;"],
@@ -4421,11 +4421,11 @@ else
         LIBS="$coin_save_LIBS"
         ;;
 
-      # See comments in COIN_HAS_BLAS.
+      # See comments in COIN_CHECK_PACKAGE_BLAS.
       *-*-solaris*)
         AC_MSG_CHECKING([for LAPACK in libsunperf])
         coin_save_LIBS="$LIBS"
-        LIBS="-lsunperf $FLIBS $LIBS"
+        LIBS="-lsunperf $BLAS_LIBS $FLIBS $LIBS"
         AC_COIN_TRY_FLINK([dsyev],
                           [AC_MSG_RESULT([yes])
                            use_lapack='-lsunperf'
@@ -4446,7 +4446,7 @@ else
   if test -z "$use_lapack" && test $skip_llapack_check = no; then
     AC_MSG_CHECKING([whether -llapack has LAPACK])
     coin_save_LIBS="$LIBS"
-    LIBS="-llapack $LIBS"
+    LIBS="-llapack $BLAS_LIBS $LIBS"
     AC_COIN_TRY_FLINK([dsyev],
 		      [AC_MSG_RESULT([yes])
 		       use_lapack='-llapack'],
