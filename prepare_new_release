@@ -325,6 +325,7 @@ if test $isNormal = yes ; then
   newLTCurrent=`calcLibtoolAge $stableURL -1`
   newLTRevision=$newRel
   newLTAge=`calcLibtoolAge $stableURL $majVer`
+  newLTAge=`expr $newLTAge - 1`
   newLTVer=${newLTCurrent}:${newLTRevision}:${newLTAge}
   echo "Libtool version.....: $newLTVer"
 fi
