@@ -4327,11 +4327,11 @@ else
     coin_save_LIBS="$LIBS"
     LIBS="-lblas $LIBS"
     AC_COIN_TRY_FLINK([daxpy],
-                      [AC_MSG_RESULT([yes])
-                       use_blas='-lblas'
+                      [use_blas='-lblas'
                        if test $coin_need_flibs = yes ; then
                          use_blas="$use_blas $FLIBS"
                        fi
+                       AC_MSG_RESULT([yes: $use_blas])
                       ],
                       [AC_MSG_RESULT([no])])
     LIBS="$coin_save_LIBS"
