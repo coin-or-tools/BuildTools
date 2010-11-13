@@ -2914,8 +2914,9 @@ AC_DEFUN([AC_COIN_TRY_FLINK],
         LIBS="$LIBS $FLIBS"
         AC_TRY_LINK([void $cfunc$1();],[$cfunc$1()],
                     [LIBS="$flink_save_libs"
+                     coin_need_flibs=yes
                      $2
-                     coin_need_flibs=yes],
+                    ],
                     [LIBS="$flink_save_libs"
                      $3])
       else
@@ -2939,8 +2940,9 @@ AC_DEFUN([AC_COIN_TRY_FLINK],
         LIBS="$LIBS $FLIBS"
         AC_TRY_LINK([extern "C" {void $cfunc$1();}],[$cfunc$1()],
                     [LIBS="$flink_save_libs"
+                     coin_need_flibs=yes
                      $2
-                     coin_need_flibs=yes],
+                    ],
                     [LIBS="$flink_save_libs"
                      $3])
       else
@@ -4243,10 +4245,14 @@ if test x"$use_blas" != x; then
     :
   elif test "$use_blas" != "no"; then
     AC_MSG_CHECKING([whether user supplied BLASLIB=\"$use_blas\" works])
+    coin_need_flibs=no
     coin_save_LIBS="$LIBS"
     LIBS="$use_blas $LIBS"
     AC_COIN_TRY_FLINK([daxpy],
-                      [AC_MSG_RESULT([yes])],
+                      [if test $coin_need_flibs = yes ; then
+                         use_blas="$use_blas $FLIBS"
+                       fi
+                       AC_MSG_RESULT([yes: $use_blas])],
                       [AC_MSG_RESULT([no])
                        AC_MSG_ERROR([user supplied BLAS library \"$use_blas\" does not work])])
     LIBS="$coin_save_LIBS"
@@ -4258,11 +4264,16 @@ else
   case $build in
     *-sgi-*) 
       AC_MSG_CHECKING([whether -lcomplib.sgimath has BLAS])
+      coin_need_flibs=no
       coin_save_LIBS="$LIBS"
       LIBS="-lcomplib.sgimath $LIBS"
       AC_COIN_TRY_FLINK([daxpy],
-                        [AC_MSG_RESULT([yes])
-                         use_blas="-lcomplib.sgimath"],
+                        [use_blas="-lcomplib.sgimath"
+                         if test $coin_need_flibs = yes ; then
+                           use_blas="$use_blas $FLIBS"
+                         fi
+                         AC_MSG_RESULT([yes: $use_blas])
+                        ],
                         [AC_MSG_RESULT([no])])
       LIBS="$coin_save_LIBS"
       ;;
@@ -4275,12 +4286,16 @@ else
 # libraries to be linked for C++ and C. We can arrange that explicitly.
     *-*-solaris*)
       AC_MSG_CHECKING([for BLAS in libsunperf])
+      coin_need_flibs=no
       coin_save_LIBS="$LIBS"
       LIBS="-lsunperf $FLIBS $LIBS"
       AC_COIN_TRY_FLINK([daxpy],
-                        [AC_MSG_RESULT([yes])
-                         use_blas='-lsunperf'
-			 coin_need_flibs=yes],
+                        [use_blas='-lsunperf'
+                         if test $coin_need_flibs = yes ; then
+                           use_blas="$use_blas $FLIBS"
+                         fi
+                         AC_MSG_RESULT([yes: $use_blas])
+                        ],
                         [AC_MSG_RESULT([no])])
       LIBS="$coin_save_LIBS"
       ;;
@@ -4288,7 +4303,7 @@ else
 # On cygwin, consider -lblas only if doscompile is disabled. The prebuilt
 # library will want to link with cygwin, hence won't run standalone in DOS.
       if test "$enable_doscompile" = mingw; then
-	skip_lblas_check=yes
+        skip_lblas_check=yes
       fi
       case "$CC" in
         cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
@@ -4296,8 +4311,9 @@ else
           coin_save_LIBS="$LIBS"
           LIBS="mkl_intel_c.lib mkl_sequential.lib mkl_core.lib $LIBS"
           AC_COIN_TRY_FLINK([daxpy],
-                            [AC_MSG_RESULT([yes])
-                             use_blas='mkl_intel_c.lib mkl_sequential.lib mkl_core.lib'],
+                            [use_blas='mkl_intel_c.lib mkl_sequential.lib mkl_core.lib'
+                             AC_MSG_RESULT([yes: $use_blas])
+                            ],
                             [AC_MSG_RESULT([no])])
           LIBS="$coin_save_LIBS"
           ;;
@@ -4307,15 +4323,20 @@ else
 
   if test -z "$use_blas" && test $skip_lblas_check = no; then
     AC_MSG_CHECKING([whether -lblas has BLAS])
+    coin_need_flibs=no
     coin_save_LIBS="$LIBS"
     LIBS="-lblas $LIBS"
     AC_COIN_TRY_FLINK([daxpy],
-		      [AC_MSG_RESULT([yes])
-		       use_blas='-lblas'],
-		      [AC_MSG_RESULT([no])])
+                      [AC_MSG_RESULT([yes])
+                       use_blas='-lblas'
+                       if test $coin_need_flibs = yes ; then
+                         use_blas="$use_blas $FLIBS"
+                       fi
+                      ],
+                      [AC_MSG_RESULT([no])])
     LIBS="$coin_save_LIBS"
   fi
-  
+
   # If we have no other ideas, consider building BLAS.
   if test -z "$use_blas" ; then
     use_blas=BUILD
@@ -4376,7 +4397,7 @@ AC_ARG_WITH([lapack],
             AC_HELP_STRING([--with-lapack],
                            [specify LAPACK library (or BUILD for compilation)]),
             [use_lapack=$withval], [use_lapack=])
-	    
+
 #if user specified --with-lapack-lib, then we should give COIN_HAS_PACKAGE preference
 AC_ARG_WITH([lapack-lib],,[use_lapack=BUILD])
 
@@ -4387,10 +4408,16 @@ if test x"$use_lapack" != x; then
     :
   elif test "$use_lapack" != no; then
     AC_MSG_CHECKING([whether user supplied LAPACKLIB=\"$use_lapack\" works])
+    coin_need_flibs=no
+    use_lapack="$use_lapack $BLAS_LIBS"
     coin_save_LIBS="$LIBS"
-    LIBS="$use_lapack $BLAS_LIBS $LIBS"
+    LIBS="$use_lapack $LIBS"
     AC_COIN_TRY_FLINK([dsyev],
-                      [AC_MSG_RESULT([yes])],
+                      [if test $coin_need_flibs = yes ; then
+                         use_lapack="$use_lapack $FLIBS"
+                       fi
+                       AC_MSG_RESULT([yes: $use_lapack])
+                      ],
                       [AC_MSG_RESULT([no])
                        AC_MSG_ERROR([user supplied LAPACK library \"$use_lapack\" does not work])])
     LIBS="$coin_save_LIBS"
@@ -4400,9 +4427,15 @@ else
     # First try to see if LAPACK is already available with BLAS library
     AC_MSG_CHECKING([whether LAPACK is already available with BLAS library])
     coin_save_LIBS="$LIBS"
+    coin_need_flibs=no
     LIBS="$BLAS_LIBS $LIBS"
     AC_COIN_TRY_FLINK([dsyev],
-                      [AC_MSG_RESULT([yes]); use_lapack="$BLAS_LIBS"],
+                      [use_lapack="$BLAS_LIBS"
+                       if test $coin_need_flibs = yes ; then
+                         use_lapack="$use_lapack $FLIBS"
+                       fi
+                       AC_MSG_RESULT([yes: $use_lapack])
+                      ],
                       [AC_MSG_RESULT([no])])
     LIBS="$coin_save_LIBS"
   fi
@@ -4413,10 +4446,15 @@ else
       *-sgi-*) 
         AC_MSG_CHECKING([whether -lcomplib.sgimath has LAPACK])
         coin_save_LIBS="$LIBS"
+        coin_need_flibs=no
         LIBS="-lcomplib.sgimath $BLAS_LIBS $LIBS"
         AC_COIN_TRY_FLINK([dsyev],
-                          [AC_MSG_RESULT([yes])
-                           use_lapack="-lcomplib.sgimath;"],
+                          [use_lapack="-lcomplib.sgimath $BLAS_LIBS"
+                           if test $coin_need_flibs = yes ; then
+                             use_lapack="$use_lapack $FLIBS"
+                           fi
+                           AC_MSG_RESULT([yes: $use_lapack])
+                          ],
                           [AC_MSG_RESULT([no])])
         LIBS="$coin_save_LIBS"
         ;;
@@ -4424,12 +4462,16 @@ else
       # See comments in COIN_CHECK_PACKAGE_BLAS.
       *-*-solaris*)
         AC_MSG_CHECKING([for LAPACK in libsunperf])
+        coin_need_flibs=no
         coin_save_LIBS="$LIBS"
         LIBS="-lsunperf $BLAS_LIBS $FLIBS $LIBS"
         AC_COIN_TRY_FLINK([dsyev],
-                          [AC_MSG_RESULT([yes])
-                           use_lapack='-lsunperf'
-                           coin_need_flibs=yes],
+                          [use_lapack='-lsunperf $BLAS_LIBS'
+                           if test $coin_need_flibs = yes ; then
+                             use_lapack="$use_lapack $FLIBS"
+                           fi
+                           AC_MSG_RESULT([yes: $use_lapack])
+                          ],
                           [AC_MSG_RESULT([no])])
         LIBS="$coin_save_LIBS"
         ;;
@@ -4445,12 +4487,17 @@ else
 
   if test -z "$use_lapack" && test $skip_llapack_check = no; then
     AC_MSG_CHECKING([whether -llapack has LAPACK])
+    coin_need_flibs=no
     coin_save_LIBS="$LIBS"
     LIBS="-llapack $BLAS_LIBS $LIBS"
     AC_COIN_TRY_FLINK([dsyev],
-		      [AC_MSG_RESULT([yes])
-		       use_lapack='-llapack'],
-		      [AC_MSG_RESULT([no])])
+                      [use_lapack='-llapack'
+                       if test $coin_need_flibs = yes ; then
+                         use_lapack="$use_lapack $FLIBS"
+                       fi
+                       AC_MSG_RESULT([yes: $use_lapack])
+                      ],
+                      [AC_MSG_RESULT([no])])
     LIBS="$coin_save_LIBS"
   fi
 
@@ -4462,7 +4509,7 @@ fi
 
 if test "x$use_lapack" = xBUILD ; then
   AC_COIN_CHECK_PACKAGE(Lapack, [coinlapack], [$1])
-  
+
 elif test "x$use_lapack" != x && test "$use_lapack" != no; then
   coin_has_lapack=yes
   AM_CONDITIONAL([COIN_HAS_LAPACK],[test 0 = 0])
