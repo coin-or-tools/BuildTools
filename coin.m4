@@ -4158,7 +4158,7 @@ while test $m4_tolower(coin_has_$1) = notGiven ; do
       fi
       
       # read dependencies from $pcfile, filter it, and add to list of projects that need to be processed next
-      projrequires=[`sed -n -e 's/Requires://gp' "$pcfile" | sed -e 's/<\{0,1\}>\{0,1\}=[ 	]*[^ 	]\{0,\}//g'`]
+      projrequires=[`sed -n -e 's/Requires://gp' "$pcfile" | sed -e 's/<\{0,1\}>\{0,1\}=[ 	]\{0,\}[^ 	]\{1,\}//g'`]
       nextprojtoprocess="$nextprojtoprocess $projrequires"
       
       # remember that we have processed $proj
