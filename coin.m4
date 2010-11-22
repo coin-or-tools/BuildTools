@@ -4102,22 +4102,15 @@ m4_toupper($1_DATA)=
 
 # initial list of dependencies is "$2", but we need to filter out version number specifications (= x, <= x, >= x)
 projtoprocess="m4_bpatsubsts([$2], [<?>?=[ 	]*[^ 	]+])"
-projprocessed=""
 
-while test $m4_tolower(coin_has_$1) = notGiven ; do
-  # setup list of projects that need to be processed in the next round
-  nextprojtoprocess=""
+# we first expand the list of projects to process by adding all dependencies just behind the project which depends on it
+# further, we collect the list of corresponding .pc files, but do this in reverse order, because we need this order afterwards
+# also, we setup the DATA variable
+allproj=""
+allpcfiles=""
+while test "x$projtoprocess" != x ; do
 
   for proj in $projtoprocess ; do
-    # if $proj has been processed already, skip this round
-    if test "x$projprocessed" != x ; then
-      for projdone in $projprocessed ; do
-        if test $projdone = $proj ; then
-	  continue 2
-	fi
-      done
-    fi
-
     # if $proj is available and configured, then a project-uninstalled.pc file should have been created, so search for it
     pcfile=""
     save_IFS="$IFS"
@@ -4126,82 +4119,117 @@ while test $m4_tolower(coin_has_$1) = notGiven ; do
       # the base directory configure should have setup coin_subdirs.txt in a way that it does not contain projects that should be skipped, so we do not need to test this here again
       if test -r "$dir/$proj-uninstalled.pc" ; then
         pcfile="$dir/$proj-uninstalled.pc"
-        pcfiledir="$dir"
         break
       fi
     done
     IFS="$save_IFS"
 
     if test "x$pcfile" != x ; then
-      # read CFLAGS from $pcfile and add CYGPATH_W cludge into include flags
-      projcflags=`sed -n -e 's/Cflags://p' "$pcfile"`
-      projcflags=[`echo "$projcflags" | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`]
-      m4_toupper($1_CFLAGS)="$projcflags $m4_toupper($1_CFLAGS)"
-      
-      # read LIBS from $pcfile and replace -L${libdir} by absolute path to build directory in linker flags
-      # we assume that the build directory is $pcfiledir/src if this directory exists, otherwise we assume that it is $pcfiledir
-      projlibs=`sed -n -e 's/Libs://' -e 's/-L\${libdir}//p' "$pcfile"`
-      if test "x$projlibs" != x ; then
-        if test -d "${pcfiledir}/src" ; then
-          projlibs="-L`cd "${pcfiledir}/src"; pwd` $projlibs"
-        else
-          projlibs="-L`cd "$pcfiledir"; pwd` $projlibs"
-        fi
-      else
-        projlibs=`sed -n -e 's/Libs://p' "$pcfile"`
-      fi
-      m4_toupper($1_LIBS)="$m4_toupper($1_LIBS) $projlibs"
-      
+      # read dependencies from $pcfile and filter it
+      projrequires=[`sed -n -e 's/Requires://gp' "$pcfile" | sed -e 's/<\{0,1\}>\{0,1\}=[ 	]\{0,\}[^ 	]\{1,\}//g'`]
+
+      # add projrequires to the front of the list of projects that have to be processed next
+      # at the same time, remove $proj from this list
+      projtoprocess=${projtoprocess/$proj/$projrequires}
+
       # read DATA from $pcfile, if this is the first .pc file we are processing (so assume that its the main one)
-      if test "x$projprocessed" = x ; then
+      if test "x$allproj" = x ; then
         m4_toupper($1_DATA)=`sed -n -e 's/datadir=//gp' "$pcfile"`
       fi
-      
-      # read dependencies from $pcfile, filter it, and add to list of projects that need to be processed next
-      projrequires=[`sed -n -e 's/Requires://gp' "$pcfile" | sed -e 's/<\{0,1\}>\{0,1\}=[ 	]\{0,\}[^ 	]\{1,\}//g'`]
-      nextprojtoprocess="$nextprojtoprocess $projrequires"
-      
-      # remember that we have processed $proj
-      projprocessed="$projprocessed $proj"
-      
+
+      allproj="$allproj $proj"
+      allpcfiles="$pcfile:$allpcfiles"
+
     else
       AC_MSG_RESULT([no, dependency $proj not available])
+      allproj=fail
       break 2
     fi
 
+    break
   done
-  
-  projtoprocess="$nextprojtoprocess"
-  
-  # if there are no more projects to search for, finish up
-  if test "x$projtoprocess" = x ; then
-    m4_tolower(coin_has_$1)=yes
-    AC_MSG_RESULT([yes, dependencies are$projprocessed])
-    AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 package is available])
-    
-    coin_foreach_w([myvar], [$3], [
-      m4_toupper(myvar)_PCREQUIRES="$2 $m4_toupper(myvar)_PCREQUIRES"
-      m4_toupper(myvar)_CFLAGS="$m4_toupper($1)_CFLAGS $m4_toupper(myvar)_CFLAGS"
-      m4_toupper(myvar)_LIBS="$m4_toupper($1)_LIBS $m4_toupper(myvar)_LIBS"
-    ])
-    
-    if test 1 = 0 ; then  #change this test to enable a bit of debugging output
-      if test -n "$m4_toupper($1)_CFLAGS" ; then
-        AC_MSG_NOTICE([$1 CFLAGS are $m4_toupper($1)_CFLAGS])
-      fi
-      if test -n "$m4_toupper($1)_LIBS" ; then
-        AC_MSG_NOTICE([$1 LIBS   are $m4_toupper($1)_LIBS])
-      fi
-      if test -n "$m4_toupper($1)_DATA" ; then
-        AC_MSG_NOTICE([$1 DATA   is  $m4_toupper($1)_DATA])
-      fi
-      coin_foreach_w([myvar], [$3], [
-        AC_MSG_NOTICE([myvar CFLAGS are $m4_toupper(myvar)_CFLAGS])
-        AC_MSG_NOTICE([myvar LIBS   are $m4_toupper(myvar)_LIBS])
-      ])
-    fi
-  fi
+
+  # remove spaces on begin of $projtoprocess
+  projtoprocess=`echo $projtoprocess | sed -e 's/^[ ]*//'`
+
 done
+
+if test "$allproj" != fail ; then
+
+  # now go through the list of .pc files and assemble compiler and linker flags
+  # important is here to obey the reverse order that has been setup before,
+  # since then libraries that are required by several others should be after these other libraries
+  pcfilesprocessed=""
+
+  save_IFS="$IFS"
+  IFS=":"
+  for pcfile in $allpcfiles ; do
+
+    # if $pcfile has been processed already, skip this round
+    if test "x$pcfilesprocessed" != x ; then
+      for pcfiledone in $pcfilesprocessed ; do
+        if test "$pcfiledone" = "$pcfile" ; then
+          continue 2
+        fi
+      done
+    fi
+
+    # reconstruct the directory where the .pc file is located
+    pcfiledir=[`echo $pcfile | sed -e 's/\/[^\/]*$//'`]
+
+    # read CFLAGS from $pcfile and add CYGPATH_W cludge into include flags
+    projcflags=`sed -n -e 's/Cflags://p' "$pcfile"`
+    projcflags=[`echo "$projcflags" | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`]
+    m4_toupper($1_CFLAGS)="$projcflags $m4_toupper($1_CFLAGS)"
+
+    # read LIBS from $pcfile and replace -L${libdir} by absolute path to build directory in linker flags
+    # we assume that the build directory is $pcfiledir/src if this directory exists, otherwise we assume that it is $pcfiledir
+    projlibs=`sed -n -e 's/Libs://' -e 's/-L\${libdir}//p' "$pcfile"`
+    if test "x$projlibs" != x ; then
+      if test -d "${pcfiledir}/src" ; then
+        projlibs="-L`cd "${pcfiledir}/src"; pwd` $projlibs"
+      else
+        projlibs="-L`cd "$pcfiledir"; pwd` $projlibs"
+      fi
+    else
+      projlibs=`sed -n -e 's/Libs://p' "$pcfile"`
+    fi
+    m4_toupper($1_LIBS)="$projlibs $m4_toupper($1_LIBS)"
+
+    # remember that we have processed $pcfile
+    pcfilesprocessed="$pcfilesprocessed:$pcfile"
+
+  done
+  IFS="$save_IFS"
+
+  # finish up
+  m4_tolower(coin_has_$1)=yes
+  AC_MSG_RESULT([yes])
+  AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 package is available])
+
+  coin_foreach_w([myvar], [$3], [
+    m4_toupper(myvar)_PCREQUIRES="$2 $m4_toupper(myvar)_PCREQUIRES"
+    m4_toupper(myvar)_CFLAGS="$m4_toupper($1)_CFLAGS $m4_toupper(myvar)_CFLAGS"
+    m4_toupper(myvar)_LIBS="$m4_toupper($1)_LIBS $m4_toupper(myvar)_LIBS"
+  ])
+
+  if test 1 = 0 ; then  #change this test to enable a bit of debugging output
+    if test -n "$m4_toupper($1)_CFLAGS" ; then
+      AC_MSG_NOTICE([$1 CFLAGS are $m4_toupper($1)_CFLAGS])
+    fi
+    if test -n "$m4_toupper($1)_LIBS" ; then
+      AC_MSG_NOTICE([$1 LIBS   are $m4_toupper($1)_LIBS])
+    fi
+    if test -n "$m4_toupper($1)_DATA" ; then
+      AC_MSG_NOTICE([$1 DATA   is  $m4_toupper($1)_DATA])
+    fi
+    coin_foreach_w([myvar], [$3], [
+      AC_MSG_NOTICE([myvar CFLAGS are $m4_toupper(myvar)_CFLAGS])
+      AC_MSG_NOTICE([myvar LIBS   are $m4_toupper(myvar)_LIBS])
+    ])
+  fi
+
+fi
 
 AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
                [test $m4_tolower(coin_has_$1) != notGiven &&
