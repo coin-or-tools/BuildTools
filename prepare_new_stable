@@ -41,7 +41,8 @@ coinURL="https://projects.coin-or.org/svn"
 # Begin parameter processing.
 
 printHelp=0
-ignoreBuildToolsMismatch=0
+ignoreBuildToolsMismatch=no
+mismatchBTExternals=
 bumpMajor=0
 suppressCheckout=0
 
@@ -81,7 +82,19 @@ else
   while test $# -gt 0 && test $exitValue = 0 && test $printHelp = 0 ; do
     case "$1" in
       -h* | --h*) printHelp=1 ;;
-      -i* | --i*) ignoreBuildToolsMismatch=1 ;;
+      -i* | --i*)
+	   if expr "$1" : '.*-i.*=.*' 2>&1 >/dev/null ; then
+	     mismatchBTExternals=`echo $1 | sed -n -e 's/[^=]*=\(.*\)/\1/p'`
+	   else
+	     shift
+	     mismatchBTExternals=$1
+	   fi
+	   if test "x$mismatchBTExternals" = "xall" ; then
+	     ignoreBuildToolsMismatch=all
+	   else
+	     ignoreBuildToolsMismatch=partial
+	   fi
+	   ;;
       -m* | --m*) bumpMajor=1 ;;
       -p* | --p*) suppressCheckout=1 ;;
       -t* | --t*)
@@ -214,12 +227,14 @@ branch.  You can specify the entire URL, or just enter what comes after
 Options:
   -b <BuildToolsURL>	URL for BuildTools; required to generate a release
   			for a ThirdParty or Data project.
-  -i			Ignore BuildTools version mismatches in externals.
+  -i <projectlist>	Ignore BuildTools version mismatches for the listed
+  			externals (comma-separated list of project names,
+			e.g., -i Osi,Cbc). '-i all' ignores all mismatches.
   -p			Suppress checkout (useful for testing)
   -m			Bump the major version number.
   -t <project-list>	Suppress conversion from trunk to stable for the
 			listed externals (comma-separated list of project
-			names, e.g., -t Osi,Cbc).
+			names).
   -x <project-list>	Remove the listed projects from the list of externals
 			(comma-separated list of project names).
 
@@ -502,9 +517,12 @@ if test -n "$srcDepFile" ; then
 	if test -n "$extBTURL" ; then
 	  testResult=`compareURLVersions "$srcBTURL" "$extBTURL"`
 	  if test $testResult = no ; then
-	    echo "    WARNING: BuildTools mismatch: $ext_url_notail uses $extBTURL"
-	    if test $ignoreBuildToolsMismatch = 0 ; then
-	       buildtoolsMismatch=1
+	    if test $ignoreBuildToolsMismatch = all || \
+	       expr "$mismatchBTExternals" : '.*'$ext_proj'.*' 2>&1 >/dev/null ; then
+	      echo "    WARNING: BuildTools mismatch: $ext_url_notail uses $extBTURL"
+	    else
+	      buildtoolsMismatch=1
+	      echo "    ERROR: BuildTools mismatch: $ext_url_notail uses $extBTURL"
 	    fi
 	  fi
 	fi
@@ -516,20 +534,25 @@ if test -n "$srcDepFile" ; then
     fi
   done
 
-# If we have a BuildTools mismatch, and mismatch is not permitted, exit.
+# If we have a BuildTools mismatch, exit.
 
-  if test $buildtoolsMismatch -gt $ignoreBuildToolsMismatch ; then
+  if test $buildtoolsMismatch = 1 ; then
     echo "Exiting due to BuildTools mismatches; use -i to ignore."
     exit 2
   fi
 
   $cmdDir/set_externals Dependencies
 
+# Try three times to check out externals before conceding defeat.
+
   echo ''
   echo '===> Checking out externals ...'
   echo ''
 
-  svn update
+  svn update ||
+  { echo "Retry 1 ... " ; svn update ; } ||
+  { echo "Retry 2 ... " ; svn update ; } ||
+  { echo "Checkout of externals failed. Aborting." ; exit 3 ; }
 
 # Run any scripts to acquire ThirdParty code.
 
