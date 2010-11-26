@@ -47,7 +47,7 @@ extractTypeFromURL ()
   case "$1" in
     */trunk* ) etfu_type=trunk ;;
     */stable/* ) etfu_type=stable ;;
-    */releases/* ) etfu_type=releases ;;
+    */releases/* ) etfu_type=release ;;
   esac
   echo $etfu_type
 }
