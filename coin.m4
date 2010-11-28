@@ -4103,6 +4103,8 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
 # whenever a file proj-uninstalled.pc is parsed, then also a corresponding
 # proj.pc file is parsed for compiler and linker flags, if available in the
 # same directory.
+# Similar, a variable PACKAGE_DATA_INSTALLED is setup to the content of datadir
+# of the first .pc file that is parsed.
 #
 # If .pc files for all projects in $2 and their dependencies is found,
 # tolower(coin_has_$1) is set to "yes".  Otherwise, if some dependency
@@ -4129,6 +4131,7 @@ m4_toupper($1_LIBS_INSTALLED)=
 m4_toupper($1_CFLAGS)=
 m4_toupper($1_CFLAGS_INSTALLED)=
 m4_toupper($1_DATA)=
+m4_toupper($1_DATA_INSTALLED)=
 
 # initial list of dependencies is "$2", but we need to filter out version number specifications (= x, <= x, >= x)
 projtoprocess="m4_bpatsubsts([$2], [<?>?=[ 	]*[^ 	]+])"
@@ -4170,9 +4173,12 @@ while test "x$projtoprocess" != x ; do
       # at the same time, remove $proj from this list
       projtoprocess=${projtoprocess/$proj/$projrequires}
 
-      # read DATA from $pcfile, if this is the first .pc file we are processing (so assume that its the main one)
-      if test "x$allproj" = x ; then
-        m4_toupper($1_DATA)=`sed -n -e 's/datadir=//gp' "$pcfile"`
+      # read DATA from $pcfile, if _DATA is still empty
+      if test "x$m4_toupper($1_DATA)" = x ; then
+        projdatadir=
+        [pcfilemod=`sed -e '/[a-zA-Z]:/d' -e 's/datadir=\(.*\)/echo projdatadir=\\\\"\1\\\\"/g' $pcfile`]
+        eval `sh -c "$pcfilemod"`
+        m4_toupper($1_DATA)="$projdatadir"
       fi
 
       allproj="$allproj $proj"
@@ -4186,6 +4192,15 @@ while test "x$projtoprocess" != x ; do
     
     if test "x$pcifile" != x ; then
       allpcifiles="$pcifile:$allpcifiles"
+      
+      # read DATA_INSTALLED from $pcifile, if _DATA_INSTALLED is still empty
+      if test "x$m4_toupper($1_DATA_INSTALLED)" = x ; then
+        projdatadir=
+        [pcifilemod=`sed -e '/[a-zA-Z]:/d' -e 's/datadir=\(.*\)/echo projdatadir=\\\\"\1\\\\"/g' $pcifile`]
+        eval `sh -c "$pcifilemod"`
+        m4_toupper($1_DATA_INSTALLED)="$projdatadir"
+      fi
+      
     fi
 
     break
@@ -4294,6 +4309,7 @@ if test "$allproj" != fail ; then
     AC_SUBST(m4_toupper(myvar)_CFLAGS_INSTALLED)
     AC_SUBST(m4_toupper(myvar)_LIBS_INSTALLED)
   ])
+  AC_SUBST(m4_toupper($1)_DATA_INSTALLED)
 
   if test 1 = 0 ; then  #change this test to enable a bit of debugging output
     if test -n "$m4_toupper($1)_CFLAGS" ; then
@@ -4310,6 +4326,9 @@ if test "$allproj" != fail ; then
     fi
     if test -n "$m4_toupper($1)_LIBS_INSTALLED" ; then
       AC_MSG_NOTICE([$1 LIBS_INSTALLED   are $m4_toupper($1)_LIBS_INSTALLED])
+    fi
+    if test -n "$m4_toupper($1)_DATA_INSTALLED" ; then
+      AC_MSG_NOTICE([$1 DATA_INSTALLED   is  $m4_toupper($1)_DATA_INSTALLED])
     fi
     coin_foreach_w([myvar], [$3], [
       AC_MSG_NOTICE([])
