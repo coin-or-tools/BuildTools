@@ -945,6 +945,17 @@ if test x"$CXX" != x; then
   esac
 fi
 
+# add automake conditional so we can recognize cl compiler in makefile
+coin_cc_is_cl=false
+if test x"$CXX" != x; then
+  case "$CXX" in
+    cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+      coin_cc_is_cl=true
+      ;;
+  esac
+fi
+AM_CONDITIONAL(COIN_CC_IS_CL, [test $coin_cc_is_cl = true])
+
 AC_ARG_VAR(CDEFS,[Additional -D flags to be used when compiling C code.])
 AC_ARG_VAR(ADD_CFLAGS,[Additional C compiler options])
 AC_ARG_VAR(DBG_CFLAGS,[Debug C compiler options])
