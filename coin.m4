@@ -3923,14 +3923,16 @@ fi
 
 # This macro checks for the existance of a COIN-OR package and provides compiler and linker flags to compile against this package.
 # A package can consists of one or more COIN-OR or other projects.
-# It defines the PACKAGE_CFLAGS, PACKAGE_LIBS, and PACKAGE_DATA variables, referring to the compiler and linker
-# flags to use when linking against this module and the directories where the module data resists.
+# It defines the PACKAGE_CFLAGS, PACKAGE_LIBS, PACKAGE_DEPENDENCIES, and PACKAGE_DATA variables, referring to the compiler and linker
+# flags to use when linking against this module, the libraries the package depends on, and the directories where the module data resists.
+# The difference between PACKAGE_LIBS and PACKAGE_DEPENDENCIES is that PACKAGE_DEPENDENCIES does not contain arguments starting with '-',
+# so it can be used to setup the _DEPENDENCIES variable in a Makefile.am.
 # It also defines a COIN_HAS_PACKAGE preprocessor macro and makefile conditional.
 # Further, tolower(coin_has_$1) is set to "yes".
 # If a list of build targets using this projects is given in the third argument,
 # then the compiler and linker variables and .pc file setup variable corresponding to this build target
 # are extended with the values for this package.
-# That is, for each build target X, the variables X_CFLAGS, X_LIBS, X_PCLIBS, X_PCREQUIRES are setup,
+# That is, for each build target X, the variables X_CFLAGS, X_LIBS, X_DEPENDENCIES, X_PCLIBS, X_PCREQUIRES are setup,
 # whereas the last two specify the values to put into the "Libs:" and "Requires:" fields of the .pc file, resp.
 #
 # The first argument should be the name (PACKAGE) of the package (in correct lower
@@ -3967,11 +3969,18 @@ m4_toupper($1_DATA)=
 AC_SUBST(m4_toupper($1_LIBS))
 AC_SUBST(m4_toupper($1_CFLAGS))
 AC_SUBST(m4_toupper($1_DATA))
+AC_SUBST(m4_toupper($1_DEPENDENCIES))
+AC_SUBST(m4_toupper($1_LIBS_INSTALLED))
+AC_SUBST(m4_toupper($1_CFLAGS_INSTALLED))
+AC_SUBST(m4_toupper($1_DATA_INSTALLED))
 coin_foreach_w([myvar], [$3], [
   AC_SUBST(m4_toupper(myvar)_CFLAGS)
   AC_SUBST(m4_toupper(myvar)_LIBS)
   AC_SUBST(m4_toupper(myvar)_PCLIBS)
   AC_SUBST(m4_toupper(myvar)_PCREQUIRES)
+  AC_SUBST(m4_toupper(myvar)_DEPENDENCIES)
+  AC_SUBST(m4_toupper(myvar)_CFLAGS_INSTALLED)
+  AC_SUBST(m4_toupper(myvar)_LIBS_INSTALLED)
 ])
 
 #check if user provided LIBS, CFLAGS, or DATA for module
@@ -4047,13 +4056,23 @@ fi
 if test $m4_tolower(coin_has_$1) != skipping &&
    test $m4_tolower(coin_has_$1) != notGiven ; then
   AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 package is available])
-   
+
+  # construct dependencies variables from LIBS variables
+  # we add an extra space in LIBS so we can substitute out everything starting with " -"
+  m4_toupper($1)_DEPENDENCIES=`echo " $m4_toupper($1)_LIBS" | [sed -e 's/ -[^ ]*//g']`
+  coin_foreach_w([myvar], [$3], [
+    m4_toupper(myvar)_DEPENDENCIES=`echo " $m4_toupper(myvar)_LIBS" | [sed -e 's/ -[^ ]*//g']`
+  ])
+
   if test 1 = 0 ; then  #change this test to enable a bit of debugging output
     if test -n "$m4_toupper($1)_CFLAGS" ; then
       AC_MSG_NOTICE([$1 CFLAGS are $m4_toupper($1)_CFLAGS])
     fi
     if test -n "$m4_toupper($1)_LIBS" ; then
       AC_MSG_NOTICE([$1 LIBS   are $m4_toupper($1)_LIBS])
+    fi
+    if test -n "$m4_toupper($1)_DEPENDENCIES" ; then
+      AC_MSG_NOTICE([$1 DEPENDENCIES are $m4_toupper($1)_DEPENDENCIES])
     fi
     if test -n "$m4_toupper($1)_DATA" ; then
       AC_MSG_NOTICE([$1 DATA   is  $m4_toupper($1)_DATA])
@@ -4064,6 +4083,7 @@ if test $m4_tolower(coin_has_$1) != skipping &&
     coin_foreach_w([myvar], [$3], [
       AC_MSG_NOTICE([myvar CFLAGS are $m4_toupper(myvar)_CFLAGS])
       AC_MSG_NOTICE([myvar LIBS   are $m4_toupper(myvar)_LIBS])
+      AC_MSG_NOTICE([myvar DEPENDENCIES are $m4_toupper(myvar)_DEPENDENCIES])
     ])
   fi
 fi
@@ -4306,38 +4326,7 @@ if test "$allproj" != fail ; then
     m4_toupper(myvar)_LIBS="$m4_toupper($1)_LIBS $m4_toupper(myvar)_LIBS"
     m4_toupper(myvar)_CFLAGS_INSTALLED="$m4_toupper($1)_CFLAGS_INSTALLED $m4_toupper(myvar)_CFLAGS_INSTALLED"
     m4_toupper(myvar)_LIBS_INSTALLED="$m4_toupper($1)_LIBS_INSTALLED $m4_toupper(myvar)_LIBS_INSTALLED"
-    AC_SUBST(m4_toupper(myvar)_CFLAGS_INSTALLED)
-    AC_SUBST(m4_toupper(myvar)_LIBS_INSTALLED)
   ])
-  AC_SUBST(m4_toupper($1)_DATA_INSTALLED)
-
-  if test 1 = 0 ; then  #change this test to enable a bit of debugging output
-    if test -n "$m4_toupper($1)_CFLAGS" ; then
-      AC_MSG_NOTICE([$1 CFLAGS are $m4_toupper($1)_CFLAGS])
-    fi
-    if test -n "$m4_toupper($1)_LIBS" ; then
-      AC_MSG_NOTICE([$1 LIBS   are $m4_toupper($1)_LIBS])
-    fi
-    if test -n "$m4_toupper($1)_DATA" ; then
-      AC_MSG_NOTICE([$1 DATA   is  $m4_toupper($1)_DATA])
-    fi
-    if test -n "$m4_toupper($1)_CFLAGS_INSTALLED" ; then
-      AC_MSG_NOTICE([$1 CFLAGS_INSTALLED are $m4_toupper($1)_CFLAGS_INSTALLED])
-    fi
-    if test -n "$m4_toupper($1)_LIBS_INSTALLED" ; then
-      AC_MSG_NOTICE([$1 LIBS_INSTALLED   are $m4_toupper($1)_LIBS_INSTALLED])
-    fi
-    if test -n "$m4_toupper($1)_DATA_INSTALLED" ; then
-      AC_MSG_NOTICE([$1 DATA_INSTALLED   is  $m4_toupper($1)_DATA_INSTALLED])
-    fi
-    coin_foreach_w([myvar], [$3], [
-      AC_MSG_NOTICE([])
-      AC_MSG_NOTICE([myvar CFLAGS are $m4_toupper(myvar)_CFLAGS])
-      AC_MSG_NOTICE([myvar LIBS   are $m4_toupper(myvar)_LIBS])
-      AC_MSG_NOTICE([myvar CFLAGS_INSTALLED are $m4_toupper(myvar)_CFLAGS_INSTALLED])
-      AC_MSG_NOTICE([myvar LIBS_INSTALLED   are $m4_toupper(myvar)_LIBS_INSTALLED])
-    ])
-  fi
 
 fi
 
