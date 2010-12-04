@@ -3773,8 +3773,8 @@ AC_COIN_PKG_CHECK_MODULE_EXISTS([$1],[$2],
 	# but only do this if is not trivial
     if test "$CYGPATH_W" != "echo" ; then
       # need to put into brackets since otherwise autoconf replaces the brackets in the sed command
-	  [cflags=`echo $cflags | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`]
-	fi
+      [cflags=`echo $cflags | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`]
+    fi
     m4_toupper($1)[]_CFLAGS="$cflags"
     m4_toupper($1)[]_LIBS=`$PKG_CONFIG --libs "$2" 2>/dev/null`
     m4_toupper($1)[]_DATA=`$PKG_CONFIG --variable=datadir "$2" 2>/dev/null`
@@ -4218,6 +4218,9 @@ while test "x$projtoprocess" != x ; do
         projdatadir=
         [pcifilemod=`sed -e '/[a-zA-Z]:/d' -e 's/datadir=\(.*\)/echo projdatadir=\\\\"\1\\\\"/g' $pcifile`]
         eval `sh -c "$pcifilemod"`
+        if test "${CYGPATH_W}" != "echo"; then
+          projdatadir="\`\$(CYGPATH_W) ${projdatadir} | sed -e 's/\\\\\\\\/\\\\\\\\\\\\\\\\/g'\`"
+        fi
         m4_toupper($1_DATA_INSTALLED)="$projdatadir"
       fi
       
@@ -4261,7 +4264,9 @@ if test "$allproj" != fail ; then
     eval `sh -c "$pcfilemod"`
 
     # add CYGPATH_W cludge into include flags and set CFLAGS variable
-    projcflags=[`echo "$projcflags" | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`]
+    if test "${CYGPATH_W}" != "echo"; then
+      projcflags=[`echo "$projcflags" | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`]
+    fi
     m4_toupper($1_CFLAGS)="$projcflags $m4_toupper($1_CFLAGS)"
 
     # set LIBS variable
@@ -4302,12 +4307,14 @@ if test "$allproj" != fail ; then
     eval `sh -c "$pcfilemod"`
 
     # add CYGPATH_W cludge into include flags and set CFLAGS variable
-    projcflags=[`echo "$projcflags" | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`]
+    if test "${CYGPATH_W}" != "echo"; then
+      projcflags=[`echo "$projcflags" | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`]
+    fi
     m4_toupper($1_CFLAGS_INSTALLED)="$projcflags $m4_toupper($1_CFLAGS_INSTALLED)"
 
     # set LIBS variable
     m4_toupper($1_LIBS_INSTALLED)="$projlibs $m4_toupper($1_LIBS_INSTALLED)"
-
+    
     # remember that we have processed $pcfile
     pcfilesprocessed="$pcfilesprocessed:$pcfile"
 
@@ -4319,6 +4326,12 @@ if test "$allproj" != fail ; then
   m4_tolower(coin_has_$1)=yes
   AC_MSG_RESULT([yes])
   AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 package is available])
+
+  # adjust linker flags for (i)cl compiler
+  if test x$coin_cxx_is_cl = xtrue || test x$coin_cc_is_cl = xtrue ;
+  then
+    m4_toupper($1_LIBS_INSTALLED)=`echo " $m4_toupper($1_LIBS_INSTALLED)" | [sed -e 's/ -L\([^ ]*\)/ \/libpath:\`$(CYGPATH_W) \1\`/g' -e 's/ -l\([^ ]*\)/ lib\1.lib/g']`
+  fi
 
   coin_foreach_w([myvar], [$3], [
     m4_toupper(myvar)_PCREQUIRES="$2 $m4_toupper(myvar)_PCREQUIRES"
