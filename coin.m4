@@ -4028,7 +4028,19 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
     AC_COIN_PKG_HAS_MODULE([$1],[$2],
       [ m4_tolower(coin_has_$1)=yes
         AC_MSG_RESULT([yes: $m4_toupper($1)_VERSIONS])
-        coin_foreach_w([myvar], [$3], [m4_toupper(myvar)_PCREQUIRES="$2 $m4_toupper(myvar)_PCREQUIRES"
+
+        # adjust linker flags for (i)cl compiler
+        # for the LIBS, we replace everything of the form "/somepath/name.lib" by "`$(CYGPATH_W) /somepath/`name.lib | sed -e s|\|/|g" (where we have to use excessive many \ to get the \ into the command line for cl)
+        if test x$coin_cxx_is_cl = xtrue || test x$coin_cc_is_cl = xtrue ;
+        then
+          m4_toupper($1_LIBS)=`echo " $m4_toupper($1_LIBS) " | [sed -e 's/ \(\/[^ ]*\/\)\([^ ]*\)\.lib / \`$(CYGPATH_W) \1 | sed -e "s|\\\\\\\\\\\\\\\\\\\\|\/|g"\`\2.lib /g']`
+        fi
+   
+        # augment X_PCREQUIRES, X_CFLAGS, and X_LIBS for each build target X in $3
+        coin_foreach_w([myvar], [$3], [
+          m4_toupper(myvar)_PCREQUIRES="$2 $m4_toupper(myvar)_PCREQUIRES"
+          m4_toupper(myvar)_CFLAGS="$m4_toupper($1)_CFLAGS $m4_toupper(myvar)_CFLAGS"
+          m4_toupper(myvar)_LIBS="$m4_toupper($1)_LIBS $m4_toupper(myvar)_LIBS"
         ])
       ],
       [ m4_tolower(coin_has_$1)=notGiven
@@ -4038,12 +4050,7 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
     # reset PKG_CONFIG_PATH variable 
     PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
     export PKG_CONFIG_PATH
-    
-    # augment X_CFLAGS and X_LIBS for each build target X in $3
-    coin_foreach_w([myvar], [$3], [
-      m4_toupper(myvar)_CFLAGS="$m4_toupper($1)_CFLAGS $m4_toupper(myvar)_CFLAGS"
-      m4_toupper(myvar)_LIBS="$m4_toupper($1)_LIBS $m4_toupper(myvar)_LIBS"
-    ])
+
   else
     AC_MSG_RESULT([skipped check via pkg-config, redirect to fallback])
     AC_COIN_CHECK_PACKAGE_FALLBACK([$1], [$2], [$3])
@@ -4059,9 +4066,10 @@ if test $m4_tolower(coin_has_$1) != skipping &&
 
   # construct dependencies variables from LIBS variables
   # we add an extra space in LIBS so we can substitute out everything starting with " -"
-  m4_toupper($1)_DEPENDENCIES=`echo " $m4_toupper($1)_LIBS" | [sed -e 's/ -[^ ]*//g']`
+  # also substitute out everything of the form `xxx`yyy (may have been added for cygwin/cl)
+  m4_toupper($1)_DEPENDENCIES=`echo " $m4_toupper($1)_LIBS" | [sed -e 's/ -[^ ]*//g' -e 's/\`[^\`]*\`[^ ]* //g']`
   coin_foreach_w([myvar], [$3], [
-    m4_toupper(myvar)_DEPENDENCIES=`echo " $m4_toupper(myvar)_LIBS" | [sed -e 's/ -[^ ]*//g']`
+    m4_toupper(myvar)_DEPENDENCIES=`echo " $m4_toupper(myvar)_LIBS " | [sed -e 's/ -[^ ]*//g' -e 's/\`[^\`]*\`[^ ]* //g']`
   ])
 
   if test 1 = 0 ; then  #change this test to enable a bit of debugging output
@@ -4332,8 +4340,13 @@ if test "$allproj" != fail ; then
   AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 package is available])
 
   # adjust linker flags for (i)cl compiler
+  # for the LIBS, we replace everything of the form "/somepath/name.lib" by "`$(CYGPATH_W) /somepath/`name.lib | sed -e s|\|/|g" (where we have to use excessive many \ to get the \ into the command line for cl),
+  # for the LIBS_INSTALLED, we replace everything of the form "/somepath/" by "`$(CYGPATH_W) /somepath/`",
+  #    everything of the form "-Lpath" by "/libpath:`$(CYGPATH_W) path`, and
+  #    everything of the form "-lname" by "libname.lib"
   if test x$coin_cxx_is_cl = xtrue || test x$coin_cc_is_cl = xtrue ;
   then
+    m4_toupper($1_LIBS)=`echo " $m4_toupper($1_LIBS) " | [sed -e 's/ \(\/[^ ]*\/\)\([^ ]*\)\.lib / \`$(CYGPATH_W) \1 | sed -e "s|\\\\\\\\\\\\\\\\\\\\|\/|g"\`\2.lib /g']`
     m4_toupper($1_LIBS_INSTALLED)=`echo " $m4_toupper($1_LIBS_INSTALLED)" | [sed -e 's/ \(\/[^ ]*\/\)/ \`$(CYGPATH_W) \1\`/g' -e 's/ -L\([^ ]*\)/ \/libpath:\`$(CYGPATH_W) \1\`/g' -e 's/ -l\([^ ]*\)/ lib\1.lib/g']`
   fi
 
