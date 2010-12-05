@@ -39,7 +39,7 @@ mainobj=`echo $mainobj | sed -e s'!\\\\!/!g'`
 
 
 if test "$#" -eq 1 && test "$1" = "-FLIBS"; then
-  echo $f2clib
+  echo $f2clibdir/vcf2c.lib
   exit 0
 fi
 
