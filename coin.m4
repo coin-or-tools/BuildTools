@@ -4261,6 +4261,8 @@ if test "$allproj" != fail ; then
     [pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/[a-zA-Z]:/d' $pcfile`]
 
     # set projcflags and projlibs variables by running $pcfilemod
+    projcflags=
+    projlibs=
     eval `sh -c "$pcfilemod"`
 
     # add CYGPATH_W cludge into include flags and set CFLAGS variable
@@ -4304,6 +4306,8 @@ if test "$allproj" != fail ; then
     [pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/[a-zA-Z]:/d' $pcfile`]
 
     # set projcflags and projlibs variables by running $pcfilemod
+    projcflags=
+    projlibs=
     eval `sh -c "$pcfilemod"`
 
     # add CYGPATH_W cludge into include flags and set CFLAGS variable
@@ -4330,7 +4334,7 @@ if test "$allproj" != fail ; then
   # adjust linker flags for (i)cl compiler
   if test x$coin_cxx_is_cl = xtrue || test x$coin_cc_is_cl = xtrue ;
   then
-    m4_toupper($1_LIBS_INSTALLED)=`echo " $m4_toupper($1_LIBS_INSTALLED)" | [sed -e 's/ -L\([^ ]*\)/ \/libpath:\`$(CYGPATH_W) \1\`/g' -e 's/ -l\([^ ]*\)/ lib\1.lib/g']`
+    m4_toupper($1_LIBS_INSTALLED)=`echo " $m4_toupper($1_LIBS_INSTALLED)" | [sed -e 's/ \(\/[^ ]*\/\)/ \`$(CYGPATH_W) \1\`/g' -e 's/ -L\([^ ]*\)/ \/libpath:\`$(CYGPATH_W) \1\`/g' -e 's/ -l\([^ ]*\)/ lib\1.lib/g']`
   fi
 
   coin_foreach_w([myvar], [$3], [
