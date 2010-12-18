@@ -3577,7 +3577,7 @@ for proj in $tmp ; do
 	  eval doxydir="`pwd`/${proj}/doxydoc"
 	  coin_doxy_tagfiles="$coin_doxy_tagfiles $doxydir/$doxytag=$doxydir/html"
 	  AC_MSG_RESULT([$doxydir (tag)])
-	  coin_doxy_excludes="$coin_doxy_excludes */${proj}*"
+	  coin_doxy_excludes="$coin_doxy_excludes */${proj}"
 	else
 	  # will process the source -- nothing further to be done here
 	  AC_MSG_RESULT([$doxysrcdir (src)])
