@@ -586,13 +586,18 @@ AC_COMPILE_IFELSE(
 )
 AC_LANG_POP(C++)
 
-# It seems that we need to cleanup something here for the Windows 
+coin_cxx_is_cl=false
+# It seems that we need to cleanup something here for the Windows
 case "$CXX" in
   cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
     sed -e 's/^void exit (int);//' confdefs.h >> confdefs.hh
     mv confdefs.hh confdefs.h
+    coin_cxx_is_cl=true
     ;;
 esac
+
+# add automake conditional so we can recognize cl compiler in makefile
+AM_CONDITIONAL(COIN_CXX_IS_CL, [test $coin_cxx_is_cl = true])
 
 # Autoconf incorrectly concludes that cl recognises -g. It doesn't.
 case "$CXX" in
@@ -939,6 +944,17 @@ if test x"$CXX" != x; then
       ;;
   esac
 fi
+
+# add automake conditional so we can recognize cl compiler in makefile
+coin_cc_is_cl=false
+if test x"$CXX" != x; then
+  case "$CXX" in
+    cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+      coin_cc_is_cl=true
+      ;;
+  esac
+fi
+AM_CONDITIONAL(COIN_CC_IS_CL, [test $coin_cc_is_cl = true])
 
 AC_ARG_VAR(CDEFS,[Additional -D flags to be used when compiling C code.])
 AC_ARG_VAR(ADD_CFLAGS,[Additional C compiler options])
@@ -2296,6 +2312,7 @@ case "$CC" in
     coin_foreach_w([myvar], [$1], [
       m4_toupper(myvar)_LIBS="-lm $m4_toupper(myvar)_LIBS"
       m4_toupper(myvar)_PCLIBS="-lm $m4_toupper(myvar)_PCLIBS"
+      m4_toupper(myvar)_LIBS_INSTALLED="-lm $m4_toupper(myvar)_LIBS_INSTALLED"
     ])
   ;;
 esac
@@ -2328,6 +2345,7 @@ if test $coin_enable_gnu = yes; then
                   coin_foreach_w([myvar], [$1], [
                     m4_toupper(myvar)_LIBS="-lz $m4_toupper(myvar)_LIBS"
                     m4_toupper(myvar)_PCLIBS="-lz $m4_toupper(myvar)_PCLIBS"
+                    m4_toupper(myvar)_LIBS_INSTALLED="-lz $m4_toupper(myvar)_LIBS_INSTALLED"
                   ])
                  ],
                  [coin_has_zlib=no])
@@ -2367,6 +2385,7 @@ if test $coin_enable_gnu = yes; then
                   coin_foreach_w([myvar], [$1], [
                     m4_toupper(myvar)_LIBS="-lbz2 $m4_toupper(myvar)_LIBS"
                     m4_toupper(myvar)_PCLIBS="-lbz2 $m4_toupper(myvar)_PCLIBS"
+                    m4_toupper(myvar)_LIBS_INSTALLED="-lbz2 $m4_toupper(myvar)_LIBS_INSTALLED"
                   ])
                  ],
                  [coin_has_bzlib=no])
@@ -2418,6 +2437,7 @@ if test $coin_enable_gnu = yes; then
                   coin_foreach_w([myvar], [$1], [
                     m4_toupper(myvar)_LIBS="-lreadline $LIBS $m4_toupper(myvar)_LIBS"
                     m4_toupper(myvar)_PCLIBS="-lreadline $LIBS $m4_toupper(myvar)_PCLIBS"
+                    m4_toupper(myvar)_LIBS_INSTALLED="-lreadline $LIBS $m4_toupper(myvar)_LIBS_INSTALLED"
                   ])
                  ],
                  [coin_has_readline=no])
@@ -2778,6 +2798,7 @@ AC_DEFUN([AC_COIN_CHECK_USER_LIBRARY],
     coin_foreach_w([myvar], [$6], [
       m4_toupper(myvar)_LIBS="$$2LIB $m4_toupper(myvar)_LIBS"
       m4_toupper(myvar)_PCLIBS="$$2LIB $m4_toupper(myvar)_PCLIBS"
+      m4_toupper(myvar)_LIBS_INSTALLED="$$2LIB $m4_toupper(myvar)_LIBS_INSTALLED"
     ])
     
     AC_DEFINE(COIN_HAS_$2,[1],[Define to 1 if the $1 package is available])
@@ -3556,7 +3577,7 @@ for proj in $tmp ; do
 	  eval doxydir="`pwd`/${proj}/doxydoc"
 	  coin_doxy_tagfiles="$coin_doxy_tagfiles $doxydir/$doxytag=$doxydir/html"
 	  AC_MSG_RESULT([$doxydir (tag)])
-	  coin_doxy_excludes="$coin_doxy_excludes */${proj}*"
+	  coin_doxy_excludes="$coin_doxy_excludes */${proj}"
 	else
 	  # will process the source -- nothing further to be done here
 	  AC_MSG_RESULT([$doxysrcdir (src)])
@@ -3752,8 +3773,8 @@ AC_COIN_PKG_CHECK_MODULE_EXISTS([$1],[$2],
 	# but only do this if is not trivial
     if test "$CYGPATH_W" != "echo" ; then
       # need to put into brackets since otherwise autoconf replaces the brackets in the sed command
-	  [cflags=`echo $cflags | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`]
-	fi
+      [cflags=`echo $cflags | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`]
+    fi
     m4_toupper($1)[]_CFLAGS="$cflags"
     m4_toupper($1)[]_LIBS=`$PKG_CONFIG --libs "$2" 2>/dev/null`
     m4_toupper($1)[]_DATA=`$PKG_CONFIG --variable=datadir "$2" 2>/dev/null`
@@ -3902,14 +3923,16 @@ fi
 
 # This macro checks for the existance of a COIN-OR package and provides compiler and linker flags to compile against this package.
 # A package can consists of one or more COIN-OR or other projects.
-# It defines the PACKAGE_CFLAGS, PACKAGE_LIBS, and PACKAGE_DATA variables, referring to the compiler and linker
-# flags to use when linking against this module and the directories where the module data resists.
+# It defines the PACKAGE_CFLAGS, PACKAGE_LIBS, PACKAGE_DEPENDENCIES, and PACKAGE_DATA variables, referring to the compiler and linker
+# flags to use when linking against this module, the libraries the package depends on, and the directories where the module data resists.
+# The difference between PACKAGE_LIBS and PACKAGE_DEPENDENCIES is that PACKAGE_DEPENDENCIES does not contain arguments starting with '-',
+# so it can be used to setup the _DEPENDENCIES variable in a Makefile.am.
 # It also defines a COIN_HAS_PACKAGE preprocessor macro and makefile conditional.
 # Further, tolower(coin_has_$1) is set to "yes".
 # If a list of build targets using this projects is given in the third argument,
 # then the compiler and linker variables and .pc file setup variable corresponding to this build target
 # are extended with the values for this package.
-# That is, for each build target X, the variables X_CFLAGS, X_LIBS, X_PCLIBS, X_PCREQUIRES are setup,
+# That is, for each build target X, the variables X_CFLAGS, X_LIBS, X_DEPENDENCIES, X_PCLIBS, X_PCREQUIRES are setup,
 # whereas the last two specify the values to put into the "Libs:" and "Requires:" fields of the .pc file, resp.
 #
 # The first argument should be the name (PACKAGE) of the package (in correct lower
@@ -3946,11 +3969,18 @@ m4_toupper($1_DATA)=
 AC_SUBST(m4_toupper($1_LIBS))
 AC_SUBST(m4_toupper($1_CFLAGS))
 AC_SUBST(m4_toupper($1_DATA))
+AC_SUBST(m4_toupper($1_DEPENDENCIES))
+AC_SUBST(m4_toupper($1_LIBS_INSTALLED))
+AC_SUBST(m4_toupper($1_CFLAGS_INSTALLED))
+AC_SUBST(m4_toupper($1_DATA_INSTALLED))
 coin_foreach_w([myvar], [$3], [
   AC_SUBST(m4_toupper(myvar)_CFLAGS)
   AC_SUBST(m4_toupper(myvar)_LIBS)
   AC_SUBST(m4_toupper(myvar)_PCLIBS)
   AC_SUBST(m4_toupper(myvar)_PCREQUIRES)
+  AC_SUBST(m4_toupper(myvar)_DEPENDENCIES)
+  AC_SUBST(m4_toupper(myvar)_CFLAGS_INSTALLED)
+  AC_SUBST(m4_toupper(myvar)_LIBS_INSTALLED)
 ])
 
 #check if user provided LIBS, CFLAGS, or DATA for module
@@ -3998,7 +4028,19 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
     AC_COIN_PKG_HAS_MODULE([$1],[$2],
       [ m4_tolower(coin_has_$1)=yes
         AC_MSG_RESULT([yes: $m4_toupper($1)_VERSIONS])
-        coin_foreach_w([myvar], [$3], [m4_toupper(myvar)_PCREQUIRES="$2 $m4_toupper(myvar)_PCREQUIRES"
+
+        # adjust linker flags for (i)cl compiler
+        # for the LIBS, we replace everything of the form "/somepath/name.lib" by "`$(CYGPATH_W) /somepath/`name.lib | sed -e s|\|/|g" (where we have to use excessive many \ to get the \ into the command line for cl)
+        if test x$coin_cxx_is_cl = xtrue || test x$coin_cc_is_cl = xtrue ;
+        then
+          m4_toupper($1_LIBS)=`echo " $m4_toupper($1_LIBS) " | [sed -e 's/ \(\/[^ ]*\/\)\([^ ]*\)\.lib / \`$(CYGPATH_W) \1 | sed -e "s|\\\\\\\\\\\\\\\\\\\\|\/|g"\`\2.lib /g']`
+        fi
+   
+        # augment X_PCREQUIRES, X_CFLAGS, and X_LIBS for each build target X in $3
+        coin_foreach_w([myvar], [$3], [
+          m4_toupper(myvar)_PCREQUIRES="$2 $m4_toupper(myvar)_PCREQUIRES"
+          m4_toupper(myvar)_CFLAGS="$m4_toupper($1)_CFLAGS $m4_toupper(myvar)_CFLAGS"
+          m4_toupper(myvar)_LIBS="$m4_toupper($1)_LIBS $m4_toupper(myvar)_LIBS"
         ])
       ],
       [ m4_tolower(coin_has_$1)=notGiven
@@ -4008,12 +4050,7 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
     # reset PKG_CONFIG_PATH variable 
     PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
     export PKG_CONFIG_PATH
-    
-    # augment X_CFLAGS and X_LIBS for each build target X in $3
-    coin_foreach_w([myvar], [$3], [
-      m4_toupper(myvar)_CFLAGS="$m4_toupper($1)_CFLAGS $m4_toupper(myvar)_CFLAGS"
-      m4_toupper(myvar)_LIBS="$m4_toupper($1)_LIBS $m4_toupper(myvar)_LIBS"
-    ])
+
   else
     AC_MSG_RESULT([skipped check via pkg-config, redirect to fallback])
     AC_COIN_CHECK_PACKAGE_FALLBACK([$1], [$2], [$3])
@@ -4026,13 +4063,24 @@ fi
 if test $m4_tolower(coin_has_$1) != skipping &&
    test $m4_tolower(coin_has_$1) != notGiven ; then
   AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 package is available])
-   
+
+  # construct dependencies variables from LIBS variables
+  # we add an extra space in LIBS so we can substitute out everything starting with " -"
+  # also substitute out everything of the form `xxx`yyy (may have been added for cygwin/cl)
+  m4_toupper($1)_DEPENDENCIES=`echo " $m4_toupper($1)_LIBS" | [sed -e 's/ -[^ ]*//g' -e 's/\`[^\`]*\`[^ ]* //g']`
+  coin_foreach_w([myvar], [$3], [
+    m4_toupper(myvar)_DEPENDENCIES=`echo " $m4_toupper(myvar)_LIBS " | [sed -e 's/ -[^ ]*//g' -e 's/\`[^\`]*\`[^ ]* //g']`
+  ])
+
   if test 1 = 0 ; then  #change this test to enable a bit of debugging output
     if test -n "$m4_toupper($1)_CFLAGS" ; then
       AC_MSG_NOTICE([$1 CFLAGS are $m4_toupper($1)_CFLAGS])
     fi
     if test -n "$m4_toupper($1)_LIBS" ; then
       AC_MSG_NOTICE([$1 LIBS   are $m4_toupper($1)_LIBS])
+    fi
+    if test -n "$m4_toupper($1)_DEPENDENCIES" ; then
+      AC_MSG_NOTICE([$1 DEPENDENCIES are $m4_toupper($1)_DEPENDENCIES])
     fi
     if test -n "$m4_toupper($1)_DATA" ; then
       AC_MSG_NOTICE([$1 DATA   is  $m4_toupper($1)_DATA])
@@ -4043,6 +4091,7 @@ if test $m4_tolower(coin_has_$1) != skipping &&
     coin_foreach_w([myvar], [$3], [
       AC_MSG_NOTICE([myvar CFLAGS are $m4_toupper(myvar)_CFLAGS])
       AC_MSG_NOTICE([myvar LIBS   are $m4_toupper(myvar)_LIBS])
+      AC_MSG_NOTICE([myvar DEPENDENCIES are $m4_toupper(myvar)_DEPENDENCIES])
     ])
   fi
 fi
@@ -4075,6 +4124,15 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
 # flags and dependent projects as needed to setup a .pc file.  The macros
 # checks also dependencies of $2.  Note that the PACKAGE_DATA variable is
 # set to the content of datadir of the first .pc file that is parsed.
+# Finally, for each X in the third argument, also variables
+# X_CFLAGS_INSTALLED and X_LIBS_INSTALLED are setup. They contain the compiler
+# and linker flags for X when all projects have been installed. Their content
+# is assembled from the .pc files that correspond to installed projects. I.e.,
+# whenever a file proj-uninstalled.pc is parsed, then also a corresponding
+# proj.pc file is parsed for compiler and linker flags, if available in the
+# same directory.
+# Similar, a variable PACKAGE_DATA_INSTALLED is setup to the content of datadir
+# of the first .pc file that is parsed.
 #
 # If .pc files for all projects in $2 and their dependencies is found,
 # tolower(coin_has_$1) is set to "yes".  Otherwise, if some dependency
@@ -4097,17 +4155,22 @@ AC_MSG_CHECKING([for COIN-OR package $1 (fallback)])
 
 m4_tolower(coin_has_$1)=notGiven
 m4_toupper($1_LIBS)=
+m4_toupper($1_LIBS_INSTALLED)=
 m4_toupper($1_CFLAGS)=
+m4_toupper($1_CFLAGS_INSTALLED)=
 m4_toupper($1_DATA)=
+m4_toupper($1_DATA_INSTALLED)=
 
 # initial list of dependencies is "$2", but we need to filter out version number specifications (= x, <= x, >= x)
 projtoprocess="m4_bpatsubsts([$2], [<?>?=[ 	]*[^ 	]+])"
 
 # we first expand the list of projects to process by adding all dependencies just behind the project which depends on it
 # further, we collect the list of corresponding .pc files, but do this in reverse order, because we need this order afterwards
+# the latter we also do with .pc files corresponding to the installed projects, which will be needed to setup Makefiles for examples
 # also, we setup the DATA variable
 allproj=""
 allpcfiles=""
+allpcifiles=""
 while test "x$projtoprocess" != x ; do
 
   for proj in $projtoprocess ; do
@@ -4117,8 +4180,14 @@ while test "x$projtoprocess" != x ; do
     IFS=":"
     for dir in $COIN_PKG_CONFIG_PATH_UNINSTALLED ; do
       # the base directory configure should have setup coin_subdirs.txt in a way that it does not contain projects that should be skipped, so we do not need to test this here again
-      if test -r "$dir/$proj-uninstalled.pc" ; then
+      if test -r "$dir/${proj}-uninstalled.pc" ; then
         pcfile="$dir/$proj-uninstalled.pc"
+        if test -r "$dir/${proj}.pc" ; then
+          pcifile="$dir/${proj}.pc"
+        else
+          AC_MSG_WARN([Found $pcfile, but $dir/${proj}.pc is not available. This may break Makefile's of examples.])
+          pcifile=
+        fi
         break
       fi
     done
@@ -4132,9 +4201,12 @@ while test "x$projtoprocess" != x ; do
       # at the same time, remove $proj from this list
       projtoprocess=${projtoprocess/$proj/$projrequires}
 
-      # read DATA from $pcfile, if this is the first .pc file we are processing (so assume that its the main one)
-      if test "x$allproj" = x ; then
-        m4_toupper($1_DATA)=`sed -n -e 's/datadir=//gp' "$pcfile"`
+      # read DATA from $pcfile, if _DATA is still empty
+      if test "x$m4_toupper($1_DATA)" = x ; then
+        projdatadir=
+        [pcfilemod=`sed -e '/[a-zA-Z]:/d' -e 's/datadir=\(.*\)/echo projdatadir=\\\\"\1\\\\"/g' $pcfile`]
+        eval `sh -c "$pcfilemod"`
+        m4_toupper($1_DATA)="$projdatadir"
       fi
 
       allproj="$allproj $proj"
@@ -4144,6 +4216,22 @@ while test "x$projtoprocess" != x ; do
       AC_MSG_RESULT([no, dependency $proj not available])
       allproj=fail
       break 2
+    fi
+    
+    if test "x$pcifile" != x ; then
+      allpcifiles="$pcifile:$allpcifiles"
+      
+      # read DATA_INSTALLED from $pcifile, if _DATA_INSTALLED is still empty
+      if test "x$m4_toupper($1_DATA_INSTALLED)" = x ; then
+        projdatadir=
+        [pcifilemod=`sed -e '/[a-zA-Z]:/d' -e 's/datadir=\(.*\)/echo projdatadir=\\\\"\1\\\\"/g' $pcifile`]
+        eval `sh -c "$pcifilemod"`
+        if test "${CYGPATH_W}" != "echo"; then
+          projdatadir="\`\$(CYGPATH_W) ${projdatadir} | sed -e 's/\\\\\\\\/\\\\\\\\\\\\\\\\/g'\`"
+        fi
+        m4_toupper($1_DATA_INSTALLED)="$projdatadir"
+      fi
+      
     fi
 
     break
@@ -4174,26 +4262,24 @@ if test "$allproj" != fail ; then
       done
     fi
 
-    # reconstruct the directory where the .pc file is located
-    pcfiledir=[`echo $pcfile | sed -e 's/\/[^\/]*$//'`]
+    # modify .pc file to a shell script that prints shell commands for setting the compiler and library flags:
+    #   replace "Libs:" by "echo projlibs="
+    #   replace "Cflags:" by "echo projcflags="
+    #   remove every line starting with <some word>:
+    [pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/[a-zA-Z]:/d' $pcfile`]
 
-    # read CFLAGS from $pcfile and add CYGPATH_W cludge into include flags
-    projcflags=`sed -n -e 's/Cflags://p' "$pcfile"`
-    projcflags=[`echo "$projcflags" | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`]
+    # set projcflags and projlibs variables by running $pcfilemod
+    projcflags=
+    projlibs=
+    eval `sh -c "$pcfilemod"`
+
+    # add CYGPATH_W cludge into include flags and set CFLAGS variable
+    if test "${CYGPATH_W}" != "echo"; then
+      projcflags=[`echo "$projcflags" | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`]
+    fi
     m4_toupper($1_CFLAGS)="$projcflags $m4_toupper($1_CFLAGS)"
 
-    # read LIBS from $pcfile and replace -L${libdir} by absolute path to build directory in linker flags
-    # we assume that the build directory is $pcfiledir/src if this directory exists, otherwise we assume that it is $pcfiledir
-    projlibs=`sed -n -e 's/Libs://' -e 's/-L\${libdir}//p' "$pcfile"`
-    if test "x$projlibs" != x ; then
-      if test -d "${pcfiledir}/src" ; then
-        projlibs="-L`cd "${pcfiledir}/src"; pwd` $projlibs"
-      else
-        projlibs="-L`cd "$pcfiledir"; pwd` $projlibs"
-      fi
-    else
-      projlibs=`sed -n -e 's/Libs://p' "$pcfile"`
-    fi
+    # set LIBS variable
     m4_toupper($1_LIBS)="$projlibs $m4_toupper($1_LIBS)"
 
     # remember that we have processed $pcfile
@@ -4202,32 +4288,75 @@ if test "$allproj" != fail ; then
   done
   IFS="$save_IFS"
 
+
+  # now go through the list of .pc files for installed projects and assemble compiler and linker flags
+  # important is here again to obey the reverse order that has been setup before,
+  # since then libraries that are required by several others should be after these other libraries
+  pcfilesprocessed=""
+
+  save_IFS="$IFS"
+  IFS=":"
+  for pcfile in $allpcifiles ; do
+
+    # if $pcfile has been processed already, skip this round
+    if test "x$pcfilesprocessed" != x ; then
+      for pcfiledone in $pcfilesprocessed ; do
+        if test "$pcfiledone" = "$pcfile" ; then
+          continue 2
+        fi
+      done
+    fi
+
+    # modify .pc file to a shell script that prints shell commands for setting the compiler and library flags:
+    #   replace "Libs:" by "echo projlibs="
+    #   replace "Cflags:" by "echo projcflags="
+    #   remove every line starting with <some word>:
+    [pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/[a-zA-Z]:/d' $pcfile`]
+
+    # set projcflags and projlibs variables by running $pcfilemod
+    projcflags=
+    projlibs=
+    eval `sh -c "$pcfilemod"`
+
+    # add CYGPATH_W cludge into include flags and set CFLAGS variable
+    if test "${CYGPATH_W}" != "echo"; then
+      projcflags=[`echo "$projcflags" | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`]
+    fi
+    m4_toupper($1_CFLAGS_INSTALLED)="$projcflags $m4_toupper($1_CFLAGS_INSTALLED)"
+
+    # set LIBS variable
+    m4_toupper($1_LIBS_INSTALLED)="$projlibs $m4_toupper($1_LIBS_INSTALLED)"
+    
+    # remember that we have processed $pcfile
+    pcfilesprocessed="$pcfilesprocessed:$pcfile"
+
+  done
+  IFS="$save_IFS"
+
+
   # finish up
   m4_tolower(coin_has_$1)=yes
   AC_MSG_RESULT([yes])
   AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 package is available])
 
+  # adjust linker flags for (i)cl compiler
+  # for the LIBS, we replace everything of the form "/somepath/name.lib" by "`$(CYGPATH_W) /somepath/`name.lib | sed -e s|\|/|g" (where we have to use excessive many \ to get the \ into the command line for cl),
+  # for the LIBS_INSTALLED, we replace everything of the form "/somepath/" by "`$(CYGPATH_W) /somepath/`",
+  #    everything of the form "-Lpath" by "/libpath:`$(CYGPATH_W) path`, and
+  #    everything of the form "-lname" by "libname.lib"
+  if test x$coin_cxx_is_cl = xtrue || test x$coin_cc_is_cl = xtrue ;
+  then
+    m4_toupper($1_LIBS)=`echo " $m4_toupper($1_LIBS) " | [sed -e 's/ \(\/[^ ]*\/\)\([^ ]*\)\.lib / \`$(CYGPATH_W) \1 | sed -e "s|\\\\\\\\\\\\\\\\\\\\|\/|g"\`\2.lib /g']`
+    m4_toupper($1_LIBS_INSTALLED)=`echo " $m4_toupper($1_LIBS_INSTALLED)" | [sed -e 's/ \(\/[^ ]*\/\)/ \`$(CYGPATH_W) \1\`/g' -e 's/ -L\([^ ]*\)/ \/libpath:\`$(CYGPATH_W) \1\`/g' -e 's/ -l\([^ ]*\)/ lib\1.lib/g']`
+  fi
+
   coin_foreach_w([myvar], [$3], [
     m4_toupper(myvar)_PCREQUIRES="$2 $m4_toupper(myvar)_PCREQUIRES"
     m4_toupper(myvar)_CFLAGS="$m4_toupper($1)_CFLAGS $m4_toupper(myvar)_CFLAGS"
     m4_toupper(myvar)_LIBS="$m4_toupper($1)_LIBS $m4_toupper(myvar)_LIBS"
+    m4_toupper(myvar)_CFLAGS_INSTALLED="$m4_toupper($1)_CFLAGS_INSTALLED $m4_toupper(myvar)_CFLAGS_INSTALLED"
+    m4_toupper(myvar)_LIBS_INSTALLED="$m4_toupper($1)_LIBS_INSTALLED $m4_toupper(myvar)_LIBS_INSTALLED"
   ])
-
-  if test 1 = 0 ; then  #change this test to enable a bit of debugging output
-    if test -n "$m4_toupper($1)_CFLAGS" ; then
-      AC_MSG_NOTICE([$1 CFLAGS are $m4_toupper($1)_CFLAGS])
-    fi
-    if test -n "$m4_toupper($1)_LIBS" ; then
-      AC_MSG_NOTICE([$1 LIBS   are $m4_toupper($1)_LIBS])
-    fi
-    if test -n "$m4_toupper($1)_DATA" ; then
-      AC_MSG_NOTICE([$1 DATA   is  $m4_toupper($1)_DATA])
-    fi
-    coin_foreach_w([myvar], [$3], [
-      AC_MSG_NOTICE([myvar CFLAGS are $m4_toupper(myvar)_CFLAGS])
-      AC_MSG_NOTICE([myvar LIBS   are $m4_toupper(myvar)_LIBS])
-    ])
-  fi
 
 fi
 
@@ -4387,6 +4516,7 @@ elif test "x$use_blas" != x && test "$use_blas" != no; then
   coin_foreach_w([myvar], [$1], [
     m4_toupper(myvar)_PCLIBS="$BLAS_LIBS $m4_toupper(myvar)_PCLIBS"
     m4_toupper(myvar)_LIBS="$BLAS_LIBS $m4_toupper(myvar)_LIBS"
+    m4_toupper(myvar)_LIBS_INSTALLED="$BLAS_LIBS $m4_toupper(myvar)_LIBS_INSTALLED"
   ])
   
 else
@@ -4397,6 +4527,7 @@ fi
 coin_foreach_w([myvar], [$1], [
   AC_SUBST(m4_toupper(myvar)_PCLIBS)
   AC_SUBST(m4_toupper(myvar)_LIBS)
+  AC_SUBST(m4_toupper(myvar)_LIBS_INSTALLED)
 ])
 
 ]) # AC_COIN_CHECK_PACKAGE_BLAS
@@ -4551,6 +4682,7 @@ elif test "x$use_lapack" != x && test "$use_lapack" != no; then
   coin_foreach_w([myvar], [$1], [
     m4_toupper(myvar)_PCLIBS="$LAPACK_LIBS $m4_toupper(myvar)_PCLIBS"
     m4_toupper(myvar)_LIBS="$LAPACK_LIBS $m4_toupper(myvar)_LIBS"
+    m4_toupper(myvar)_LIBS_INSTALLED="$LAPACK_LIBS $m4_toupper(myvar)_LIBS_INSTALLED"
   ])
   
 else
@@ -4561,6 +4693,7 @@ fi
 coin_foreach_w([myvar], [$1], [
   AC_SUBST(m4_toupper(myvar)_PCLIBS)
   AC_SUBST(m4_toupper(myvar)_LIBS)
+  AC_SUBST(m4_toupper(myvar)_LIBS_INSTALLED)
 ])
 
 ]) # AC_COIN_CHECK_PACKAGE_LAPACK

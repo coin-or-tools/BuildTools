@@ -35,6 +35,11 @@ printHelp=0
 exitValue=0
 depFile=
 
+# stableExternals specifies externals which we do not want to convert to
+# releases, for whatever reason.
+
+stableExternals=
+
 if test "$#" -eq 0; then
   printHelp=1
 else
@@ -45,7 +50,14 @@ else
   while test $# -gt 0 && test $exitValue = 0 && test $printHelp = 0 ; do
     case "$1" in
       -h* | --h*) printHelp=1 ;;
-           
+      -s* | --s*)
+	   if expr "$1" : '.*-s.*=.*' 2>&1 >/dev/null ; then
+	     stableExternals=`echo $1 | sed -n -e 's/[^=]*=\(.*\)/\1/p'`
+	   else
+	     shift
+	     stableExternals=$1
+	   fi
+	   ;;
        -*) echo "$0: unrecognised command line switch '"$1"'."
 	   printHelp=1
 	   exitValue=1
@@ -58,7 +70,8 @@ else
 fi
 
 # Find the most recent release for each stable external. Allow for the
-# possibility that a stable branch has no associated release.
+# possibility that a stable branch has no associated release, or that the
+# user has asked to keep the stable external.
 
 if test $printHelp = 0 && test $exitValue = 0; then
   if test -r $depFile; then
@@ -81,36 +94,40 @@ if test $printHelp = 0 && test $exitValue = 0; then
           ext_name=
           continue
         fi                                    
-	extType=`extractTypeFromURL $ext_url`
-	if test "$extType" = invalid ; then
-          echo ''
-          echo "The external URL $ext_url appears to be invalid. Exiting."
-          echo ''
-          exit 3
-        fi
-
-	if test "$extType" = stable ; then
-	  ext_majVer=`extractMajorFromURL $ext_url`
-	  ext_minVer=`extractMinorFromURL $ext_url`
-	  ext_rel_url=`bestRelease $ext_url $ext_majVer $ext_minVer`
-	  if test -z "$ext_rel_url" ; then
-	    echo "There is no release for $ext_url"
-	    echo "Keeping $ext_url"
-	  else
-	    # Normal (not BuildTools/ThirdParty/Data) need a directory name,
-	    # and it may differ from the project name. Carefully preserve it.
-	    # ThirdParty URLs include BuildTools ; both named for emphasis
-	    case $ext_rel_url in
-	      */BuildTools/* | */ThirdParty/* | */Data/* ) ;;
-	      *) ext_tail=`extractTailFromExt $ext_url`
-		 ext_rel_url=${ext_rel_url}${ext_tail}
-		 ;;
-	    esac
-	    echo "Replacing $ext_url with $ext_rel_url"
-	    ext_url=$ext_rel_url
-	  fi
+	if expr "$stableExternals" : '.*'"$ext_name"'.*' 2>&1 >/dev/null ; then
+	  echo "    $ext_name $ext_url unchanged"
 	else
-	  echo "Keeping $ext_url"
+	  extType=`extractTypeFromURL $ext_url`
+	  if test "$extType" = invalid ; then
+	    echo ''
+	    echo "The external URL $ext_url appears to be invalid. Exiting."
+	    echo ''
+	    exit 3
+	  fi
+
+	  if test "$extType" = stable ; then
+	    ext_majVer=`extractMajorFromURL $ext_url`
+	    ext_minVer=`extractMinorFromURL $ext_url`
+	    ext_rel_url=`bestRelease $ext_url $ext_majVer $ext_minVer`
+	    if test -z "$ext_rel_url" ; then
+	      echo "There is no release for $ext_url"
+	      echo "Keeping $ext_url"
+	    else
+	      # Normal (not BuildTools/ThirdParty/Data) need a directory name,
+	      # and it may differ from the project name. Carefully preserve it.
+	      # ThirdParty URLs include BuildTools ; both named for emphasis
+	      case $ext_rel_url in
+		*/BuildTools/* | */ThirdParty/* | */Data/* ) ;;
+		*) ext_tail=`extractTailFromExt $ext_url`
+		   ext_rel_url=${ext_rel_url}${ext_tail}
+		   ;;
+	      esac
+	      echo "Replacing $ext_url with $ext_rel_url"
+	      ext_url=$ext_rel_url
+	    fi
+	  else
+	    echo "Keeping $ext_url"
+	  fi
 	fi
 
         echo "$ext_name  $ext_url" >>Externals.releases
@@ -140,18 +157,23 @@ if test $printHelp = 1 ; then
   cat <<EOF
 Usage: set_externals <Dependency File> 
 
+Options:
+  -s <projectlist>      Suppress conversion from stable to release for the
+			listed externals (comma-separated list of project
+			names, e.g., -s Osi,Cbc).
+
 This script takes as input a dependency file containing a list of stable
 versions of COIN projects on separate lines in the form
 
  <name> <URL of stable version>
 
-Recommended practice is to keep this list in a file called "Dependencies" in
-the project's root directory. A temporary file called "Externals.releases" in
-the same form, but with the URL of each stable version replaced by the URL of
-the latest associated release is produced. From this file, the script will
-set the svn:externals variable. It does not do an update or commit the
-change. After the script runs, do an update and test build, then commit the
-change if you are happy.
+Recommended practice is to keep the set of stable externals in a file
+called "Dependencies" in the project's root directory. A temporary file
+called "Externals.releases" in the same form, but with the URL of each
+stable version replaced by the URL of the latest associated release is
+produced. From this file, the script will set the svn:externals variable. It
+does not do an update or commit the change. After the script runs, do an
+update and test build, then commit the change if you are happy.
 
 EOF
 else
