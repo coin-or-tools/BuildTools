@@ -3799,7 +3799,7 @@ AC_COIN_PKG_CHECK_MODULE_EXISTS([$1],[$2],
 
 AC_DEFUN([AC_COIN_MAIN_PACKAGEDIR],
 [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
-AC_MSG_CHECKING([whether project $1 is available])
+AC_MSG_CHECKING([whether project m4_ifval([$2],[$2/])$1 is available])
 
 m4_tolower(coin_has_$1)=notGiven
 coin_have_project_dir=no
