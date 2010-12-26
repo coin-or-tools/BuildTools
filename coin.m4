@@ -3902,7 +3902,7 @@ fi
 
 AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
 
-AC_MSG_CHECKING(whether project $1 needs to be configured)
+AC_MSG_CHECKING(whether project m4_ifval([$2],[$2/])$1 needs to be configured)
 if test "$coin_have_project_dir" = yes ; then
 
   if test -r $srcdir/m4_ifval($2,[$2/],)$1/configure; then
