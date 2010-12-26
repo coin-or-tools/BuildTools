@@ -1719,7 +1719,7 @@ else
 fi
 full_prefix=`cd $full_prefix ; pwd`
 AC_SUBST(abs_lib_dir)
-abs_lib_dir=$full_prefix/lib/coin
+abs_lib_dir=$full_prefix/lib
 AC_SUBST(abs_include_dir)
 abs_include_dir=$full_prefix/include
 AC_SUBST(abs_bin_dir)
@@ -1843,7 +1843,7 @@ if test "x$LIBTOOL" = x; then
 # AC_MSG_NOTICE([Finished COIN_PROG_LIBTOOL.])
   # set RPATH_FLAGS to the compiler link flags required to hardcode location
   # of the shared objects
-  AC_COIN_RPATH_FLAGS([$abs_lib_dir $abs_lib_dir/ThirdParty])
+  AC_COIN_RPATH_FLAGS([$abs_lib_dir])
 
 else
 
@@ -2652,7 +2652,7 @@ if test $m4_tolower(coin_has_$1) != unavailable &&
   AC_SUBST(m4_toupper($1OBJDIR))
   m4_toupper($1OBJDIR)=`pwd`/$m4_tolower(coin_has_$1)
   AC_SUBST(m4_toupper($1DOCDIR))
-  m4_toupper($1DOCDIR)=$abs_lib_dir/../../share/doc/coin/$1
+  m4_toupper($1DOCDIR)=$abs_lib_dir/../share/doc/coin/$1
 fi
 
   # Define the Makefile conditional
