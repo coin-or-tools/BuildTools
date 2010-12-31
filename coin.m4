@@ -4071,10 +4071,11 @@ if test $m4_tolower(coin_has_$1) != skipping &&
 
   # construct dependencies variables from LIBS variables
   # we add an extra space in LIBS so we can substitute out everything starting with " -"
+  # before, substitute out everything of the form -framework xxx as used on Mac
   # also substitute out everything of the form `xxx`yyy (may have been added for cygwin/cl)
-  m4_toupper($1)_DEPENDENCIES=`echo " $m4_toupper($1)_LIBS" | [sed -e 's/ -[^ ]*//g' -e 's/\`[^\`]*\`[^ ]* //g']`
+  m4_toupper($1)_DEPENDENCIES=`echo " $m4_toupper($1)_LIBS" | [sed -e 's/ -framework  *[^ ]*//g' -e 's/ -[^ ]*//g' -e 's/\`[^\`]*\`[^ ]* //g']`
   coin_foreach_w([myvar], [$3], [
-    m4_toupper(myvar)_DEPENDENCIES=`echo " $m4_toupper(myvar)_LIBS " | [sed -e 's/ -[^ ]*//g' -e 's/\`[^\`]*\`[^ ]* //g']`
+    m4_toupper(myvar)_DEPENDENCIES=`echo " $m4_toupper(myvar)_LIBS " | [sed -e 's/ -framework  *[^ ]*//g' -e 's/ -[^ ]*//g' -e 's/\`[^\`]*\`[^ ]* //g']`
   ])
 
   if test 1 = 0 ; then  #change this test to enable a bit of debugging output
@@ -4461,6 +4462,7 @@ else
                         [AC_MSG_RESULT([no])])
       LIBS="$coin_save_LIBS"
       ;;
+      
     *-cygwin* | *-mingw*)
 # On cygwin, consider -lblas only if doscompile is disabled. The prebuilt
 # library will want to link with cygwin, hence won't run standalone in DOS.
@@ -4480,6 +4482,22 @@ else
           LIBS="$coin_save_LIBS"
           ;;
       esac
+      ;;
+      
+     *-darwin*)
+      AC_MSG_CHECKING([for BLAS in Veclib])
+      coin_need_flibs=no
+      coin_save_LIBS="$LIBS"
+      LIBS="-framework vecLib $LIBS"
+      AC_COIN_TRY_FLINK([daxpy],
+                        [use_blas='-framework vecLib'
+                         if test $coin_need_flibs = yes ; then
+                           use_blas="$use_blas $FLIBS"
+                         fi
+                         AC_MSG_RESULT([yes: $use_blas])
+                        ],
+                        [AC_MSG_RESULT([no])])
+      LIBS="$coin_save_LIBS"
       ;;
   esac
 
@@ -4641,11 +4659,29 @@ else
         ;;
         # On cygwin, do this check only if doscompile is disabled. The prebuilt library
         # will want to link with cygwin, hence won't run standalone in DOS.
+        
       *-cygwin*)
 	if test "$enable_doscompile" = mingw; then
 	  skip_llapack_check=yes
 	fi
 	;;
+	
+     *-darwin*)
+      AC_MSG_CHECKING([for LAPACK in Veclib])
+      coin_need_flibs=no
+      coin_save_LIBS="$LIBS"
+      LIBS="-framework vecLib $BLAS_LIBS $LIBS"
+      AC_COIN_TRY_FLINK([dsyev],
+                        [use_lapack="-framework vecLib $BLAS_LIBS"
+                         if test $coin_need_flibs = yes ; then
+                           use_lapack="$use_lapack $FLIBS"
+                         fi
+                         AC_MSG_RESULT([yes: $use_lapack])
+                        ],
+                        [AC_MSG_RESULT([no])])
+      LIBS="$coin_save_LIBS"
+      ;;
+	
     esac
   fi
 
