@@ -3804,7 +3804,7 @@ AC_COIN_PKG_CHECK_MODULE_EXISTS([$1],[$2],
 
 AC_DEFUN([AC_COIN_MAIN_PACKAGEDIR],
 [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
-AC_MSG_CHECKING([whether project m4_ifval([$2],[$2/])$1 is available])
+AC_MSG_CHECKING([whether project $1 is available])
 
 m4_tolower(coin_has_$1)=notGiven
 coin_have_project_dir=no
@@ -3824,26 +3824,26 @@ fi
 
 if test $m4_tolower(coin_has_$1) != skipping; then
   if test $PACKAGE_TARNAME = m4_tolower($1); then
-    m4_tolower(coin_has_$1)=.
+    m4_tolower(coin_has_$1)=yes
     coin_have_project_dir=yes
   fi
 
   AC_ARG_WITH([m4_tolower($1)-lib],
     AC_HELP_STRING([--with-m4_tolower($1)-lib],
                    [linker flags for using project $1]),
-      [m4_tolower(coin_has_$1)=installed],
+      [m4_tolower(coin_has_$1)="yes, via --with-m4_tolower($1)-lib"],
       [])
 
   AC_ARG_WITH([m4_tolower($1)-incdir],
     AC_HELP_STRING([--with-m4_tolower($1)-incdir],
                    [directory with header files for using project $1]),
-    [m4_tolower(coin_has_$1)=installed],
+    [m4_tolower(coin_has_$1)="yes, via --with-m4_tolower($1)-incdir"],
     [])
 
   AC_ARG_WITH([m4_tolower($1)-datadir],
     AC_HELP_STRING([--with-m4_tolower($1)-datadir],
                    [directory with data files for using project $1]),
-    [m4_tolower(coin_has_$1)=installed],
+    [m4_tolower(coin_has_$1)="yes, via --with-m4_tolower($1)-datadir"],
     [])
 
   m4_if(m4_tolower($1), blas, [
@@ -3853,7 +3853,7 @@ if test $m4_tolower(coin_has_$1) != skipping; then
         [if test x"$withval" = "xBUILD" ; then
            coin_has_blas=notGiven
          else
-           coin_has_blas=installed
+           coin_has_blas="yes, via --with-blas"
          fi],
         [])])
 
@@ -3864,7 +3864,7 @@ if test $m4_tolower(coin_has_$1) != skipping; then
         [if test x"$withval" = "xBUILD" ; then
            coin_has_lapack=notGiven
          else
-           coin_has_lapack=installed
+           coin_has_lapack="yes, via --with-lapack"
          fi],
         [])])
 
@@ -3884,28 +3884,38 @@ if test "$m4_tolower(coin_has_$1)" = notGiven; then
        done],
       [ coin_have_project_dir=yes ])
     if test $coin_have_project_dir = yes; then
-      m4_tolower(coin_has_$1)=m4_ifval($2,[$2/],)$1
+      m4_tolower(coin_has_$1)="yes, source in m4_ifval($2,[$2/],)$1"
     fi
   fi
 fi
 
 # check for project by using pkg-config, if pkg-config is available
-if test $m4_tolower(coin_has_$1) = notGiven; then
+if test "$m4_tolower(coin_has_$1)" = notGiven; then
   #we are only interested in installed packages here, so we do not search in $COIN_PKG_CONFIG_PATH_UNINSTALLED
   if test -n "$PKG_CONFIG" ; then
     coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
     PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" ; export PKG_CONFIG_PATH
       m4_ifval([$4],
         [AC_COIN_PKG_CHECK_PROJECT_EXISTS([$4],
-	        [m4_tolower(coin_has_$1)="$m4_toupper([$4])_VERSION"])],
+	        [m4_tolower(coin_has_$1)="yes, found installed version $m4_toupper([$4])_VERSION"])],
 	      [AC_COIN_PKG_CHECK_PROJECT_EXISTS([$1],
-	        [m4_tolower(coin_has_$1)="$m4_toupper([$1])_VERSION"])])
+	        [m4_tolower(coin_has_$1)="yes, found installed version $m4_toupper([$1])_VERSION"])])
     PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
     export PKG_CONFIG_PATH
   fi
 fi
 
-AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
+if test "$m4_tolower(coin_has_$1)" = notGiven; then
+  m4_case(m4_tolower($1),
+    [blas],
+    [AC_MSG_RESULT([no (but will check for system blas later)])],
+    [lapack],
+    [AC_MSG_RESULT([no (but will check for system lapack later)])],
+    [AC_MSG_RESULT([not given])]
+  )
+else
+  AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
+fi
 
 AC_MSG_CHECKING(whether project m4_ifval([$2],[$2/])$1 needs to be configured)
 if test "$coin_have_project_dir" = yes ; then
