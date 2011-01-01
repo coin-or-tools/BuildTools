@@ -68,24 +68,10 @@ AC_MSG_RESULT($coin_vpath_config)
 # less so for stable or trunk).
 
 AC_DEFUN([AC_COIN_PROJECTDIR_INIT],
-[# Initialize the ADDLIBS variable
-ADDLIBS="-lm $LIBS"
-AC_SUBST(ADDLIBS)
-
-# Initialize the PCADDLIBS variable.
-# This variable is used to setup library flags for the "Libs:" section in a .pc file.
-# In certain cases, it may contain more flags than the ADDLIBS variable.
-PCADDLIBS=""
-AC_SUBST(PCADDLIBS)
-
+[
 # As backup, we make sure we don't loose an FLIBS if it has been set
 # by the user
 save_FLIBS="$FLIBS"
-
-# Initialize the FADDLIBS variable (which is to be used with a fortran
-# compiler and will not include FLIBS)
-FADDLIBS="$LIBS"
-AC_SUBST(FADDLIBS)
 
 # A useful makefile conditional that is always false
 AM_CONDITIONAL(ALWAYS_FALSE, false)
@@ -566,8 +552,9 @@ if test x"$MPICXX" = x; then :; else
   CXX="$MPICXX"
 fi
 
+# correct the LD variable in a mingw build with MS or intel compiler
 case "$CXX" in
-  cl* | */cl* | CL* | */CL* )
+  cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
     AC_COIN_MINGW_LD_FIX
     ;;
 esac
@@ -952,10 +939,9 @@ if test x"$MPICC" = x; then :; else
   CC="$MPICC"
 fi
 
-# Correct ADDLIBS initialization if we are using the MS compiler
+# Correct the LD variable if we are using the MS or Intel-windows compiler
 case "$CC" in
   cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
-    ADDLIBS=
     AC_COIN_MINGW_LD_FIX
     ;;
 esac
@@ -1168,6 +1154,7 @@ if test x"$MPIF77" = x; then :; else
   F77="$MPIF77"
 fi
 
+# correct the LD variable if we use the intel fortran compiler in windows
 case "$F77" in
   ifort* | */ifort* | IFORT* | */IFORT*)
     AC_COIN_MINGW_LD_FIX
@@ -1949,12 +1936,6 @@ AC_DEFUN([AC_COIN_FINALIZE],
 AC_REQUIRE([AC_COIN_LINK_INPUT_CMD])
 if test x$coin_skip_ac_output != xyes; then
 
-  FADDLIBS="$ADDLIBS"
-  if test x"$coin_need_flibs" = xyes; then
-    ADDLIBS="$ADDLIBS $FLIBS"
-  fi
-  PCADDLIBS="$PCADDLIBS $ADDLIBS"
-
   # library extension
   AC_SUBST(LIBEXT)
   case "$CC" in
@@ -2111,13 +2092,12 @@ if test $coin_enable_gnu = yes; then
 
   if test $coin_has_zlib = yes; then
     AC_CHECK_LIB([z],[gzopen],
-                 [ADDLIBS="-lz $ADDLIBS"
-                  coin_foreach_w([myvar], [$1], [
+                 [coin_foreach_w([myvar], [$1], [
                     m4_toupper(myvar)_LIBS="-lz $m4_toupper(myvar)_LIBS"
                     m4_toupper(myvar)_PCLIBS="-lz $m4_toupper(myvar)_PCLIBS"
                     m4_toupper(myvar)_LIBS_INSTALLED="-lz $m4_toupper(myvar)_LIBS_INSTALLED"
                   ])
-                 ],
+                 :],
                  [coin_has_zlib=no])
   fi
 
@@ -2151,13 +2131,12 @@ if test $coin_enable_gnu = yes; then
 
   if test $coin_has_bzlib = yes; then
     AC_CHECK_LIB([bz2],[BZ2_bzReadOpen],
-                 [ADDLIBS="-lbz2 $ADDLIBS"
-                  coin_foreach_w([myvar], [$1], [
+                 [coin_foreach_w([myvar], [$1], [
                     m4_toupper(myvar)_LIBS="-lbz2 $m4_toupper(myvar)_LIBS"
                     m4_toupper(myvar)_PCLIBS="-lbz2 $m4_toupper(myvar)_PCLIBS"
                     m4_toupper(myvar)_LIBS_INSTALLED="-lbz2 $m4_toupper(myvar)_LIBS_INSTALLED"
                   ])
-                 ],
+                 :],
                  [coin_has_bzlib=no])
   fi
 
@@ -2203,13 +2182,12 @@ if test $coin_enable_gnu = yes; then
   # Now we check for readline
   if test $coin_has_readline = yes; then
     AC_CHECK_LIB([readline],[readline],
-                 [ADDLIBS="-lreadline $LIBS $ADDLIBS"
-                  coin_foreach_w([myvar], [$1], [
+                 [coin_foreach_w([myvar], [$1], [
                     m4_toupper(myvar)_LIBS="-lreadline $LIBS $m4_toupper(myvar)_LIBS"
                     m4_toupper(myvar)_PCLIBS="-lreadline $LIBS $m4_toupper(myvar)_PCLIBS"
                     m4_toupper(myvar)_LIBS_INSTALLED="-lreadline $LIBS $m4_toupper(myvar)_LIBS_INSTALLED"
                   ])
-                 ],
+                 :],
                  [coin_has_readline=no])
   fi
 
@@ -2325,8 +2303,7 @@ AC_COIN_LINKCOPY_FROM_FILELIST($1, $2, [cp])
 # creates soft links to the example files.
 
 AC_DEFUN([AC_COIN_EXAMPLE_FILES],
-[AC_REQUIRE([AC_COIN_CHECK_GNU_ZLIB])
-AC_REQUIRE([AC_COIN_CHECK_VPATH])
+[AC_REQUIRE([AC_COIN_CHECK_VPATH])
 AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
 AC_REQUIRE([AC_PROG_LN_S])
 
@@ -2486,7 +2463,7 @@ AC_DEFUN([AC_COIN_CHECK_USER_LIBRARY],
     m4_ifvaln([$4],
         [if test x"$m4_tolower($1)_libcheck" != xno; then
 	   coin_save_LIBS="$LIBS"
-	   LIBS="$$2LIB $ADDLIBS $5"
+	   LIBS="$$2LIB $5"
 	   coin_$2_link=no
 	   AC_LANG_PUSH(C)
 	   for fnm in $4 ; do
@@ -2505,10 +2482,9 @@ AC_DEFUN([AC_COIN_CHECK_USER_LIBRARY],
 	 fi])
 
 # If we make it this far, we've verified the file and linked the function. Add
-# the necessary link flags to ADDLIBS and $6_{PC}LIBS and define the preprocessor symbol
+# the necessary link flags to $6_{PC}LIBS and define the preprocessor symbol
 # COIN_HAS_LBRY.
 
-    ADDLIBS="$$2LIB $ADDLIBS"
     coin_foreach_w([myvar], [$6], [
       m4_toupper(myvar)_LIBS="$$2LIB $m4_toupper(myvar)_LIBS"
       m4_toupper(myvar)_PCLIBS="$$2LIB $m4_toupper(myvar)_PCLIBS"
@@ -2717,7 +2693,8 @@ AC_SUBST([coin_doxy_excludes])
 # is assembled from the value of $PKG_CONFIG_PATH, the values of --prefix,
 # --coin-instdir, and the directory named in a file ../coin_subdirs.txt
 # or ../../coin_subdirs.txt in a variable COIN_PKG_CONFIG_PATH, which is
-# also AC_SUBST'ed.
+# also AC_SUBST'ed. For a path xxx given in the coin-subdirs.txt, also
+# the directory xxx/pkgconfig is added, if existing.
 
 AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
 [AC_ARG_VAR([PKG_CONFIG], [path to pkg-config utility])
@@ -2789,6 +2766,9 @@ if test x$coin_projectdir = xyes ; then
       if test -d ../$i ; then
         COIN_PKG_CONFIG_PATH_UNINSTALLED="`cd ../$i; pwd`:${COIN_PKG_CONFIG_PATH_UNINSTALLED}"
       fi
+      if test -d ../$i/pkgconfig ; then
+        COIN_PKG_CONFIG_PATH_UNINSTALLED="`cd ../$i/pkgconfig; pwd`:${COIN_PKG_CONFIG_PATH_UNINSTALLED}"
+      fi
     done
   fi
 
@@ -2796,6 +2776,9 @@ if test x$coin_projectdir = xyes ; then
     for i in `cat ../../coin_subdirs.txt` ; do
       if test -d ../../$i ; then
         COIN_PKG_CONFIG_PATH_UNINSTALLED="`cd ../../$i; pwd`:${COIN_PKG_CONFIG_PATH_UNINSTALLED}"
+      fi
+      if test -d ../../$i/pkgconfig ; then
+        COIN_PKG_CONFIG_PATH_UNINSTALLED="`cd ../../$i/pkgconfig; pwd`:${COIN_PKG_CONFIG_PATH_UNINSTALLED}"
       fi
     done
   fi
