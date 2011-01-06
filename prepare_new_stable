@@ -513,7 +513,7 @@ if test -n "$srcDepFile" ; then
         ext_url_notail=`echo $ext_url | sed -e 's,/[^/]*$,,'`
 	extBTURL=`svn propget svn:externals $ext_url_notail`
 	extBTURL=`echo $extBTURL | \
-	  sed -n -e 's/.*BuildTools https:\([^ ]*\) .*/https:\1/p'`
+	  sed -n -e 's/^BuildTools *https:\([^ ]*\) *$/https:\1/p'`
 	if test -n "$extBTURL" ; then
 	  testResult=`compareURLVersions "$srcBTURL" "$extBTURL"`
 	  if test $testResult = no ; then
