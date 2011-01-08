@@ -3166,12 +3166,12 @@ if test $m4_tolower(coin_has_$1) != skipping &&
   if test $enable_interpackage_dependencies = yes ; then
      # construct dependencies variables from LIBS variables
      # we add an extra space in LIBS so we can substitute out everything starting with " -"
-     # remove everything of the form -framework xxx as used on Mac and libmklxxx as used on Windows
+     # remove everything of the form -framework xxx as used on Mac and mklxxx as used on Windows
      # then remove everything of the form -xxx
      # also remove everything of the form `xxx`yyy (may have been added for cygwin/cl)
-     m4_toupper($1)_DEPENDENCIES=`echo " $m4_toupper($1)_LIBS" | [sed -e 's/ libmkl[^ ]*//g' -e 's/ -framework  *[^ ]*//g' -e 's/ -[^ ]*//g' -e 's/\`[^\`]*\`[^ ]* //g']`
+     m4_toupper($1)_DEPENDENCIES=`echo " $m4_toupper($1)_LIBS" | [sed -e 's/ mkl[^ ]*//g' -e 's/ -framework  *[^ ]*//g' -e 's/ -[^ ]*//g' -e 's/\`[^\`]*\`[^ ]* //g']`
      coin_foreach_w([myvar], [$3], [
-       m4_toupper(myvar)_DEPENDENCIES=`echo " $m4_toupper(myvar)_LIBS " | [sed -e 's/ libmkl[^ ]*//g' -e 's/ -framework  *[^ ]*//g' -e 's/ -[^ ]*//g' -e 's/\`[^\`]*\`[^ ]* //g']`
+       m4_toupper(myvar)_DEPENDENCIES=`echo " $m4_toupper(myvar)_LIBS " | [sed -e 's/ mkl[^ ]*//g' -e 's/ -framework  *[^ ]*//g' -e 's/ -[^ ]*//g' -e 's/\`[^\`]*\`[^ ]* //g']`
      ])
   fi
 
@@ -3568,8 +3568,8 @@ else
       fi
       case "$CC" in
         cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
-          AC_MSG_CHECKING([for BLAS in MKL])
           coin_save_LIBS="$LIBS"
+          AC_MSG_CHECKING([for BLAS in MKL (32bit)])
           LIBS="mkl_intel_c.lib mkl_sequential.lib mkl_core.lib $LIBS"
           AC_COIN_TRY_FLINK([daxpy],
                             [use_blas='mkl_intel_c.lib mkl_sequential.lib mkl_core.lib'
@@ -3577,6 +3577,17 @@ else
                             ],
                             [AC_MSG_RESULT([no])])
           LIBS="$coin_save_LIBS"
+          
+          if test "x$use_blas" = x ; then
+            AC_MSG_CHECKING([for BLAS in MKL (64bit)])
+            LIBS="mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib $LIBS"
+            AC_COIN_TRY_FLINK([daxpy],
+                              [use_blas='mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib'
+                               AC_MSG_RESULT([yes: $use_blas])
+                              ],
+                              [AC_MSG_RESULT([no])])
+            LIBS="$coin_save_LIBS"
+          fi
           ;;
       esac
       ;;
@@ -3722,6 +3733,8 @@ else
   if test -z "$use_lapack"; then
     # Try to autodetect the library for lapack based on build system
     case $build in
+      # TODO: Is this check actually needed here, since -lcomplib.sigmath should have been recognized as Blas library,
+      #       and above it is checked whether the Blas library already contains Lapack
       *-sgi-*) 
         AC_MSG_CHECKING([whether -lcomplib.sgimath has LAPACK])
         coin_save_LIBS="$LIBS"
@@ -3739,6 +3752,8 @@ else
         ;;
 
       # See comments in COIN_CHECK_PACKAGE_BLAS.
+      # TODO: Is this check actually needed here, since -lsunperf should have been recognized as Blas library,
+      #       and above it is checked whether the Blas library already contains Lapack
       *-*-solaris*)
         AC_MSG_CHECKING([for LAPACK in libsunperf])
         coin_need_flibs=no
@@ -3762,22 +3777,6 @@ else
 	  skip_llapack_check=yes
 	fi
 	;;
-	
-     *-darwin*)
-      AC_MSG_CHECKING([for LAPACK in Veclib])
-      coin_need_flibs=no
-      coin_save_LIBS="$LIBS"
-      LIBS="-framework vecLib $BLAS_LIBS $LIBS"
-      AC_COIN_TRY_FLINK([dsyev],
-                        [use_lapack="-framework vecLib $BLAS_LIBS"
-                         if test $coin_need_flibs = yes ; then
-                           use_lapack="$use_lapack $FLIBS"
-                         fi
-                         AC_MSG_RESULT([yes: $use_lapack])
-                        ],
-                        [AC_MSG_RESULT([no])])
-      LIBS="$coin_save_LIBS"
-      ;;
 	
     esac
   fi
