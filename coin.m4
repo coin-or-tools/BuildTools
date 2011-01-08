@@ -2911,44 +2911,69 @@ if test $m4_tolower(coin_has_$1) != skipping; then
   AC_ARG_WITH([m4_tolower($1)-lib],
     AC_HELP_STRING([--with-m4_tolower($1)-lib],
                    [linker flags for using project $1]),
-      [m4_tolower(coin_has_$1)="yes, via --with-m4_tolower($1)-lib"],
-      [])
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)=skipping
+     else
+       m4_tolower(coin_has_$1)="yes, via --with-m4_tolower($1)-lib"
+     fi],
+    [])
+fi
 
+if test $m4_tolower(coin_has_$1) != skipping; then
   AC_ARG_WITH([m4_tolower($1)-incdir],
     AC_HELP_STRING([--with-m4_tolower($1)-incdir],
                    [directory with header files for using project $1]),
-    [m4_tolower(coin_has_$1)="yes, via --with-m4_tolower($1)-incdir"],
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)=skipping
+     else
+       m4_tolower(coin_has_$1)="yes, via --with-m4_tolower($1)-incdir"
+     fi],
     [])
+fi
 
+if test $m4_tolower(coin_has_$1) != skipping; then
   AC_ARG_WITH([m4_tolower($1)-datadir],
     AC_HELP_STRING([--with-m4_tolower($1)-datadir],
                    [directory with data files for using project $1]),
-    [m4_tolower(coin_has_$1)="yes, via --with-m4_tolower($1)-datadir"],
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)=skipping
+     else
+       m4_tolower(coin_has_$1)="yes, via --with-m4_tolower($1)-datadir"
+     fi],
     [])
+fi
 
-  m4_if(m4_tolower($1), blas, [
+m4_if(m4_tolower($1), blas, [
+  if test $m4_tolower(coin_has_$1) != skipping; then
     #--with-blas can overwrite --with-blas-lib, and can be set to BUILD to enforce building blas
     AC_ARG_WITH([blas],
-      AC_HELP_STRING([--with-blas], [specify BLAS library (or BUILD for compilation)]),
+      AC_HELP_STRING([--with-blas], [specify BLAS library (or BUILD to enforce use of ThirdParty/Blas)]),
         [if test x"$withval" = "xBUILD" ; then
            coin_has_blas=notGiven
+         elif test x"$withval" = "xno" ; then
+           coin_has_blas=skipping
          else
            coin_has_blas="yes, via --with-blas"
          fi],
-        [])])
+        [])
+  fi
+])
 
-  m4_if(m4_tolower($1), lapack, [
+m4_if(m4_tolower($1), lapack, [
+  if test $m4_tolower(coin_has_$1) != skipping; then
     #--with-lapack can overwrite --with-lapack-lib, and can be set to BUILD to enforce building lapack
     AC_ARG_WITH([lapack],
-      AC_HELP_STRING([--with-lapack], [specify LAPACK library (or BUILD for compilation)]),
+      AC_HELP_STRING([--with-lapack], [specify LAPACK library (or BUILD to enforce use of ThirdParty/Lapack)]),
         [if test x"$withval" = "xBUILD" ; then
            coin_has_lapack=notGiven
+         elif test x"$withval" = "xno" ; then
+           coin_has_lapack=skipping
          else
            coin_has_lapack="yes, via --with-lapack"
          fi],
-        [])])
-
-fi
+        [])
+  fi
+])
 
 # check if project is available in present directory
 if test "$m4_tolower(coin_has_$1)" = notGiven; then
@@ -2997,18 +3022,11 @@ else
   AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
 fi
 
-AC_MSG_CHECKING(whether project m4_ifval([$2],[$2/])$1 needs to be configured)
 if test "$coin_have_project_dir" = yes ; then
-
   if test -r $srcdir/m4_ifval($2,[$2/],)$1/configure; then
     coin_subdirs="$coin_subdirs m4_ifval($2,[$2/],)$1"
-    AC_MSG_RESULT(yes)
     AC_CONFIG_SUBDIRS(m4_ifval($2,[$2/],)$1)
-  else
-    AC_MSG_RESULT(no)
   fi
-else
-  AC_MSG_RESULT(no)
 fi
 ])
 
@@ -3078,36 +3096,51 @@ coin_foreach_w([myvar], [$3], [
   AC_SUBST(m4_toupper(myvar)_LIBS_INSTALLED)
 ])
 
-#check if user provided LIBS, CFLAGS, or DATA for module
+#check if user provided LIBS, CFLAGS, or DATA for package or disables use of package
 if test $m4_tolower(coin_has_$1) != skipping; then
-
   AC_ARG_WITH([m4_tolower($1)-lib],
     AC_HELP_STRING([--with-m4_tolower($1)-lib],
                    [linker flags for using package $1]),
-      [m4_tolower(coin_has_$1)=yes
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)=skipping
+     else
+       m4_tolower(coin_has_$1)=yes
        m4_toupper($1_LIBS)="$withval"
        coin_foreach_w([myvar], [$3], [
          m4_toupper(myvar)_PCLIBS="$withval $m4_toupper(myvar)_PCLIBS"
          m4_toupper(myvar)_LIBS="$withval $m4_toupper(myvar)_LIBS"
        ])
-      ],
-      [])
+     fi
+    ],
+    [])
+fi
 
+if test $m4_tolower(coin_has_$1) != skipping; then
   AC_ARG_WITH([m4_tolower($1)-incdir],
     AC_HELP_STRING([--with-m4_tolower($1)-incdir],
                    [directory with header files for using package $1]),
-    [m4_tolower(coin_has_$1)=yes
-     m4_toupper($1_CFLAGS)="-I`${CYGPATH_W} $withval`"
-     coin_foreach_w([myvar], [$3], [m4_toupper(myvar)_CFLAGS="$withval $m4_toupper(myvar)_CFLAGS"
-     ])
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)=skipping
+     else
+       m4_tolower(coin_has_$1)=yes
+       m4_toupper($1_CFLAGS)="-I`${CYGPATH_W} $withval`"
+       coin_foreach_w([myvar], [$3], [m4_toupper(myvar)_CFLAGS="$withval $m4_toupper(myvar)_CFLAGS"])
+     fi
     ],
     [])
+fi
 
+if test $m4_tolower(coin_has_$1) != skipping; then
   AC_ARG_WITH([m4_tolower($1)-datadir],
     AC_HELP_STRING([--with-m4_tolower($1)-datadir],
                    [directory with data files for using package $1]),
-    [m4_tolower(coin_has_$1)=yes
-     m4_toupper($1_DATA)="$withval"],
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)=skipping
+     else
+       m4_tolower(coin_has_$1)=yes
+       m4_toupper($1_DATA)="$withval"
+     fi
+    ],
     [])
 fi
 
@@ -3491,7 +3524,7 @@ AC_DEFUN([AC_COIN_CHECK_PACKAGE_BLAS],
 [
 AC_ARG_WITH([blas],
             AC_HELP_STRING([--with-blas],
-                           [specify BLAS library (or BUILD for compilation)]),
+                           [specify BLAS library (or BUILD to enforce use of ThirdParty/Blas)]),
             [use_blas="$withval"], [use_blas=])
 
 # if user specified --with-blas-lib, then we should give COIN_CHECK_PACKAGE
@@ -3685,7 +3718,7 @@ AC_DEFUN([AC_COIN_CHECK_PACKAGE_LAPACK],
 [
 AC_ARG_WITH([lapack],
             AC_HELP_STRING([--with-lapack],
-                           [specify LAPACK library (or BUILD for compilation)]),
+                           [specify LAPACK library (or BUILD to enforce use of ThirdParty/Lapack)]),
             [use_lapack=$withval], [use_lapack=])
 
 #if user specified --with-lapack-lib, then we should give COIN_HAS_PACKAGE preference
