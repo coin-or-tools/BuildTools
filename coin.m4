@@ -2911,44 +2911,69 @@ if test $m4_tolower(coin_has_$1) != skipping; then
   AC_ARG_WITH([m4_tolower($1)-lib],
     AC_HELP_STRING([--with-m4_tolower($1)-lib],
                    [linker flags for using project $1]),
-      [m4_tolower(coin_has_$1)="yes, via --with-m4_tolower($1)-lib"],
-      [])
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)=skipping
+     else
+       m4_tolower(coin_has_$1)="yes, via --with-m4_tolower($1)-lib"
+     fi],
+    [])
+fi
 
+if test $m4_tolower(coin_has_$1) != skipping; then
   AC_ARG_WITH([m4_tolower($1)-incdir],
     AC_HELP_STRING([--with-m4_tolower($1)-incdir],
                    [directory with header files for using project $1]),
-    [m4_tolower(coin_has_$1)="yes, via --with-m4_tolower($1)-incdir"],
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)=skipping
+     else
+       m4_tolower(coin_has_$1)="yes, via --with-m4_tolower($1)-incdir"
+     fi],
     [])
+fi
 
+if test $m4_tolower(coin_has_$1) != skipping; then
   AC_ARG_WITH([m4_tolower($1)-datadir],
     AC_HELP_STRING([--with-m4_tolower($1)-datadir],
                    [directory with data files for using project $1]),
-    [m4_tolower(coin_has_$1)="yes, via --with-m4_tolower($1)-datadir"],
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)=skipping
+     else
+       m4_tolower(coin_has_$1)="yes, via --with-m4_tolower($1)-datadir"
+     fi],
     [])
+fi
 
-  m4_if(m4_tolower($1), blas, [
+m4_if(m4_tolower($1), blas, [
+  if test $m4_tolower(coin_has_$1) != skipping; then
     #--with-blas can overwrite --with-blas-lib, and can be set to BUILD to enforce building blas
     AC_ARG_WITH([blas],
-      AC_HELP_STRING([--with-blas], [specify BLAS library (or BUILD for compilation)]),
+      AC_HELP_STRING([--with-blas], [specify BLAS library (or BUILD to enforce use of ThirdParty/Blas)]),
         [if test x"$withval" = "xBUILD" ; then
            coin_has_blas=notGiven
+         elif test x"$withval" = "xno" ; then
+           coin_has_blas=skipping
          else
            coin_has_blas="yes, via --with-blas"
          fi],
-        [])])
+        [])
+  fi
+])
 
-  m4_if(m4_tolower($1), lapack, [
+m4_if(m4_tolower($1), lapack, [
+  if test $m4_tolower(coin_has_$1) != skipping; then
     #--with-lapack can overwrite --with-lapack-lib, and can be set to BUILD to enforce building lapack
     AC_ARG_WITH([lapack],
-      AC_HELP_STRING([--with-lapack], [specify LAPACK library (or BUILD for compilation)]),
+      AC_HELP_STRING([--with-lapack], [specify LAPACK library (or BUILD to enforce use of ThirdParty/Lapack)]),
         [if test x"$withval" = "xBUILD" ; then
            coin_has_lapack=notGiven
+         elif test x"$withval" = "xno" ; then
+           coin_has_lapack=skipping
          else
            coin_has_lapack="yes, via --with-lapack"
          fi],
-        [])])
-
-fi
+        [])
+  fi
+])
 
 # check if project is available in present directory
 if test "$m4_tolower(coin_has_$1)" = notGiven; then
@@ -2997,18 +3022,11 @@ else
   AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
 fi
 
-AC_MSG_CHECKING(whether project m4_ifval([$2],[$2/])$1 needs to be configured)
 if test "$coin_have_project_dir" = yes ; then
-
   if test -r $srcdir/m4_ifval($2,[$2/],)$1/configure; then
     coin_subdirs="$coin_subdirs m4_ifval($2,[$2/],)$1"
-    AC_MSG_RESULT(yes)
     AC_CONFIG_SUBDIRS(m4_ifval($2,[$2/],)$1)
-  else
-    AC_MSG_RESULT(no)
   fi
-else
-  AC_MSG_RESULT(no)
 fi
 ])
 
@@ -3078,36 +3096,51 @@ coin_foreach_w([myvar], [$3], [
   AC_SUBST(m4_toupper(myvar)_LIBS_INSTALLED)
 ])
 
-#check if user provided LIBS, CFLAGS, or DATA for module
+#check if user provided LIBS, CFLAGS, or DATA for package or disables use of package
 if test $m4_tolower(coin_has_$1) != skipping; then
-
   AC_ARG_WITH([m4_tolower($1)-lib],
     AC_HELP_STRING([--with-m4_tolower($1)-lib],
                    [linker flags for using package $1]),
-      [m4_tolower(coin_has_$1)=yes
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)=skipping
+     else
+       m4_tolower(coin_has_$1)=yes
        m4_toupper($1_LIBS)="$withval"
        coin_foreach_w([myvar], [$3], [
          m4_toupper(myvar)_PCLIBS="$withval $m4_toupper(myvar)_PCLIBS"
          m4_toupper(myvar)_LIBS="$withval $m4_toupper(myvar)_LIBS"
        ])
-      ],
-      [])
+     fi
+    ],
+    [])
+fi
 
+if test $m4_tolower(coin_has_$1) != skipping; then
   AC_ARG_WITH([m4_tolower($1)-incdir],
     AC_HELP_STRING([--with-m4_tolower($1)-incdir],
                    [directory with header files for using package $1]),
-    [m4_tolower(coin_has_$1)=yes
-     m4_toupper($1_CFLAGS)="-I`${CYGPATH_W} $withval`"
-     coin_foreach_w([myvar], [$3], [m4_toupper(myvar)_CFLAGS="$withval $m4_toupper(myvar)_CFLAGS"
-     ])
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)=skipping
+     else
+       m4_tolower(coin_has_$1)=yes
+       m4_toupper($1_CFLAGS)="-I`${CYGPATH_W} $withval`"
+       coin_foreach_w([myvar], [$3], [m4_toupper(myvar)_CFLAGS="$withval $m4_toupper(myvar)_CFLAGS"])
+     fi
     ],
     [])
+fi
 
+if test $m4_tolower(coin_has_$1) != skipping; then
   AC_ARG_WITH([m4_tolower($1)-datadir],
     AC_HELP_STRING([--with-m4_tolower($1)-datadir],
                    [directory with data files for using package $1]),
-    [m4_tolower(coin_has_$1)=yes
-     m4_toupper($1_DATA)="$withval"],
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)=skipping
+     else
+       m4_tolower(coin_has_$1)=yes
+       m4_toupper($1_DATA)="$withval"
+     fi
+    ],
     [])
 fi
 
@@ -3159,14 +3192,21 @@ if test $m4_tolower(coin_has_$1) != skipping &&
    test $m4_tolower(coin_has_$1) != notGiven ; then
   AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 package is available])
 
-  # construct dependencies variables from LIBS variables
-  # we add an extra space in LIBS so we can substitute out everything starting with " -"
-  # before, substitute out everything of the form -framework xxx as used on Mac
-  # also substitute out everything of the form `xxx`yyy (may have been added for cygwin/cl)
-  m4_toupper($1)_DEPENDENCIES=`echo " $m4_toupper($1)_LIBS" | [sed -e 's/ -framework  *[^ ]*//g' -e 's/ -[^ ]*//g' -e 's/\`[^\`]*\`[^ ]* //g']`
-  coin_foreach_w([myvar], [$3], [
-    m4_toupper(myvar)_DEPENDENCIES=`echo " $m4_toupper(myvar)_LIBS " | [sed -e 's/ -framework  *[^ ]*//g' -e 's/ -[^ ]*//g' -e 's/\`[^\`]*\`[^ ]* //g']`
-  ])
+  AC_ARG_ENABLE([interpackage-dependencies],
+    AC_HELP_STRING([--enable-interpackage-dependencies], [whether to deduce Makefile dependencies from package linker flags (default: yes)]),
+    [], [enable_interpackage_dependencies=yes])
+    
+  if test $enable_interpackage_dependencies = yes ; then
+     # construct dependencies variables from LIBS variables
+     # we add an extra space in LIBS so we can substitute out everything starting with " -"
+     # remove everything of the form -framework xxx as used on Mac and mklxxx as used on Windows
+     # then remove everything of the form -xxx
+     # also remove everything of the form `xxx`yyy (may have been added for cygwin/cl)
+     m4_toupper($1)_DEPENDENCIES=`echo " $m4_toupper($1)_LIBS" | [sed -e 's/ mkl[^ ]*//g' -e 's/ -framework  *[^ ]*//g' -e 's/ -[^ ]*//g' -e 's/\`[^\`]*\`[^ ]* //g']`
+     coin_foreach_w([myvar], [$3], [
+       m4_toupper(myvar)_DEPENDENCIES=`echo " $m4_toupper(myvar)_LIBS " | [sed -e 's/ mkl[^ ]*//g' -e 's/ -framework  *[^ ]*//g' -e 's/ -[^ ]*//g' -e 's/\`[^\`]*\`[^ ]* //g']`
+     ])
+  fi
 
   if test 1 = 0 ; then  #change this test to enable a bit of debugging output
     if test -n "$m4_toupper($1)_CFLAGS" ; then
@@ -3484,7 +3524,7 @@ AC_DEFUN([AC_COIN_CHECK_PACKAGE_BLAS],
 [
 AC_ARG_WITH([blas],
             AC_HELP_STRING([--with-blas],
-                           [specify BLAS library (or BUILD for compilation)]),
+                           [specify BLAS library (or BUILD to enforce use of ThirdParty/Blas)]),
             [use_blas="$withval"], [use_blas=])
 
 # if user specified --with-blas-lib, then we should give COIN_CHECK_PACKAGE
@@ -3561,8 +3601,8 @@ else
       fi
       case "$CC" in
         cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
-          AC_MSG_CHECKING([for BLAS in MKL])
           coin_save_LIBS="$LIBS"
+          AC_MSG_CHECKING([for BLAS in MKL (32bit)])
           LIBS="mkl_intel_c.lib mkl_sequential.lib mkl_core.lib $LIBS"
           AC_COIN_TRY_FLINK([daxpy],
                             [use_blas='mkl_intel_c.lib mkl_sequential.lib mkl_core.lib'
@@ -3570,6 +3610,17 @@ else
                             ],
                             [AC_MSG_RESULT([no])])
           LIBS="$coin_save_LIBS"
+          
+          if test "x$use_blas" = x ; then
+            AC_MSG_CHECKING([for BLAS in MKL (64bit)])
+            LIBS="mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib $LIBS"
+            AC_COIN_TRY_FLINK([daxpy],
+                              [use_blas='mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib'
+                               AC_MSG_RESULT([yes: $use_blas])
+                              ],
+                              [AC_MSG_RESULT([no])])
+            LIBS="$coin_save_LIBS"
+          fi
           ;;
       esac
       ;;
@@ -3667,7 +3718,7 @@ AC_DEFUN([AC_COIN_CHECK_PACKAGE_LAPACK],
 [
 AC_ARG_WITH([lapack],
             AC_HELP_STRING([--with-lapack],
-                           [specify LAPACK library (or BUILD for compilation)]),
+                           [specify LAPACK library (or BUILD to enforce use of ThirdParty/Lapack)]),
             [use_lapack=$withval], [use_lapack=])
 
 #if user specified --with-lapack-lib, then we should give COIN_HAS_PACKAGE preference
@@ -3715,6 +3766,8 @@ else
   if test -z "$use_lapack"; then
     # Try to autodetect the library for lapack based on build system
     case $build in
+      # TODO: Is this check actually needed here, since -lcomplib.sigmath should have been recognized as Blas library,
+      #       and above it is checked whether the Blas library already contains Lapack
       *-sgi-*) 
         AC_MSG_CHECKING([whether -lcomplib.sgimath has LAPACK])
         coin_save_LIBS="$LIBS"
@@ -3732,6 +3785,8 @@ else
         ;;
 
       # See comments in COIN_CHECK_PACKAGE_BLAS.
+      # TODO: Is this check actually needed here, since -lsunperf should have been recognized as Blas library,
+      #       and above it is checked whether the Blas library already contains Lapack
       *-*-solaris*)
         AC_MSG_CHECKING([for LAPACK in libsunperf])
         coin_need_flibs=no
@@ -3755,22 +3810,6 @@ else
 	  skip_llapack_check=yes
 	fi
 	;;
-	
-     *-darwin*)
-      AC_MSG_CHECKING([for LAPACK in Veclib])
-      coin_need_flibs=no
-      coin_save_LIBS="$LIBS"
-      LIBS="-framework vecLib $BLAS_LIBS $LIBS"
-      AC_COIN_TRY_FLINK([dsyev],
-                        [use_lapack="-framework vecLib $BLAS_LIBS"
-                         if test $coin_need_flibs = yes ; then
-                           use_lapack="$use_lapack $FLIBS"
-                         fi
-                         AC_MSG_RESULT([yes: $use_lapack])
-                        ],
-                        [AC_MSG_RESULT([no])])
-      LIBS="$coin_save_LIBS"
-      ;;
 	
     esac
   fi
