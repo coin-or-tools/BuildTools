@@ -3706,13 +3706,18 @@ coin_foreach_w([myvar], [$1], [
 # 3. if --with-lapack has been specified to a working library, sets
 #    LAPACK_LIBS to its value
 # 4. tries standard libraries
-# 5. calls COIN_CHECK_PACKAGE(Lapack, [lapack], [$1]) to check for
+# 5. calls COIN_CHECK_PACKAGE(Lapack, [coinlapack], [$1]) to check for
 #    ThirdParty/Lapack
 # The makefile conditional and preprocessor macro COIN_HAS_LAPACK is defined.
 # LAPACK_LIBS is set to the flags required to link with a Lapack library.
 # For each build target X in $1, X_LIBS is extended with $LAPACK_LIBS.
 # In case 3 and 4, the flags to link to Lapack are added to X_PCLIBS too.
 # In case 5, Lapack is added to X_PCREQUIRES.
+#
+# TODO: Lapack usually depends on Blas, so if we check for a system lapack library,
+#   shouldn't we include AC_COIN_CHECK_PACKAGE_BLAS first?
+#   However, if we look for coinlapack via AC_COIN_CHECK_PACKAGE(Lapack, [coinlapack], [$1]),
+#   then we will get Blas as dependency of coinlapack.
 
 AC_DEFUN([AC_COIN_CHECK_PACKAGE_LAPACK],
 [
