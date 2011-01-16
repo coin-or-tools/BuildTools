@@ -100,7 +100,7 @@ extractProjFromURL ()
         epfu_pfxPat='svn/'
         epfu_projPat='\(.*\)'
         case $epfu_type in
-	  trunk | stable | releases )
+	  trunk | stable | release )
 	      epfu_sfxPat=$epfu_type'.*$'
 	      ;;
 	  * )

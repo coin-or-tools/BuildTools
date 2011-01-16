@@ -42,7 +42,8 @@ if test "$#" -eq 0; then
 else
 
 # Process the parameters. A parameter without an opening `-' is assumed to be
-# the spec for the directory to be committed.
+# the spec for the directory to be committed. (Strip any trailing '/'. Some
+# people add it, but the script doesn't expect it.)
 
   while test $# -gt 0 && test $printHelp = 0 ; do
     case "$1" in
@@ -55,7 +56,7 @@ else
        -*) echo "$0: unrecognised command line switch '"$1"'."
 	   printHelp=1
 	   ;;
-	*) dirToCommit="$1"
+	*) dirToCommit=`echo $1 | sed -e 's,/$,,'`
 	   ;;
     esac
     shift
