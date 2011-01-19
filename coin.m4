@@ -2738,9 +2738,9 @@ COIN_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
 # best would actually to use ${libdir}, since .pc files get installed into ${libdir}/pkgconfig,
 # unfortunately, ${libdir} expands to ${exec_prefix}/lib and ${exec_prefix} to ${prefix}...
 if test "x${prefix}" = xNONE ; then
-  COIN_PKG_CONFIG_PATH="${ac_default_prefix}/lib/pkgconfig:${COIN_PKG_CONFIG_PATH}"
+  COIN_PKG_CONFIG_PATH="${ac_default_prefix}/lib/pkgconfig:${ac_default_prefix}/share/pkgconfig:${COIN_PKG_CONFIG_PATH}"
 else
-  COIN_PKG_CONFIG_PATH="${prefix}/lib/pkgconfig:${COIN_PKG_CONFIG_PATH}"
+  COIN_PKG_CONFIG_PATH="${prefix}/lib/pkgconfig:${prefix}/share/pkgconfig:${COIN_PKG_CONFIG_PATH}"
 fi
 
 AC_ARG_WITH([coin-instdir],
@@ -2749,7 +2749,7 @@ AC_ARG_WITH([coin-instdir],
   [if test -d "$withval"; then : ; else
      AC_MSG_ERROR([argument for --with-coin-instdir not a directory])
    fi
-   COIN_PKG_CONFIG_PATH="$withval/lib/pkgconfig:${COIN_PKG_CONFIG_PATH}"
+   COIN_PKG_CONFIG_PATH="$withval/lib/pkgconfig:$withval/share/pkgconfig:${COIN_PKG_CONFIG_PATH}"
   ],[])
 
 AC_SUBST(COIN_PKG_CONFIG_PATH)
@@ -3706,13 +3706,18 @@ coin_foreach_w([myvar], [$1], [
 # 3. if --with-lapack has been specified to a working library, sets
 #    LAPACK_LIBS to its value
 # 4. tries standard libraries
-# 5. calls COIN_CHECK_PACKAGE(Lapack, [lapack], [$1]) to check for
+# 5. calls COIN_CHECK_PACKAGE(Lapack, [coinlapack], [$1]) to check for
 #    ThirdParty/Lapack
 # The makefile conditional and preprocessor macro COIN_HAS_LAPACK is defined.
 # LAPACK_LIBS is set to the flags required to link with a Lapack library.
 # For each build target X in $1, X_LIBS is extended with $LAPACK_LIBS.
 # In case 3 and 4, the flags to link to Lapack are added to X_PCLIBS too.
 # In case 5, Lapack is added to X_PCREQUIRES.
+#
+# TODO: Lapack usually depends on Blas, so if we check for a system lapack library,
+#   shouldn't we include AC_COIN_CHECK_PACKAGE_BLAS first?
+#   However, if we look for coinlapack via AC_COIN_CHECK_PACKAGE(Lapack, [coinlapack], [$1]),
+#   then we will get Blas as dependency of coinlapack.
 
 AC_DEFUN([AC_COIN_CHECK_PACKAGE_LAPACK],
 [
