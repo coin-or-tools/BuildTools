@@ -2907,7 +2907,7 @@ if test x"$COIN_SKIP_PROJECTS" != x; then
   done
 fi
 
-if test $m4_tolower(coin_has_$1) != skipping; then
+if test "$m4_tolower(coin_has_$1)" != skipping; then
   if test $PACKAGE_TARNAME = m4_tolower($1); then
     m4_tolower(coin_has_$1)=yes
     coin_have_project_dir=yes
@@ -2924,7 +2924,7 @@ if test $m4_tolower(coin_has_$1) != skipping; then
     [])
 fi
 
-if test $m4_tolower(coin_has_$1) != skipping; then
+if test "$m4_tolower(coin_has_$1)" != skipping; then
   AC_ARG_WITH([m4_tolower($1)-incdir],
     AC_HELP_STRING([--with-m4_tolower($1)-incdir],
                    [directory with header files for using project $1]),
@@ -2936,7 +2936,7 @@ if test $m4_tolower(coin_has_$1) != skipping; then
     [])
 fi
 
-if test $m4_tolower(coin_has_$1) != skipping; then
+if test "$m4_tolower(coin_has_$1)" != skipping; then
   AC_ARG_WITH([m4_tolower($1)-datadir],
     AC_HELP_STRING([--with-m4_tolower($1)-datadir],
                    [directory with data files for using project $1]),
