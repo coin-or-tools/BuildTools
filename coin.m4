@@ -4010,6 +4010,11 @@ if test $m4_tolower(coin_has_$1) != skipping; then
          m4_toupper(myvar)_PCLIBS="$withval $m4_toupper(myvar)_PCLIBS"
          m4_toupper(myvar)_LIBS="$withval $m4_toupper(myvar)_LIBS"
        ])
+       # if project flags are given by user and we build without pkg-config, then we need to setup the _INSTALLED variables
+       if test -z "$PKG_CONFIG" ; then
+         m4_toupper($1_LIBS_INSTALLED)="$withval"
+         coin_foreach_w([myvar], [$3], [m4_toupper(myvar)_LIBS_INSTALLED="$withval $m4_toupper(myvar)_LIBS_INSTALLED"])
+       fi
       ],
       [])
 
@@ -4019,6 +4024,12 @@ if test $m4_tolower(coin_has_$1) != skipping; then
     [m4_tolower(coin_has_$1)=yes
      m4_toupper($1_CFLAGS)="-I`${CYGPATH_W} $withval`"
      coin_foreach_w([myvar], [$3], [m4_toupper(myvar)_CFLAGS="$withval $m4_toupper(myvar)_CFLAGS"
+     coin_foreach_w([myvar], [$3], [m4_toupper(myvar)_CFLAGS="-I`${CYGPATH_W} $withval` $m4_toupper(myvar)_CFLAGS"])
+     # if project flags are given by user and we build without pkg-config, then we need to setup the _INSTALLED variables
+     if test -z "$PKG_CONFIG" ; then
+       m4_toupper($1_CFLAGS_INSTALLED)="$m4_toupper($1_CFLAGS)"
+       coin_foreach_w([myvar], [$3], [m4_toupper(myvar)_CFLAGS_INSTALLED="$m4_toupper($1_CFLAGS) $m4_toupper(myvar)_CFLAGS_INSTALLED"])
+     fi
      ])
     ],
     [])
@@ -4027,7 +4038,12 @@ if test $m4_tolower(coin_has_$1) != skipping; then
     AC_HELP_STRING([--with-m4_tolower($1)-datadir],
                    [directory with data files for using package $1]),
     [m4_tolower(coin_has_$1)=yes
-     m4_toupper($1_DATA)="$withval"],
+     m4_toupper($1_DATA)="$withval"
+     # if project flags are given by user and we build without pkg-config, then we need to setup the _INSTALLED variables
+     if test -z "$PKG_CONFIG" ; then
+       m4_toupper($1_DATA_INSTALLED)="$withval"
+     fi
+    ],
     [])
 fi
 
