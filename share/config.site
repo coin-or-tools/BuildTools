@@ -265,8 +265,8 @@
 # linker flags for linking with the library.  This is done with the
 # --with-LIB-incdir and --with-LIB-lib configure flags, where "LIB" is
 # replaced by the lower-case short-form of the library.  A possibly
-# incomplete list of choices for LIB in the current COIN projects is:
-# cplex, glpk, gmpl, fortmp, mosek, mpi, osl, soplex, xpress.
+# incomplete list of choices for LIB in the current COIN-OR projects is:
+# cplex, gurobi, mosek, soplex, xpress.
 # For Cplex, one might set the following:
 #with_cplex_incdir='/usr/ilog/cplex90/include/ilcplex'
 #with_cplex_lib='-L/usr/ilog/cplex90/lib/static_pic -lcplex -lpthread'
@@ -306,13 +306,3 @@
 #with_lapack=BUILD
 # Specify that Lapack should not be used
 #with_lapack=no
-
-### ASL
-# Flag indicating where to find the AMPL Solver Library.  If --with-asldir
-# is not used, the configure script will test for the source code for ASL
-# in ThirdParty/ASL.  If this is found there, the ASL will be automatically
-# compiled and used, otherwise, it is assumed that ASL is unavailable.
-# If the user already has a precompiled version of the ASL, (s)he can use
-# this flag to specify the directory will all headers and the library:
-#with_asldir=$HOME/ampl/solvers
-
