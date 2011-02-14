@@ -3421,7 +3421,7 @@ if test "$allproj" != fail ; then
     #   replace "Libs:" by "echo projlibs="
     #   replace "Cflags:" by "echo projcflags="
     #   remove every line starting with <some word>:
-    [pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/[a-zA-Z]:/d' $pcfile`]
+    [pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/^[a-zA-Z]*:/d' $pcfile`]
 
     # set projcflags and projlibs variables by running $pcfilemod
     projcflags=
@@ -3466,7 +3466,7 @@ if test "$allproj" != fail ; then
     #   replace "Libs:" by "echo projlibs="
     #   replace "Cflags:" by "echo projcflags="
     #   remove every line starting with <some word>:
-    [pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/[a-zA-Z]:/d' $pcfile`]
+    [pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/^[a-zA-Z]*:/d' $pcfile`]
 
     # set projcflags and projlibs variables by running $pcfilemod
     projcflags=
