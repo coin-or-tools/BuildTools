@@ -2686,15 +2686,16 @@ AC_SUBST([coin_doxy_excludes])
 # This macro checks whether a pkg-config tool with a minimal version number
 # is available.  If so, then the variable PKGCONFIG is set to its path.
 # If not, PKGCONFIG is set to "".  The minimal version number can be given
-# as first parameter, by default it is 0.9.0.  This macro is a modified
-# version of PKG_PROG_PKG_CONFIG in pkg.m4.  Further, the AM_CONDITIONAL
-# COIN_HAS_PKGCONFIG is set and PKGCONFIG is AC_SUBST'ed.  Finally, if this
-# setup belongs to a project directory, then the search path for .pc files
-# is assembled from the value of $PKG_CONFIG_PATH, the values of --prefix,
-# --coin-instdir, and the directory named in a file ../coin_subdirs.txt
-# or ../../coin_subdirs.txt in a variable COIN_PKG_CONFIG_PATH, which is
-# also AC_SUBST'ed. For a path xxx given in the coin-subdirs.txt, also
-# the directory xxx/pkgconfig is added, if existing.
+# as first parameter, by default it is 0.16.0, since COIN-OR .pc files now
+# include an URL field, which breaks pkg-config version <= 0.15.
+# This macro is a modified version of PKG_PROG_PKG_CONFIG in pkg.m4.
+# Further, the AM_CONDITIONAL COIN_HAS_PKGCONFIG is set and PKGCONFIG is
+# AC_SUBST'ed.  Finally, if this setup belongs to a project directory, then
+# the search path for .pc files is assembled from the value of
+# $PKG_CONFIG_PATH, the values of --prefix, --coin-instdir, and the directories
+# named in a file ../coin_subdirs.txt or ../../coin_subdirs.txt in a variable
+# COIN_PKG_CONFIG_PATH, which is also AC_SUBST'ed. For a path xxx given in the
+# coin-subdirs.txt, also the directory xxx/pkgconfig is added, if existing.
 
 AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
 [AC_ARG_VAR([PKG_CONFIG], [path to pkg-config utility])
@@ -2709,7 +2710,7 @@ if test $use_pkgconfig = yes ; then
     AC_PATH_TOOL([PKG_CONFIG], [pkg-config])
   fi
   if test -n "$PKG_CONFIG"; then
-    _pkg_min_version=m4_default([$1], [0.9.0])
+    _pkg_min_version=m4_default([$1], [0.16.0])
     AC_MSG_CHECKING([pkg-config is at least version $_pkg_min_version])
     if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
       AC_MSG_RESULT([yes])
@@ -2784,6 +2785,10 @@ if test x$coin_projectdir = xyes ; then
   fi
 
   AC_SUBST(COIN_PKG_CONFIG_PATH_UNINSTALLED)
+fi
+
+if test -n "$PKG_CONFIG" && test x$coin_cc_is_cl = xtrue; then
+  AC_MSG_WARN([Using pkg-config together with MS or Intel Compiler on Windows is not support by example Makefiles. Consider using --disable-pkg-config.])
 fi
 
 ])
@@ -2902,7 +2907,7 @@ if test x"$COIN_SKIP_PROJECTS" != x; then
   done
 fi
 
-if test $m4_tolower(coin_has_$1) != skipping; then
+if test "$m4_tolower(coin_has_$1)" != skipping; then
   if test $PACKAGE_TARNAME = m4_tolower($1); then
     m4_tolower(coin_has_$1)=yes
     coin_have_project_dir=yes
@@ -2919,7 +2924,7 @@ if test $m4_tolower(coin_has_$1) != skipping; then
     [])
 fi
 
-if test $m4_tolower(coin_has_$1) != skipping; then
+if test "$m4_tolower(coin_has_$1)" != skipping; then
   AC_ARG_WITH([m4_tolower($1)-incdir],
     AC_HELP_STRING([--with-m4_tolower($1)-incdir],
                    [directory with header files for using project $1]),
@@ -2931,7 +2936,7 @@ if test $m4_tolower(coin_has_$1) != skipping; then
     [])
 fi
 
-if test $m4_tolower(coin_has_$1) != skipping; then
+if test "$m4_tolower(coin_has_$1)" != skipping; then
   AC_ARG_WITH([m4_tolower($1)-datadir],
     AC_HELP_STRING([--with-m4_tolower($1)-datadir],
                    [directory with data files for using project $1]),
@@ -3416,7 +3421,7 @@ if test "$allproj" != fail ; then
     #   replace "Libs:" by "echo projlibs="
     #   replace "Cflags:" by "echo projcflags="
     #   remove every line starting with <some word>:
-    [pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/[a-zA-Z]:/d' $pcfile`]
+    [pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/^[a-zA-Z]*:/d' $pcfile`]
 
     # set projcflags and projlibs variables by running $pcfilemod
     projcflags=
@@ -3461,7 +3466,7 @@ if test "$allproj" != fail ; then
     #   replace "Libs:" by "echo projlibs="
     #   replace "Cflags:" by "echo projcflags="
     #   remove every line starting with <some word>:
-    [pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/[a-zA-Z]:/d' $pcfile`]
+    [pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/^[a-zA-Z]*:/d' $pcfile`]
 
     # set projcflags and projlibs variables by running $pcfilemod
     projcflags=
