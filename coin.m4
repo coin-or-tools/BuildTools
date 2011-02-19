@@ -3822,7 +3822,7 @@ if test x"$COIN_SKIP_PROJECTS" != x; then
   done
 fi
 
-if test $m4_tolower(coin_has_$1) != skipping; then
+if test "$m4_tolower(coin_has_$1)" != skipping; then
   if test $PACKAGE_TARNAME = m4_tolower($1); then
     m4_tolower(coin_has_$1)=yes
     coin_have_project_dir=yes
@@ -4305,7 +4305,7 @@ if test "$allproj" != fail ; then
     #   replace "Libs:" by "echo projlibs="
     #   replace "Cflags:" by "echo projcflags="
     #   remove every line starting with <some word>:
-    [pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/[a-zA-Z]:/d' $pcfile`]
+    [pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/^[a-zA-Z]*:/d' $pcfile`]
 
     # set projcflags and projlibs variables by running $pcfilemod
     projcflags=
@@ -4350,7 +4350,7 @@ if test "$allproj" != fail ; then
     #   replace "Libs:" by "echo projlibs="
     #   replace "Cflags:" by "echo projcflags="
     #   remove every line starting with <some word>:
-    [pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/[a-zA-Z]:/d' $pcfile`]
+    [pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/^[a-zA-Z]*:/d' $pcfile`]
 
     # set projcflags and projlibs variables by running $pcfilemod
     projcflags=
