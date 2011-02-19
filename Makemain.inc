@@ -54,15 +54,15 @@ $(AUX_DIR)/depcomp: $(BUILDTOOLSDIR)/depcomp
 $(AUX_DIR)/ltmain.sh: $(BUILDTOOLSDIR)/ltmain.sh
 	cp $< $@
 
-# Take care of updating externals (if Externals file exists)
+# Take care of updating externals (if Dependencies file exists)
 if HAVE_EXTERNALS
-$(top_builddir)/Makefile: .Externals-stamp
+$(top_builddir)/Makefile: .Dependencies-stamp
 
-.Externals-stamp: $(srcdir)/Externals
-	cd $(srcdir); svn propset svn:externals -F Externals .
-	touch .Externals-stamp
+.Dependencies-stamp: $(srcdir)/Dependencies
+	cd $(srcdir); BuildTools/set_externals Dependencies
+	touch .Dependencies-stamp
 
-update-externals: .Externals-stamp
+update-externals: .Dependencies-stamp
 	cd $(srcdir); svn update
 
 endif
@@ -70,8 +70,8 @@ endif
 endif
 
 if HAVE_EXTERNALS
-EXTRA_DIST += Externals
-DISTCLEANFILES += .Externals-stamp
+EXTRA_DIST += Dependencies
+DISTCLEANFILES += .Dependencies-stamp
 endif
 
 DISTCLEANFILES += $(VPATH_DISTCLEANFILES)

@@ -1421,8 +1421,8 @@ if test "$enable_maintainer_mode" = yes; then
                      [LIBTOOLM4="$want_dir/aclocal/libtool.m4"],
                      [AC_MSG_ERROR([I cannot find the libtool.m4 file.])])
 
-  # Check if we have an Externals file
-  if test -r $srcdir/Externals; then
+  # Check if we have an Dependencies file
+  if test -r $srcdir/Dependencies; then
     coin_have_externals=yes
   fi
   # Check if subversion is installed and understands https
