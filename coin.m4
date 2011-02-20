@@ -81,27 +81,30 @@ AM_CONDITIONAL(ALWAYS_FALSE, false)
 coin_projectdir=yes
 
 # Set the project's version number
-if test "x$1" != x; then
-  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION), ["$PACKAGE_VERSION"],
-		     [Version number of project])
-fi
+m4_ifvaln([$1],[
+  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION), ["$PACKAGE_VERSION"],[Version number of project])
 
-# Set the project's SVN revision number. The complicated sed expression
-# (made worse by quadrigraphs) ensures that things like 4123:4168MS end up
-# as a single number.
-AC_CHECK_PROG([have_svnversion],[svnversion],[yes],[no])
-if test "x$have_svnversion" = xyes && test "x$1" != x; then
-  AC_SUBST(m4_toupper($1_SVN_REV))
-  svn_rev_tmp=`cd $srcdir/$m4_tolower(coin_has_$1) ; svnversion`
-  m4_toupper($1_SVN_REV)=`echo $svn_rev_tmp | sed -n -e 's/^@<:@0-9@:>@*://' -e 's/\(@<:@0-9@:>@\)@<:@^0-9@:>@*$/\1/p'`
-  if test $m4_toupper($1_SVN_REV) != exported; then
-    AC_DEFINE_UNQUOTED(m4_toupper($1_SVN_REV), $m4_toupper($1_SVN_REV),
-		       [SVN revision number of project])
+  # We use the following variable to have a string with the upper case
+  # version of the project name
+  COIN_PRJCT=m4_toupper($1)
+
+  # Set the project's SVN revision number. The complicated sed expression
+  # (made worse by quadrigraphs) ensures that things like 4123:4168MS end up
+  # as a single number.
+  AC_CHECK_PROG([have_svnversion],[svnversion],[yes],[no])
+  if test "x$have_svnversion" = xyes; then
+    AC_SUBST(m4_toupper($1_SVN_REV))
+    svn_rev_tmp=`cd $srcdir/$m4_tolower(coin_has_$1) ; svnversion`
+    m4_toupper($1_SVN_REV)=`echo $svn_rev_tmp | sed -n -e 's/^@<:@0-9@:>@*://' -e 's/\(@<:@0-9@:>@\)@<:@^0-9@:>@*$/\1/p'`
+    if test $m4_toupper($1_SVN_REV) != exported; then
+      AC_DEFINE_UNQUOTED(m4_toupper($1_SVN_REV), $m4_toupper($1_SVN_REV), [SVN revision number of project])
+    fi
   fi
-fi
+ ])
 
 # Capture libtool library version, if given.
 m4_ifvaln([$2],[coin_libversion=$2],[])
+
 ]) # AC_COIN_PROJECTDIR_INIT
 
 ###########################################################################
@@ -188,11 +191,6 @@ m4_ifvaln([$1],
  AC_DEFINE_UNQUOTED(m4_toupper(COIN_$1_CHECKLEVEL),
                     m4_tolower($coin_$1_checklevel),
                     [Define to the debug sanity check level (0 is no test)])
-
-# We use the following variable to have a string with the upper case
-# version of the project name
-COIN_PRJCT=m4_toupper($1)
-
 ]) # m4_ifvaln([$1],
  
 ]) # AC_COIN_DEBUG_COMPILE
@@ -2077,7 +2075,7 @@ esac
 # This macro checks for the libz library.  If found, it sets the automake
 # conditional COIN_HAS_ZLIB and defines the C preprocessor variable
 # COIN_HAS_ZLIB.  Further, for a (space separated) list of arguments X,
-# it adds the linker flag to the variables X_LIBS and X_PCLIBS.
+# it adds the linker flag to the variables X_LIBS, X_PCLIBS, and X_LIBS_INSTALLED.
 
 AC_DEFUN([AC_COIN_CHECK_GNU_ZLIB],
 [AC_REQUIRE([AC_COIN_ENABLE_GNU_PACKAGES])
@@ -2116,7 +2114,7 @@ AM_CONDITIONAL(COIN_HAS_ZLIB,test x$coin_has_zlib = xyes)
 
 # This macro checks for the libbz2 library.  If found, it defines the C
 # preprocessor variable COIN_HAS_BZLIB.  Further, for a (space separated) list
-# of arguments X, it adds the linker flag to the variables X_LIBS and X_PCLIBS.
+# of arguments X, it adds the linker flag to the variables X_LIBS, X_PCLIBS, and X_LIBS_INSTALLED.
 
 AC_DEFUN([AC_COIN_CHECK_GNU_BZLIB],
 [AC_REQUIRE([AC_COIN_ENABLE_GNU_PACKAGES])
@@ -2156,7 +2154,8 @@ fi
 # contains "readline".  It is assumed that #include <stdio.h> is included
 # in the source file before the #include<readline/readline.h>
 # If found, it defines the C preprocessor variable COIN_HAS_READLINE.
-# Further, for a (space separated) list of arguments X, it adds the linker flag to the variable X_LIBS and X_PCLIBS.
+# Further, for a (space separated) list of arguments X, it adds the
+# linker flag to the variable X_LIBS, X_PCLIBS, and X_LIBS_INSTALLED.
 
 AC_DEFUN([AC_COIN_CHECK_GNU_READLINE],
 [AC_REQUIRE([AC_COIN_ENABLE_GNU_PACKAGES])
@@ -2881,17 +2880,15 @@ AC_COIN_PKG_CHECK_MODULE_EXISTS([$1],[$2],
 # This macro substitutes COIN_MAIN_SUBDIR.
 # If $2/$1 or $1 is in COIN_SKIP_PROJECTS, do nothing.
 # If --with-$1-lib, --with-$1-incdir, or --with-$1-datadir is given, then assume that the package is installed.
-# Otherwise, if pkg-config is available, use it to check whether the package is available.
-#   If $4 is given, then pkg-config is asked for the existance of $4, otherwise tolower($1) is used.
 # Otherwise, if the directory $2/$1 and the file $2/$1/$3 exist, check whether $2/$1/configure exists.
 #   If so, include this directory into the list of directories where configure and make recourse into.
-# tolower(coin_has_$1) is set to notGiven, skipping, installed, the version of an installed project, or the projects main directory (if uninstalled).
+# tolower(coin_has_$1) is set to a string starting with "no" if the project source is not available or
+# will not be compiled. Otherwise, it will be set to a string starting with "yes".
 
-AC_DEFUN([AC_COIN_MAIN_PACKAGEDIR],
-[AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
-AC_MSG_CHECKING([whether project $1 is available])
+AC_DEFUN([AC_COIN_MAIN_PACKAGEDIR],[
+AC_MSG_CHECKING([whether source of project $1 is available and should be compiled])
 
-m4_tolower(coin_has_$1)=notGiven
+m4_tolower(coin_has_$1)=no
 coin_have_project_dir=no
 
 # check if user wants to skip project in any case
@@ -2899,11 +2896,12 @@ AC_ARG_VAR([COIN_SKIP_PROJECTS],[Set to the subdirectories of projects that shou
 if test x"$COIN_SKIP_PROJECTS" != x; then
   for dir in $COIN_SKIP_PROJECTS; do
     if test $dir = "$1"; then
-      m4_tolower(coin_has_$1)=skipping
+      m4_tolower(coin_has_$1)="no, $1 has been specified in COIN_SKIP_PROJECTS"
     fi
+    m4_ifval($2,[
     if test $dir = "$2/$1"; then
-      m4_tolower(coin_has_$1)=skipping
-    fi
+      m4_tolower(coin_has_$1)="no, $2/$1 has been specified in COIN_SKIP_PROJECTS"
+    fi])
   done
 fi
 
@@ -2917,9 +2915,9 @@ if test "$m4_tolower(coin_has_$1)" != skipping; then
     AC_HELP_STRING([--with-m4_tolower($1)-lib],
                    [linker flags for using project $1]),
     [if test "$withval" = no ; then
-       m4_tolower(coin_has_$1)=skipping
+       m4_tolower(coin_has_$1)="no, --without-m4_tolower($1)-lib has been specified"
      else
-       m4_tolower(coin_has_$1)="yes, via --with-m4_tolower($1)-lib"
+       m4_tolower(coin_has_$1)="no, --with-m4_tolower($1)-lib has been specified"
      fi],
     [])
 fi
@@ -2929,9 +2927,9 @@ if test "$m4_tolower(coin_has_$1)" != skipping; then
     AC_HELP_STRING([--with-m4_tolower($1)-incdir],
                    [directory with header files for using project $1]),
     [if test "$withval" = no ; then
-       m4_tolower(coin_has_$1)=skipping
+       m4_tolower(coin_has_$1)="no, --without-m4_tolower($1)-incdir has been specified"
      else
-       m4_tolower(coin_has_$1)="yes, via --with-m4_tolower($1)-incdir"
+       m4_tolower(coin_has_$1)="no, --with-m4_tolower($1)-incdir has been specified"
      fi],
     [])
 fi
@@ -2941,9 +2939,9 @@ if test "$m4_tolower(coin_has_$1)" != skipping; then
     AC_HELP_STRING([--with-m4_tolower($1)-datadir],
                    [directory with data files for using project $1]),
     [if test "$withval" = no ; then
-       m4_tolower(coin_has_$1)=skipping
+       m4_tolower(coin_has_$1)="no, --without-m4_tolower($1)-datadir has been specified"
      else
-       m4_tolower(coin_has_$1)="yes, via --with-m4_tolower($1)-datadir"
+       m4_tolower(coin_has_$1)="no, --with-m4_tolower($1)-datadir has been specified"
      fi],
     [])
 fi
@@ -2956,9 +2954,9 @@ m4_if(m4_tolower($1), blas, [
         [if test x"$withval" = "xBUILD" ; then
            coin_has_blas=notGiven
          elif test x"$withval" = "xno" ; then
-           coin_has_blas=skipping
+           coin_has_blas="no, --without-blas has been specified"
          else
-           coin_has_blas="yes, via --with-blas"
+           coin_has_blas="no, --with-blas has been specified"
          fi],
         [])
   fi
@@ -2972,9 +2970,9 @@ m4_if(m4_tolower($1), lapack, [
         [if test x"$withval" = "xBUILD" ; then
            coin_has_lapack=notGiven
          elif test x"$withval" = "xno" ; then
-           coin_has_lapack=skipping
+           coin_has_lapack="no, --without-lapack has been specified"
          else
-           coin_has_lapack="yes, via --with-lapack"
+           coin_has_lapack="no, --with-lapack has been specified"
          fi],
         [])
   fi
@@ -2982,6 +2980,7 @@ m4_if(m4_tolower($1), lapack, [
 
 # check if project is available in present directory
 if test "$m4_tolower(coin_has_$1)" = notGiven; then
+  $m4_tolower(coin_has_$1)=no
   if test -d $srcdir/$2/$1; then
     # If a third argument is given, then we have to check if one one the files given in that third argument is present.
     # If none of the files in the third argument is available, then we consider the project directory as non-existing.
@@ -2999,33 +2998,7 @@ if test "$m4_tolower(coin_has_$1)" = notGiven; then
   fi
 fi
 
-# check for project by using pkg-config, if pkg-config is available
-if test "$m4_tolower(coin_has_$1)" = notGiven; then
-  #we are only interested in installed packages here, so we do not search in $COIN_PKG_CONFIG_PATH_UNINSTALLED
-  if test -n "$PKG_CONFIG" ; then
-    coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
-    PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" ; export PKG_CONFIG_PATH
-      m4_ifval([$4],
-        [AC_COIN_PKG_CHECK_PROJECT_EXISTS([$4],
-	        [m4_tolower(coin_has_$1)="yes, found installed version $m4_toupper([$4])_VERSION"])],
-	      [AC_COIN_PKG_CHECK_PROJECT_EXISTS([$1],
-	        [m4_tolower(coin_has_$1)="yes, found installed version $m4_toupper([$1])_VERSION"])])
-    PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
-    export PKG_CONFIG_PATH
-  fi
-fi
-
-if test "$m4_tolower(coin_has_$1)" = notGiven; then
-  m4_case(m4_tolower($1),
-    [blas],
-    [AC_MSG_RESULT([no (but will check for system blas later)])],
-    [lapack],
-    [AC_MSG_RESULT([no (but will check for system lapack later)])],
-    [AC_MSG_RESULT([not given])]
-  )
-else
-  AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
-fi
+AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
 
 if test "$coin_have_project_dir" = yes ; then
   if test -r $srcdir/m4_ifval($2,[$2/],)$1/configure; then
