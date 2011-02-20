@@ -2882,81 +2882,84 @@ AC_COIN_PKG_CHECK_MODULE_EXISTS([$1],[$2],
 # If --with-$1-lib, --with-$1-incdir, or --with-$1-datadir is given, then assume that the package is installed.
 # Otherwise, if the directory $2/$1 and the file $2/$1/$3 exist, check whether $2/$1/configure exists.
 #   If so, include this directory into the list of directories where configure and make recourse into.
-# tolower(coin_has_$1) is set to a string starting with "no" if the project source is not available or
-# will not be compiled. Otherwise, it will be set to a string starting with "yes".
+# tolower(coin_has_$1) is set to "no" if the project source is not available or will not be compiled.
+# Otherwise, it will be set to "yes".
 
 AC_DEFUN([AC_COIN_MAIN_PACKAGEDIR],[
 AC_MSG_CHECKING([whether source of project $1 is available and should be compiled])
 
-m4_tolower(coin_has_$1)=no
-coin_have_project_dir=no
+m4_tolower(coin_has_$1)=notGiven
+coin_reason=
 
 # check if user wants to skip project in any case
 AC_ARG_VAR([COIN_SKIP_PROJECTS],[Set to the subdirectories of projects that should be skipped in the configuration])
 if test x"$COIN_SKIP_PROJECTS" != x; then
   for dir in $COIN_SKIP_PROJECTS; do
     if test $dir = "$1"; then
-      m4_tolower(coin_has_$1)="no, $1 has been specified in COIN_SKIP_PROJECTS"
+      m4_tolower(coin_has_$1)="no"
+      coin_reason="$1 has been specified in COIN_SKIP_PROJECTS"
     fi
     m4_ifval($2,[
     if test $dir = "$2/$1"; then
-      m4_tolower(coin_has_$1)="no, $2/$1 has been specified in COIN_SKIP_PROJECTS"
+      m4_tolower(coin_has_$1)="no"
+      coin_reason="$2/$1 has been specified in COIN_SKIP_PROJECTS"
     fi])
   done
 fi
 
-if test "$m4_tolower(coin_has_$1)" != skipping; then
-  if test $PACKAGE_TARNAME = m4_tolower($1); then
-    m4_tolower(coin_has_$1)=yes
-    coin_have_project_dir=yes
-  fi
-
+if test "$m4_tolower(coin_has_$1)" != no; then
   AC_ARG_WITH([m4_tolower($1)-lib],
     AC_HELP_STRING([--with-m4_tolower($1)-lib],
                    [linker flags for using project $1]),
     [if test "$withval" = no ; then
-       m4_tolower(coin_has_$1)="no, --without-m4_tolower($1)-lib has been specified"
+       m4_tolower(coin_has_$1)="no"
+       coin_reason="--without-m4_tolower($1)-lib has been specified"
      else
-       m4_tolower(coin_has_$1)="no, --with-m4_tolower($1)-lib has been specified"
+       m4_tolower(coin_has_$1)="no"
+       coin_reason="--with-m4_tolower($1)-lib has been specified"
      fi],
     [])
 fi
 
-if test "$m4_tolower(coin_has_$1)" != skipping; then
+if test "$m4_tolower(coin_has_$1)" != no; then
   AC_ARG_WITH([m4_tolower($1)-incdir],
     AC_HELP_STRING([--with-m4_tolower($1)-incdir],
                    [directory with header files for using project $1]),
     [if test "$withval" = no ; then
-       m4_tolower(coin_has_$1)="no, --without-m4_tolower($1)-incdir has been specified"
+       m4_tolower(coin_has_$1)="no"
+       coin_reason="--without-m4_tolower($1)-incdir has been specified"
      else
-       m4_tolower(coin_has_$1)="no, --with-m4_tolower($1)-incdir has been specified"
+       m4_tolower(coin_has_$1)="no"
+       coin_reason="--with-m4_tolower($1)-incdir has been specified"
      fi],
     [])
 fi
 
-if test "$m4_tolower(coin_has_$1)" != skipping; then
+if test "$m4_tolower(coin_has_$1)" != no; then
   AC_ARG_WITH([m4_tolower($1)-datadir],
     AC_HELP_STRING([--with-m4_tolower($1)-datadir],
                    [directory with data files for using project $1]),
     [if test "$withval" = no ; then
-       m4_tolower(coin_has_$1)="no, --without-m4_tolower($1)-datadir has been specified"
+       m4_tolower(coin_has_$1)="no"
+       coin_reason="--without-m4_tolower($1)-datadir has been specified"
      else
-       m4_tolower(coin_has_$1)="no, --with-m4_tolower($1)-datadir has been specified"
+       m4_tolower(coin_has_$1)="no"
+       coin_reason="--with-m4_tolower($1)-datadir has been specified"
      fi],
     [])
 fi
 
 m4_if(m4_tolower($1), blas, [
-  if test $m4_tolower(coin_has_$1) != skipping; then
+  if test $m4_tolower(coin_has_$1) != no; then
     #--with-blas can overwrite --with-blas-lib, and can be set to BUILD to enforce building blas
     AC_ARG_WITH([blas],
       AC_HELP_STRING([--with-blas], [specify BLAS library (or BUILD to enforce use of ThirdParty/Blas)]),
-        [if test x"$withval" = "xBUILD" ; then
-           coin_has_blas=notGiven
-         elif test x"$withval" = "xno" ; then
-           coin_has_blas="no, --without-blas has been specified"
-         else
-           coin_has_blas="no, --with-blas has been specified"
+        [if test x"$withval" = "xno" ; then
+           coin_has_blas="no"
+           coin_reason="--without-blas has been specified"
+         elif test x"$withval" != "xBUILD" ; then
+           coin_has_blas="no"
+           coin_reason="--with-blas has been specified"
          fi],
         [])
   fi
@@ -2967,12 +2970,12 @@ m4_if(m4_tolower($1), lapack, [
     #--with-lapack can overwrite --with-lapack-lib, and can be set to BUILD to enforce building lapack
     AC_ARG_WITH([lapack],
       AC_HELP_STRING([--with-lapack], [specify LAPACK library (or BUILD to enforce use of ThirdParty/Lapack)]),
-        [if test x"$withval" = "xBUILD" ; then
-           coin_has_lapack=notGiven
-         elif test x"$withval" = "xno" ; then
-           coin_has_lapack="no, --without-lapack has been specified"
-         else
-           coin_has_lapack="no, --with-lapack has been specified"
+        [if test x"$withval" = "xno" ; then
+           coin_has_lapack="no"
+           coin_reason="--without-lapack has been specified"
+         elif test x"$withval" != "xBUILD" ; then
+           coin_has_lapack="no"
+           coin_reason="--with-lapack has been specified"
          fi],
         [])
   fi
@@ -2980,27 +2983,33 @@ m4_if(m4_tolower($1), lapack, [
 
 # check if project is available in present directory
 if test "$m4_tolower(coin_has_$1)" = notGiven; then
-  $m4_tolower(coin_has_$1)=no
-  if test -d $srcdir/$2/$1; then
+  m4_tolower(coin_has_$1)=no
+  if test -d $srcdir/m4_ifval($2,[$2/],)$1; then
+    coin_reason="source in m4_ifval($2,[$2/],)$1"
     # If a third argument is given, then we have to check if one one the files given in that third argument is present.
     # If none of the files in the third argument is available, then we consider the project directory as non-existing.
     # However, if no third argument is given, then this means that there should be no check, and existence of the directory is sufficient.
     m4_ifvaln([$3],
       [for i in $srcdir/m4_ifval($2,[$2/],)$1/$3; do
          if test -r $i; then
-           coin_have_project_dir=yes
+           m4_tolower(coin_has_$1)="yes"
+         else
+           m4_tolower(coin_has_$1)="no"
+           coin_reason="source file $i not available"
+           break
          fi
        done],
-      [ coin_have_project_dir=yes ])
-    if test $coin_have_project_dir = yes; then
-      m4_tolower(coin_has_$1)="yes, source in m4_ifval($2,[$2/],)$1"
-    fi
+      [ m4_tolower(coin_has_$1)="yes" ])
   fi
 fi
 
-AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
+if test -z "$coin_reason" ; then
+  AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
+else
+  AC_MSG_RESULT([$m4_tolower(coin_has_$1), $coin_reason])
+fi
 
-if test "$coin_have_project_dir" = yes ; then
+if test "$m4_tolower(coin_has_$1)" = yes ; then
   if test -r $srcdir/m4_ifval($2,[$2/],)$1/configure; then
     coin_subdirs="$coin_subdirs m4_ifval($2,[$2/],)$1"
     AC_CONFIG_SUBDIRS(m4_ifval($2,[$2/],)$1)
