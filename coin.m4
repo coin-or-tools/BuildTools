@@ -1256,13 +1256,13 @@ AC_DEFUN([AC_COIN_F77_COMPS],
      if test "$enable_doscompile" = msvc ; then
        coin_f77_comps="ifort fl32 compile_f2c"
      else
-       coin_f77_comps="gfortran g77 ifort fl32 compile_f2c"
+       coin_f77_comps="gfortran ifort g95 g77 fl32 compile_f2c"
      fi ;;
   *-*-solaris*)
-     coin_f77_comps="f95 f90 f77 xlf_r fort77 gfortran g77 pgf90 pgf77 ifort ifc frt af77" ;;
+     coin_f77_comps="f95 f90 g95 f77 xlf_r fort77 gfortran g77 pgf90 pgf77 ifort ifc frt af77" ;;
   *-linux-gnu*)
-     coin_f77_comps="gfortran fort77 f77 g77 pgf90 pgf77 ifort ifc frt af77 xlf_r" ;;
-  *) coin_f77_comps="xlf_r fort77 gfortran f77 g77 pgf90 pgf77 ifort ifc frt af77" ;;
+     coin_f77_comps="gfortran ifort g95 fort77 f77 g77 pgf90 pgf77 ifc frt af77 xlf_r" ;;
+  *) coin_f77_comps="xlf_r fort77 gfortran ifort g95 f77 g77 pgf90 pgf77 ifc frt af77" ;;
  esac
 ])
 
