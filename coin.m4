@@ -80,9 +80,19 @@ AM_CONDITIONAL(ALWAYS_FALSE, false)
 # that we are in a project main directory
 coin_projectdir=yes
 
-# Set the project's version number
+# Set the project's version numbers
 m4_ifvaln([$1],[
   AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION), ["$PACKAGE_VERSION"],[Version number of project])
+  
+  [coin_majorver=`echo $PACKAGE_VERSION | sed -n -e 's/^\([0-9]*\).*/\1/gp'`]
+  [coin_minorver=`echo $PACKAGE_VERSION | sed -n -e 's/^[0-9]*\.\([0-9]*\).*/\1/gp'`]
+  [coin_releasever=`echo $PACKAGE_VERSION | sed -n -e 's/^[0-9]*\.[0-9]*\.\([0-9]*\).*/\1/gp'`]
+  if test "x$coin_majorver" = x ; then coin_majorver=-1 ; fi
+  if test "x$coin_minorver" = x ; then coin_minorver=-1 ; fi
+  if test "x$coin_releasever" = x ; then coin_releasever=-1 ; fi
+  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MAJOR),   [$coin_majorver],   [Major Version number of project])
+  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MINOR),   [$coin_minorver],   [Minor Version number of project])
+  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_RELEASE), [$coin_releasever], [Release Version number of project])
 
   # We use the following variable to have a string with the upper case
   # version of the project name
