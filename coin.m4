@@ -1536,6 +1536,7 @@ AC_DEFUN([AC_COIN_F77_COMPS],
 
 AC_DEFUN([AC_COIN_INIT_AUTOMAKE],
 [AC_REQUIRE([AC_PROG_EGREP])
+AC_REQUIRE([AC_PROG_LN_S])
 
 # AC_MSG_NOTICE([Beginning automake initialisation.])
 # Stuff for automake
@@ -1669,8 +1670,8 @@ if test "$enable_maintainer_mode" = yes; then
                      [LIBTOOLM4="$want_dir/aclocal/libtool.m4"],
                      [AC_MSG_ERROR([I cannot find the libtool.m4 file.])])
 
-  # Check if we have an Externals file
-  if test -r $srcdir/Externals; then
+  # Check if we have an Dependencies file
+  if test -r $srcdir/Dependencies; then
     coin_have_externals=yes
   fi
   # Check if subversion is installed and understands https
@@ -1700,11 +1701,16 @@ if test "$enable_maintainer_mode" = yes; then
       if test -r $srcdir/../../BuildTools/coin.m4; then
         BUILDTOOLSDIR=$srcdir/../../BuildTools
       else
-        AC_MSG_ERROR(Cannot find the BuildTools directory)
+        AC_MSG_ERROR(Cannot find the BuildTools directory, better disable maintainer mode.)
       fi
     fi
   fi
   AC_SUBST(BUILDTOOLSDIR)
+  
+  # for running automake by make, we need to have Makemain.inc available at the place where it usually can be found during run_autotools
+  if test "$BUILDTOOLSDIR" != "$srcdir/BuildTools" ; then
+    $LN_S `cd $BUILDTOOLSDIR; pwd` "$srcdir/BuildTools"
+  fi
 
   # The following variable is set to the name of the directory where
   # the autotool scripts are located
