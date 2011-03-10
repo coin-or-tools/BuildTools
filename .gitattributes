@@ -1,4 +1,7 @@
 * text=auto !eol
+MSVisualStudio/v10alt/BuildTools.sln -text
+MSVisualStudio/v10alt/BuildTools.vcxproj -text
+MSVisualStudio/v10alt/coin.props -text
 MSVisualStudio/v9alt/BuildTools.sln -text
 MSVisualStudio/v9alt/BuildTools.vcproj -text
 MSVisualStudio/v9alt/coin.vsprops -text
