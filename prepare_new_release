@@ -16,6 +16,9 @@
 # Modified: Lou Hafer	       SFU	2010-06-02
 #	Adapt to new script architecture pioneered in *_new_stable; major
 #       rewrite.
+# Modified: Lou Hafer	       SFU	2011-03-14
+#	Change handling of externals so the svn:externals is left pointing to
+#	releases but Dependencies is left pointing to stable branches.
 
 #set -x -v
 set -e
@@ -75,8 +78,8 @@ isNormal=yes
 cmdBTURL=
 
 # stableExternals specifies externals for which we are doing simultaneous
-# releases. We will use the stable branch of the external while preparing and
-# testing this release candidate, changing the Dependencies file to specify a
+# releases. We will use the stable branch of the external while preparing
+# and testing this release candidate, changing svn:externals to specify a
 # (nonexistent) release of the external at the last moment.
 
 stableExternals=
@@ -448,7 +451,15 @@ if test -n "$configFileLoc" ; then
   svn diff $configFileLoc
 fi
 
-# Look for a file specifying externals.
+# The Dependencies file in a stable branch should contain only stable
+# and release references (trunk is flagged as an error below). The overall
+# algorithm is to convert svn:externals to use releases but leave Dependencies
+# with stables. In practice, this is accomplished by backing up Dependencies,
+# using Dependencies to assemble and set svn:externals, and finally restoring
+# Dependencies from the backup after all else is done.
+
+# Look for a file specifying externals. Preferably Dependencies, but check for
+# Externals just in case this is an unconverted project.
 
 srcDepFile=
 for file in Dependencies Externals ; do
@@ -458,15 +469,15 @@ for file in Dependencies Externals ; do
   fi
 done
 
-# Now generate a proper Dependencies file for the release.  Each line
-# in a Dependencies file has the format <ext_name> <ext_url>.  Normally,
-# each <ext_url> should be a stable branch.  References to stable branches
-# will be converted to references to releases unless the reference is to
-# a project in the stableExternals list (in which case it'll be converted
-# at the very end). References to releases are not changed. References to
-# trunk are an error. Failure to find a release for an external not in the
-# stableExternals list is an error. Save the existing externals and srcDepFile,
-# as we'll probably change both.
+# Now generate the proper externals for the release.  Each line in a
+# Dependencies file has the format <ext_name> <ext_url>.  Normally, each
+# <ext_url> should be a stable branch.  References to stable branches will be
+# converted to references to releases unless the reference is to a project
+# in the stableExternals list (in which case it'll be converted at the very
+# end). References to releases are not changed. References to trunk are an
+# error. Failure to find a release for an external not in the stableExternals
+# list is an error. Save the existing externals and srcDepFile, as we'll
+# probably change both.
 
 if test -n "$srcDepFile" ; then
 
@@ -747,6 +758,15 @@ if test -n "$stableExternals" ; then
   rm -f Dependencies.temp.$$
   svn propset -F Dependencies svn:externals .
   echo ''
+fi
+
+# If we had a Dependencies file to begin with, it contained references to
+# stable branches, and perhaps releases. This is the set of dependencies that
+# we want to commit in Dependencies, so reload $srcDepFile.bak into
+# Dependencies, now that we have svn:externals set to releases.
+
+if test -n "$srcDepFile" ; then
+  cp $srcDepFile.bak Dependencies
 fi
 
 if test -r Dependencies ; then
