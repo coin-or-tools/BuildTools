@@ -1176,15 +1176,20 @@ AC_LANG_POP([Fortran 77])
 #                           COIN_F77_WRAPPERS                             #
 ###########################################################################
 
-# Calls autoconfs AC_F77_WRAPPERS and does additional corrections to FLIBS
+# Calls autoconfs AC_F77_LIBRARY_LDFLAGS and does additional corrections to FLIBS.
+# Then calls AC_F77_WRAPPERS to get Fortran namemangling scheme.
+#
+# To ensure that the FLIBS are determined and corrected before linking against
+# Fortran compilers is attempted by other macros, we put it into an extra macro
+# and call it via AC_REQUIRE. This way it seems to be called before the macros
+# required by AC_F77_WRAPPERS.
 
-AC_DEFUN([AC_COIN_F77_WRAPPERS],
-[AC_BEFORE([AC_COIN_PROG_F77],[$0])dnl
-AC_BEFORE([AC_PROG_F77],[$0])dnl
+AC_DEFUN([_AC_COIN_F77_LIBRARY_LDFLAGS],
+[AC_BEFORE([AC_PROG_F77],[$0])dnl
 
-AC_LANG_PUSH([Fortran 77])
-
-AC_F77_WRAPPERS
+# get FLIBS
+AC_F77_LIBRARY_LDFLAGS
+orig_FLIBS="$FLIBS"
 
 # If FLIBS has been set by the user, we just restore its value here
 if test x"$save_FLIBS" != x; then
@@ -1200,9 +1205,6 @@ else
                *) my_flibs="$my_flibs $flag" ;;
       esac
     done
-    if test "x$FLIBS" != "x$my_flibs" ; then
-      AC_MSG_NOTICE(["corrected FLIBS: $my_flibs"])
-    fi
     FLIBS="$my_flibs"
   fi
 
@@ -1241,6 +1243,17 @@ else
   ac_cv_f77_libs="$FLIBS"
 fi
 
+if test "x$orig_FLIBS" != "x$FLIBS" ; then
+  AC_MSG_NOTICE([Corrected Fortran libraries: $FLIBS])
+fi
+]) # _AC_COIN_F77_LIBRARY_LDFLAGS
+
+AC_DEFUN([AC_COIN_F77_WRAPPERS],
+[AC_BEFORE([AC_COIN_PROG_F77],[$0])dnl
+AC_REQUIRE([_AC_COIN_F77_LIBRARY_LDFLAGS])dnl
+
+AC_LANG_PUSH([Fortran 77])
+AC_F77_WRAPPERS
 AC_LANG_POP([Fortran 77])
 
 ]) # AC_COIN_F77_WRAPPERS
