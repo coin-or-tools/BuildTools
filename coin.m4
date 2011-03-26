@@ -1200,6 +1200,9 @@ else
                *) my_flibs="$my_flibs $flag" ;;
       esac
     done
+    if test "x$FLIBS" != "x$my_flibs" ; then
+      AC_MSG_NOTICE(["corrected FLIBS: $my_flibs"])
+    fi
     FLIBS="$my_flibs"
   fi
 
@@ -1209,7 +1212,7 @@ else
   # However, this seem to create a dependency on libifcorert.dll (or libifcorertd.dll) in the executables.
   # This is seem to be unnecessary, libifcorert(d).lib has been removed from the link line.
   # Further, excluding libc.lib from the default libs seemed to be necessary only for VS < 8.
-  # Since the corresponding flag seems to make more trouble that it avoid, it has been removed now.
+  # Since the corresponding flag seems to make more trouble than it avoids, it has been removed now.
      *-cygwin* | *-mingw*)
        case "$F77" in
 #         ifort* | */ifort* | IFORT* | */IFORT*)
