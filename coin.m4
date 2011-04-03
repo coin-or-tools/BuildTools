@@ -341,11 +341,10 @@ fi
 AC_CHECK_PROG([have_svnversion],[svnversion],[yes],[no])
 if test "x$have_svnversion" = xyes && test "x$1" != x; then
   AC_SUBST(m4_toupper($1_SVN_REV))
-  svn_rev_tmp=`cd $srcdir/$m4_tolower(coin_has_$1) ; svnversion`
-  m4_toupper($1_SVN_REV)=`echo $svn_rev_tmp | sed -n -e 's/^@<:@0-9@:>@*://' -e 's/\(@<:@0-9@:>@\)@<:@^0-9@:>@*$/\1/p'`
-  if test $m4_toupper($1_SVN_REV) != exported; then
-    AC_DEFINE_UNQUOTED(m4_toupper($1_SVN_REV), $m4_toupper($1_SVN_REV),
-		       [SVN revision number of project])
+  svn_rev_tmp=`LANG=en_EN svnversion $srcdir 2>/dev/null`
+  if test "x$svn_rev_tmp" != xexported -a "x$svn_rev_tmp" != x; then
+    m4_toupper($1_SVN_REV)=`echo $svn_rev_tmp | sed -n -e 's/^@<:@0-9@:>@*://' -e 's/\(@<:@0-9@:>@\)@<:@^0-9@:>@*$/\1/p'`
+    AC_DEFINE_UNQUOTED(m4_toupper($1_SVN_REV), $m4_toupper($1_SVN_REV), [SVN revision number of project])
   fi
 fi
 
@@ -947,17 +946,6 @@ if test x"$CXX" != x; then
   esac
 fi
 
-# add automake conditional so we can recognize cl compiler in makefile
-coin_cc_is_cl=false
-if test x"$CXX" != x; then
-  case "$CXX" in
-    cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
-      coin_cc_is_cl=true
-      ;;
-  esac
-fi
-AM_CONDITIONAL(COIN_CC_IS_CL, [test $coin_cc_is_cl = true])
-
 AC_ARG_VAR(CDEFS,[Additional -D flags to be used when compiling C code.])
 AC_ARG_VAR(ADD_CFLAGS,[Additional C compiler options])
 AC_ARG_VAR(DBG_CFLAGS,[Debug C compiler options])
@@ -1009,6 +997,15 @@ case "$CC" in
     fi ;;
 esac
 CFLAGS="$save_cflags"
+
+# add automake conditional so we can recognize cl compiler in makefile
+coin_cc_is_cl=false
+case "$CC" in
+  cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+    coin_cc_is_cl=true
+    ;;
+esac
+AM_CONDITIONAL(COIN_CC_IS_CL, [test $coin_cc_is_cl = true])
 
 # Check if a project specific CFLAGS variable has been set
 if test x$COIN_PRJCT != x; then
@@ -1416,15 +1413,20 @@ AC_LANG_POP([Fortran 77])
 #                           COIN_F77_WRAPPERS                             #
 ###########################################################################
 
-# Calls autoconfs AC_F77_WRAPPERS and does additional corrections to FLIBS
+# Calls autoconfs AC_F77_LIBRARY_LDFLAGS and does additional corrections to FLIBS.
+# Then calls AC_F77_WRAPPERS to get Fortran namemangling scheme.
+#
+# To ensure that the FLIBS are determined and corrected before linking against
+# Fortran compilers is attempted by other macros, we put it into an extra macro
+# and call it via AC_REQUIRE. This way it seems to be called before the macros
+# required by AC_F77_WRAPPERS.
 
-AC_DEFUN([AC_COIN_F77_WRAPPERS],
-[AC_BEFORE([AC_COIN_PROG_F77],[$0])dnl
-AC_BEFORE([AC_PROG_F77],[$0])dnl
+AC_DEFUN([_AC_COIN_F77_LIBRARY_LDFLAGS],
+[AC_BEFORE([AC_PROG_F77],[$0])dnl
 
-AC_LANG_PUSH([Fortran 77])
-
-AC_F77_WRAPPERS
+# get FLIBS
+AC_F77_LIBRARY_LDFLAGS
+orig_FLIBS="$FLIBS"
 
 # If FLIBS has been set by the user, we just restore its value here
 if test x"$save_FLIBS" != x; then
@@ -1449,7 +1451,7 @@ else
   # However, this seem to create a dependency on libifcorert.dll (or libifcorertd.dll) in the executables.
   # This is seem to be unnecessary, libifcorert(d).lib has been removed from the link line.
   # Further, excluding libc.lib from the default libs seemed to be necessary only for VS < 8.
-  # Since the corresponding flag seems to make more trouble that it avoid, it has been removed now.
+  # Since the corresponding flag seems to make more trouble than it avoids, it has been removed now.
      *-cygwin* | *-mingw*)
        case "$F77" in
 #         ifort* | */ifort* | IFORT* | */IFORT*)
@@ -1478,6 +1480,17 @@ else
   ac_cv_f77_libs="$FLIBS"
 fi
 
+if test "x$orig_FLIBS" != "x$FLIBS" ; then
+  AC_MSG_NOTICE([Corrected Fortran libraries: $FLIBS])
+fi
+]) # _AC_COIN_F77_LIBRARY_LDFLAGS
+
+AC_DEFUN([AC_COIN_F77_WRAPPERS],
+[AC_BEFORE([AC_COIN_PROG_F77],[$0])dnl
+AC_REQUIRE([_AC_COIN_F77_LIBRARY_LDFLAGS])dnl
+
+AC_LANG_PUSH([Fortran 77])
+AC_F77_WRAPPERS
 AC_LANG_POP([Fortran 77])
 
 ]) # AC_COIN_F77_WRAPPERS
