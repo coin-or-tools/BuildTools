@@ -534,14 +534,14 @@ bestRelease ()
 }
 
 # Count the total number of stable branches for the project for the specified
-# major version number (libtool age). A major version number of -1 means all
-# stable branches (libtool current; see next function). Returns 0 if handed
-# a trunk url, or if the url is Data or BuildTools itself.
-# usage: calcLibtoolAge <svnURL> <major> 
+# major version number, up to the specified minor version number (libtool age).
+# Returns 0 if handed a trunk url, or if the url is Data or BuildTools itself.
+# usage: calcLibtoolAge <svnURL> <major> <minor>
 
 calcLibtoolAge ()
 { cltc_URL=$1
   cltc_majVer=$2
+  cltc_minVer=$3
 
   # Construct a URL to send to the repository to list the stable branches.
 
@@ -571,33 +571,128 @@ calcLibtoolAge ()
     # echo "Raw ls: $cltc_rawls"
 
     # Filter the list of stable branches to remove any that do not match the
-    # requested major version. -1 means `any major version', hence no filter.
+    # requested major version.
 
-    if test "$cltc_majVer" != "-1" ; then
-      if expr "$cltc_URL" : '.*/CppAD/.*' >/dev/null 2>&1 ; then
-	cltc_verPat=$cltc_majVer
-      else
-	cltc_verPat=$cltc_majVer'\.[0-9][0-9]*/'
-      fi
+    if expr "$cltc_URL" : '.*/CppAD/.*' >/dev/null 2>&1 ; then
+      cltc_verPat=$cltc_majVer
     else
-      cltc_verPat='[0-9][0-9.]*/'
+      cltc_verPat=$cltc_majVer'\.[0-9][0-9]*/'
     fi
-    cltc_filter=
+    cltc_majfilter=
     for cltc_ver in $cltc_rawls ; do
       if  expr "$cltc_ver" : $cltc_verPat >/dev/null 2>&1 ; then
-	cltc_filter="$cltc_filter $cltc_ver"
+	cltc_majfilter="$cltc_majfilter $cltc_ver"
       fi
     done
 
-    # echo "Filtered ls: $cltc_filter"
+    # echo "Filtered ls (major version): $cltc_majfilter"
 
-    cltc_cnt=`echo $cltc_filter | wc -w | sed -e 's/ //g'`
+    # For the specific major version, filter the list that matched on major
+    # version to remove any that exceed the minor version.
+
+    cltc_minfilter=
+    for cltc_ver in $cltc_majfilter ; do
+      cltc_min=`echo $cltc_ver | sed -e 's/[0-9][0-9]*\.\([0-9][0-9]*\).*/\1/'`
+      if expr $cltc_min '<=' $cltc_minVer >/dev/null 2>&1 ; then
+	cltc_minfilter="$cltc_minfilter $cltc_ver"
+      fi
+    done
+
+    # echo "Filtered ls (minor version): $cltc_minfilter"
+
+    cltc_cnt=`echo $cltc_minfilter | wc -w | sed -e 's/ //g'`
   else
     cltc_cnt=0
   fi
 
   echo $cltc_cnt
 }
+
+# Count the total number of stable branches for the project up to the
+# specified major.minor version number (libtool current).  Returns 0 if
+# handed a trunk url, or if the url is Data or BuildTools itself.
+# usage: calcLibtoolCurrent <svnURL> <major> <minor>
+
+calcLibtoolCurrent ()
+{ cltc_URL=$1
+  cltc_majVer=$2
+  cltc_minVer=$3
+
+  # Construct a URL to send to the repository to list the stable branches.
+
+  cltc_baseURL=`extractBaseURL $cltc_URL`
+  cltc_proj=`extractProjFromURL $cltc_URL`
+
+  case "$cltc_URL" in
+    */Data/* )
+	cltc_listURL=
+	;;
+    */ThirdParty/* )
+	cltc_listURL=$cltc_baseURL/BuildTools/ThirdParty/$cltc_proj/stable
+	;;
+    */BuildTools/* )
+	cltc_listURL=
+	;;
+    * )
+	cltc_listURL=$cltc_baseURL/$cltc_proj/stable
+	;;
+  esac
+
+  # Run an ls and filter for standard stable branches (M.m or YYYYMMDD)
+
+  if test -n "$cltc_listURL" ; then
+    cltc_rawls=`svn list $cltc_listURL | sed -n -e '/[0-9][0-9.]/p'`
+
+    # echo "Raw ls: $cltc_rawls"
+
+    # Filter the list of stable branches to find those with standard version
+    # numbers.
+
+    cltc_verPat='[0-9][0-9.]*/'
+
+    cltc_stdfilter=
+    for cltc_ver in $cltc_rawls ; do
+      if  expr "$cltc_ver" : $cltc_verPat >/dev/null 2>&1 ; then
+	cltc_stdfilter="$cltc_stdfilter $cltc_ver"
+      fi
+    done
+
+    # echo "Filtered ls (standard): $cltc_stdfilter"
+
+    # Filter to remove major versions that exceed the specified version.
+
+    cltc_majfilter=
+    for cltc_ver in $cltc_stdfilter ; do
+      cltc_maj=`echo $cltc_ver | sed -e 's/\([0-9][0-9]*\)\.[0-9].*/\1/'`
+      if expr $cltc_maj '<=' $cltc_majVer >/dev/null 2>&1 ; then
+	cltc_majfilter="$cltc_majfilter $cltc_ver"
+      fi
+    done
+
+    # echo "Filtered ls (major version): $cltc_majfilter"
+
+    # For the specific major version, filter the list that matched on major
+    # version to remove any that exceed the minor version.
+
+    cltc_minfilter=
+    cltc_verPat='s/'$cltc_majVer'\.\([0-9][0-9]*\).*/\1/'
+    for cltc_ver in $cltc_majfilter ; do
+      cltc_min=`echo $cltc_ver | sed -e $cltc_verPat`
+      if expr $cltc_min '<=' $cltc_minVer >/dev/null 2>&1 ; then
+	cltc_minfilter="$cltc_minfilter $cltc_ver"
+      fi
+    done
+
+    # echo "Filtered ls (minor version): $cltc_minfilter"
+
+    cltc_cnt=`echo $cltc_minfilter | wc -w | sed -e 's/ //g'`
+  else
+    cltc_cnt=0
+  fi
+
+  echo $cltc_cnt
+}
+
 
 # Function to compare the versions in a pair of URLs for equality. The criteria
 # is that the major and minor versions match. In theory, the release should
