@@ -540,6 +540,11 @@ case "$CXXFLAGS" in
     fi ;;
 esac
 
+# add -DPROJECT_BUILD to signal compiler preprocessor which config header file to include
+if test x$COIN_PRJCT != x; then
+  CXXFLAGS="$CXXFLAGS -D${COIN_PRJCT}_BUILD"
+fi
+
 # Try if CXXFLAGS works
 save_CXXFLAGS="$CXXFLAGS"
 AC_TRY_LINK([],[int i=0; i++;],[],[CXXFLAGS=])
@@ -924,6 +929,11 @@ case "$CFLAGS" in
       esac
     fi ;;
 esac
+
+# add -DPROJECT_BUILD to signal compiler preprocessor which config header file to include
+if test x$COIN_PRJCT != x; then
+  CFLAGS="$CFLAGS -D${COIN_PRJCT}_BUILD"
+fi
 
 # Try if CFLAGS works
 save_CFLAGS="$CFLAGS"
