@@ -142,7 +142,7 @@ AC_MSG_CHECKING([whether we want to compile in debug mode])
 
 AC_ARG_ENABLE([debug],
 [AC_HELP_STRING([--enable-debug],
-                [compile all projects with debug options tests])],
+                [compile all projects with debug options tests (implies --disable-shared)])],
 [case "${enableval}" in
    yes) coin_debug_compile=true
         if test "${enable_shared+set}" = set; then :; else
@@ -159,10 +159,9 @@ esac],
 m4_ifvaln([$1],
 [AC_ARG_ENABLE(debug-m4_tolower($1),
  [AC_HELP_STRING([--enable-debug-m4_tolower($1)],
-                 [compile this project ($1) with debug options])],
+                 [compile this project ($1) with debug compiler flags])],
  [case "${enableval}" in
     yes) coin_debug_compile=true
-         enable_shared=no
          ;;
     no)  coin_debug_compile=false
          ;;
