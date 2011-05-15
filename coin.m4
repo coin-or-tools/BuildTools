@@ -2947,6 +2947,15 @@ if test x"$COIN_SKIP_PROJECTS" != x; then
 fi
 
 if test "$m4_tolower(coin_has_$1)" != no; then
+  AC_ARG_WITH([m4_tolower($1)],,
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)="no"
+       coin_reason="--without-m4_tolower($1) has been specified"
+     fi
+    ])
+fi
+
+if test "$m4_tolower(coin_has_$1)" != no; then
   AC_ARG_WITH([m4_tolower($1)-lib],
     AC_HELP_STRING([--with-m4_tolower($1)-lib],
                    [linker flags for using project $1]),
@@ -3100,6 +3109,14 @@ if test x"$COIN_SKIP_PROJECTS" != x; then
       m4_tolower(coin_has_$1)=skipping
     fi
   done
+fi
+
+if test "$m4_tolower(coin_has_$1)" != skipping; then
+  AC_ARG_WITH([m4_tolower($1)],,
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)=skipping
+     fi
+    ])
 fi
 
 m4_toupper($1_LIBS)=
