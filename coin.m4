@@ -142,7 +142,7 @@ AC_MSG_CHECKING([whether we want to compile in debug mode])
 
 AC_ARG_ENABLE([debug],
 [AC_HELP_STRING([--enable-debug],
-                [compile all projects with debug options tests])],
+                [compile all projects with debug options tests (implies --disable-shared)])],
 [case "${enableval}" in
    yes) coin_debug_compile=true
         if test "${enable_shared+set}" = set; then :; else
@@ -159,10 +159,9 @@ esac],
 m4_ifvaln([$1],
 [AC_ARG_ENABLE(debug-m4_tolower($1),
  [AC_HELP_STRING([--enable-debug-m4_tolower($1)],
-                 [compile this project ($1) with debug options])],
+                 [compile this project ($1) with debug compiler flags])],
  [case "${enableval}" in
     yes) coin_debug_compile=true
-         enable_shared=no
          ;;
     no)  coin_debug_compile=false
          ;;
@@ -539,6 +538,11 @@ case "$CXXFLAGS" in
       esac
     fi ;;
 esac
+
+# add -DPROJECT_BUILD to signal compiler preprocessor which config header file to include
+if test x$COIN_PRJCT != x; then
+  CXXFLAGS="$CXXFLAGS -D${COIN_PRJCT}_BUILD"
+fi
 
 # Try if CXXFLAGS works
 save_CXXFLAGS="$CXXFLAGS"
@@ -924,6 +928,11 @@ case "$CFLAGS" in
       esac
     fi ;;
 esac
+
+# add -DPROJECT_BUILD to signal compiler preprocessor which config header file to include
+if test x$COIN_PRJCT != x; then
+  CFLAGS="$CFLAGS -D${COIN_PRJCT}_BUILD"
+fi
 
 # Try if CFLAGS works
 save_CFLAGS="$CFLAGS"
@@ -2938,6 +2947,15 @@ if test x"$COIN_SKIP_PROJECTS" != x; then
 fi
 
 if test "$m4_tolower(coin_has_$1)" != no; then
+  AC_ARG_WITH([m4_tolower($1)],,
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)="no"
+       coin_reason="--without-m4_tolower($1) has been specified"
+     fi
+    ])
+fi
+
+if test "$m4_tolower(coin_has_$1)" != no; then
   AC_ARG_WITH([m4_tolower($1)-lib],
     AC_HELP_STRING([--with-m4_tolower($1)-lib],
                    [linker flags for using project $1]),
@@ -3091,6 +3109,14 @@ if test x"$COIN_SKIP_PROJECTS" != x; then
       m4_tolower(coin_has_$1)=skipping
     fi
   done
+fi
+
+if test "$m4_tolower(coin_has_$1)" != skipping; then
+  AC_ARG_WITH([m4_tolower($1)],,
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)=skipping
+     fi
+    ])
 fi
 
 m4_toupper($1_LIBS)=

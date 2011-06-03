@@ -340,9 +340,9 @@ fi
 # We need a libtool version number only for normal projects
 
 if test $isNormal = yes ; then
-  newLTCurrent=`calcLibtoolAge $stableURL -1`
+  newLTCurrent=`calcLibtoolCurrent $stableURL $majVer $minVer`
   newLTRevision=$newRel
-  newLTAge=`calcLibtoolAge $stableURL $majVer`
+  newLTAge=`calcLibtoolAge $stableURL $majVer $minVer`
   newLTAge=`expr $newLTAge - 1`
   newLTVer=${newLTCurrent}:${newLTRevision}:${newLTAge}
   echo "Libtool version.....: $newLTVer"
