@@ -3354,8 +3354,8 @@ m4_toupper($1_CFLAGS_INSTALLED)=
 m4_toupper($1_DATA)=
 m4_toupper($1_DATA_INSTALLED)=
 
-# initial list of dependencies is "$2", but we need to filter out version number specifications (= x, <= x, >= x)
-projtoprocess="m4_bpatsubsts([$2], [<?>?=[ 	]*[^ 	]+])"
+# initial list of dependencies is "$2", but we need to filter out version number specifications (= x, <= x, >= x, != x)
+projtoprocess="m4_bpatsubsts([$2], [<?>?!?=[ 	]*[^ 	]+])"
 
 # we first expand the list of projects to process by adding all dependencies just behind the project which depends on it
 # further, we collect the list of corresponding .pc files, but do this in reverse order, because we need this order afterwards
