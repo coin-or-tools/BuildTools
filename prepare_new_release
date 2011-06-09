@@ -435,11 +435,11 @@ else
   echo "    ... none to process."
 fi
 
-# Find ProjConfig.h. If there's a definition for PROJ_VERSION, adjust it and
-# add ProjConfig.h.bak to the list of files to be restored.
+# Find config_proj_default.h. If there's a definition for PROJ_VERSION, adjust it and
+# add config_proj_default.h.bak to the list of files to be restored.
 
 stableProjUC=`echo $stableProj | tr '[a-z]' '[A-Z]'`
-configFileLoc=`find . -name '*Config.h' -print`
+configFileLoc=`find . -name 'config_*_default.h' -print`
 if test -n "$configFileLoc" ; then
   versionSym=${stableProjUC}_VERSION
   echo ''
@@ -447,7 +447,11 @@ if test -n "$configFileLoc" ; then
   echo ''
   mv $configFileLoc $configFileLoc.bak
   bak_files="$bak_files $configFileLoc"
-  sed -e "s/# *define $versionSym.*\$/#define $versionSym \"$newVer\"/" <$configFileLoc.bak >$configFileLoc
+  sed -e "s/# *define $versionSym .*\$/#define $versionSym \"$newVer\"/" \
+    -e "s/# *define ${versionSym}_MAJOR .*\$/#define ${versionSym}_MAJOR $majVer/" \
+    -e "s/# *define ${versionSym}_MINOR .*\$/#define ${versionSym}_MINOR $minVer/" \
+    -e "s/# *define ${versionSym}_RELEASE .*\$/#define ${versionSym}_RELEASE $newRel/" \
+    <$configFileLoc.bak >$configFileLoc
   svn diff $configFileLoc
 fi
 
