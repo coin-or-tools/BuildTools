@@ -3122,6 +3122,10 @@ fi
 m4_toupper($1_LIBS)=
 m4_toupper($1_CFLAGS)=
 m4_toupper($1_DATA)=
+m4_toupper($1_DEPENDENCIES)=
+m4_toupper($1_PCLIBS)=
+m4_toupper($1_PCREQUIRES)=
+m4_toupper($1_DATA)=
 AC_SUBST(m4_toupper($1_LIBS))
 AC_SUBST(m4_toupper($1_CFLAGS))
 AC_SUBST(m4_toupper($1_DATA))
@@ -3149,6 +3153,7 @@ if test $m4_tolower(coin_has_$1) != skipping; then
      else
        m4_tolower(coin_has_$1)=yes
        m4_toupper($1_LIBS)="$withval"
+       m4_toupper($1_PCLIBS)="$withval"
        coin_foreach_w([myvar], [$3], [
          m4_toupper(myvar)_PCLIBS="$withval $m4_toupper(myvar)_PCLIBS"
          m4_toupper(myvar)_LIBS="$withval $m4_toupper(myvar)_LIBS"
@@ -3220,6 +3225,7 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
         then
           m4_toupper($1_LIBS)=`echo " $m4_toupper($1_LIBS) " | [sed -e 's/ \(\/[^ ]*\/\)\([^ ]*\)\.lib / \`$(CYGPATH_W) \1 | sed -e "s|\\\\\\\\\\\\\\\\\\\\|\/|g"\`\2.lib /g']`
         fi
+        m4_toupper($1_PCREQUIRES)="$2"
    
         # augment X_PCREQUIRES, X_CFLAGS, and X_LIBS for each build target X in $3
         coin_foreach_w([myvar], [$3], [
@@ -3278,8 +3284,11 @@ if test $m4_tolower(coin_has_$1) != skipping &&
     if test -n "$m4_toupper($1)_DATA" ; then
       AC_MSG_NOTICE([$1 DATA   is  $m4_toupper($1)_DATA])
     fi
-    if test -n "$m4_toupper($1)_CFLAGS" ; then
-      AC_MSG_NOTICE([$1 CFLAGS are $m4_toupper($1)_CFLAGS])
+    if test -n "$m4_toupper($1)_PCLIBS" ; then
+      AC_MSG_NOTICE([$1 PCLIBS are $m4_toupper($1)_PCLIBS])
+    fi
+    if test -n "$m4_toupper($1)_PCREQUIRES" ; then
+      AC_MSG_NOTICE([$1 PCREQUIRES are $m4_toupper($1)_PCREQUIRES])
     fi
     coin_foreach_w([myvar], [$3], [
       AC_MSG_NOTICE([myvar CFLAGS are $m4_toupper(myvar)_CFLAGS])
@@ -3353,6 +3362,8 @@ m4_toupper($1_CFLAGS)=
 m4_toupper($1_CFLAGS_INSTALLED)=
 m4_toupper($1_DATA)=
 m4_toupper($1_DATA_INSTALLED)=
+m4_toupper($1_PCLIBS)=
+m4_toupper($1_PCREQUIRES)=
 
 # initial list of dependencies is "$2", but we need to filter out version number specifications (= x, <= x, >= x, != x)
 projtoprocess="m4_bpatsubsts([$2], [<?>?!?=[ 	]*[^ 	]+])"
@@ -3543,6 +3554,7 @@ if test "$allproj" != fail ; then
     m4_toupper($1_LIBS_INSTALLED)=`echo " $m4_toupper($1_LIBS_INSTALLED)" | [sed -e 's/ \(\/[^ ]*\/\)/ \`$(CYGPATH_W) \1\`/g' -e 's/ -L\([^ ]*\)/ \/libpath:\`$(CYGPATH_W) \1\`/g' -e 's/ -l\([^ ]*\)/ lib\1.lib/g']`
   fi
 
+  m4_toupper($1_PCREQUIRES)="$2"
   coin_foreach_w([myvar], [$3], [
     m4_toupper(myvar)_PCREQUIRES="$2 $m4_toupper(myvar)_PCREQUIRES"
     m4_toupper(myvar)_CFLAGS="$m4_toupper($1)_CFLAGS $m4_toupper(myvar)_CFLAGS"
