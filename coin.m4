@@ -2042,6 +2042,7 @@ else
   AC_MSG_NOTICE([No configuration of $PACKAGE_NAME necessary])
 fi
 
+AC_MSG_NOTICE([In case of trouble, first consult the troubleshooting page at https://projects.coin-or.org/BuildTools/wiki/user-troubleshooting])
 ]) #AC_COIN_FINALIZE
 
 ###########################################################################
