@@ -3404,7 +3404,7 @@ while test "x$projtoprocess" != x ; do
 
       # add projrequires to the front of the list of projects that have to be processed next
       # at the same time, remove $proj from this list
-      projtoprocess=${projtoprocess/$proj/$projrequires}
+      projtoprocess=[`echo $projtoprocess | sed -e "s/$proj/$projrequires/g"`]
 
       # read DATA from $pcfile, if _DATA is still empty
       if test "x$m4_toupper($1_DATA)" = x ; then
