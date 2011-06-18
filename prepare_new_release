@@ -439,7 +439,7 @@ fi
 # add config_proj_default.h.bak to the list of files to be restored.
 
 stableProjUC=`echo $stableProj | tr '[a-z]' '[A-Z]'`
-configFileLoc=`find . -name 'config_*_default.h' -print`
+configFileLoc=`find . -name .svn -prune -o -name 'config_*_default.h' -print`
 if test -n "$configFileLoc" ; then
   versionSym=${stableProjUC}_VERSION
   echo ''
