@@ -1799,12 +1799,6 @@ AC_DEFUN([AC_COIN_PATCH_LIBTOOL_SOLARIS],
 # Setup the libtool stuff together with any modifications to make it
 # work on additional platforms
 
-AC_DEFUN([AC_COIN_LIBTOOL_WRAPPER],
-[AC_BEFORE([AC_COIN_BLA],[$0])
-AC_PROG_LIBTOOL])
-
-AC_DEFUN([AC_COIN_BLA],[echo bla])
-
 AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 [# No longer needed now that CPPFLAGS is correctly set -- lh, 061214 --
  # AC_REQUIRE([AC_COIN_DLFCN_H])
