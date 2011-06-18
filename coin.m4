@@ -1277,7 +1277,7 @@ AC_DEFUN([AC_COIN_FIND_F77],
 [AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
 AC_REQUIRE([AC_COIN_F77_COMPS])
 AC_MSG_NOTICE([Trying to determine Fortran compiler name])
-AC_CHECK_PROGS([F77],[$coin_f77_comps],[unavailable])
+AC_CHECK_TOOLS([F77],[$coin_f77_comps],[unavailable])
 ])
 
 # Auxilliary macro to make sure both COIN_PROG_F77 and COIN_FIND_F77 use
