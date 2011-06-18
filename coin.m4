@@ -159,7 +159,7 @@ esac],
 m4_ifvaln([$1],
 [AC_ARG_ENABLE(debug-m4_tolower($1),
  [AC_HELP_STRING([--enable-debug-m4_tolower($1)],
-                 [compile this project ($1) with debug compiler flags])],
+                 [compile project $1 with debug compiler flags])],
  [case "${enableval}" in
     yes) coin_debug_compile=true
          ;;
@@ -2467,9 +2467,8 @@ AC_DEFUN([AC_COIN_CHECK_USER_LIBRARY],
 # Switch to disable library check if requested
 
   AC_ARG_ENABLE(m4_tolower($1)-libcheck,
-      AS_HELP_STRING([--enable-m4_tolower($1)-libcheck],
-		     [use disable-m4_tolower($1)-libcheck to skip the link
-		      check at configuration time]),
+      AS_HELP_STRING([--disable-m4_tolower($1)-libcheck],
+		     [skip the link check at configuration time]),
       [m4_tolower($1)_libcheck=$enableval],
       [m4_tolower($1)_libcheck=yes])
 
@@ -2746,7 +2745,7 @@ AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
 [AC_ARG_VAR([PKG_CONFIG], [path to pkg-config utility])
 
 AC_ARG_ENABLE([pkg-config],
-  [AC_HELP_STRING([--enable-pkg-config],[use pkg-config if available (default is yes)])],
+  [AC_HELP_STRING([--disable-pkg-config],[disable use of pkg-config (if available)])],
   [use_pkgconfig="$enableval"],
   [use_pkgconfig=yes])
 
@@ -3263,7 +3262,7 @@ if test $m4_tolower(coin_has_$1) != skipping &&
   AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 package is available])
 
   AC_ARG_ENABLE([interpackage-dependencies],
-    AC_HELP_STRING([--enable-interpackage-dependencies], [whether to deduce Makefile dependencies from package linker flags (default: yes)]),
+    AC_HELP_STRING([--disable-interpackage-dependencies], [disables deduction of Makefile dependencies from package linker flags]),
     [], [enable_interpackage_dependencies=yes])
     
   if test $enable_interpackage_dependencies = yes ; then
