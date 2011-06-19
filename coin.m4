@@ -159,7 +159,7 @@ esac],
 m4_ifvaln([$1],
 [AC_ARG_ENABLE(debug-m4_tolower($1),
  [AC_HELP_STRING([--enable-debug-m4_tolower($1)],
-                 [compile this project ($1) with debug compiler flags])],
+                 [compile project $1 with debug compiler flags])],
  [case "${enableval}" in
     yes) coin_debug_compile=true
          ;;
@@ -1277,7 +1277,7 @@ AC_DEFUN([AC_COIN_FIND_F77],
 [AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
 AC_REQUIRE([AC_COIN_F77_COMPS])
 AC_MSG_NOTICE([Trying to determine Fortran compiler name])
-AC_CHECK_PROGS([F77],[$coin_f77_comps],[unavailable])
+AC_CHECK_TOOLS([F77],[$coin_f77_comps],[unavailable])
 ])
 
 # Auxilliary macro to make sure both COIN_PROG_F77 and COIN_FIND_F77 use
@@ -1799,12 +1799,6 @@ AC_DEFUN([AC_COIN_PATCH_LIBTOOL_SOLARIS],
 # Setup the libtool stuff together with any modifications to make it
 # work on additional platforms
 
-AC_DEFUN([AC_COIN_LIBTOOL_WRAPPER],
-[AC_BEFORE([AC_COIN_BLA],[$0])
-AC_PROG_LIBTOOL])
-
-AC_DEFUN([AC_COIN_BLA],[echo bla])
-
 AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 [# No longer needed now that CPPFLAGS is correctly set -- lh, 061214 --
  # AC_REQUIRE([AC_COIN_DLFCN_H])
@@ -2013,7 +2007,19 @@ if test x$coin_skip_ac_output != xyes; then
     ABSBUILDDIR="`pwd`"
     AC_SUBST(ABSBUILDDIR)
   fi
-  
+ 
+  # On AIX, the default sed cannot deal with somewhat long sed commands executed by config.status.
+  # So we reduce the hardcoded number of commands given to sed from 48 to 5 in config.status, hoping this will suffice.
+  AC_CONFIG_COMMANDS_POST([
+    case $build in
+      *-aix*)
+        AC_MSG_NOTICE(patching config.status to reduce ac_max_sed_lines to 5)
+        sed -e 's/ac_max_sed_lines=48/ac_max_sed_lines=5/g' config.status > config.status.tmp
+        mv config.status.tmp config.status
+      ;;
+    esac
+  ])
+ 
   AC_OUTPUT
 
   if test x"$coin_vpath_link_files" = x; then : ; else
@@ -2239,6 +2245,232 @@ fi
 ]) # AC_COIN_CHECK_GNU_READLINE
 
 ###########################################################################
+#                            COIN_CHECK_ISFINITE                          #
+###########################################################################
+
+# This macro checks for a usable implementation of a function to check
+# whether a given floating point number is finite.
+# If a function is found, then the macro defines the symbol
+# toupper($1)_C_FINITE to the name of this function.
+
+AC_DEFUN([AC_COIN_CHECK_ISFINITE],[
+
+AC_LANG_PUSH(C++)
+
+AC_COIN_CHECK_CXX_CHEADER(math)
+AC_COIN_CHECK_CXX_CHEADER(float)
+AC_COIN_CHECK_CXX_CHEADER(ieeefp)
+
+COIN_C_FINITE=
+AC_CHECK_DECL([finite],[COIN_C_FINITE=finite],,[
+#ifdef HAVE_CMATH
+# include <cmath>
+#else
+# ifdef HAVE_MATH_H
+#  include <math.h>
+# endif
+#endif
+#ifdef HAVE_CFLOAT
+# include <cfloat>
+#else
+# ifdef HAVE_FLOAT_H
+#  include <float.h>
+# endif
+#endif
+#ifdef HAVE_CIEEEFP
+# include <cieeefp>
+#else
+# ifdef HAVE_IEEEFP_H
+#  include <ieeefp.h>
+# endif
+#endif])
+if test -z "$COIN_C_FINITE"; then
+  AC_CHECK_DECL([_finite],[COIN_C_FINITE=_finite],,[
+#ifdef HAVE_CMATH
+# include <cmath>
+#else
+# ifdef HAVE_MATH_H
+#  include <math.h>
+# endif
+#endif
+#ifdef HAVE_CFLOAT
+# include <cfloat>
+#else
+# ifdef HAVE_FLOAT_H
+#  include <float.h>
+# endif
+#endif
+#ifdef HAVE_CIEEEFP
+# include <cieeefp>
+#else
+# ifdef HAVE_IEEEFP_H
+#  include <ieeefp.h>
+# endif
+#endif])
+  if test -z "$COIN_C_FINITE"; then
+    AC_CHECK_DECL([isfinite],[COIN_C_FINITE=isfinite],,[
+#ifdef HAVE_CMATH
+# include <cmath>
+#else
+# ifdef HAVE_MATH_H
+#  include <math.h>
+# endif
+#endif
+#ifdef HAVE_CFLOAT
+# include <cfloat>
+#else
+# ifdef HAVE_FLOAT_H
+#  include <float.h>
+# endif
+#endif
+#ifdef HAVE_CIEEEFP
+# include <cieeefp>
+#else
+# ifdef HAVE_IEEEFP_H
+#  include <ieeefp.h>
+# endif
+#endif])
+  fi
+fi
+if test -z "$COIN_C_FINITE"; then
+  AC_MSG_WARN(Cannot find C-function for checking Inf.)
+else
+  AC_DEFINE_UNQUOTED(COIN_C_FINITE,[$COIN_C_FINITE],
+                     [Define to be the name of C-function for Inf check])
+fi
+
+AC_LANG_POP(C++)
+])
+
+###########################################################################
+#                              COIN_CHECK_ISNAN                           #
+###########################################################################
+
+# This macro checks for a usable implementation of a function to check
+# whether a given floating point number represents NaN.
+# If a function is found, then the macro defines the symbol COIN_C_ISNAN
+# to the name of this function.
+
+AC_DEFUN([AC_COIN_CHECK_ISNAN],[
+
+AC_LANG_PUSH(C++)
+
+AC_COIN_CHECK_CXX_CHEADER(math)
+AC_COIN_CHECK_CXX_CHEADER(float)
+AC_COIN_CHECK_CXX_CHEADER(ieeefp)
+
+COIN_C_ISNAN=
+AC_CHECK_DECL([isnan],[COIN_C_ISNAN=isnan],,[
+#ifdef HAVE_CMATH
+# include <cmath>
+#else
+# ifdef HAVE_MATH_H
+#  include <math.h>
+# endif
+#endif
+#ifdef HAVE_CFLOAT
+# include <cfloat>
+#else
+# ifdef HAVE_FLOAT_H
+#  include <float.h>
+# endif
+#endif
+#ifdef HAVE_CIEEEFP
+# include <cieeefp>
+#else
+# ifdef HAVE_IEEEFP_H
+#  include <ieeefp.h>
+# endif
+#endif])
+
+# It appears that for some systems (e.g., Mac OSX), cmath will provide only
+# std::isnan, and bare isnan will be unavailable. Typically we need a parameter
+# in the test to allow C++ to do overload resolution.
+
+if test -z "$COIN_C_ISNAN"; then
+  AC_CHECK_DECL([std::isnan(42.42)],[COIN_C_ISNAN=std::isnan],,[
+#ifdef HAVE_CMATH
+# include <cmath>
+#else
+# ifdef HAVE_MATH_H
+#  include <math.h>
+# endif
+#endif
+#ifdef HAVE_CFLOAT
+# include <cfloat>
+#else
+# ifdef HAVE_FLOAT_H
+#  include <float.h>
+# endif
+#endif
+#ifdef HAVE_CIEEEFP
+# include <cieeefp>
+#else
+# ifdef HAVE_IEEEFP_H
+#  include <ieeefp.h>
+# endif
+#endif])
+fi
+
+if test -z "$COIN_C_ISNAN"; then
+  AC_CHECK_DECL([_isnan],[COIN_C_ISNAN=_isnan],,[
+#ifdef HAVE_CMATH
+# include <cmath>
+#else
+# ifdef HAVE_MATH_H
+#  include <math.h>
+# endif
+#endif
+#ifdef HAVE_CFLOAT
+# include <cfloat>
+#else
+# ifdef HAVE_FLOAT_H
+#  include <float.h>
+# endif
+#endif
+#ifdef HAVE_CIEEEFP
+# include <cieeefp>
+#else
+# ifdef HAVE_IEEEFP_H
+#  include <ieeefp.h>
+# endif
+#endif])
+fi
+if test -z "$COIN_C_ISNAN"; then
+  AC_CHECK_DECL([isnand],[COIN_C_ISNAN=isnand],,[
+#ifdef HAVE_CMATH
+# include <cmath>
+#else
+# ifdef HAVE_MATH_H
+#  include <math.h>
+# endif
+#endif
+#ifdef HAVE_CFLOAT
+# include <cfloat>
+#else
+# ifdef HAVE_FLOAT_H
+#  include <float.h>
+# endif
+#endif
+#ifdef HAVE_CIEEEFP
+# include <cieeefp>
+#else
+# ifdef HAVE_IEEEFP_H
+#  include <ieeefp.h>
+# endif
+#endif])
+fi
+if test -z "$COIN_C_ISNAN"; then
+  AC_MSG_WARN(Cannot find C-function for checking NaN.)
+else
+  AC_DEFINE_UNQUOTED(COIN_C_ISNAN,[$COIN_C_ISNAN],
+                     [Define to be the name of C-function for NaN check])
+fi
+
+AC_LANG_POP(C++)
+])
+
+###########################################################################
 #                             COIN_DATA_PATH                              #
 ###########################################################################
 
@@ -2461,9 +2693,8 @@ AC_DEFUN([AC_COIN_CHECK_USER_LIBRARY],
 # Switch to disable library check if requested
 
   AC_ARG_ENABLE(m4_tolower($1)-libcheck,
-      AS_HELP_STRING([--enable-m4_tolower($1)-libcheck],
-		     [use disable-m4_tolower($1)-libcheck to skip the link
-		      check at configuration time]),
+      AS_HELP_STRING([--disable-m4_tolower($1)-libcheck],
+		     [skip the link check at configuration time]),
       [m4_tolower($1)_libcheck=$enableval],
       [m4_tolower($1)_libcheck=yes])
 
@@ -2740,7 +2971,7 @@ AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
 [AC_ARG_VAR([PKG_CONFIG], [path to pkg-config utility])
 
 AC_ARG_ENABLE([pkg-config],
-  [AC_HELP_STRING([--enable-pkg-config],[use pkg-config if available (default is yes)])],
+  [AC_HELP_STRING([--disable-pkg-config],[disable use of pkg-config (if available)])],
   [use_pkgconfig="$enableval"],
   [use_pkgconfig=yes])
 
@@ -2869,7 +3100,7 @@ AC_DEFUN([AC_COIN_PKG_CHECK_MODULE_EXISTS],
 [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
 if test -n "$PKG_CONFIG" ; then
   if $PKG_CONFIG --exists "$2"; then
-    m4_toupper($1)[]_VERSIONS="`$PKG_CONFIG --modversion "$2" 2>/dev/null | tr '\n' ' '`"
+    m4_toupper($1)[]_VERSIONS="`$PKG_CONFIG --modversion "$2" 2>/dev/null | sed -n -e "1h;2,\\$H;\\${g;s/\n/ /g;p}"`"
     $3
   else
     m4_toupper($1)_PKG_ERRORS=`$PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "$2"`
@@ -3257,7 +3488,7 @@ if test $m4_tolower(coin_has_$1) != skipping &&
   AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 package is available])
 
   AC_ARG_ENABLE([interpackage-dependencies],
-    AC_HELP_STRING([--enable-interpackage-dependencies], [whether to deduce Makefile dependencies from package linker flags (default: yes)]),
+    AC_HELP_STRING([--disable-interpackage-dependencies], [disables deduction of Makefile dependencies from package linker flags]),
     [], [enable_interpackage_dependencies=yes])
     
   if test $enable_interpackage_dependencies = yes ; then
