@@ -2007,19 +2007,7 @@ if test x$coin_skip_ac_output != xyes; then
     ABSBUILDDIR="`pwd`"
     AC_SUBST(ABSBUILDDIR)
   fi
- 
-  # On AIX, the default sed cannot deal with somewhat long sed commands executed by config.status.
-  # So we reduce the hardcoded number of commands given to sed from 48 to 5 in config.status, hoping this will suffice.
-  AC_CONFIG_COMMANDS_POST([
-    case $build in
-      *-aix*)
-        AC_MSG_NOTICE(patching config.status to reduce ac_max_sed_lines to 5)
-        sed -e 's/ac_max_sed_lines=48/ac_max_sed_lines=5/g' config.status > config.status.tmp
-        mv config.status.tmp config.status
-      ;;
-    esac
-  ])
- 
+  
   AC_OUTPUT
 
   if test x"$coin_vpath_link_files" = x; then : ; else
