@@ -2007,19 +2007,7 @@ if test x$coin_skip_ac_output != xyes; then
     ABSBUILDDIR="`pwd`"
     AC_SUBST(ABSBUILDDIR)
   fi
- 
-  # On AIX, the default sed cannot deal with somewhat long sed commands executed by config.status.
-  # So we reduce the hardcoded number of commands given to sed from 48 to 5 in config.status, hoping this will suffice.
-  AC_CONFIG_COMMANDS_POST([
-    case $build in
-      *-aix*)
-        AC_MSG_NOTICE(patching config.status to reduce ac_max_sed_lines to 5)
-        sed -e 's/ac_max_sed_lines=48/ac_max_sed_lines=5/g' config.status > config.status.tmp
-        mv config.status.tmp config.status
-      ;;
-    esac
-  ])
- 
+  
   AC_OUTPUT
 
   if test x"$coin_vpath_link_files" = x; then : ; else
@@ -3100,7 +3088,7 @@ AC_DEFUN([AC_COIN_PKG_CHECK_MODULE_EXISTS],
 [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
 if test -n "$PKG_CONFIG" ; then
   if $PKG_CONFIG --exists "$2"; then
-    m4_toupper($1)[]_VERSIONS="`$PKG_CONFIG --modversion "$2" 2>/dev/null | sed -n -e "1h;2,\\$H;\\${g;s/\n/ /g;p}"`"
+    m4_toupper($1)[]_VERSIONS="`$PKG_CONFIG --modversion "$2" 2>/dev/null | tr '\n' ' '`"
     $3
   else
     m4_toupper($1)_PKG_ERRORS=`$PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "$2"`
