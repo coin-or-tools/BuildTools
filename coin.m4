@@ -3765,7 +3765,7 @@ AC_DEFUN([AC_COIN_PKG_CHECK_MODULE_EXISTS],
 [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
 if test -n "$PKG_CONFIG" ; then
   if $PKG_CONFIG --exists "$2"; then
-    m4_toupper($1)[]_VERSIONS="`$PKG_CONFIG --modversion "$2" 2>/dev/null`"
+    m4_toupper($1)[]_VERSIONS=`$PKG_CONFIG --modversion "$2" 2>/dev/null`
     $3
   else
     m4_toupper($1)_PKG_ERRORS=`$PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "$2"`
