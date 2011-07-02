@@ -413,7 +413,7 @@ if test -n "$configFileLoc" ; then
   echo ''
   mv $configFileLoc $configFileLoc.bak
   bak_files="$bak_files $configFileLoc"
-  sed -e "s/# *define $versionSym.*\$/#define $versionSym \"$newVersion\"/" \
+  sed -e "s/# *define $versionSym .*\$/#define $versionSym \"$newVersion\"/" \
     -e "s/# *define ${versionSym}_MAJOR .*\$/#define ${versionSym}_MAJOR $majVer/" \
     -e "s/# *define ${versionSym}_MINOR .*\$/#define ${versionSym}_MINOR $minVer/" \
     -e "s/# *define ${versionSym}_RELEASE .*\$/#define ${versionSym}_RELEASE 9999/" \
