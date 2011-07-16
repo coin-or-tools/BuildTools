@@ -19,6 +19,10 @@
 # Modified: Lou Hafer	       SFU	2011-03-14
 #	Change handling of externals so the svn:externals is left pointing to
 #	releases but Dependencies is left pointing to stable branches.
+# Modified: Stefan Vigerske    HU       2011-07-16
+#       Do not attempt to configure/make/make test ThirdParty projects that
+#       do not have a get-script, since this fails in most cases (which is
+#       the expected behaviour).
 
 #set -x -v
 set -e
@@ -204,7 +208,6 @@ else
 	;;
       *Data/* )
 	isData=yes
-	isNormal=no
 	;;
       *BuildTools/* )
 	isBuildTools=yes
@@ -343,7 +346,13 @@ if test $isNormal = yes ; then
   newLTCurrent=`calcLibtoolCurrent $stableURL $majVer $minVer`
   newLTRevision=$newRel
   newLTAge=`calcLibtoolAge $stableURL $majVer $minVer`
-  newLTAge=`expr $newLTAge - 1`
+  # expr returns with status 1 if the result of the calculation is 0
+  # this leads to exiting this script, which is somewhat unexpected
+  if test "$newLTAge" = 1 ; then
+    newLTAge=0
+  else
+    newLTAge=`expr $newLTAge - 1`
+  fi
   newLTVer=${newLTCurrent}:${newLTRevision}:${newLTAge}
   echo "Libtool version.....: $newLTVer"
 fi
@@ -418,16 +427,16 @@ if test -n "$bak_files" ; then
 # Take the attitude that [] around parameters in AC_INIT is optional,
 # it's the commas that count. This does make for a surpassing ugly regular
 # expression.  A comma in the version string will cause a spectacular failure.
-# In AC_COIN_PROJECTDIR_INIT, take the attitude that the existing parameters
-# don't matter, we know what the release parameters should be.
+# In AC_COIN_PROJECTDIR_INIT, take the attitude that there is one parameter
+# with the PMs choosen project name which is preserved and we only add a
+# libtool version number afterwards.
 
   echo ''
   echo "===> Updating version numbers in configure.ac files ..."
   for i in $bak_files; do
     sed -e "s|AC_INIT\(.*\),\(\[*\)[^],]*\(\]*\),\(.*\)|AC_INIT\1,\2$newVer\3,\4|" $i > bla
     mv bla $i
-    lastComponent=`echo $stableProj | sed -e 's|.*/\([^/][^/]*\)|\1|'`
-    sed -e "s|AC_COIN_PROJECTDIR_INIT(.*)|AC_COIN_PROJECTDIR_INIT\($lastComponent,$newLTCurrent:$newLTRevision:$newLTAge\)|" $i > bla
+    sed -e "s|AC_COIN_PROJECTDIR_INIT(\(.*\))|AC_COIN_PROJECTDIR_INIT\(\1,$newLTCurrent:$newLTRevision:$newLTAge\)|" $i > bla
     mv bla $i
     svn diff $i
   done
@@ -644,14 +653,17 @@ if test -n "$srcDepFile" ; then
 fi
 
 # Finally! Done processing externals. If this is a ThirdParty project, we
-# still have to run the get script.
+# still have to run the get script, if there is one.
 
+isThirdPartyWithoutGet=no
 if test $isThirdParty = yes ; then
   if test -x get.$stableProj ; then
     echo ''
     echo '===> Downloading third party code ...'
     echo ''
     ./get.$stableProj
+  else
+    isThirdPartyWithoutGet=yes
   fi
 fi
 
@@ -675,7 +687,7 @@ fi
 # it's not needed. At the worst, as of 100526, it'll undo all the careful
 # work above to set externals.
 
-if test $isNormal = yes ; then
+if test $isNormal = yes && test $isThirdPartyWithoutGet = no; then
   (set -e
    echo ''
    echo '===> Creating build directory and running the configuration script...'
@@ -721,7 +733,7 @@ if test $isNormal = yes ; then
 fi
 
 echo ''
-if test $isNormal = yes ; then
+if test $isNormal = yes && test $isThirdPartyWithoutGet = no; then
   echo 'Please review the output above, particularly the one of make test.'
 else
   echo 'Please review the output above.'
