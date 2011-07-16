@@ -208,7 +208,6 @@ else
 	;;
       *Data/* )
 	isData=yes
-	isNormal=no
 	;;
       *BuildTools/* )
 	isBuildTools=yes

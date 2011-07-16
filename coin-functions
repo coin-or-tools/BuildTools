@@ -550,7 +550,7 @@ calcLibtoolAge ()
 
   case "$cltc_URL" in
     */Data/* )
-	cltc_listURL=
+	cltc_listURL=$cltc_baseURL/Data/$cltc_proj/stable
 	;;
     */ThirdParty/* )
 	cltc_listURL=$cltc_baseURL/BuildTools/ThirdParty/$cltc_proj/stable
@@ -625,7 +625,7 @@ calcLibtoolCurrent ()
 
   case "$cltc_URL" in
     */Data/* )
-	cltc_listURL=
+	cltc_listURL=$cltc_baseURL/Data/$cltc_proj/stable
 	;;
     */ThirdParty/* )
 	cltc_listURL=$cltc_baseURL/BuildTools/ThirdParty/$cltc_proj/stable
