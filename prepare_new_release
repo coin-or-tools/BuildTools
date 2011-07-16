@@ -348,7 +348,7 @@ if test $isNormal = yes ; then
   newLTRevision=$newRel
   newLTAge=`calcLibtoolAge $stableURL $majVer $minVer`
   # expr returns with status 1 if the result of the calculation is 0
-  # this leads to exiting this script, which is a bit unexpected
+  # this leads to exiting this script, which is somewhat unexpected
   if test "$newLTAge" = 1 ; then
     newLTAge=0
   else
@@ -428,16 +428,16 @@ if test -n "$bak_files" ; then
 # Take the attitude that [] around parameters in AC_INIT is optional,
 # it's the commas that count. This does make for a surpassing ugly regular
 # expression.  A comma in the version string will cause a spectacular failure.
-# In AC_COIN_PROJECTDIR_INIT, take the attitude that the existing parameters
-# don't matter, we know what the release parameters should be.
+# In AC_COIN_PROJECTDIR_INIT, take the attitude that there is one parameter
+# with the PMs choosen project name which is preserved and we only add a
+# libtool version number afterwards.
 
   echo ''
   echo "===> Updating version numbers in configure.ac files ..."
   for i in $bak_files; do
     sed -e "s|AC_INIT\(.*\),\(\[*\)[^],]*\(\]*\),\(.*\)|AC_INIT\1,\2$newVer\3,\4|" $i > bla
     mv bla $i
-    lastComponent=`echo $stableProj | sed -e 's|.*/\([^/][^/]*\)|\1|'`
-    sed -e "s|AC_COIN_PROJECTDIR_INIT(.*)|AC_COIN_PROJECTDIR_INIT\($lastComponent,$newLTCurrent:$newLTRevision:$newLTAge\)|" $i > bla
+    sed -e "s|AC_COIN_PROJECTDIR_INIT(\(.*\))|AC_COIN_PROJECTDIR_INIT\(\1,$newLTCurrent:$newLTRevision:$newLTAge\)|" $i > bla
     mv bla $i
     svn diff $i
   done
