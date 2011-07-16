@@ -19,6 +19,10 @@
 # Modified: Lou Hafer	       SFU	2011-03-14
 #	Change handling of externals so the svn:externals is left pointing to
 #	releases but Dependencies is left pointing to stable branches.
+# Modified: Stefan Vigerske    HU       2011-07-16
+#       Do not attempt to configure/make/make test ThirdParty projects that
+#       do not have a get-script, since this fails in most cases (which is
+#       the expected behaviour).
 
 #set -x -v
 set -e
@@ -343,7 +347,13 @@ if test $isNormal = yes ; then
   newLTCurrent=`calcLibtoolCurrent $stableURL $majVer $minVer`
   newLTRevision=$newRel
   newLTAge=`calcLibtoolAge $stableURL $majVer $minVer`
-  newLTAge=`expr $newLTAge - 1`
+  # expr returns with status 1 if the result of the calculation is 0
+  # this leads to exiting this script, which is a bit unexpected
+  if test "$newLTAge" = 1 ; then
+    newLTAge=0
+  else
+    newLTAge=`expr $newLTAge - 1`
+  fi
   newLTVer=${newLTCurrent}:${newLTRevision}:${newLTAge}
   echo "Libtool version.....: $newLTVer"
 fi
@@ -644,14 +654,17 @@ if test -n "$srcDepFile" ; then
 fi
 
 # Finally! Done processing externals. If this is a ThirdParty project, we
-# still have to run the get script.
+# still have to run the get script, if there is one.
 
+isThirdPartyWithoutGet=no
 if test $isThirdParty = yes ; then
   if test -x get.$stableProj ; then
     echo ''
     echo '===> Downloading third party code ...'
     echo ''
     ./get.$stableProj
+  else
+    isThirdPartyWithoutGet=yes
   fi
 fi
 
@@ -675,7 +688,7 @@ fi
 # it's not needed. At the worst, as of 100526, it'll undo all the careful
 # work above to set externals.
 
-if test $isNormal = yes ; then
+if test $isNormal = yes && test $isThirdPartyWithoutGet = no; then
   (set -e
    echo ''
    echo '===> Creating build directory and running the configuration script...'
@@ -721,7 +734,7 @@ if test $isNormal = yes ; then
 fi
 
 echo ''
-if test $isNormal = yes ; then
+if test $isNormal = yes && test $isThirdPartyWithoutGet = no; then
   echo 'Please review the output above, particularly the one of make test.'
 else
   echo 'Please review the output above.'
