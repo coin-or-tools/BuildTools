@@ -106,7 +106,11 @@ if test x$AUTOTOOLS_DIR = x; then
 fi
 
 grep_version=`echo  $ver_autoconf | sed -e 's/\\./\\\\\\./g'`
-autoconf --version > confauto.out 2>&1
+if autoconf --version > confauto.out 2>&1 ; then : ; else
+  echo "autoconf $ver_autoconf not available"
+  rm -f confauto.out
+  exit 2
+fi
 if $EGREP $grep_version confauto.out >/dev/null 2>&1; then :; else
   echo You are not using the correct version of autoconf
   rm -f confauto.out
@@ -121,7 +125,11 @@ if test $autoconf_dir = `cd $AUTOTOOLS_DIR/bin; pwd`; then :; else
 fi
 
 grep_version=`echo  $ver_automake | sed -e 's/\\./\\\\\\./g'`
-automake --version > confauto.out 2>&1
+if automake --version > confauto.out 2>&1 ; then : ; else
+  echo "automake $ver_automake not available"
+  rm -f confauto.out
+  exit 2
+fi
 if $EGREP $grep_version confauto.out >/dev/null 2>&1; then :; else
   echo You are not using the correct version of automake
   rm -f confauto.out
@@ -141,7 +149,7 @@ fi
 grep_version=`echo  $ver_libtool | sed -e 's/\\./\\\\\\./g'`
 ltfile=$AUTOTOOLS_DIR/share/libtool/ltmain.sh
 if test -r $ltfile; then :; else
-  echo WARNING: Cannot file libtool shell $ltfile
+  echo WARNING: Cannot find libtool shell $ltfile
 fi
 if $EGREP $grep_version $ltfile >/dev/null 2>&1; then :; else
   echo WARNING: You are not using the correct version of libtool
