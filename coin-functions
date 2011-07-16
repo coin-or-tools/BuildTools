@@ -535,7 +535,7 @@ bestRelease ()
 
 # Count the total number of stable branches for the project for the specified
 # major version number, up to the specified minor version number (libtool age).
-# Returns 0 if handed a trunk url, or if the url is Data or BuildTools itself.
+# Returns 0 if handed a trunk url, or if the url is BuildTools itself.
 # usage: calcLibtoolAge <svnURL> <major> <minor>
 
 calcLibtoolAge ()
@@ -610,7 +610,7 @@ calcLibtoolAge ()
 
 # Count the total number of stable branches for the project up to the
 # specified major.minor version number (libtool current).  Returns 0 if
-# handed a trunk url, or if the url is Data or BuildTools itself.
+# handed a trunk url, or if the url is BuildTools itself.
 # usage: calcLibtoolCurrent <svnURL> <major> <minor>
 
 calcLibtoolCurrent ()
