@@ -2131,7 +2131,7 @@ if test $coin_enable_zlib = yes; then
   AC_COIN_CHECK_HEADER([zlib.h],[coin_has_zlib=yes])
 
   if test $coin_has_zlib = yes; then
-    AC_CHECK_LIB([z],[gzopen],,[coin_has_zlib=no])
+    AC_CHECK_LIB([z],[gzopen],[:],[coin_has_zlib=no])
   fi
 
   if test $coin_has_zlib = yes; then
@@ -2175,7 +2175,7 @@ if test $coin_enable_bzlib = yes; then
   AC_COIN_CHECK_HEADER([bzlib.h],[coin_has_bzlib=yes])
 
   if test $coin_has_bzlib = yes; then
-    AC_CHECK_LIB([bz2],[BZ2_bzReadOpen],,[coin_has_bzlib=no])
+    AC_CHECK_LIB([bz2],[BZ2_bzReadOpen],[:],[coin_has_bzlib=no])
   fi
 
   if test $coin_has_bzlib = yes; then
@@ -2225,7 +2225,7 @@ if test $coin_enable_gnu = yes; then
 
   # Now we check for readline
   if test $coin_has_readline = yes; then
-    AC_CHECK_LIB([readline],[readline],,[coin_has_readline=no])
+    AC_CHECK_LIB([readline],[readline],[:],[coin_has_readline=no])
   fi
 
   if test $coin_has_readline = yes; then
