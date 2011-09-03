@@ -2066,8 +2066,8 @@ fi
 ###########################################################################
 
 # This macro defined the --enable-gnu-packages flag.  This can be used
-# to check if a user wants to compile GNU packges (such as readline or
-# zlib) into the executable.  By default, GNU packages are disabled.
+# to check if a user wants to compile GNU packges (such as readline)
+# into the executable.  By default, GNU packages are disabled.
 # This also defines the automake conditional COIN_ENABLE_GNU_PACKAGES
 
 AC_DEFUN([AC_COIN_ENABLE_GNU_PACKAGES],
@@ -2111,29 +2111,35 @@ esac
 # COIN_HAS_ZLIB.  Further, for a (space separated) list of arguments X,
 # it adds the linker flag to the variables X_LIBS, X_PCLIBS, and X_LIBS_INSTALLED.
 
+# TODO the macro name should be changed to AC_COIN_CHECK_ZLIB
+
 AC_DEFUN([AC_COIN_CHECK_GNU_ZLIB],
-[AC_REQUIRE([AC_COIN_ENABLE_GNU_PACKAGES])
+[
 AC_BEFORE([AC_COIN_PROG_CXX],[$0])
 AC_BEFORE([AC_COIN_PROG_CC],[$0])
 AC_BEFORE([AC_COIN_PROG_F77],[$0])
 AC_BEFORE([$0],[AC_COIN_FINALIZE])
 
 coin_has_zlib=no
-if test $coin_enable_gnu = yes; then
+
+AC_ARG_ENABLE([zlib],
+              [AC_HELP_STRING([--disable-zlib],[do not compile with compression library zlib])],
+              [coin_enable_zlib=$enableval],
+              [coin_enable_zlib=yes])
+
+if test $coin_enable_zlib = yes; then
   AC_COIN_CHECK_HEADER([zlib.h],[coin_has_zlib=yes])
 
   if test $coin_has_zlib = yes; then
-    AC_CHECK_LIB([z],[gzopen],
-                 [coin_foreach_w([myvar], [$1], [
-                    m4_toupper(myvar)_LIBS="-lz $m4_toupper(myvar)_LIBS"
-                    m4_toupper(myvar)_PCLIBS="-lz $m4_toupper(myvar)_PCLIBS"
-                    m4_toupper(myvar)_LIBS_INSTALLED="-lz $m4_toupper(myvar)_LIBS_INSTALLED"
-                  ])
-                 :],
-                 [coin_has_zlib=no])
+    AC_CHECK_LIB([z],[gzopen],[:],[coin_has_zlib=no])
   fi
 
   if test $coin_has_zlib = yes; then
+    coin_foreach_w([myvar], [$1], [
+                    m4_toupper(myvar)_LIBS="-lz $m4_toupper(myvar)_LIBS"
+                    m4_toupper(myvar)_PCLIBS="-lz $m4_toupper(myvar)_PCLIBS"
+                    m4_toupper(myvar)_LIBS_INSTALLED="-lz $m4_toupper(myvar)_LIBS_INSTALLED"
+                   ])
     AC_DEFINE([COIN_HAS_ZLIB],[1],[Define to 1 if zlib is available])
   fi
 fi
@@ -2150,29 +2156,34 @@ AM_CONDITIONAL(COIN_HAS_ZLIB,test x$coin_has_zlib = xyes)
 # preprocessor variable COIN_HAS_BZLIB.  Further, for a (space separated) list
 # of arguments X, it adds the linker flag to the variables X_LIBS, X_PCLIBS, and X_LIBS_INSTALLED.
 
+# TODO the macro name should be changed to AC_COIN_CHECK_BZLIB
+
 AC_DEFUN([AC_COIN_CHECK_GNU_BZLIB],
-[AC_REQUIRE([AC_COIN_ENABLE_GNU_PACKAGES])
+[
 AC_BEFORE([AC_COIN_PROG_CXX],[$0])
 AC_BEFORE([AC_COIN_PROG_CC],[$0])
 AC_BEFORE([AC_COIN_PROG_F77],[$0])
 AC_BEFORE([$0],[AC_COIN_FINALIZE])
 
+AC_ARG_ENABLE([bzlib],
+              [AC_HELP_STRING([--disable-bzlib],[do not compile with compression library bzlib])],
+              [coin_enable_bzlib=$enableval],
+              [coin_enable_bzlib=yes])
+
 coin_has_bzlib=no
-if test $coin_enable_gnu = yes; then
+if test $coin_enable_bzlib = yes; then
   AC_COIN_CHECK_HEADER([bzlib.h],[coin_has_bzlib=yes])
 
   if test $coin_has_bzlib = yes; then
-    AC_CHECK_LIB([bz2],[BZ2_bzReadOpen],
-                 [coin_foreach_w([myvar], [$1], [
+    AC_CHECK_LIB([bz2],[BZ2_bzReadOpen],[:],[coin_has_bzlib=no])
+  fi
+
+  if test $coin_has_bzlib = yes; then
+    coin_foreach_w([myvar], [$1], [
                     m4_toupper(myvar)_LIBS="-lbz2 $m4_toupper(myvar)_LIBS"
                     m4_toupper(myvar)_PCLIBS="-lbz2 $m4_toupper(myvar)_PCLIBS"
                     m4_toupper(myvar)_LIBS_INSTALLED="-lbz2 $m4_toupper(myvar)_LIBS_INSTALLED"
                   ])
-                 :],
-                 [coin_has_bzlib=no])
-  fi
-
-  if test $coin_has_bzlib = yes; then
     AC_DEFINE([COIN_HAS_BZLIB],[1],[Define to 1 if bzlib is available])
   fi
 fi
@@ -2214,23 +2225,56 @@ if test $coin_enable_gnu = yes; then
 
   # Now we check for readline
   if test $coin_has_readline = yes; then
-    AC_CHECK_LIB([readline],[readline],
-                 [coin_foreach_w([myvar], [$1], [
-                    m4_toupper(myvar)_LIBS="-lreadline $LIBS $m4_toupper(myvar)_LIBS"
-                    m4_toupper(myvar)_PCLIBS="-lreadline $LIBS $m4_toupper(myvar)_PCLIBS"
-                    m4_toupper(myvar)_LIBS_INSTALLED="-lreadline $LIBS $m4_toupper(myvar)_LIBS_INSTALLED"
-                  ])
-                 :],
-                 [coin_has_readline=no])
+    AC_CHECK_LIB([readline],[readline],[:],[coin_has_readline=no])
   fi
 
   if test $coin_has_readline = yes; then
+    coin_foreach_w([myvar], [$1], [
+                    m4_toupper(myvar)_LIBS="-lreadline $LIBS $m4_toupper(myvar)_LIBS"
+                    m4_toupper(myvar)_PCLIBS="-lreadline $LIBS $m4_toupper(myvar)_PCLIBS"
+                    m4_toupper(myvar)_LIBS_INSTALLED="-lreadline $LIBS $m4_toupper(myvar)_LIBS_INSTALLED"
+                   ])
     AC_DEFINE([COIN_HAS_READLINE],[1],[Define to 1 if readline is available])
   fi
 
   LIBS="$coin_save_LIBS"
 fi
 ]) # AC_COIN_CHECK_GNU_READLINE
+
+###########################################################################
+#                              COIN_CHECK_GMP                             #
+###########################################################################
+
+# This macro checks for the gmp library.  If found, it defines the C
+# preprocessor variable COIN_HAS_GMP.  Further, for a (space separated) list
+# of arguments X, it adds the linker flag to the variables X_LIBS, X_PCLIBS, and X_LIBS_INSTALLED.
+
+AC_DEFUN([AC_COIN_CHECK_GMP],
+[
+AC_BEFORE([AC_COIN_PROG_CXX],[$0])
+AC_BEFORE([AC_COIN_PROG_CC],[$0])
+AC_BEFORE([AC_COIN_PROG_F77],[$0])
+AC_BEFORE([$0],[AC_COIN_FINALIZE])
+
+AC_ARG_ENABLE([gmp],
+              [AC_HELP_STRING([--disable-gmp],[do not compile with GNU multiple precision library])],
+              [coin_enable_gmp=$enableval],
+              [coin_enable_gmp=yes])
+
+coin_has_gmp=no
+if test $coin_enable_gmp = yes; then
+  AC_COIN_CHECK_HEADER([gmp.h],[AC_CHECK_LIB([gmp],[__gmpz_init],[coin_has_gmp=yes])])
+  
+  if test $coin_has_gmp = yes ; then
+    coin_foreach_w([myvar], [$1], [
+                    m4_toupper(myvar)_LIBS="-lgmp $m4_toupper(myvar)_LIBS"
+                    m4_toupper(myvar)_PCLIBS="-lgmp $m4_toupper(myvar)_PCLIBS"
+                    m4_toupper(myvar)_LIBS_INSTALLED="-lgmp $m4_toupper(myvar)_LIBS_INSTALLED"
+                   ])
+    AC_DEFINE([COIN_HAS_GMP],[1],[Define to 1 if GMP is available])
+  fi
+fi
+]) # AC_COIN_CHECK_GMP
 
 ###########################################################################
 #                            COIN_CHECK_ISFINITE                          #
