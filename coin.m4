@@ -2111,15 +2111,23 @@ esac
 # COIN_HAS_ZLIB.  Further, for a (space separated) list of arguments X,
 # it adds the linker flag to the variables X_LIBS, X_PCLIBS, and X_LIBS_INSTALLED.
 
+# TODO the macro name should be changed to AC_COIN_CHECK_ZLIB
+
 AC_DEFUN([AC_COIN_CHECK_GNU_ZLIB],
-[AC_REQUIRE([AC_COIN_ENABLE_GNU_PACKAGES])
+[
 AC_BEFORE([AC_COIN_PROG_CXX],[$0])
 AC_BEFORE([AC_COIN_PROG_CC],[$0])
 AC_BEFORE([AC_COIN_PROG_F77],[$0])
 AC_BEFORE([$0],[AC_COIN_FINALIZE])
 
 coin_has_zlib=no
-if test $coin_enable_gnu = yes; then
+
+AC_ARG_ENABLE([zlib],
+              [AC_HELP_STRING([--disable-zlib],[do not compile with compression library zlib])],
+              [coin_enable_zlib=$enableval],
+              [coin_enable_zlib=yes])
+
+if test $coin_enable_zlib = yes; then
   AC_COIN_CHECK_HEADER([zlib.h],[coin_has_zlib=yes])
 
   if test $coin_has_zlib = yes; then
@@ -2150,15 +2158,22 @@ AM_CONDITIONAL(COIN_HAS_ZLIB,test x$coin_has_zlib = xyes)
 # preprocessor variable COIN_HAS_BZLIB.  Further, for a (space separated) list
 # of arguments X, it adds the linker flag to the variables X_LIBS, X_PCLIBS, and X_LIBS_INSTALLED.
 
+# TODO the macro name should be changed to AC_COIN_CHECK_BZLIB
+
 AC_DEFUN([AC_COIN_CHECK_GNU_BZLIB],
-[AC_REQUIRE([AC_COIN_ENABLE_GNU_PACKAGES])
+[
 AC_BEFORE([AC_COIN_PROG_CXX],[$0])
 AC_BEFORE([AC_COIN_PROG_CC],[$0])
 AC_BEFORE([AC_COIN_PROG_F77],[$0])
 AC_BEFORE([$0],[AC_COIN_FINALIZE])
 
+AC_ARG_ENABLE([bzlib],
+              [AC_HELP_STRING([--disable-bzlib],[do not compile with compression library bzlib])],
+              [coin_enable_bzlib=$enableval],
+              [coin_enable_bzlib=yes])
+
 coin_has_bzlib=no
-if test $coin_enable_gnu = yes; then
+if test $coin_enable_bzlib = yes; then
   AC_COIN_CHECK_HEADER([bzlib.h],[coin_has_bzlib=yes])
 
   if test $coin_has_bzlib = yes; then
