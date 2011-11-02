@@ -57,6 +57,9 @@
 /* Define to 1 if you have the <ctime> header file. */
 #define HAVE_CTIME 1
 
+/* Define to 1 if you have the <cstddef> header file. */
+#define HAVE_CSTDDEF 1
+
 /* Define to 1 if you have the <ctype.h> header file. */
 /* #undef HAVE_CTYPE_H */
 
