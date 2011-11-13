@@ -349,6 +349,7 @@ AC_LANG_POP(C++)
 coin_cxx_is_cl=false
 # It seems that we need to cleanup something here for the Windows
 case "$CXX" in
+  clang* ) ;;
   cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
     sed -e 's/^void exit (int);//' confdefs.h >> confdefs.hh
     mv confdefs.hh confdefs.h
@@ -361,6 +362,7 @@ AM_CONDITIONAL(COIN_CXX_IS_CL, [test $coin_cxx_is_cl = true])
 
 # Autoconf incorrectly concludes that cl recognises -g. It doesn't.
 case "$CXX" in
+  clang* ) ;;
   cl* | */cl* | CL* | */CL* )
     if test "$ac_cv_prog_cxx_g" = yes ; then
       ac_cv_prog_cxx_g=no
@@ -419,6 +421,7 @@ if test x"$CXXFLAGS" = x; then
     case $build in
       *-cygwin* | *-mingw*)
         case "$CXX" in
+          clang* ) ;;
           cl* | */cl* | CL* | */CL*)
 	    # The MT and MTd options are mutually exclusive
             coin_opt_cxxflags='-MT -O2'
@@ -566,6 +569,7 @@ fi
 
 # correct the LD variable in a mingw build with MS or intel compiler
 case "$CXX" in
+  clang* ) ;;
   cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
     AC_COIN_MINGW_LD_FIX
     ;;
@@ -600,6 +604,7 @@ if test -z "$CXXLIBS"; then
     case $build in
      *-mingw32 | *-cygwin* )
       case "$CXX" in
+      clang* ) ;;
       cl* | */cl* | CL* | */CL*)
         CXXLIBS=nothing;;
       esac;;
@@ -702,6 +707,7 @@ AC_LANG_PUSH(C)
 # compiler, if the C++ is set, but the C compiler isn't (only for CXX=cl)
 if test x"$CXX" != x; then
   case "$CXX" in
+    clang* ) ;;
     cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
       if test x"$CC" = x; then
         CC="$CXX"
@@ -755,6 +761,7 @@ if test -z "$CC" ; then
 fi
 # Autoconf incorrectly concludes that cl recognises -g. It doesn't.
 case "$CC" in
+  clang* ) ;;
   cl* | */cl* | CL* | */CL* )
     if test "$ac_cv_prog_cc_g" = yes ; then
       ac_cv_prog_cc_g=no
@@ -766,6 +773,7 @@ CFLAGS="$save_cflags"
 # add automake conditional so we can recognize cl compiler in makefile
 coin_cc_is_cl=false
 case "$CC" in
+  clang* ) ;;
   cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
     coin_cc_is_cl=true
     ;;
@@ -817,6 +825,7 @@ if test x"$CFLAGS" = x; then
     case $build in
       *-cygwin* | *-mingw*)
         case "$CC" in
+          clang* ) ;;
           cl* | */cl* | CL* | */CL*)
             coin_opt_cflags='-MT -O2'
             coin_add_cflags='-nologo -wd4996 -D_CRT_SECURE_NO_DEPRECATE'
@@ -956,6 +965,7 @@ fi
 
 # Correct the LD variable if we are using the MS or Intel-windows compiler
 case "$CC" in
+  clang* ) ;;
   cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
     AC_COIN_MINGW_LD_FIX
     ;;
@@ -1716,6 +1726,14 @@ AC_SUBST(LT_LDFLAGS)
 
 AC_DEFUN([AC_COIN_PATCH_LIBTOOL_CYGWIN],
 [ case "$CXX" in
+    clang* )
+      # we assume that libtool patches for CLANG are the same as for GNU compiler - correct???
+      AC_MSG_NOTICE(Applying patches to libtool for CLANG compiler)
+      sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
+	  -e 's|"lib /OUT:\\$oldlib\\$oldobjs\\$old_deplibs"|"\\$AR \\$AR_FLAGS \\$oldlib\\$oldobjs\\$old_deplibs~\\$RANLIB \\$oldlib"|' \
+	  -e 's|libext="lib"|libext="a"|' \
+      libtool > conftest.bla
+      ;;
     cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*) 
       AC_MSG_NOTICE(Applying patches to libtool for cl compiler)
       sed -e 's|fix_srcfile_path=\"`cygpath -w \"\$srcfile\"`\"|fix_srcfile_path=\"\\\`'"$CYGPATH_W"' \\\"\\$srcfile\\\"\\\`\"|' \
@@ -1730,9 +1748,6 @@ AC_DEFUN([AC_COIN_PATCH_LIBTOOL_CYGWIN],
 	  -e 's%^archive_cmds=.*%archive_cmds="\\$CC -o \\$lib \\$libobjs \\$compiler_flags \\\\\\`echo \\\\\\"\\$deplibs\\\\\\" | \\$SED -e '"\'"'s/ -lc\\$//'"\'"'\\\\\\` -link -dll~linknames="%' \
 	  -e 's%old_archive_cmds="lib -OUT:\\$oldlib\\$oldobjs\\$old_deplibs"%old_archive_cmds="if test -r \\$oldlib; then bla=\\"\\$oldlib\\"; else bla=; fi; lib -OUT:\\$oldlib \\\\\\$bla\\$oldobjs\\$old_deplibs"%' \
       libtool > conftest.bla
-
-      mv conftest.bla libtool
-      chmod 755 libtool
       ;;
     *)
       AC_MSG_NOTICE(Applying patches to libtool for GNU compiler)
@@ -1740,11 +1755,11 @@ AC_DEFUN([AC_COIN_PATCH_LIBTOOL_CYGWIN],
 	  -e 's|"lib /OUT:\\$oldlib\\$oldobjs\\$old_deplibs"|"\\$AR \\$AR_FLAGS \\$oldlib\\$oldobjs\\$old_deplibs~\\$RANLIB \\$oldlib"|' \
 	  -e 's|libext="lib"|libext="a"|' \
       libtool > conftest.bla
-
-      mv conftest.bla libtool
-      chmod 755 libtool
       ;;
-  esac ]) # COIN_PATCH_LIBTOOL_CYGWIN
+  esac
+  mv conftest.bla libtool
+  chmod 755 libtool
+]) # COIN_PATCH_LIBTOOL_CYGWIN
 
 ###########################################################################
 #                    COIN_PATCH_LIBTOOL_SOLARIS                           #
@@ -1945,6 +1960,7 @@ if test "$enable_doscompile" = mingw; then
   coin_link_input_cmd=cp
 fi
 case "$CC" in
+  clang* ) ;;
   cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
     coin_link_input_cmd=cp ;;
 esac
@@ -1970,6 +1986,8 @@ if test x$coin_skip_ac_output != xyes; then
   # library extension
   AC_SUBST(LIBEXT)
   case "$CC" in
+    clang* )
+         LIBEXT=a ;;
     cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
          LIBEXT=lib ;;
       *) LIBEXT=a ;;
@@ -2088,17 +2106,13 @@ AC_DEFUN([AC_COIN_ENABLE_GNU_PACKAGES],
 AC_DEFUN([AC_COIN_CHECK_LIBM],
 [AC_BEFORE([AC_COIN_PROG_CC],[$0])
 
-case "$CC" in
-  cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
-    ;;
-  *)
-    coin_foreach_w([myvar], [$1], [
-      m4_toupper(myvar)_LIBS="-lm $m4_toupper(myvar)_LIBS"
-      m4_toupper(myvar)_PCLIBS="-lm $m4_toupper(myvar)_PCLIBS"
-      m4_toupper(myvar)_LIBS_INSTALLED="-lm $m4_toupper(myvar)_LIBS_INSTALLED"
-    ])
-  ;;
-esac
+if test $coin_cc_is_cl != true ; then
+  coin_foreach_w([myvar], [$1], [
+    m4_toupper(myvar)_LIBS="-lm $m4_toupper(myvar)_LIBS"
+    m4_toupper(myvar)_PCLIBS="-lm $m4_toupper(myvar)_PCLIBS"
+    m4_toupper(myvar)_LIBS_INSTALLED="-lm $m4_toupper(myvar)_LIBS_INSTALLED"
+  ])
+fi
 
 ]) # AC_COIN_CHECK_LIBM
 
@@ -2622,6 +2636,7 @@ if test $coin_vpath_config = yes; then
     lnkcmd=cp
   fi
   case "$CC" in
+    clang* ) ;;
     cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
       lnkcmd=cp ;;
   esac
@@ -3939,6 +3954,7 @@ else
         skip_lblas_check=yes
       fi
       case "$CC" in
+        clang* ) ;;
         cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
           coin_save_LIBS="$LIBS"
           AC_MSG_CHECKING([for BLAS in MKL (32bit)])
