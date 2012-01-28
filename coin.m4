@@ -2308,7 +2308,7 @@ AC_COIN_CHECK_CXX_CHEADER(float)
 AC_COIN_CHECK_CXX_CHEADER(ieeefp)
 
 COIN_C_FINITE=
-AC_CHECK_DECL([finite],[COIN_C_FINITE=finite],,[
+AC_CHECK_DECL([isfinite],[COIN_C_FINITE=isfinite],,[
 #ifdef HAVE_CMATH
 # include <cmath>
 #else
@@ -2331,7 +2331,7 @@ AC_CHECK_DECL([finite],[COIN_C_FINITE=finite],,[
 # endif
 #endif])
 if test -z "$COIN_C_FINITE"; then
-  AC_CHECK_DECL([_finite],[COIN_C_FINITE=_finite],,[
+  AC_CHECK_DECL([finite],[COIN_C_FINITE=finite],,[
 #ifdef HAVE_CMATH
 # include <cmath>
 #else
@@ -2354,7 +2354,7 @@ if test -z "$COIN_C_FINITE"; then
 # endif
 #endif])
   if test -z "$COIN_C_FINITE"; then
-    AC_CHECK_DECL([isfinite],[COIN_C_FINITE=isfinite],,[
+    AC_CHECK_DECL([_finite],[COIN_C_FINITE=_finite],,[
 #ifdef HAVE_CMATH
 # include <cmath>
 #else
