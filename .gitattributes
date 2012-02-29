@@ -18,6 +18,7 @@ compile_f2c/compile_f2c -text
 /config.sub -text
 /depcomp -text
 /install-sh -text
+/install_autotools.sh -text
 /missing -text
 /prepare_new_release -text
 /prepare_new_stable -text
