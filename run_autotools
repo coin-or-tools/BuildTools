@@ -98,8 +98,8 @@ runautotoolDir=`echo $runautotoolDir | sed -e 's,/\./,/,g' -e 's,//,/,g'`
 # Make sure we're using the correct versions of the autotools. Failure to
 # satisfy this requirement is a fatal error.
 
-ver_autoconf='2.68'
-ver_automake='1.11.3'
+ver_autoconf='2.69'
+ver_automake='1.12'
 ver_libtool='2.4.2'
 EGREP='grep -E'
 

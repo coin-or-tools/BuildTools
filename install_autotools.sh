@@ -1,33 +1,41 @@
+#!/bin/sh
 # script to download and install the autoools versions that we currently use with COIN-OR/BuildTools
 # original script by Pierre Bonami
 
 PREFIX=$HOME/local2
 
+acver=2.69
+amver=1.12
+ltver=2.4.2
+
+# exit immediately if something fails
+set -e
+
 # so that we can configure automake with the new (then installed) autoconf
 export PATH=$PREFIX/bin:$PATH
 
 # cleanup from previous (maybe failed) build
-rm -rf autoconf-2.68* automake-1.11.3* libtool-2.4.2*
+rm -rf autoconf-$acver* automake-$amver* libtool-$ltver*
 
-wget ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.68.tar.gz
-tar xvzf autoconf-2.68.tar.gz
-cd autoconf-2.68
+wget ftp://ftp.gnu.org/gnu/autoconf/autoconf-$acver.tar.gz
+tar xvzf autoconf-$acver.tar.gz
+cd autoconf-$acver
 ./configure --prefix=$PREFIX
 make install
 cd ..
 
-wget ftp://ftp.gnu.org/gnu/automake/automake-1.11.3.tar.gz
-tar xvzf automake-1.11.3.tar.gz
-cd automake-1.11.3
+wget ftp://ftp.gnu.org/gnu/automake/automake-$amver.tar.gz
+tar xvzf automake-$amver.tar.gz
+cd automake-$amver
 ./configure --prefix=$PREFIX
 make install
 cd ..
 
-wget ftp://ftp.gnu.org/gnu/libtool/libtool-2.4.2.tar.gz
-tar xvzf libtool-2.4.2.tar.gz
-cd libtool-2.4.2
+wget ftp://ftp.gnu.org/gnu/libtool/libtool-$ltver.tar.gz
+tar xvzf libtool-$ltver.tar.gz
+cd libtool-$ltver
 ./configure --prefix=$PREFIX
 make install
 cd ..
 
-rm -rf autoconf-2.68* automake-1.11.3* libtool-2.4.2*
+rm -rf autoconf-$acver* automake-$amver* libtool-$ltver*
