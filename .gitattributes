@@ -1,4 +1,7 @@
 * text=auto !eol
+MSVisualStudio/v10/Common.props -text
+MSVisualStudio/v10/Debug.props -text
+MSVisualStudio/v10/Release.props -text
 MSVisualStudio/v10alt/BuildTools.sln -text
 MSVisualStudio/v10alt/BuildTools.vcxproj -text
 MSVisualStudio/v10alt/coin.props -text
