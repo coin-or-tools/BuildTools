@@ -1649,6 +1649,10 @@ if test "x$LIBTOOL" = x; then
   fi
 fi
 
+# TODO reusing libtool from a directory below does not work yet with the new autotools
+# so for now we recreate
+LIBTOOL=
+
 if test "x$LIBTOOL" = x; then
 # AC_MSG_NOTICE([Creating libtool script (calling COIN_PROG_LIBTOOL).])
   # Stuff for libtool
