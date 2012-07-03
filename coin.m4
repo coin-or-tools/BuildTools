@@ -299,18 +299,8 @@ AC_DEFUN([AC_COIN_ENABLE_DOSCOMPILE],
 # case name of this project).  It is possible to provide additional -D flags
 # in the variable CXXDEFS, and additional compilation flags with ADD_CXXFLAGS.
 
-AC_DEFUN([AC_COIN_PROG_CXX],
-[AC_REQUIRE([AC_COIN_PROG_CC]) #Let's try if that overcomes configuration problem with VC++ 6.0
-AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
-AC_LANG_PUSH(C++)
-
-AC_ARG_VAR(CXXDEFS,[Additional -D flags to be used when compiling C++ code.])
-AC_ARG_VAR(ADD_CXXFLAGS,[Additional C++ compiler options])
-AC_ARG_VAR(DBG_CXXFLAGS,[Debug C++ compiler options])
-AC_ARG_VAR(OPT_CXXFLAGS,[Optimize C++ compiler options])
-
-coin_has_cxx=yes
-
+AC_DEFUN([AC_COIN_PROG_CXX_INIT],
+[
 save_cxxflags="$CXXFLAGS"
 # For *-*-solaris*, promote Studio/Workshop compiler to front of list.
 case $build in
@@ -333,18 +323,6 @@ esac
 $as_unset ac_cv_prog_CXX || test "${ac_cv_prog_CXX+set}" != set || { ac_cv_prog_CXX=; export ac_cv_prog_CXX; }
 # AC_MSG_NOTICE([C++ compiler candidates: $comps])
 AC_PROG_CXX([$comps])
-
-#AC_PROG_CXX sets CXX to g++ if it cannot find a working C++ compiler
-#thus, we test here whether $CXX is actually working 
-AC_LANG_PUSH(C++)
-AC_MSG_CHECKING([whether C++ compiler $CXX works]);
-AC_COMPILE_IFELSE(
-  [AC_LANG_PROGRAM(, [int i=0;])],
-  [AC_MSG_RESULT(yes)],
-  [AC_MSG_RESULT(no)
-   AC_MSG_ERROR(failed to find a C++ compiler or C++ compiler $CXX does not work)]
-)
-AC_LANG_POP(C++)
 
 coin_cxx_is_cl=false
 # It seems that we need to cleanup something here for the Windows
@@ -370,6 +348,28 @@ case "$CXX" in
     fi ;;
 esac
 CXXFLAGS="$save_cxxflags"
+])
+
+AC_DEFUN([AC_COIN_PROG_CXX],
+[AC_REQUIRE([AC_COIN_PROG_CC]) #Let's try if that overcomes configuration problem with VC++ 6.0
+AC_REQUIRE([AC_COIN_PROG_CXX_INIT])
+AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
+AC_LANG_PUSH(C++)
+
+AC_ARG_VAR(CXXDEFS,[Additional -D flags to be used when compiling C++ code.])
+AC_ARG_VAR(ADD_CXXFLAGS,[Additional C++ compiler options])
+AC_ARG_VAR(DBG_CXXFLAGS,[Debug C++ compiler options])
+AC_ARG_VAR(OPT_CXXFLAGS,[Optimize C++ compiler options])
+
+#AC_PROG_CXX sets CXX to g++ if it cannot find a working C++ compiler
+#thus, we test here whether $CXX is actually working 
+AC_MSG_CHECKING([whether C++ compiler $CXX works]);
+AC_COMPILE_IFELSE(
+  [AC_LANG_PROGRAM(, [int i=0;])],
+  [AC_MSG_RESULT(yes)],
+  [AC_MSG_RESULT(no)
+   AC_MSG_ERROR(failed to find a C++ compiler or C++ compiler $CXX does not work)]
+)
 
 # Check if a project specific CXXFLAGS variable has been set
 if test x$COIN_PRJCT != x; then
@@ -698,11 +698,9 @@ AC_LANG_POP(C++)
 # given my the user), and find an appropriate value for CFLAGS.  It is
 # possible to provide additional -D flags in the variable CDEFS.
 
-AC_DEFUN([AC_COIN_PROG_CC],
-[AC_REQUIRE([AC_COIN_MINGW_LD_FIX])
-AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
-AC_LANG_PUSH(C)
-
+# C compiler recognition moved to separate macro so we can AC_REQUIRE it
+AC_DEFUN([AC_COIN_PROG_CC_INIT],
+[
 # For consistency, we set the C compiler to the same value of the C++
 # compiler, if the C++ is set, but the C compiler isn't (only for CXX=cl)
 if test x"$CXX" != x; then
@@ -721,8 +719,6 @@ AC_ARG_VAR(CDEFS,[Additional -D flags to be used when compiling C code.])
 AC_ARG_VAR(ADD_CFLAGS,[Additional C compiler options])
 AC_ARG_VAR(DBG_CFLAGS,[Debug C compiler options])
 AC_ARG_VAR(OPT_CFLAGS,[Optimize C compiler options])
-
-coin_has_cc=yes
 
 save_cflags="$CFLAGS"
 
@@ -779,6 +775,17 @@ case "$CC" in
     ;;
 esac
 AM_CONDITIONAL(COIN_CC_IS_CL, [test $coin_cc_is_cl = true])
+])
+
+AC_DEFUN([AC_COIN_PROG_CC],
+[AC_REQUIRE([AC_COIN_MINGW_LD_FIX])
+AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
+AC_REQUIRE([AC_COIN_PROG_CC_INIT])
+AC_LANG_PUSH(C)
+
+# C compiler has been checked via AC_REQUIRE([AC_COIN_PROG_CC_INIT])
+# We do it this way so our explicit "call" to AC_PROG_CC is done before
+# the AC_REQUIRE of AC_TRY_LINK
 
 # Check if a project specific CFLAGS variable has been set
 if test x$COIN_PRJCT != x; then
@@ -982,19 +989,8 @@ AC_LANG_POP(C)
 # for different operating systems) and put it into F77 (unless it was
 # given by the user), and find an appropriate value for FFLAGS
 
-AC_DEFUN([AC_COIN_PROG_F77],
-[AC_REQUIRE([AC_COIN_MINGW_LD_FIX])
-AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
-AC_REQUIRE([AC_COIN_PROG_CC])
-AC_REQUIRE([AC_COIN_F77_COMPS])
-AC_LANG_PUSH([Fortran 77])
-
-AC_ARG_VAR(ADD_FFLAGS,[Additional Fortran compiler options])
-AC_ARG_VAR(DBG_FFLAGS,[Debug Fortran compiler options])
-AC_ARG_VAR(OPT_FFLAGS,[Optimize Fortran compiler options])
-
-coin_has_f77=yes
-
+AC_DEFUN([AC_COIN_PROG_F77_INIT],
+[
 save_fflags="$FFLAGS"
 
 # We delete the cached value, since the test might not have been
@@ -1015,6 +1011,19 @@ else
 fi
 
 FFLAGS="$save_fflags"
+])
+
+AC_DEFUN([AC_COIN_PROG_F77],
+[AC_REQUIRE([AC_COIN_MINGW_LD_FIX])
+AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
+AC_REQUIRE([AC_COIN_PROG_CC])
+AC_REQUIRE([AC_COIN_F77_COMPS])
+AC_REQUIRE([AC_COIN_PROG_F77_INIT])
+AC_LANG_PUSH([Fortran 77])
+
+AC_ARG_VAR(ADD_FFLAGS,[Additional Fortran compiler options])
+AC_ARG_VAR(DBG_FFLAGS,[Debug Fortran compiler options])
+AC_ARG_VAR(OPT_FFLAGS,[Optimize Fortran compiler options])
 
 # Check if a project specific FFLAGS variable has been set
 if test x$COIN_PRJCT != x; then
