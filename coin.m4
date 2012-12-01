@@ -302,6 +302,7 @@ AC_DEFUN([AC_COIN_ENABLE_DOSCOMPILE],
 AC_DEFUN([AC_COIN_PROG_CXX],
 [AC_REQUIRE([AC_COIN_PROG_CC]) #Let's try if that overcomes configuration problem with VC++ 6.0
 AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
+AC_REQUIRE([AC_COIN_ENABLE_STATICSTDLIBS])
 AC_LANG_PUSH(C++)
 
 AC_ARG_VAR(CXXDEFS,[Additional -D flags to be used when compiling C++ code.])
@@ -575,6 +576,35 @@ case "$CXX" in
     ;;
 esac
 
+# check whether to add flag for static linking against standard libraries to LDFLAGS
+if test x$use_static_standardlibs != xno ; then
+  case $build in
+    *-mingw*)
+      static_standardlib_flag=-static
+      ;;
+    *)
+      static_standardlib_flag=-static-libstdc++
+      ;;
+  esac
+  case " $LDFLAGS " in
+    *" $static_standardlib_flag "* ) ;;
+    *)
+    AC_MSG_CHECKING([whether linking with $static_standardlib_flag works])
+    coin_save_LDFLAGS="$LDFLAGS"
+    LDFLAGS="$LDFLAGS $static_standardlib_flag"
+    AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM(, [int i=0;])],
+      [AC_MSG_RESULT(yes)],
+      [AC_MSG_RESULT(no)
+       LDFLAGS="$coin_save_LDFLAGS"
+       if test $use_static_standardlibs = yes ; then
+         AC_MSG_ERROR([failed to link with $static_standardlib_flag])
+       fi
+      ])
+    ;;
+  esac
+fi
+
 AC_LANG_POP(C++)
 ]) # AC_COIN_PROG_CXX
 
@@ -690,6 +720,38 @@ AC_LANG_POP(C++)
 ]) # AC_COIN_CHECK_CXX_CHEADER
 
 ###########################################################################
+#                   COIN_ENABLE_STATICSTDLIBS                             #
+###########################################################################
+
+# This macro defines the --enable-static-standardlibs flag and determines
+# its default value according to the setting of --enable-shared.
+# That is, if static libraries are build, then we also try to link against
+# static standard libraries, unless the corresponding flags do not work.
+
+AC_DEFUN([AC_COIN_ENABLE_STATICSTDLIBS],
+[
+
+# check whether to add flags for static linking against standard libraries
+AC_ARG_ENABLE([static-standardlibs],
+  [AC_HELP_STRING([--enable-static-standardlibs],
+                  [whether to link against static standard libraries (libgcc, libgfortran, libstdc++)])],
+  [case "$enableval" in
+     no | yes | auto ) ;;
+     *)
+       AC_MSG_ERROR([invalid argument for --enable-static-standardlibs: $enableval]) ;;
+   esac
+   use_static_standardlibs=$enableval],
+  [if test $enable_shared = yes ; then
+     use_static_standardlibs = no
+   else
+     use_static_standardlibs = auto
+   fi
+  ]
+)
+
+]);
+
+###########################################################################
 #                             COIN_PROG_CC                                #
 ###########################################################################
 
@@ -701,6 +763,7 @@ AC_LANG_POP(C++)
 AC_DEFUN([AC_COIN_PROG_CC],
 [AC_REQUIRE([AC_COIN_MINGW_LD_FIX])
 AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
+AC_REQUIRE([AC_COIN_ENABLE_STATICSTDLIBS])
 AC_LANG_PUSH(C)
 
 # For consistency, we set the C compiler to the same value of the C++
@@ -911,6 +974,7 @@ if test x"$CFLAGS" = x; then
   else
     CFLAGS="$OPT_CFLAGS"
   fi
+
 else
   CFLAGS="$CFLAGS $ADD_CFLAGS $CDEFS"
   if test x${DBG_CFLAGS+set} != xset; then
@@ -971,6 +1035,35 @@ case "$CC" in
     ;;
 esac
 
+# check whether to add flags for static linking against standard libraries to LDFLAGS
+if test x$use_static_standardlibs != xno ; then
+  case $build in
+    *-mingw*)
+      static_standardlib_flag=-static
+      ;;
+    *)
+      static_standardlib_flag=-static-libgcc
+      ;;
+  esac
+  case " $LDFLAGS " in
+    *" $static_standardlib_flag "* ) ;;
+    *)
+    AC_MSG_CHECKING([whether linking with $static_standardlib_flag works])
+    coin_save_LDFLAGS="$LDFLAGS"
+    LDFLAGS="$LDFLAGS $static_standardlib_flag"
+    AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM(, [int i=0;])],
+      [AC_MSG_RESULT(yes)],
+      [AC_MSG_RESULT(no)
+       LDFLAGS="$coin_save_LDFLAGS"
+       if test $use_static_standardlibs = yes ; then
+         AC_MSG_ERROR([failed to link with $static_standardlib_flag])
+       fi
+      ])
+    ;;
+  esac
+fi
+
 AC_LANG_POP(C)
 ]) # AC_COIN_PROG_CC
 
@@ -985,6 +1078,7 @@ AC_LANG_POP(C)
 AC_DEFUN([AC_COIN_PROG_F77],
 [AC_REQUIRE([AC_COIN_MINGW_LD_FIX])
 AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
+AC_REQUIRE([AC_COIN_ENABLE_STATICSTDLIBS])
 AC_REQUIRE([AC_COIN_PROG_CC])
 AC_REQUIRE([AC_COIN_F77_COMPS])
 AC_LANG_PUSH([Fortran 77])
@@ -1132,6 +1226,7 @@ if test "$F77" != "unavailable" && test x"$FFLAGS" = x ; then
   else
     FFLAGS="$OPT_FFLAGS"
   fi
+
 else
   FFLAGS="$FFLAGS $ADD_FFLAGS"
   if test x${DBG_FFLAGS+set} != xset; then
@@ -1185,6 +1280,35 @@ case "$F77" in
     AC_COIN_MINGW_LD_FIX
     ;;
 esac
+
+# check whether to add flag for static linking against standard libraries to LDFLAGS
+if test x$use_static_standardlibs != xno ; then
+  case $build in
+    *-mingw*)
+      static_standardlib_flag=-static
+      ;;
+    *)
+      static_standardlib_flag=-static-libgfortran
+      ;;
+  esac
+  case " $LDFLAGS " in
+    *" $static_standardlib_flag "* ) ;;
+    *)
+    AC_MSG_CHECKING([whether linking with $static_standardlib_flag works])
+    coin_save_LDFLAGS="$LDFLAGS"
+    LDFLAGS="$LDFLAGS $static_standardlib_flag"
+    AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM(,[      integer i])],
+      [AC_MSG_RESULT(yes)],
+      [AC_MSG_RESULT(no)
+       LDFLAGS="$coin_save_LDFLAGS"
+       if test $use_static_standardlibs = yes ; then
+         AC_MSG_ERROR([failed to link with $static_standardlib_flag])
+       fi
+      ])
+    ;;
+  esac
+fi
 
 AC_LANG_POP([Fortran 77])
 ]) # AC_COIN_PROG_F77
