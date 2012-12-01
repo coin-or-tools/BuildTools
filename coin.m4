@@ -741,10 +741,10 @@ AC_ARG_ENABLE([static-standardlibs],
        AC_MSG_ERROR([invalid argument for --enable-static-standardlibs: $enableval]) ;;
    esac
    use_static_standardlibs=$enableval],
-  [if test $enable_shared = yes ; then
-     use_static_standardlibs = no
-   else
+  [if test x$enable_shared = xno ; then
      use_static_standardlibs = auto
+   else
+     use_static_standardlibs = no
    fi
   ]
 )
