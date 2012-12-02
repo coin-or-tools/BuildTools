@@ -727,28 +727,41 @@ AC_LANG_POP(C++)
 # its default value according to the setting of --enable-shared.
 # That is, if static libraries are build, then we also try to link against
 # static standard libraries, unless the corresponding flags do not work.
+#
+# Since this is not yet always working as desired, we do not advertise this
+# option and do not enable it automatically, yet.
+
+#AC_DEFUN([AC_COIN_ENABLE_STATICSTDLIBS],
+#[
+#AC_ARG_ENABLE([static-standardlibs],
+#  [AC_HELP_STRING([--enable-static-standardlibs],
+#                  [whether to link against static standard libraries (libgcc, libgfortran, libstdc++)])],
+#  [case "$enableval" in
+#     no | yes | auto ) ;;
+#     *)
+#       AC_MSG_ERROR([invalid argument for --enable-static-standardlibs: $enableval]) ;;
+#   esac
+#   use_static_standardlibs=$enableval],
+#  [if test x$enable_shared = xno ; then
+#     use_static_standardlibs=auto
+#   else
+#     use_static_standardlibs=no
+#   fi
+#  ]
+#)
+#]);
 
 AC_DEFUN([AC_COIN_ENABLE_STATICSTDLIBS],
 [
-
-# check whether to add flags for static linking against standard libraries
 AC_ARG_ENABLE([static-standardlibs],
-  [AC_HELP_STRING([--enable-static-standardlibs],
-                  [whether to link against static standard libraries (libgcc, libgfortran, libstdc++)])],
+  [],
   [case "$enableval" in
      no | yes | auto ) ;;
      *)
        AC_MSG_ERROR([invalid argument for --enable-static-standardlibs: $enableval]) ;;
    esac
    use_static_standardlibs=$enableval],
-  [if test x$enable_shared = xno ; then
-     use_static_standardlibs = auto
-   else
-     use_static_standardlibs = no
-   fi
-  ]
-)
-
+  [use_static_standardlibs=no])
 ]);
 
 ###########################################################################
