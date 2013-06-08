@@ -3157,7 +3157,11 @@ AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
 AC_ARG_ENABLE([pkg-config],
   [AC_HELP_STRING([--disable-pkg-config],[disable use of pkg-config (if available)])],
   [use_pkgconfig="$enableval"],
-  [use_pkgconfig=yes])
+  [if test x$coin_cc_is_cl = xtrue; then
+     use_pkgconfig=no
+   else
+     use_pkgconfig=yes
+   fi])
 
 if test $use_pkgconfig = yes ; then
   if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
