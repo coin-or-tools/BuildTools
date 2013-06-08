@@ -425,7 +425,7 @@ if test x"$CXXFLAGS" = x; then
           clang* ) ;;
           cl* | */cl* | CL* | */CL*)
             # The MT and MTd options are mutually exclusive
-            if test "$coin_disable_shared" = yes ; then
+            if test "$coin_disable_shared" = yes || test "$enable_shared" = yes ; then
                coin_opt_cxxflags='-MD -O2'
                coin_dbg_cxxflags='-MDd'
             else
@@ -436,7 +436,7 @@ if test x"$CXXFLAGS" = x; then
             ;;
           icl* | */icl* | ICL* | */ICL*)
           # The MT and MTd options are mutually exclusive
-            if test "$coin_disable_shared" = yes ; then
+            if test "$coin_disable_shared" = yes || test "$enable_shared" = yes ; then
               coin_opt_cxxflags='-MD -Ox'
               coin_dbg_cxxflags='-MDd -debug'
             else
@@ -913,7 +913,7 @@ if test x"$CFLAGS" = x; then
         case "$CC" in
           clang* ) ;;
           cl* | */cl* | CL* | */CL*)
-            if test "$coin_disable_shared" = yes ; then
+            if test "$coin_disable_shared" = yes || test "$enable_shared" = yes ; then
               coin_opt_cflags='-MD -O2'
               coin_dbg_cflags='-MDd'
             else
@@ -923,7 +923,7 @@ if test x"$CFLAGS" = x; then
             coin_add_cflags='-nologo -wd4996 -D_CRT_SECURE_NO_DEPRECATE'
             ;;
           icl* | */icl* | ICL* | */ICL*)
-            if test "$coin_disable_shared" = yes ; then
+            if test "$coin_disable_shared" = yes || test "$enable_shared" = yes ; then
               coin_opt_cflags='-MD -Ox'
               coin_dbg_cflags='-MDd -debug'
             else
@@ -1175,7 +1175,7 @@ if test "$F77" != "unavailable" && test x"$FFLAGS" = x ; then
       *-cygwin* | *-mingw*)
         case $F77 in
           ifort* | */ifort* | IFORT* | */IFORT* )
-            if test "$coin_disable_shared" = yes ; then
+            if test "$coin_disable_shared" = yes || test "$enable_shared" = yes ; then
               coin_opt_fflags='-MD -O3'
               coin_dbg_fflags='-MDd -debug'
             else
@@ -1185,7 +1185,7 @@ if test "$F77" != "unavailable" && test x"$FFLAGS" = x ; then
             coin_add_fflags='-fpp -nologo'
           ;;
           compile_f2c*)
-            if test "$coin_disable_shared" = yes ; then
+            if test "$coin_disable_shared" = yes || test "$enable_shared" = yes ; then
               coin_opt_fflags='-MD -O2'
               coin_dbg_fflags='-MDd'
             else
