@@ -3161,7 +3161,7 @@ AC_ARG_ENABLE([pkg-config],
 
 if test $use_pkgconfig = yes ; then
   if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
-    AC_PATH_TOOL([PKG_CONFIG], [pkg-config])
+    AC_CHECK_TOOL([PKG_CONFIG], [pkg-config])
   fi
   if test -n "$PKG_CONFIG"; then
     _pkg_min_version=m4_default([$1], [0.16.0])
