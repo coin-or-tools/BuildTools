@@ -65,8 +65,7 @@ AC_MSG_RESULT($coin_vpath_config)
 # to versioning numbers of the project.
 
 AC_DEFUN([AC_COIN_PROJECTVERSION],
-[
-m4_ifvaln([$1],[
+[m4_ifvaln([$1],[
   AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION), ["$PACKAGE_VERSION"],[Version number of project])
   
   [coin_majorver=`echo $PACKAGE_VERSION | sed -n -e 's/^\([0-9]*\).*/\1/gp'`]
@@ -97,7 +96,7 @@ m4_ifvaln([$1],[
   fi
  ])
  
- # Capture libtool library version, if given.
+# Capture libtool library version, if given.
  m4_ifvaln([$2],[coin_libversion=$2],[])
 ])
 
@@ -127,7 +126,6 @@ coin_projectdir=yes
 
 # Set the project's version numbers
 AC_COIN_PROJECTVERSION($1, $2)
-
 ]) # AC_COIN_PROJECTDIR_INIT
 
 ###########################################################################
