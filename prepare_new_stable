@@ -381,10 +381,7 @@ cd $coDir
 # be two files for a standard project, one for a ThirdParty or Data project.
 
 echo ''
-bak_files=`find $srcProj -name 'configure.ac'`
-if test -e configure.ac ; then
-  bak_files="$bak_files configure.ac"
-fi
+bak_files=`find . -name 'configure.ac'`
 echo "===> Creating backup (.bak) for configure.ac files..."
 for i in $bak_files; do
   cp $i $i.bak
@@ -408,8 +405,7 @@ done
 # add config_proj_default.h.bak to the list of files to be restored.
 
 srcProjUC=`echo $srcProj | tr '[a-z]' '[A-Z]'`
-configFileLoc=`find $srcProj -name .svn -prune -o -name 'config_*_default.h' -print`
-echo "config File Loc: $configFileLoc"
+configFileLoc=`find . -name .svn -prune -o -name 'config_*_default.h' -print`
 if test -n "$configFileLoc" ; then
   versionSym=${srcProjUC}_VERSION
   echo ''
