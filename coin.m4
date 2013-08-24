@@ -867,6 +867,9 @@ case "$CC" in
       ac_cv_prog_cc_g=no
       AC_MSG_NOTICE([Overruling autoconf; cl does not recognise -g.])
     fi ;;
+  * )
+    CYGPATH_W = echo
+    ;;
 esac
 CFLAGS="$save_cflags"
 
@@ -876,9 +879,6 @@ case "$CC" in
   clang* ) ;;
   cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
     coin_cc_is_cl=true
-    ;;
-  * )
-    CYGPATH_W=echo
     ;;
 esac
 AM_CONDITIONAL(COIN_CC_IS_CL, [test $coin_cc_is_cl = true])
@@ -3221,7 +3221,7 @@ if test $use_pkgconfig = yes ; then
   if test -n "$PKG_CONFIG"; then
     _pkg_min_version=m4_default([$1], [0.16.0])
     AC_MSG_CHECKING([pkg-config is at least version $_pkg_min_version])
-    if "$PKG_CONFIG" --atleast-pkgconfig-version $_pkg_min_version; then
+    if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
       AC_MSG_RESULT([yes])
     else
       AC_MSG_RESULT([no])
@@ -3231,7 +3231,7 @@ if test $use_pkgconfig = yes ; then
 
   # check if pkg-config supports the short-errors flag
   if test -n "$PKG_CONFIG" && \
-    "$PKG_CONFIG" --atleast-pkgconfig-version 0.20; then
+    $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
     pkg_short_errors=" --short-errors "
   else
     pkg_short_errors=""
@@ -3314,11 +3314,11 @@ fi
 AC_DEFUN([AC_COIN_PKG_CHECK_PROJECT_EXISTS],
 [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
 if test -n "$PKG_CONFIG" ; then
-  if "$PKG_CONFIG" --exists "m4_tolower($1)"; then
-    m4_toupper($1)[]_VERSION=`"$PKG_CONFIG" --modversion "m4_tolower($1)" 2>/dev/null`
+  if $PKG_CONFIG --exists "m4_tolower($1)"; then
+    m4_toupper($1)[]_VERSION=`$PKG_CONFIG --modversion "m4_tolower($1)" 2>/dev/null`
     m4_ifval([$2], [$2], [:])
   else
-    m4_toupper($1)_PKG_ERRORS=`"$PKG_CONFIG" $pkg_short_errors --errors-to-stdout --print-errors "m4_tolower($1)"`
+    m4_toupper($1)_PKG_ERRORS=`$PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "m4_tolower($1)"`
     $3
   fi
 else
@@ -3338,11 +3338,11 @@ fi
 AC_DEFUN([AC_COIN_PKG_CHECK_MODULE_EXISTS],
 [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
 if test -n "$PKG_CONFIG" ; then
-  if "$PKG_CONFIG" --exists "$2"; then
-    m4_toupper($1)[]_VERSIONS=`"$PKG_CONFIG" --modversion "$2" 2>/dev/null | tr '\n' ' '`
+  if $PKG_CONFIG --exists "$2"; then
+    m4_toupper($1)[]_VERSIONS=`$PKG_CONFIG --modversion "$2" 2>/dev/null | tr '\n' ' '`
     $3
   else
-    m4_toupper($1)_PKG_ERRORS=`"$PKG_CONFIG" $pkg_short_errors --errors-to-stdout --print-errors "$2"`
+    m4_toupper($1)_PKG_ERRORS=`$PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "$2"`
     $4
   fi
 else
@@ -3366,7 +3366,7 @@ AC_DEFUN([AC_COIN_PKG_HAS_MODULE],
 [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
 
 AC_COIN_PKG_CHECK_MODULE_EXISTS([$1],[$2],
-  [ cflags=`"$PKG_CONFIG" --cflags "$2" 2>/dev/null`
+  [ cflags=`$PKG_CONFIG --cflags "$2" 2>/dev/null`
     # pkg-config cannot handle spaces, so CYGPATH_W cannot be put into .pc files
 	# thus, we modify the cflags extracted from pkg-config by putting CYGPATH_W behind -I's
 	# but only do this if is not trivial
@@ -3375,8 +3375,8 @@ AC_COIN_PKG_CHECK_MODULE_EXISTS([$1],[$2],
       [cflags=`echo $cflags | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`]
     fi
     m4_toupper($1)[]_CFLAGS="$cflags"
-    m4_toupper($1)[]_LIBS=`"$PKG_CONFIG" --libs "$2" 2>/dev/null`
-    m4_toupper($1)[]_DATA=`"$PKG_CONFIG" --variable=datadir "$2" 2>/dev/null`
+    m4_toupper($1)[]_LIBS=`$PKG_CONFIG --libs "$2" 2>/dev/null`
+    m4_toupper($1)[]_DATA=`$PKG_CONFIG --variable=datadir "$2" 2>/dev/null`
     $3
   ],
   [ $4 ])
