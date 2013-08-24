@@ -381,7 +381,7 @@ case "$CXX" in
       AC_MSG_NOTICE([Overruling autoconf; cl does not recognise -g.])
     fi ;;
   * )
-    CYGPATH_W = echo
+    CYGPATH_W=echo
     ;;
 esac
 CXXFLAGS="$save_cxxflags"
@@ -868,7 +868,7 @@ case "$CC" in
       AC_MSG_NOTICE([Overruling autoconf; cl does not recognise -g.])
     fi ;;
   * )
-    CYGPATH_W = echo
+    CYGPATH_W=echo
     ;;
 esac
 CFLAGS="$save_cflags"
