@@ -379,6 +379,9 @@ case "$CXX" in
       ac_cv_prog_cxx_g=no
       AC_MSG_NOTICE([Overruling autoconf; cl does not recognise -g.])
     fi ;;
+  * )
+    CYGPATH_W=echo
+    ;;
 esac
 CXXFLAGS="$save_cxxflags"
 
@@ -788,6 +791,9 @@ case "$CC" in
       ac_cv_prog_cc_g=no
       AC_MSG_NOTICE([Overruling autoconf; cl does not recognise -g.])
     fi ;;
+  * )
+    CYGPATH_W=echo
+    ;;
 esac
 CFLAGS="$save_cflags"
 
@@ -1629,29 +1635,34 @@ if test "x$1" = xforce_shared; then
 else
   # On Cygwin and AIX, building DLLs doesn't work
   case $build in
-    *-cygwin*)
+    *-cygwin* | *-mingw*)
       coin_disable_shared=yes
-      platform=Cygwin
+      if test x"$enable_shared" = xyes; then
+        case "$CXX" in
+          clang* )
+            AC_MSG_WARN([DLL building not supported. I'm disabling your choice.])
+            ;;
+          cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+            AC_MSG_WARN([DLL building not supported. I'm disabling your choice, but will build with -MD(d) instead of -MT(d).])
+            ;;
+          *)
+            AC_MSG_WARN([DLL building not supported. I'm disabling your choice.])
+            ;;
+        esac
+      fi
     ;;
     *-aix*)
       coin_disable_shared=yes
       platform=AIX
-    ;;
-    *-mingw*)
-      coin_disable_shared=yes
-      platform="Msys"
-#      case "$CXX" in
-#        cl*)
-#          coin_disable_shared=yes
-#          platform="Msys with cl"
-#      ;;
-#      esac
+      if test x"$enable_shared" = xyes; then
+        AC_MSG_WARN([Shared objects are not supported. I'm disabling your choice.])
+      fi
     ;;
   esac
 fi
 if test x"$coin_disable_shared" = xyes; then
   if test x"$enable_shared" = xyes; then
-    AC_MSG_WARN([On $platform, shared objects are not supported. I'm disabling your choice.])
+    :
   else
     # we don't disable shared, because it was not selected anyway
     coin_disable_shared=no

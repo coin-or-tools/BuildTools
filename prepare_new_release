@@ -360,8 +360,8 @@ fi
 # Now decide where to build and check out code. If the stable project name
 # contains a '/', strip it out to make the build and checkout directories.
 
-topBuildDir=`echo $stableProj | sed -e 's|.*/\([^/]*\)$|\1|'`
-topBuildDir="${topBuildDir}-${newVer}"
+topProjName=`echo $stableProj | sed -e 's|.*/\([^/]*\)$|\1|'`
+topBuildDir="${topProjName}-${newVer}"
 if test $isThirdParty = yes; then
   coDir=$topBuildDir/Thirdparty/$stableProj
 elif test $isData = yes; then
@@ -417,7 +417,9 @@ cd $coDir
 
 echo ''
 echo "===> Checking for configure.ac files ..."
-bak_files=`find $stableProj -name 'configure.ac'`
+if test -d $topProjName ; then
+  bak_files=`find $topProjName -name 'configure.ac'`
+fi
 if test -e configure.ac ; then
   bak_files="$bak_files configure.ac"
 fi
@@ -450,10 +452,12 @@ fi
 # Find config_proj_default.h. If there's a definition for PROJ_VERSION, adjust it and
 # add config_proj_default.h.bak to the list of files to be restored.
 
-stableProjUC=`echo $stableProj | tr '[a-z]' '[A-Z]'`
-configFileLoc=`find $stableProj -name .svn -prune -o -name 'config_*_default.h' -print`
+topProjNameUC=`echo $topProjName | tr '[a-z]' '[A-Z]'`
+if test -d $topProjName ; then
+  configFileLoc=`find $topProjName -name .svn -prune -o -name 'config_*_default.h' -print`
+fi
 if test -n "$configFileLoc" ; then
-  versionSym=${stableProjUC}_VERSION
+  versionSym=${topProjNameUC}_VERSION
   echo ''
   echo "===> Updating $versionSym in $configFileLoc (if present)"
   echo ''
