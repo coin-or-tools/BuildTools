@@ -649,7 +649,7 @@ if test -n "$srcDepFile" ; then
 	  ext_proj=`extractProjFromURL $ext_url`
 	  getScript=get.$ext_proj
 	  if test -x "$getScript" ; then
-	    ./$getScript -patch
+	    ./$getScript -y
 	  fi
 	  cd $coDir
 	fi
@@ -668,7 +668,7 @@ if test $isThirdParty = yes ; then
     echo ''
     echo '===> Downloading third party code ...'
     echo ''
-    ./get.$stableProj
+    ./get.$stableProj -y
   else
     isThirdPartyWithoutGet=yes
   fi
