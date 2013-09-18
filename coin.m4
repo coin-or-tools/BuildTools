@@ -264,19 +264,19 @@ AC_DEFUN([AC_COIN_MINGW_LD_FIX],
 AC_DEFUN([AC_COIN_ENABLE_MSVC],
 [AC_REQUIRE([AC_CANONICAL_BUILD])
 
-  enable_msvc=no
+  # for backward compatibility
+  AC_ARG_ENABLE([doscompile],,[enable_doscompile=$enableval],[enable_doscompile=no])
   
   AC_ARG_ENABLE([msvc],
     [AC_HELP_STRING([--enable-msvc],
                     [Prefer (i)cl/ifort/link over GNU on MinGW/Cygwin.])],
-    [],
-    [AC_ARG_ENABLE([doscompile],[],
-       [if test "$enable_doscompile" = msvc ; then
-          enable_msvc=yes
-        elif test "$enable_doscompile" != no ; then
-          AC_MSG_ERROR([--enable-doscompile=$enable_doscompile not supported anymore.])
-        fi
-       ])
+    [enable_msvc=$enableval],
+    [enable_msvc=no
+     if test "$enable_doscompile" = msvc ; then
+       enable_msvc=yes
+     elif test "$enable_doscompile" != no ; then
+       AC_MSG_ERROR([--enable-doscompile=$enable_doscompile not supported anymore.])
+     fi
     ])
 
   if test "$enable_msvc" = yes; then
