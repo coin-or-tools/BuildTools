@@ -229,61 +229,73 @@ m4_ifvaln([$1],
 # CFLAGS and CXXFLAGS suffice.
 
 AC_DEFUN([AC_COIN_MINGW_LD_FIX],
-[AC_REQUIRE([AC_COIN_ENABLE_MSVC])
- case $build in
+[case $build in
   *-mingw*)
     if test "${LD+set}" = set; then :; else
       LD=link
     fi
     ;;
  esac
- if test $enable_msvc = yes ; then
-   if test "x${LD+set}" = xset; then :; else
-     LD=link
-   fi
- fi
+ case $enable_doscompile in
+   msvc)
+     if test "x${LD+set}" = xset; then :; else
+       LD=link
+     fi
+     ;;
+ esac
 ])
 
 ###########################################################################
-#                          COIN_ENABLE_MSVC                               # 
+#                        COIN_ENABLE_DOSCOMPILE                           #
 ###########################################################################
 
 # This macro is invoked by any PROG_compiler macro to establish the
-# --enable-msvc option.
-# The job of this macro is to make sure the option is correct and
-# to set enable_msvc. Legal values are yes and no (disabled).
-# If set, assume the presence of cl/link. It's the user's responsibility to
-# make sure their PATH is correct. In particular, that MSVC link is found
-# and not cygwin link (we want to do code linking, not file linking).
+# --enable-doscompile option, used when one wants to compile an executable
+# under Cygwin which also runs directly under DOS (without requiring
+# Cygwin1.dll). The job of this macro is to make sure the option is correct and
+# to set enable_doscompile. Legal values are mingw, msvc, and no (disabled).
+# mingw: Fake mingw under cygwin, using GCC tools and -mno-cygwin. The most
+#	 important thing here is that preprocess, compile, and link steps
+#	 *all* see -mno-cygwin.
+# msvc:  Assume the presence of cl/link. It's the user's responsibility to
+#        make sure their PATH is correct. In particular, that MSVC link is
+#	 found and not cygwin link (we want to do code linking, not file
+#	 linking).
 # It's the responsibility of individual PROG_compiler macros to ensure that
 # they correctly set the compiler search list and preprocess, compile, and
 # link flags. This is tied to compiler setup because in practice invocations
 # of the preprocessor and linker are made through the compiler.
-# For backward compatibility, we also check for --enable-doscompile=msvc.
 
-AC_DEFUN([AC_COIN_ENABLE_MSVC],
+AC_DEFUN([AC_COIN_ENABLE_DOSCOMPILE],
 [AC_REQUIRE([AC_CANONICAL_BUILD])
-
-  # for backward compatibility
-  AC_ARG_ENABLE([doscompile],,[enable_doscompile=$enableval],[enable_doscompile=no])
-  
-  AC_ARG_ENABLE([msvc],
-    [AC_HELP_STRING([--enable-msvc],
-                    [Prefer (i)cl/ifort/link over GNU on MinGW/Cygwin.])],
-    [enable_msvc=$enableval],
-    [enable_msvc=no
-     if test "$enable_doscompile" = msvc ; then
-       enable_msvc=yes
-     elif test "$enable_doscompile" != no ; then
-       AC_MSG_ERROR([--enable-doscompile=$enable_doscompile not supported anymore.])
-     fi
-    ])
-
-  if test "$enable_msvc" = yes; then
-    case $build in
-      *-cygwin* | *-mingw*) ;;
-      *) AC_MSG_ERROR([--enable-msvc option makes sense only under Cygwin or MinGW]) ;;
-    esac
+ AC_ARG_ENABLE([doscompile],
+  [AC_HELP_STRING([--enable-doscompile],
+                  [Under Cygwin, compile so that executables run under DOS.
+		   Set to mingw to use gcc/g++/ld with -mno-cygwin.
+		   Set to msvc to use cl/link (or icl/link).
+		   Default when mentioned: mingw.
+		   Default when not mentioned: disabled.])],
+  [if test "$enable_doscompile" != no; then
+     case $build in
+       *-cygwin* | *-mingw*) ;;
+       *) AC_MSG_ERROR([--enable-doscompile option makes sense only under Cygwin or MinGW]) ;;
+     esac
+   fi],
+  [enable_doscompile=no])
+ case "$enable_doscompile" in
+   mingw)
+     case $build in
+       *-mingw*) enable_doscompile=no ;;
+     esac
+     ;;
+   msvc|no) ;;
+   yes) enable_doscompile=mingw ;;
+   *) AC_MSG_ERROR([Invalid value $enable_doscompile for --enable-doscompile.
+		    Try configure --help=recursive.])
+      ;;
+  esac
+  if test "$enable_doscompile" != no ; then
+    AC_MSG_NOTICE([DOS compile style is: $enable_doscompile])
   fi
 ])
 
@@ -300,7 +312,7 @@ AC_DEFUN([AC_COIN_ENABLE_MSVC],
 
 AC_DEFUN([AC_COIN_PROG_CXX],
 [AC_REQUIRE([AC_COIN_PROG_CC]) #Let's try if that overcomes configuration problem with VC++ 6.0
-AC_REQUIRE([AC_COIN_ENABLE_MSVC])
+AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
 AC_LANG_PUSH(C++)
 
 AC_ARG_VAR(CXXDEFS,[Additional -D flags to be used when compiling C++ code.])
@@ -314,11 +326,11 @@ save_cxxflags="$CXXFLAGS"
 # For *-*-solaris*, promote Studio/Workshop compiler to front of list.
 case $build in
   *-cygwin* | *-mingw*)
-      if test "$enable_msvc" = yes ; then
-         comps="icl cl g++"
-      else
-         comps="g++ icl cl"
-      fi ;;
+  	     if test "$enable_doscompile" = msvc ; then
+	       comps="icl cl"
+	     else
+	       comps="g++ cl"
+	     fi ;;
   *-*-solaris*)
   	     comps="CC xlC_r aCC g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC" ;;
   *-darwin*) comps="g++ c++ CC" ;;
@@ -405,6 +417,14 @@ if test x"$CXXFLAGS" = x; then
           *)
             coin_warn_cxxflags="-pedantic-errors $coin_warn_cxxflags"
             ;;
+        esac
+
+        case $enable_doscompile in
+          mingw)
+            CXXFLAGS="-mno-cygwin"
+            AC_TRY_LINK(,[int i=0; i++;],[coin_add_cxxflags="-mno-cygwin $coin_add_cxxflags"])
+            CXXFLAGS=
+          ;;
         esac
     esac
   fi
@@ -704,7 +724,7 @@ AC_LANG_POP(C++)
 
 AC_DEFUN([AC_COIN_PROG_CC],
 [AC_REQUIRE([AC_COIN_MINGW_LD_FIX])
-AC_REQUIRE([AC_COIN_ENABLE_MSVC])
+AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
 AC_LANG_PUSH(C)
 
 # For consistency, we set the C compiler to the same value of the C++
@@ -737,10 +757,10 @@ save_cflags="$CFLAGS"
 
 case $build in
   *-cygwin* | *-mingw*)
-  	     if test "$enable_msvc" = yes ; then
-	       comps="icl cl gcc"
+  	     if test "$enable_doscompile" = msvc ; then
+	       comps="icl cl"
 	     else
-	       comps="gcc icl cl"
+	       comps="gcc cl"
 	     fi ;;
   *-*-solaris*)
 	     AC_CHECK_PROG(sol_cc_compiler,cc,cc,[],[],/usr/ucb/cc)
@@ -818,6 +838,14 @@ if test x"$CFLAGS" = x; then
             coin_warn_cflags="-pedantic-errors $coin_warn_cflags"
             ;;
         esac
+	case $enable_doscompile in
+	  mingw)
+	    CFLAGS="-mno-cygwin"
+	    AC_TRY_LINK([],[int i=0; i++;],
+			[coin_add_cflags="-mno-cygwin $coin_add_cflags"])
+	    CFLAGS=
+	  ;;
+	esac
     esac
   fi
   if test -z "$coin_opt_cflags"; then
@@ -993,7 +1021,7 @@ AC_LANG_POP(C)
 
 AC_DEFUN([AC_COIN_PROG_F77],
 [AC_REQUIRE([AC_COIN_MINGW_LD_FIX])
-AC_REQUIRE([AC_COIN_ENABLE_MSVC])
+AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
 AC_REQUIRE([AC_COIN_PROG_CC])
 AC_REQUIRE([AC_COIN_F77_COMPS])
 AC_LANG_PUSH([Fortran 77])
@@ -1044,6 +1072,14 @@ if test "$F77" != "unavailable" && test x"$FFLAGS" = x ; then
     coin_opt_fflags="-O3"
     coin_add_fflags="-pipe"
     coin_dbg_fflags="-g -O0"
+    case $enable_doscompile in
+      mingw)
+	FFLAGS="-mno-cygwin"
+	AC_TRY_LINK(,[      write(*,*) 'Hello world'],
+		    [coin_add_fflags="-mno-cygwin $coin_add_fflags"])
+	FFLAGS=
+      ;;
+    esac
   else
     case $build in
       *-cygwin* | *-mingw*)
@@ -1295,7 +1331,7 @@ AC_LANG_POP([Fortran 77])
 # found. It should be called before COIN_PROG_F77 or COIN_TRY_FLINK.
 
 AC_DEFUN([AC_COIN_FIND_F77],
-[AC_REQUIRE([AC_COIN_ENABLE_MSVC])
+[AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
 AC_REQUIRE([AC_COIN_F77_COMPS])
 AC_MSG_NOTICE([Trying to determine Fortran compiler name])
 AC_CHECK_TOOLS([F77],[$coin_f77_comps],[unavailable])
@@ -1307,8 +1343,8 @@ AC_CHECK_TOOLS([F77],[$coin_f77_comps],[unavailable])
 AC_DEFUN([AC_COIN_F77_COMPS],
 [case $build in
   *-cygwin* | *-mingw*)
-     if test "$enable_msvc" = yes ; then
-       coin_f77_comps="ifort fl32 compile_f2c gfortran g95 g77"
+     if test "$enable_doscompile" = msvc ; then
+       coin_f77_comps="ifort fl32 compile_f2c"
      else
        coin_f77_comps="gfortran ifort g95 g77 fl32 compile_f2c"
      fi ;;
@@ -1972,10 +2008,13 @@ AC_SUBST(RPATH_FLAGS)
 AC_DEFUN([AC_COIN_LINK_INPUT_CMD],
 [AC_REQUIRE([AC_PROG_LN_S])
 AC_BEFORE([AC_COIN_PROG_CC], [$0])
-AC_BEFORE([AC_COIN_ENABLE_MSVC], [$0])
+AC_BEFORE([AC_COIN_ENABLE_DOSCOMPILE], [$0])
 
 AC_MSG_CHECKING([which command should be used to link input files])
 coin_link_input_cmd="$LN_S"
+if test "$enable_doscompile" = mingw; then
+  coin_link_input_cmd=cp
+fi
 case "$CC" in
   clang* ) ;;
   cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
@@ -2638,7 +2677,7 @@ AC_COIN_LINKCOPY_FROM_FILELIST($1, $2, [cp])
 
 AC_DEFUN([AC_COIN_EXAMPLE_FILES],
 [AC_REQUIRE([AC_COIN_CHECK_VPATH])
-AC_REQUIRE([AC_COIN_ENABLE_MSVC])
+AC_REQUIRE([AC_COIN_ENABLE_DOSCOMPILE])
 AC_REQUIRE([AC_PROG_LN_S])
 
 files=`cd $srcdir; ls $1`
@@ -2649,7 +2688,7 @@ for file in $files; do
 done
 if test $coin_vpath_config = yes; then
   lnkcmd=
-  if test "$enable_msvc" = yes; then
+  if test "$enable_doscompile" != no; then
     lnkcmd=cp
   fi
   case "$CC" in
@@ -3928,6 +3967,7 @@ if test x"$use_blas" != x; then
 else
 # Try to autodetect the library for blas based on build system
   #AC_MSG_CHECKING([default locations for BLAS])
+  skip_lblas_check=no
   case $build in
     *-sgi-*) 
       AC_MSG_CHECKING([whether -lcomplib.sgimath has BLAS])
@@ -3968,6 +4008,11 @@ else
       ;;
       
     *-cygwin* | *-mingw*)
+# On cygwin, consider -lblas only if doscompile is disabled. The prebuilt
+# library will want to link with cygwin, hence won't run standalone in DOS.
+      if test "$enable_doscompile" = mingw; then
+        skip_lblas_check=yes
+      fi
       case "$CC" in
         clang* ) ;;
         cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
@@ -4012,7 +4057,7 @@ else
       ;;
   esac
 
-  if test -z "$use_blas" ; then
+  if test -z "$use_blas" && test $skip_lblas_check = no; then
     AC_MSG_CHECKING([whether -lblas has BLAS])
     coin_need_flibs=no
     coin_save_LIBS="$LIBS"
@@ -4137,6 +4182,7 @@ else
                       [AC_MSG_RESULT([no])])
     LIBS="$coin_save_LIBS"
   fi
+  skip_llapack_check=no
   if test -z "$use_lapack"; then
     # Try to autodetect the library for lapack based on build system
     case $build in
@@ -4178,10 +4224,17 @@ else
         ;;
         # On cygwin, do this check only if doscompile is disabled. The prebuilt library
         # will want to link with cygwin, hence won't run standalone in DOS.
+        
+      *-cygwin*)
+	if test "$enable_doscompile" = mingw; then
+	  skip_llapack_check=yes
+	fi
+	;;
+	
     esac
   fi
 
-  if test -z "$use_lapack" ; then
+  if test -z "$use_lapack" && test $skip_llapack_check = no; then
     AC_MSG_CHECKING([whether -llapack has LAPACK])
     coin_need_flibs=no
     coin_save_LIBS="$LIBS"
