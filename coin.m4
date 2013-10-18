@@ -1649,12 +1649,12 @@ AC_COIN_DISABLE_STATIC([$1])
 AC_COIN_INIT_AUTOMAKE
 
 LIBTOOL=
-if test -r ../libtool; then
+if test -f ../libtool; then
   coin_config_dir=..
   LIBTOOL='$(SHELL) $(top_builddir)/../libtool'
 fi
 if test "x$LIBTOOL" = x; then
-  if test -r ../../libtool; then
+  if test -f ../../libtool; then
     coin_config_dir=../..
     LIBTOOL='$(SHELL) $(top_builddir)/../../libtool'
   fi
@@ -2566,7 +2566,7 @@ case $build in
     ;;
 esac
 
-if test -r $m4_toupper(COIN_DATA_$1_PATH); then
+if test -d $m4_toupper(COIN_DATA_$1_PATH); then
   AC_DEFINE_UNQUOTED(m4_toupper(COIN_DATA_$1_PATH),["$m4_toupper(COIN_DATA_$1_PATH)"],
             [Define to absolute path for Data subdirectory $1])
   AC_MSG_RESULT($m4_toupper(COIN_DATA_$1_PATH))
@@ -2586,7 +2586,7 @@ fi
 
 AC_DEFUN([AC_COIN_LINKCOPY_FROM_FILELIST],
 [cmd="$3"
-if test -e $srcdir/$2 ; then
+if test -r $srcdir/$2 ; then
   my_target_dir="$1"
   my_link_files=`cat $srcdir/$2`
   my_dirname=`AS_DIRNAME($2)`
@@ -2597,7 +2597,7 @@ if test -e $srcdir/$2 ; then
     #rm -rf $my_target_dir/$i
     if test -e $my_target_dir/$i; then : ; else
       dirn2=`AS_DIRNAME($my_target_dir/$i)`
-      if test -e $dirn2; then : ; else
+      if test -d $dirn2; then : ; else
         AS_MKDIR_P($dirn2)
       fi
       $cmd $abs_source_dir/$my_dirname/$i $my_target_dir/$i
@@ -3100,7 +3100,7 @@ if test x$coin_projectdir = xyes ; then
   # unfortunately, if the user set prefix, then we do not know where the project base directory is located
   # but it is likely to be either .. (if we are a usual coin project) or ../.. (if we are a unusual coin project like ThirdParty or Data)
   COIN_PKG_CONFIG_PATH_UNINSTALLED=
-  if test -e ../coin_subdirs.txt ; then
+  if test -f ../coin_subdirs.txt ; then
     for i in `cat ../coin_subdirs.txt` ; do
       if test -d ../$i ; then
         COIN_PKG_CONFIG_PATH_UNINSTALLED="`cd ../$i; pwd`:${COIN_PKG_CONFIG_PATH_UNINSTALLED}"
@@ -3111,7 +3111,7 @@ if test x$coin_projectdir = xyes ; then
     done
   fi
 
-  if test -e ../../coin_subdirs.txt ; then
+  if test -f ../../coin_subdirs.txt ; then
     for i in `cat ../../coin_subdirs.txt` ; do
       if test -d ../../$i ; then
         COIN_PKG_CONFIG_PATH_UNINSTALLED="`cd ../../$i; pwd`:${COIN_PKG_CONFIG_PATH_UNINSTALLED}"
