@@ -1314,6 +1314,7 @@ else
       case $flag in
         -lcrt*.o) ;;
         -lcygwin) ;;
+        -lgcc*)   ;;
                *) my_flibs="$my_flibs $flag" ;;
       esac
     done
