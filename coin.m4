@@ -220,13 +220,10 @@ m4_ifvaln([$1],
 ###########################################################################
 
 # This macro is included by any PROG_compiler macro, to set the LD
-# environment variable on MinGW to the correct value (link). But note that
-# if we're building in cygwin with -mno-cygwin, we still want ld! If we're
+# environment variable on MinGW to the correct value (link). If we're
 # building from cygwin with MSVC tools (cl/link), then we do want link and
 # you'd better have your PATH variable straight, else you'll be doing file
-# links instead of code links! Arguably, LDFLAGS should include -mno-cygwin
-# but in practice all linking seems to be handled through the compilers, so
-# CFLAGS and CXXFLAGS suffice.
+# links instead of code links!
 
 AC_DEFUN([AC_COIN_MINGW_LD_FIX],
 [AC_REQUIRE([AC_COIN_ENABLE_MSVC])
@@ -528,23 +525,6 @@ else
     OPT_CXXFLAGS="$CXXFLAGS"
   fi
 fi
-
-# If CXXFLAGS contains -mno-cygwin, CPPFLAGS must also have it.
-
-case "$CXXFLAGS" in
-  *-mno-cygwin*)
-    if test x${CPPFLAGS+set} != xset ; then
-      CPPFLAGS="-mno-cygwin"
-    else
-      case "$CPPFLAGS" in
-        *-mno-cygwin*)
-	  ;;
-	*)
-	  CPPFLAGS="$CPPFLAGS -mno-cygwin"
-	  ;;
-      esac
-    fi ;;
-esac
 
 # add -DPROJECT_BUILD to signal compiler preprocessor which config header file to include
 if test x$COIN_PRJCT != x; then
@@ -930,23 +910,6 @@ else
   fi
 fi
 
-# If CFLAGS contains -mno-cygwin, CPPFLAGS must also have it.
-
-case "$CFLAGS" in
-  *-mno-cygwin*)
-    if test x${CPPFLAGS+set} != xset ; then
-      CPPFLAGS="-mno-cygwin"
-    else
-      case "$CPPFLAGS" in
-        *-mno-cygwin*)
-	  ;;
-	*)
-	  CPPFLAGS="$CPPFLAGS -mno-cygwin"
-	  ;;
-      esac
-    fi ;;
-esac
-
 # add -DPROJECT_BUILD to signal compiler preprocessor which config header file to include
 if test x$COIN_PRJCT != x; then
   CFLAGS="$CFLAGS -D${COIN_PRJCT}_BUILD"
@@ -1153,22 +1116,6 @@ else
   fi
 fi
 
-# If FFLAGS contains -mno-cygwin, CPPFLAGS must have it.
-case "$FFLAGS" in
-  *-mno-cygwin*)
-    if test x${CPPFLAGS+set} != xset ; then
-      CPPFLAGS="-mno-cygwin"
-    else
-      case "$CPPFLAGS" in
-        *-mno-cygwin*)
-	  ;;
-	*)
-	  CPPFLAGS="$CPPFLAGS -mno-cygwin"
-	  ;;
-      esac
-    fi ;;
-esac
-
 # Try if FFLAGS works
 if test "$F77" != "unavailable" ; then
   AC_TRY_LINK(,[      integer i],[],[FFLAGS=])
@@ -1230,6 +1177,7 @@ else
       case $flag in
         -lcrt*.o) ;;
         -lcygwin) ;;
+        -lgcc*)   ;;
                *) my_flibs="$my_flibs $flag" ;;
       esac
     done
