@@ -616,7 +616,16 @@ if test -z "$CXXLIBS"; then
         CXXLIBS="-lstdc++"
         ;;
       *)
-        CXXLIBS="-lstdc++ -lm" # -lgcc"
+        # clang uses libc++ as the default standard C++ library, not libstdc++
+        # this test is supposed to recognize whether the compiler is clang
+        # 
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <ciso646>]], [[
+#ifndef _LIBCPP_VERSION
+       choke me
+#endif
+          ]])],
+          [CXXLIBS="-lc++"],
+          [CXXLIBS="-lstdc++ -lm"])
         ;;
     esac
   else
