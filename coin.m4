@@ -1820,6 +1820,9 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
   case $build in
     # Here we need to check if -m32 is specified.  If so, we need to correct
     # sys_lib_search_path_spec
+    *-cygwin* | *-mingw*)
+      AC_COIN_PATCH_LIBTOOL_CYGWIN
+      ;;
     *x86_64-*)
       if test "$GCC" = yes && (echo $CXXFLAGS $CFLAGS $FFLAGS | $EGREP 'm32' >& /dev/null); then 
         AC_MSG_NOTICE(Applying patches to libtool for 32bit compilation)
@@ -1833,9 +1836,6 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
       AC_COIN_PATCH_LIBTOOL_SOLARIS
       ;;
     # Cygwin. Ah, cygwin. Too big and ugly to inline; see the macro.
-    *-cygwin* | *-mingw*)
-      AC_COIN_PATCH_LIBTOOL_CYGWIN
-      ;;
     *-darwin*)
       AC_MSG_NOTICE(Applying patches to libtool for Darwin)
       sed -e 's/verstring="${wl}-compatibility_version ${wl}$minor_current ${wl}-current_version ${wl}$minor_current.$revision"/verstring="-compatibility_version $minor_current -current_version $minor_current.$revision"/' \
