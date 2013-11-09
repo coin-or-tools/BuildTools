@@ -370,7 +370,9 @@ case "$CXX" in
       AC_MSG_NOTICE([Overruling autoconf; cl does not recognise -g.])
     fi ;;
   * )
-    CYGPATH_W=echo
+    if test x"$CYGPATH_W" = x ; then
+      CYGPATH_W=echo
+    fi
     ;;
 esac
 CXXFLAGS="$save_cxxflags"
@@ -586,7 +588,16 @@ if test -z "$CXXLIBS"; then
         CXXLIBS="-lstdc++"
         ;;
       *)
-        CXXLIBS="-lstdc++ -lm" # -lgcc"
+        # clang uses libc++ as the default standard C++ library, not libstdc++
+        # this test is supposed to recognize whether the compiler is clang
+        # 
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <ciso646>]], [[
+#ifndef _LIBCPP_VERSION
+       choke me
+#endif
+          ]])],
+          [CXXLIBS="-lc++"],
+          [CXXLIBS="-lstdc++ -lm"])
         ;;
     esac
   else
@@ -757,7 +768,9 @@ case "$CC" in
       AC_MSG_NOTICE([Overruling autoconf; cl does not recognise -g.])
     fi ;;
   * )
-    CYGPATH_W=echo
+    if test x"$CYGPATH_W" = x ; then
+      CYGPATH_W=echo
+    fi
     ;;
 esac
 CFLAGS="$save_cflags"
