@@ -1817,11 +1817,22 @@ fi
 
 # AC_MSG_NOTICE([End of INIT_AUTO_TOOLS.])
 
+AC_ARG_ENABLE([dependency-linking],[],
+  [dependency_linking="$enableval"],
+  [dependency_linking=no])
+
 # ToDo
 # For now, don't use the -no-undefined flag, since the Makefiles are
 # not yet set up that way.  But we need to fix this, when we want
 # to comile DLLs under Windows.
-LT_LDFLAGS=
+if test "$dependency_linking" = yes ;
+then
+  LT_LDFLAGS="-no-undefined"
+else
+  LT_LDFLAGS=
+fi
+
+AM_CONDITIONAL(DEPENDENCY_LINKING, [test "$dependency_linking" = yes])
 
 # Check if we want to set the library version
 AC_MSG_CHECKING([if library version is set])
