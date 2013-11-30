@@ -1566,16 +1566,21 @@ else
   # On Cygwin and AIX, building DLLs doesn't work
   case $build in
     *-cygwin* | *-mingw*)
-      coin_disable_shared=yes
       if test x"$enable_shared" = xyes; then
         case "$CXX" in
           clang* )
+	    coin_disable_shared=yes
             AC_MSG_WARN([DLL building not supported. I'm disabling your choice.])
             ;;
           cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+      	    coin_disable_shared=yes
             AC_MSG_NOTICE([DLL building not supported, but will build with -MD(d) instead of -MT(d).])
             ;;
+          *-g++*)
+            coin_disable_shared=no
+            ;;
           *)
+            coin_disable_shared=yes
             AC_MSG_WARN([DLL building not supported. I'm disabling your choice.])
             ;;
         esac
