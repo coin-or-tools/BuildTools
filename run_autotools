@@ -99,7 +99,7 @@ runautotoolDir=`echo $runautotoolDir | sed -e 's,/\./,/,g' -e 's,//,/,g'`
 # satisfy this requirement is a fatal error.
 
 ver_autoconf='2.69'
-ver_automake='1.12'
+ver_automake='1.14'
 ver_libtool='2.4.2'
 EGREP='grep -E'
 
