@@ -54,6 +54,9 @@
 # scripts with the -i option. It's good to read the autoconf documentation for
 # AC_CONFIG_AUX_DIR if this doesn't make sense to you.
 
+AUTOTOOLS_DIR=$HOME/local2
+export PATH=$HOME/local2/bin:$PATH
+
 # Make sure we bail out if there is an error
 set -e
 
@@ -95,9 +98,9 @@ runautotoolDir=`echo $runautotoolDir | sed -e 's,/\./,/,g' -e 's,//,/,g'`
 # Make sure we're using the correct versions of the autotools. Failure to
 # satisfy this requirement is a fatal error.
 
-ver_autoconf='2.59'
-ver_automake='1.9.6'
-ver_libtool='1.5.22'
+ver_autoconf='2.69'
+ver_automake='1.12'
+ver_libtool='2.4.2'
 EGREP='grep -E'
 
 # Check if the correct version of the autotools is used
@@ -147,7 +150,7 @@ fi
 # the user should be warned.
 
 grep_version=`echo  $ver_libtool | sed -e 's/\\./\\\\\\./g'`
-ltfile=$AUTOTOOLS_DIR/share/libtool/ltmain.sh
+ltfile=$AUTOTOOLS_DIR/share/libtool/config/ltmain.sh
 if test -r $ltfile; then :; else
   echo WARNING: Cannot find libtool shell $ltfile
 fi
