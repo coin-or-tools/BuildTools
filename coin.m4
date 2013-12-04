@@ -1705,15 +1705,15 @@ else
     *-cygwin* | *-mingw*)
       coin_disable_shared=yes
       if test x"$enable_shared" = xyes; then
-        case "$CXX" in
+        case "$CC" in
           clang* )
             AC_MSG_WARN([DLL building not supported. I'm disabling your choice.])
             ;;
           cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
             AC_MSG_NOTICE([DLL building not supported, but will build with -MD(d) instead of -MT(d).])
             ;;
-          *g++*)
-	    if test x"$dependency_linking" = xyes; then
+          *gcc*)
+	    if test x"$enable_dependency_linking" = xyes; then
               coin_disable_shared=no
             else
               AC_MSG_WARN([To build shared libraries with gcc on CYGWIN or MSys, use --enable-dependency-linking])
