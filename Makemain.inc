@@ -55,24 +55,24 @@ $(AUX_DIR)/ltmain.sh: $(BUILDTOOLSDIR)/ltmain.sh
 	cp $< $@
 
 # Take care of updating externals (if Dependencies file exists)
-if HAVE_EXTERNALS
-$(top_builddir)/Makefile: .Dependencies-stamp
-
-.Dependencies-stamp: $(srcdir)/Dependencies
-	cd $(srcdir); BuildTools/set_externals Dependencies
-	touch .Dependencies-stamp
-
-update-externals: .Dependencies-stamp
-	cd $(srcdir); svn update
+#if HAVE_EXTERNALS
+#$(top_builddir)/Makefile: .Dependencies-stamp
+#
+#.Dependencies-stamp: $(srcdir)/Dependencies
+#	cd $(srcdir); BuildTools/set_externals Dependencies
+#	touch .Dependencies-stamp
+#
+#update-externals: .Dependencies-stamp
+#	cd $(srcdir); svn update
+#
+#endif
 
 endif
 
-endif
-
-if HAVE_EXTERNALS
-EXTRA_DIST += Dependencies
-DISTCLEANFILES += .Dependencies-stamp
-endif
+#if HAVE_EXTERNALS
+#EXTRA_DIST += Dependencies
+#DISTCLEANFILES += .Dependencies-stamp
+#endif
 
 DISTCLEANFILES += $(VPATH_DISTCLEANFILES)
 
