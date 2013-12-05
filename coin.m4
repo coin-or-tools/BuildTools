@@ -258,3 +258,73 @@ fi
 
 AC_LANG_POP(C++)
 ])
+
+###########################################################################
+#                          COIN_EXAMPLE_FILES                             #
+###########################################################################
+
+# This macro determines the names of the example files (using the
+# argument in an "ls" command) and sets up the variables EXAMPLE_FILES
+# and EXAMPLE_CLEAN_FILES.  If this is a VPATH configuration, it also
+# creates soft links to the example files.
+
+AC_DEFUN([AC_COIN_EXAMPLE_FILES],
+[
+#AC_REQUIRE([AC_COIN_CHECK_VPATH])
+#AC_REQUIRE([AC_COIN_ENABLE_MSVC])
+#AC_REQUIRE([AC_PROG_LN_S])
+
+files=`cd $srcdir; ls $1`
+# We need to do the following loop to make sure that there are no newlines
+# in the variable
+for file in $files; do
+  EXAMPLE_FILES="$EXAMPLE_FILES $file"
+  # using AC_CONFIG_LINKS is much simpler here, but due to a bug
+  # in autoconf (even latest autoconf), the AC_COIN_EXAMPLE_FILES
+  # macro can only be called once if the links are made this way
+  # (otherwise autoconf thinks $file is a duplicate...)
+  AC_CONFIG_LINKS([$file:$file])
+done
+
+# potentially add some of this back as needed:
+#if test $coin_vpath_config = yes; then
+#  lnkcmd=
+#  if test "$enable_msvc" != no; then
+#    lnkcmd=cp
+#  fi
+#  case "$CC" in
+#    clang* ) ;;
+#    cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+#      lnkcmd=cp ;;
+#  esac
+#  if test "x$lnkcmd" = xcp; then
+#    AC_MSG_NOTICE([Copying example files ($1)])
+#  else
+#    AC_MSG_NOTICE([Creating links to the example files ($1)])
+#    lnkcmd="$LN_S"
+#  fi
+#  for file in $EXAMPLE_FILES; do
+#    rm -f $file
+#    $lnkcmd $srcdir/$file $file
+#  done
+#  EXAMPLE_CLEAN_FILES="$EXAMPLE_CLEAN_FILES $1"
+#else
+#  EXAMPLE_CLEAN_FILES="$EXAMPLE_CLEAN_FILES"
+#fi
+#
+# In case there are compressed files, we create a variable with the
+# uncompressed names
+#EXAMPLE_UNCOMPRESSED_FILES=
+#for file in $EXAMPLE_FILES; do
+#  case $file in
+#    *.gz)
+#      EXAMPLE_UNCOMPRESSED_FILES="$EXAMPLE_UNCOMPRESSED_FILES `echo $file | sed -e s/.gz//`"
+#      ;;
+#  esac
+#done
+#
+#AC_SUBST(EXAMPLE_UNCOMPRESSED_FILES)
+#AC_SUBST(EXAMPLE_FILES)
+#AC_SUBST(EXAMPLE_CLEAN_FILES)
+]) #AC_COIN_EXAMPLE_FILES
+
