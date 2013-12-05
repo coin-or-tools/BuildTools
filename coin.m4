@@ -175,9 +175,10 @@ AC_CHECK_DECL([isnan],[COIN_C_ISNAN=isnan],,[
 # It appears that for some systems (e.g., Mac OSX), cmath will provide only
 # std::isnan, and bare isnan will be unavailable. Typically we need a parameter
 # in the test to allow C++ to do overload resolution.
+# With newer autoconf, this parameter now gets interpreted as a typecast.
 
 if test -z "$COIN_C_ISNAN"; then
-  AC_CHECK_DECL([std::isnan(42.42)],[COIN_C_ISNAN=std::isnan],,[
+  AC_CHECK_DECL([std::isnan(double)],[COIN_C_ISNAN=std::isnan],,[
 #ifdef HAVE_CMATH
 # include <cmath>
 #else
