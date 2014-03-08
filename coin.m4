@@ -216,32 +216,6 @@ m4_ifvaln([$1],
 ]) # AC_COIN_DEBUG_COMPILE
 
 ###########################################################################
-#                          COIN_MINGW_LD_FIX                              #
-###########################################################################
-
-# This macro is included by any PROG_compiler macro, to set the LD
-# environment variable on MinGW to the correct value (link). If we're
-# building from cygwin with MSVC tools (cl/link), then we do want link and
-# you'd better have your PATH variable straight, else you'll be doing file
-# links instead of code links!
-
-AC_DEFUN([AC_COIN_MINGW_LD_FIX],
-[AC_REQUIRE([AC_COIN_ENABLE_MSVC])
- case $build in
-  *-mingw*)
-    if test "${LD+set}" = set; then :; else
-      LD=link
-    fi
-    ;;
- esac
- if test $enable_msvc = yes ; then
-   if test "x${LD+set}" = xset; then :; else
-     LD=link
-   fi
- fi
-])
-
-###########################################################################
 #                          COIN_ENABLE_MSVC                               # 
 ###########################################################################
 
@@ -558,11 +532,11 @@ if test x"$MPICXX" = x; then :; else
   CXX="$MPICXX"
 fi
 
-# correct the LD variable in a mingw build with MS or intel compiler
+# correct the LD variable in a build with MS or intel compiler
 case "$CXX" in
   clang* ) ;;
   cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
-    AC_COIN_MINGW_LD_FIX
+    LD=link
     ;;
 esac
 
@@ -699,8 +673,7 @@ AC_LANG_POP(C++)
 # possible to provide additional -D flags in the variable CDEFS.
 
 AC_DEFUN([AC_COIN_PROG_CC],
-[AC_REQUIRE([AC_COIN_MINGW_LD_FIX])
-AC_REQUIRE([AC_COIN_ENABLE_MSVC])
+[AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 AC_LANG_PUSH(C)
 
 # For consistency, we set the C compiler to the same value of the C++
@@ -957,7 +930,7 @@ fi
 case "$CC" in
   clang* ) ;;
   cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
-    AC_COIN_MINGW_LD_FIX
+    LD=link
     ;;
 esac
 
@@ -973,8 +946,7 @@ AC_LANG_POP(C)
 # given by the user), and find an appropriate value for FFLAGS
 
 AC_DEFUN([AC_COIN_PROG_F77],
-[AC_REQUIRE([AC_COIN_MINGW_LD_FIX])
-AC_REQUIRE([AC_COIN_ENABLE_MSVC])
+[AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 AC_REQUIRE([AC_COIN_PROG_CC])
 AC_REQUIRE([AC_COIN_F77_COMPS])
 AC_LANG_PUSH([Fortran 77])
@@ -1158,7 +1130,7 @@ fi
 # correct the LD variable if we use the intel fortran compiler in windows
 case "$F77" in
   ifort* | */ifort* | IFORT* | */IFORT*)
-    AC_COIN_MINGW_LD_FIX
+    LD=link
     ;;
 esac
 
