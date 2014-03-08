@@ -329,3 +329,317 @@ done
 #AC_SUBST(EXAMPLE_CLEAN_FILES)
 ]) #AC_COIN_EXAMPLE_FILES
 
+
+###########################################################################
+#                          COIN_PROJECTVERSION                            #
+###########################################################################
+
+# This macro is used by COIN_PROJECTDIR_INIT and sets up variables related
+# to versioning numbers of the project.
+
+AC_DEFUN([AC_COIN_PROJECTVERSION],
+[m4_ifvaln([$1],[
+  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION), ["$PACKAGE_VERSION"],[Version number of project])
+  
+  [coin_majorver=`echo $PACKAGE_VERSION | sed -n -e 's/^\([0-9]*\).*/\1/gp'`]
+  [coin_minorver=`echo $PACKAGE_VERSION | sed -n -e 's/^[0-9]*\.\([0-9]*\).*/\1/gp'`]
+  [coin_releasever=`echo $PACKAGE_VERSION | sed -n -e 's/^[0-9]*\.[0-9]*\.\([0-9]*\).*/\1/gp'`]
+  if test "x$coin_majorver" = x ; then coin_majorver=9999 ; fi
+  if test "x$coin_minorver" = x ; then coin_minorver=9999 ; fi
+  if test "x$coin_releasever" = x ; then coin_releasever=9999 ; fi
+  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MAJOR),   [$coin_majorver],   [Major Version number of project])
+  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MINOR),   [$coin_minorver],   [Minor Version number of project])
+  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_RELEASE), [$coin_releasever], [Release Version number of project])
+
+  # We use the following variable to have a string with the upper case
+  # version of the project name
+  COIN_PRJCT=m4_toupper($1)
+
+  # Set the project's SVN revision number. The complicated sed expression
+  # (made worse by quadrigraphs) ensures that things like 4123:4168MS end up
+  # as a single number.
+  AC_CHECK_PROG([have_svnversion],[svnversion],[yes],[no])
+  if test "x$have_svnversion" = xyes; then
+    AC_SUBST(m4_toupper($1_SVN_REV))
+    svn_rev_tmp=`LANG=en_EN svnversion $srcdir 2>/dev/null`
+    if test "x$svn_rev_tmp" != xexported -a "x$svn_rev_tmp" != x -a "x$svn_rev_tmp" != "xUnversioned directory"; then
+      m4_toupper($1_SVN_REV)=`echo $svn_rev_tmp | sed -n -e 's/^@<:@0-9@:>@*://' -e 's/\(@<:@0-9@:>@\)@<:@^0-9@:>@*$/\1/p'`
+      AC_DEFINE_UNQUOTED(m4_toupper($1_SVN_REV), $m4_toupper($1_SVN_REV), [SVN revision number of project])
+    fi
+  fi
+ ])
+ 
+# Capture libtool library version, if given.
+ m4_ifvaln([$2],[coin_libversion=$2],[])
+])
+
+###########################################################################
+#                            COIN_INITALIZE                               #
+###########################################################################
+
+# This macro does everything that is required in the early part in the
+# configure script, such as defining a few variables.
+# The first parameter is the project name.
+# The second (optional) is the libtool library version (important for releases,
+# less so for stable or trunk).
+
+AC_DEFUN([AC_COIN_INITIALIZE],
+[
+# figure out whether there is a base directory up from here
+coin_base_directory=
+if test -e ../coin_subdirs.txt ; then
+  coin_base_directory=`cd ..; pwd`
+elif test -e ../../coin_subdirs.txt ; then
+  coin_base_directory=`cd ../..; pwd`
+fi
+
+if test "x$coin_base_directory" != x ; then 
+  COIN_DESTDIR=$coin_base_directory/coinstash
+fi
+AC_SUBST(COIN_DESTDIR)
+
+# Set the project's version numbers
+AC_COIN_PROJECTVERSION($1, $2)
+])
+
+
+###########################################################################
+#                              COIN_FINALIZE                              #
+###########################################################################
+
+# This macro should be called at the very end of the configure.ac file.
+# It creates the output files (by using AC_OUTPUT), and might do some other
+# things (such as generating links to data files in a VPATH configuration).
+# It also prints the "success" message.
+# Note: If the variable coin_skip_ac_output is set to yes, then no output
+# files are written.
+
+AC_DEFUN([AC_COIN_FINALIZE],
+[
+# need to come before AC_OUTPUT
+if test "x$coin_subdirs" != x; then
+  # write coin_subdirs to a file so that project configuration knows where to find uninstalled projects
+  echo $coin_subdirs > coin_subdirs.txt
+else
+  # substitute for OBJDIR, needed to setup .pc file for uninstalled project
+  #ABSBUILDDIR="`pwd`"
+  #AC_SUBST(ABSBUILDDIR)
+  :
+fi
+  
+AC_OUTPUT
+
+AC_MSG_NOTICE([In case of trouble, first consult the troubleshooting page at https://projects.coin-or.org/BuildTools/wiki/user-troubleshooting])
+#if test x$coin_projectdir = xyes; then
+  AC_MSG_NOTICE([Configuration of $PACKAGE_NAME successful])
+#else
+#  AC_MSG_NOTICE([Main configuration of $PACKAGE_NAME successful])
+#fi
+
+]) #AC_COIN_FINALIZE
+
+
+###########################################################################
+#                           COIN_HAS_PKGCONFIG                            #
+###########################################################################
+
+# This macro checks whether a pkg-config tool with a minimal version number
+# is available.  If so, then the variable PKGCONFIG is set to its path.
+# If not, PKGCONFIG is set to "".  The minimal version number can be given
+# as first parameter, by default it is 0.16.0, since COIN-OR .pc files now
+# include an URL field, which breaks pkg-config version <= 0.15.
+# This macro is a modified version of PKG_PROG_PKG_CONFIG in pkg.m4.
+# Further, the AM_CONDITIONAL COIN_HAS_PKGCONFIG is set and PKGCONFIG is
+# AC_SUBST'ed.  Finally, if this setup belongs to a project directory, then
+# the search path for .pc files is assembled from the value of
+# $PKG_CONFIG_PATH and the directories named in a file
+# $coin_base_directory/coin_subdirs.txt in a variable
+# COIN_PKG_CONFIG_PATH, which is also AC_SUBST'ed. For a path xxx given in the
+# coin-subdirs.txt, also the directory xxx/pkgconfig is added, if existing.
+
+AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
+[AC_ARG_VAR([PKG_CONFIG], [path to pkg-config utility])
+
+AC_ARG_ENABLE([pkg-config],
+  [AC_HELP_STRING([--disable-pkg-config],[disable use of pkg-config (if available)])],
+  [use_pkgconfig="$enableval"],
+  [#if test x$coin_cc_is_cl = xtrue; then
+   #  use_pkgconfig=no
+   #else
+     use_pkgconfig=yes
+   #fi
+  ])
+
+if test $use_pkgconfig = yes ; then
+  if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
+    AC_CHECK_TOOL([PKG_CONFIG], [pkg-config])
+  fi
+  if test -n "$PKG_CONFIG"; then
+    _pkg_min_version=m4_default([$1], [0.16.0])
+    AC_MSG_CHECKING([pkg-config is at least version $_pkg_min_version])
+    if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
+      AC_MSG_RESULT([yes])
+    else
+      AC_MSG_RESULT([no])
+      PKG_CONFIG=""
+    fi
+  fi
+
+  # check if pkg-config supports the short-errors flag
+  if test -n "$PKG_CONFIG" && \
+    $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+    pkg_short_errors=" --short-errors "
+  else
+    pkg_short_errors=""
+  fi
+fi
+
+AM_CONDITIONAL([COIN_HAS_PKGCONFIG], [test -n "$PKG_CONFIG"])
+AC_SUBST(PKG_CONFIG)
+
+# assemble pkg-config search path to find projects under base directory
+COIN_PKG_CONFIG_PATH=
+if test "x$coin_base_directory" != x ; then
+  if test -f $coin_base_directory/coin_subdirs.txt ; then
+    for i in `cat $coin_base_directory/coin_subdirs.txt` ; do
+      if test -d $coin_base_directory/$i ; then
+        COIN_PKG_CONFIG_PATH="$coin_base_directory/$i:${COIN_PKG_CONFIG_PATH}"
+      fi
+      if test -d $coin_base_directory/$i/pkgconfig ; then
+        COIN_PKG_CONFIG_PATH="$coin_base_directory/$i/pkgconfig:${COIN_PKG_CONFIG_PATH}"
+      fi
+    done
+  fi
+fi
+AC_SUBST(COIN_PKG_CONFIG_PATH)
+
+])
+
+
+###########################################################################
+#                           COIN_PKG_CHECK_MODULE_EXISTS                  #
+###########################################################################
+
+# COIN_PKG_CHECK_MODULES_EXISTS(MODULE, PACKAGES, [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
+#
+# Check to see whether a particular set of packages exists.
+# Similar to PKG_CHECK_MODULES(), but set only the variable $1_VERSIONS and $1_PKG_ERRORS
+#
+AC_DEFUN([AC_COIN_PKG_CHECK_MODULE_EXISTS],
+[AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
+if test -n "$PKG_CONFIG" ; then
+  if $PKG_CONFIG --exists "$2"; then
+    m4_toupper($1)[]_VERSIONS=`$PKG_CONFIG --modversion "$2" 2>/dev/null | tr '\n' ' '`
+    $3
+  else
+    m4_toupper($1)_PKG_ERRORS=`$PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "$2"`
+    $4
+  fi
+else
+  AC_MSG_ERROR("Cannot check for existance of module $1 without pkg-config")
+fi
+])
+
+###########################################################################
+#                            COIN_CHECK_PACKAGE                           #
+###########################################################################
+
+AC_DEFUN([AC_COIN_CHECK_PACKAGE],
+[AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
+AC_MSG_CHECKING([for COIN-OR package $1])
+
+m4_tolower(coin_has_$1)=notGiven
+
+if test $m4_tolower(coin_has_$1) = notGiven; then
+  if test -n "$PKG_CONFIG" ; then
+    # set search path for pkg-config
+    # need to export variable to be sure that the following pkg-config gets these values
+    coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
+    PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH:$PKG_CONFIG_PATH"
+    export PKG_CONFIG_PATH
+    
+    # let pkg-config do it's magic
+    AC_COIN_PKG_CHECK_MODULE_EXISTS([$1],[$2],
+      [ m4_tolower(coin_has_$1)=yes
+        AC_MSG_RESULT([yes: $m4_toupper($1)_VERSIONS])
+      ],
+      [ m4_tolower(coin_has_$1)=notGiven
+        AC_MSG_RESULT([not given: $m4_toupper($1)_PKG_ERRORS])
+      ])
+
+    # reset PKG_CONFIG_PATH variable 
+    PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
+    export PKG_CONFIG_PATH
+
+  else
+    AC_MSG_ERROR([skipped check via pkg-config, redirect to fallback... -- oops, not there yet])
+    # TODO
+    #AC_COIN_CHECK_PACKAGE_FALLBACK([$1], [$2], [$3])
+  fi
+
+else
+  AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
+fi
+
+if test $m4_tolower(coin_has_$1) != skipping &&
+   test $m4_tolower(coin_has_$1) != notGiven ; then
+  AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 package is available])
+fi
+
+# Define the Makefile conditional
+AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
+               [test $m4_tolower(coin_has_$1) != notGiven &&
+                test $m4_tolower(coin_has_$1) != skipping])
+
+])
+
+###########################################################################
+#                           COIN_MAIN_PACKAGEDIR                          #
+###########################################################################
+
+# Otherwise, if the directory $2/$1 and the file $2/$1/$3 exist, check whether $2/$1/configure exists.
+#   If so, include this directory into the list of directories where configure and make recourse into.
+# tolower(coin_has_$1) is set to "no" if the project source is not available or will not be compiled.
+# Otherwise, it will be set to "yes".
+
+AC_DEFUN([AC_COIN_MAIN_PACKAGEDIR],[
+AC_MSG_CHECKING([whether source of project $1 is available and should be compiled])
+
+m4_tolower(coin_has_$1)=notGiven
+coin_reason=
+
+# check if project is available in present directory
+if test "$m4_tolower(coin_has_$1)" = notGiven; then
+  m4_tolower(coin_has_$1)=no
+  if test -d $srcdir/m4_ifval($2,[$2/],)$1; then
+    coin_reason="source in m4_ifval($2,[$2/],)$1"
+    # If a third argument is given, then we have to check if one one the files given in that third argument is present.
+    # If none of the files in the third argument is available, then we consider the project directory as non-existing.
+    # However, if no third argument is given, then this means that there should be no check, and existence of the directory is sufficient.
+    m4_ifvaln([$3],
+      [for i in $srcdir/m4_ifval($2,[$2/],)$1/$3; do
+         if test -r $i; then
+           m4_tolower(coin_has_$1)="yes"
+         else
+           m4_tolower(coin_has_$1)="no"
+           coin_reason="source file $i not available"
+           break
+         fi
+       done],
+      [ m4_tolower(coin_has_$1)="yes" ])
+  fi
+fi
+
+if test -z "$coin_reason" ; then
+  AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
+else
+  AC_MSG_RESULT([$m4_tolower(coin_has_$1), $coin_reason])
+fi
+
+if test "$m4_tolower(coin_has_$1)" = yes ; then
+  if test -r $srcdir/m4_ifval($2,[$2/],)$1/configure; then
+    coin_subdirs="$coin_subdirs m4_ifval($2,[$2/],)$1"
+    AC_CONFIG_SUBDIRS(m4_ifval($2,[$2/],)$1)
+  fi
+fi
+])
