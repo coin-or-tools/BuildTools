@@ -426,7 +426,7 @@ else
   #AC_SUBST(ABSBUILDDIR)
   :
 fi
-  
+
 AC_OUTPUT
 
 AC_MSG_NOTICE([In case of trouble, first consult the troubleshooting page at https://projects.coin-or.org/BuildTools/wiki/user-troubleshooting])
@@ -550,6 +550,89 @@ AC_MSG_CHECKING([for COIN-OR package $1])
 
 m4_tolower(coin_has_$1)=notGiven
 
+# check if user wants to skip package in any case
+if test x"$COIN_SKIP_PROJECTS" != x; then
+  for dir in $COIN_SKIP_PROJECTS; do
+    if test $dir = "$1"; then
+      m4_tolower(coin_has_$1)=skipping
+    fi
+  done
+fi
+
+if test "$m4_tolower(coin_has_$1)" != skipping; then
+  AC_ARG_WITH([m4_tolower($1)],,
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)=skipping
+     fi
+    ])
+fi
+
+m4_toupper($1_LIBS)=
+m4_toupper($1_CFLAGS)=
+m4_toupper($1_DATA)=
+m4_toupper($1_DEPENDENCIES)=
+m4_toupper($1_PCREQUIRES)=
+AC_SUBST(m4_toupper($1_LIBS))
+AC_SUBST(m4_toupper($1_CFLAGS))
+AC_SUBST(m4_toupper($1_DATA))
+AC_SUBST(m4_toupper($1_DEPENDENCIES))
+m4_foreach_w([myvar], [$3], [
+  AC_SUBST(m4_toupper(myvar)_CFLAGS)
+  AC_SUBST(m4_toupper(myvar)_LIBS)
+  AC_SUBST(m4_toupper(myvar)_PCREQUIRES)
+  AC_SUBST(m4_toupper(myvar)_DEPENDENCIES)
+])
+
+#check if user provided LIBS for package or disables use of package
+if test $m4_tolower(coin_has_$1) != skipping; then
+  AC_ARG_WITH([m4_tolower($1)-lib],
+    AC_HELP_STRING([--with-m4_tolower($1)-lib],
+                   [linker flags for using package $1]),
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)=skipping
+     else
+       m4_tolower(coin_has_$1)=yes
+       m4_toupper($1_LIBS)="$withval"
+       m4_foreach_w([myvar], [$3], [
+         m4_toupper(myvar)_LIBS="$withval $m4_toupper(myvar)_LIBS"
+       ])
+     fi
+    ],
+    [])
+fi
+
+#check if user provided INCDIR for package or disables use of package
+if test $m4_tolower(coin_has_$1) != skipping; then
+  AC_ARG_WITH([m4_tolower($1)-incdir],
+    AC_HELP_STRING([--with-m4_tolower($1)-incdir],
+                   [directory with header files for using package $1]),
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)=skipping
+     else
+       m4_tolower(coin_has_$1)=yes
+       m4_toupper($1_CFLAGS)="-I$withval"
+       m4_foreach_w([myvar], [$3], [m4_toupper(myvar)_CFLAGS="-I$withval $m4_toupper(myvar)_CFLAGS"])
+     fi
+    ],
+    [])
+fi
+
+#check if user provided DATADIR for package or disables use of package
+if test $m4_tolower(coin_has_$1) != skipping; then
+  AC_ARG_WITH([m4_tolower($1)-datadir],
+    AC_HELP_STRING([--with-m4_tolower($1)-datadir],
+                   [directory with data files for using package $1]),
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)=skipping
+     else
+       m4_tolower(coin_has_$1)=yes
+       m4_toupper($1_DATA)="$withval"
+     fi
+    ],
+    [])
+fi
+
+# now use pkg-config, if nothing of the above applied
 if test $m4_tolower(coin_has_$1) = notGiven; then
   if test -n "$PKG_CONFIG" ; then
     # set search path for pkg-config
@@ -562,6 +645,14 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
     AC_COIN_PKG_CHECK_MODULE_EXISTS([$1],[$2],
       [ m4_tolower(coin_has_$1)=yes
         AC_MSG_RESULT([yes: $m4_toupper($1)_VERSIONS])
+
+        m4_toupper($1_DATA)=`$PKG_CONFIG --variable=datadir --define-variable prefix=${COIN_DESTDIR}${prefix} $2 2>/dev/null`
+        
+        m4_toupper($1_PCREQUIRES)="$2"
+        # augment X_PCREQUIRES for each build target X in $3
+        m4_foreach_w([myvar], [$3], [
+          m4_toupper(myvar)_PCREQUIRES="$2 $m4_toupper(myvar)_PCREQUIRES"
+        ])
       ],
       [ m4_tolower(coin_has_$1)=notGiven
         AC_MSG_RESULT([not given: $m4_toupper($1)_PKG_ERRORS])
@@ -570,6 +661,10 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
     # reset PKG_CONFIG_PATH variable 
     PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
     export PKG_CONFIG_PATH
+
+    m4_foreach_w([myvar], [$3], [
+      m4_toupper(myvar)_PCREQUIRES="$2 $m4_toupper(myvar)_PCREQUIRES"
+    ])
 
   else
     AC_MSG_ERROR([skipped check via pkg-config, redirect to fallback... -- oops, not there yet])
@@ -584,12 +679,56 @@ fi
 if test $m4_tolower(coin_has_$1) != skipping &&
    test $m4_tolower(coin_has_$1) != notGiven ; then
   AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],[Define to 1 if the $1 package is available])
+  
+  if test 1 = 0 ; then  #change this test to enable a bit of debugging output
+    if test -n "$m4_toupper($1)_DATA" ; then
+      AC_MSG_NOTICE([$1 DATA   is  $m4_toupper($1)_DATA])
+    fi
+    if test -n "$m4_toupper($1)_PCREQUIRES" ; then
+      AC_MSG_NOTICE([$1 PCREQUIRES are $m4_toupper($1)_PCREQUIRES])
+    fi
+  fi
+  
 fi
 
 # Define the Makefile conditional
 AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
                [test $m4_tolower(coin_has_$1) != notGiven &&
                 test $m4_tolower(coin_has_$1) != skipping])
+])
+
+###########################################################################
+#                           COIN_FINALIZE_FLAGS                           #
+###########################################################################
+
+# TODO this could be moved into COIN_FINALIZE, if we were able to remember
+#   for which variables we need to run pkg-config
+AC_DEFUN([AC_COIN_FINALIZE_FLAGS],[
+
+# do pkg-config calls to complete LIBS and CFLAGS
+coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
+PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH:$COIN_PKG_CONFIG_PATH_UNINSTALLED"
+export PKG_CONFIG_PATH
+
+m4_foreach_w([myvar],[$1],[
+  if test -n "${m4_toupper(myvar)_PCREQUIRES}" ; then
+    m4_toupper(myvar)_CFLAGS=`$PKG_CONFIG --cflags --define-variable prefix=${COIN_DESTDIR}${prefix} ${m4_toupper(myvar)_PCREQUIRES} ` ${m4_toupper(myvar)_CFLAGS}
+    m4_toupper(myvar)_LIBS=`$PKG_CONFIG --libs --define-variable prefix=${COIN_DESTDIR}${prefix} ${m4_toupper(myvar)_PCREQUIRES} ` ${m4_toupper(myvar)_LIBS}
+    #TODO setup _DEPENDENCIES from _LIBS
+  fi
+    
+  if test 1 = 0 ; then  #change this test to enable a bit of debugging output
+    if test -n "${m4_toupper(myvar)_CFLAGS}" ; then
+      AC_MSG_NOTICE([myvar CFLAGS are ${m4_toupper(myvar)_CFLAGS}])
+    fi
+    if test -n "${m4_toupper(myvar)_LIBS}" ; then
+      AC_MSG_NOTICE([myvar LIBS   are ${m4_toupper(myvar)_LIBS}])
+    fi
+  fi
+])
+
+# reset PKG_CONFIG_PATH variable 
+PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
 
 ])
 
@@ -607,6 +746,74 @@ AC_MSG_CHECKING([whether source of project $1 is available and should be compile
 
 m4_tolower(coin_has_$1)=notGiven
 coin_reason=
+
+# check if user wants to skip project in any case
+AC_ARG_VAR([COIN_SKIP_PROJECTS],[Set to the subdirectories of projects that should be skipped in the configuration])
+if test x"$COIN_SKIP_PROJECTS" != x; then
+  for dir in $COIN_SKIP_PROJECTS; do
+    if test $dir = "$1"; then
+      m4_tolower(coin_has_$1)="no"
+      coin_reason="$1 has been specified in COIN_SKIP_PROJECTS"
+    fi
+    m4_ifval($2,[
+    if test $dir = "$2/$1"; then
+      m4_tolower(coin_has_$1)="no"
+      coin_reason="$2/$1 has been specified in COIN_SKIP_PROJECTS"
+    fi])
+  done
+fi
+
+if test "$m4_tolower(coin_has_$1)" != no; then
+  AC_ARG_WITH([m4_tolower($1)],,
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)="no"
+       coin_reason="--without-m4_tolower($1) has been specified"
+     fi
+    ])
+fi
+
+if test "$m4_tolower(coin_has_$1)" != no; then
+  AC_ARG_WITH([m4_tolower($1)-lib],
+    AC_HELP_STRING([--with-m4_tolower($1)-lib],
+                   [linker flags for using project $1]),
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)="no"
+       coin_reason="--without-m4_tolower($1)-lib has been specified"
+     else
+       m4_tolower(coin_has_$1)="no"
+       coin_reason="--with-m4_tolower($1)-lib has been specified"
+     fi],
+    [])
+fi
+
+if test "$m4_tolower(coin_has_$1)" != no; then
+  AC_ARG_WITH([m4_tolower($1)-incdir],
+    AC_HELP_STRING([--with-m4_tolower($1)-incdir],
+                   [directory with header files for using project $1]),
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)="no"
+       coin_reason="--without-m4_tolower($1)-incdir has been specified"
+     else
+       m4_tolower(coin_has_$1)="no"
+       coin_reason="--with-m4_tolower($1)-incdir has been specified"
+     fi],
+    [])
+fi
+
+if test "$m4_tolower(coin_has_$1)" != no; then
+  AC_ARG_WITH([m4_tolower($1)-datadir],
+    AC_HELP_STRING([--with-m4_tolower($1)-datadir],
+                   [directory with data files for using project $1]),
+    [if test "$withval" = no ; then
+       m4_tolower(coin_has_$1)="no"
+       coin_reason="--without-m4_tolower($1)-datadir has been specified"
+     else
+       m4_tolower(coin_has_$1)="no"
+       coin_reason="--with-m4_tolower($1)-datadir has been specified"
+     fi],
+    [])
+fi
+
 
 # check if project is available in present directory
 if test "$m4_tolower(coin_has_$1)" = notGiven; then
