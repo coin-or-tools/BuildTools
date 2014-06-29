@@ -709,8 +709,8 @@ export PKG_CONFIG_PATH
 
 m4_foreach_w([myvar],[$1],[
   if test -n "${m4_toupper(myvar)_PCREQUIRES}" ; then
-    m4_toupper(myvar)_CFLAGS=`$PKG_CONFIG --define-variable prefix=${COIN_DESTDIR}${prefix} --cflags ${m4_toupper(myvar)_PCREQUIRES}` ${m4_toupper(myvar)_CFLAGS}
-    m4_toupper(myvar)_LIBS=`$PKG_CONFIG --define-variable prefix=${COIN_DESTDIR}${prefix} --libs ${m4_toupper(myvar)_PCREQUIRES}` ${m4_toupper(myvar)_LIBS}
+    m4_toupper(myvar)_CFLAGS="`$PKG_CONFIG --define-variable prefix=${COIN_DESTDIR}${prefix} --cflags ${m4_toupper(myvar)_PCREQUIRES}` ${m4_toupper(myvar)_CFLAGS}"
+    m4_toupper(myvar)_LIBS="`$PKG_CONFIG --define-variable prefix=${COIN_DESTDIR}${prefix} --libs ${m4_toupper(myvar)_PCREQUIRES}` ${m4_toupper(myvar)_LIBS}"
   fi
 
   if test 1 = 0 ; then  #change this test to enable a bit of debugging output
@@ -725,8 +725,364 @@ m4_foreach_w([myvar],[$1],[
 
 # reset PKG_CONFIG_PATH variable 
 PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
-
 ])
+
+
+###########################################################################
+#                            COIN_TRY_FLINK                               #
+###########################################################################
+
+# Auxilliary macro to test if a Fortran function name can be linked,
+# given the current settings of LIBS.  We determine from the context, what
+# the currently active programming language is, and cast the name accordingly.
+# The first argument is the name of the function/subroutine, in small letters,
+# the second argument are the actions taken when the test works, and the
+# third argument are the actions taken if the test fails.
+
+AC_DEFUN([AC_COIN_TRY_FLINK],[
+case $ac_ext in
+  f)
+    AC_TRY_LINK(,[      call $1],[flink_try=yes],[flink_try=no])
+    ;;
+  c)
+    coin_need_flibs=no
+    flink_try=no
+    AC_F77_FUNC($1,cfunc$1)
+    AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM([void $cfunc$1();],[$cfunc$1()])],
+      [flink_try=yes],
+      [if test x"$FLIBS" != x; then
+         flink_save_libs="$LIBS"
+         LIBS="$LIBS $FLIBS"
+         AC_LINK_IFELSE(
+           [AC_LANG_PROGRAM([void $cfunc$1();],[$cfunc$1()])],
+           [coin_need_flibs=yes
+            flint_try=yes]
+         )
+         LIBS="$flink_save_libs"
+       fi
+      ]
+    )
+    ;;
+  cc|cpp)
+    coin_need_flibs=no
+    flink_try=no
+    AC_F77_FUNC($1,cfunc$1)
+    AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM([extern "C" {void $cfunc$1();}],[$cfunc$1()])],
+      [flink_try=yes],
+      [if test x"$FLIBS" != x; then
+         flink_save_libs="$LIBS"
+         LIBS="$LIBS $FLIBS"
+         AC_LINK_IFELSE(
+           [AC_LANG_PROGRAM([extern "C" {void $cfunc$1();}],[$cfunc$1()])],
+           [coin_need_flibs=yes
+            flink_try=yes]
+         )
+         LIBS="$flink_save_libs"
+       fi
+      ]
+    )
+    ;;
+esac
+if test $flink_try = yes; then
+  $2
+else
+  $3
+fi
+]) # AC_COIN_TRY_FLINK
+
+###########################################################################
+#                         COIN_CHECK_PACKAGE_BLAS                         #
+###########################################################################
+
+# This macro checks for a library containing the BLAS library.  It
+# 1. checks the --with-blas argument
+# 2. if --with-blas=BUILD has been specified goes to point 5
+# 3. if --with-blas has been specified to a working library, sets BLAS_LIBS
+#    to its value
+# 4. tries standard libraries
+# 5. calls COIN_CHECK_PACKAGE(Blas, [coinblas], [$1]) to check for
+#    ThirdParty/Blas
+# The makefile conditional and preprocessor macro COIN_HAS_BLAS is defined.
+# BLAS_LIBS is set to the flags required to link with a Blas library.
+# For each build target X in $1, X_LIBS is extended with $BLAS_LIBS.
+# In case 3 and 4, the flags to link to Blas are added to X_PCLIBS too.
+# In case 5, Blas is added to X_PCREQUIRES.
+
+AC_DEFUN([AC_COIN_CHECK_PACKAGE_BLAS],
+[
+AC_ARG_WITH([blas],
+            AC_HELP_STRING([--with-blas],
+                           [specify BLAS library (or BUILD to enforce use of ThirdParty/Blas)]),
+            [use_blas="$withval"], [use_blas=])
+
+# if user specified --with-blas-lib, then we should give COIN_CHECK_PACKAGE
+# preference
+AC_ARG_WITH([blas-lib],,[use_blas=BUILD])
+
+# Check if user supplied option makes sense
+if test x"$use_blas" != x; then
+  if test "$use_blas" = "BUILD"; then
+    # we come to this later
+    :
+  elif test "$use_blas" != "no"; then
+    AC_MSG_CHECKING([whether user supplied BLASLIB=\"$use_blas\" works])
+    coin_save_LIBS="$LIBS"
+    LIBS="$use_blas $LIBS"
+    AC_COIN_TRY_FLINK([daxpy],
+                      [test $coin_need_flibs = yes && use_blas="$use_blas $FLIBS"
+                       AC_MSG_RESULT([yes: $use_blas])],
+                      [AC_MSG_RESULT([no])
+                       AC_MSG_ERROR([user supplied BLAS library \"$use_blas\" does not work])])
+    LIBS="$coin_save_LIBS"
+  fi
+else
+  # Try to autodetect the library for blas based on build system
+  case $build in
+    *-sgi-*) 
+      AC_MSG_CHECKING([whether -lcomplib.sgimath has BLAS])
+      coin_save_LIBS="$LIBS"
+      LIBS="-lcomplib.sgimath $LIBS"
+      AC_COIN_TRY_FLINK([daxpy],
+                        [use_blas="-lcomplib.sgimath"
+                         test $coin_need_flibs = yes && use_blas="$use_blas $FLIBS"
+                         AC_MSG_RESULT([yes: $use_blas])
+                        ],
+                        [AC_MSG_RESULT([no])])
+      LIBS="$coin_save_LIBS"
+      ;;
+
+    *-*-solaris*)
+      AC_MSG_CHECKING([for BLAS in libsunperf])
+      # Ideally, we'd use -library=sunperf, but it's an imperfect world. Studio
+      # cc doesn't recognise -library, it wants -xlic_lib. Studio 12 CC doesn't
+      # recognise -xlic_lib. Libtool doesn't like -xlic_lib anyway. Sun claims
+      # that CC and cc will understand -library in Studio 13. The main extra
+      # function of -xlic_lib and -library is to arrange for the Fortran run-time
+      # libraries to be linked for C++ and C. We can arrange that explicitly.
+      coin_save_LIBS="$LIBS"
+      LIBS="-lsunperf $FLIBS $LIBS"
+      AC_COIN_TRY_FLINK([daxpy],
+                        [use_blas='-lsunperf'
+                         test $coin_need_flibs = yes && use_blas="$use_blas $FLIBS"
+                         AC_MSG_RESULT([yes: $use_blas])
+                        ],
+                        [AC_MSG_RESULT([no])])
+      LIBS="$coin_save_LIBS"
+      ;;
+      
+    *-cygwin* | *-mingw*)
+      case "$CC" in
+        clang* ) ;;
+        cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+          coin_save_LIBS="$LIBS"
+          AC_MSG_CHECKING([for BLAS in MKL (32bit)])
+          LIBS="mkl_intel_c.lib mkl_sequential.lib mkl_core.lib $LIBS"
+          AC_COIN_TRY_FLINK([daxpy],
+                            [use_blas='mkl_intel_c.lib mkl_sequential.lib mkl_core.lib'
+                             AC_MSG_RESULT([yes: $use_blas])
+                            ],
+                            [AC_MSG_RESULT([no])])
+          LIBS="$coin_save_LIBS"
+          
+          if test "x$use_blas" = x ; then
+            AC_MSG_CHECKING([for BLAS in MKL (64bit)])
+            LIBS="mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib $LIBS"
+            AC_COIN_TRY_FLINK([daxpy],
+                              [use_blas='mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib'
+                               AC_MSG_RESULT([yes: $use_blas])
+                              ],
+                              [AC_MSG_RESULT([no])])
+            LIBS="$coin_save_LIBS"
+          fi
+          ;;
+      esac
+      ;;
+      
+     *-darwin*)
+      AC_MSG_CHECKING([for BLAS in Veclib])
+      coin_save_LIBS="$LIBS"
+      LIBS="-framework vecLib $LIBS"
+      AC_COIN_TRY_FLINK([daxpy],
+                        [use_blas='-framework vecLib'
+                         test $coin_need_flibs = yes && use_blas="$use_blas $FLIBS"
+                         AC_MSG_RESULT([yes: $use_blas])
+                        ],
+                        [AC_MSG_RESULT([no])])
+      LIBS="$coin_save_LIBS"
+      ;;
+  esac
+
+  if test -z "$use_blas" ; then
+    AC_MSG_CHECKING([whether -lblas has BLAS])
+    coin_save_LIBS="$LIBS"
+    LIBS="-lblas $LIBS"
+    AC_COIN_TRY_FLINK([daxpy],
+                      [use_blas='-lblas'
+                       test $coin_need_flibs = yes && use_blas="$use_blas $FLIBS"
+                       AC_MSG_RESULT([yes: $use_blas])
+                      ],
+                      [AC_MSG_RESULT([no])])
+    LIBS="$coin_save_LIBS"
+  fi
+
+  # If we have no other ideas, consider building BLAS.
+  if test -z "$use_blas" ; then
+    use_blas=BUILD
+  fi
+fi
+
+if test "x$use_blas" = xBUILD ; then
+  AC_COIN_CHECK_PACKAGE(Blas, [coinblas], [$1])
+  
+elif test "x$use_blas" != x && test "$use_blas" != no; then
+  coin_has_blas=yes
+  AM_CONDITIONAL([COIN_HAS_BLAS],[test 0 = 0])
+  AC_DEFINE([COIN_HAS_BLAS],[1], [If defined, the BLAS Library is available.])
+  BLAS_LIBS="$use_blas"
+  BLAS_CFLAGS=
+  BLAS_DATA=
+  AC_SUBST(BLAS_LIBS)
+  AC_SUBST(BLAS_CFLAGS)
+  AC_SUBST(BLAS_DATA)
+  m4_foreach_w([myvar], [$1], [
+    m4_toupper(myvar)_LIBS="$BLAS_LIBS $m4_toupper(myvar)_LIBS"
+  ])
+  
+else
+  coin_has_blas=no
+  AM_CONDITIONAL([COIN_HAS_BLAS],[test 0 = 1])
+fi
+
+m4_foreach_w([myvar], [$1], [
+  AC_SUBST(m4_toupper(myvar)_LIBS)
+])
+
+]) # AC_COIN_CHECK_PACKAGE_BLAS
+
+###########################################################################
+#                       COIN_CHECK_PACKAGE_LAPACK                         #
+###########################################################################
+
+# This macro checks for a library containing the LAPACK library.  It
+# 1. checks the --with-lapack argument
+# 2. if --with-lapack=BUILD has been specified goes to point 5
+# 3. if --with-lapack has been specified to a working library, sets
+#    LAPACK_LIBS to its value
+# 4. tries standard libraries
+# 5. calls COIN_CHECK_PACKAGE(Lapack, [coinlapack], [$1]) to check for
+#    ThirdParty/Lapack
+# The makefile conditional and preprocessor macro COIN_HAS_LAPACK is defined.
+# LAPACK_LIBS is set to the flags required to link with a Lapack library.
+# For each build target X in $1, X_LIBS is extended with $LAPACK_LIBS.
+# In case 3 and 4, the flags to link to Lapack are added to X_PCLIBS too.
+# In case 5, Lapack is added to X_PCREQUIRES.
+#
+# TODO: Lapack usually depends on Blas, so if we check for a system lapack library,
+#   shouldn't we include AC_COIN_CHECK_PACKAGE_BLAS first?
+#   However, if we look for coinlapack via AC_COIN_CHECK_PACKAGE(Lapack, [coinlapack], [$1]),
+#   then we will get Blas as dependency of coinlapack.
+
+AC_DEFUN([AC_COIN_CHECK_PACKAGE_LAPACK],
+[
+AC_ARG_WITH([lapack],
+            AC_HELP_STRING([--with-lapack],
+                           [specify LAPACK library (or BUILD to enforce use of ThirdParty/Lapack)]),
+            [use_lapack=$withval], [use_lapack=])
+
+#if user specified --with-lapack-lib, then we should give COIN_HAS_PACKAGE preference
+AC_ARG_WITH([lapack-lib],,[use_lapack=BUILD])
+
+# Check if user supplied option makes sense
+if test x"$use_lapack" != x; then
+  if test "$use_lapack" = "BUILD"; then
+    # we come to this later
+    :
+  elif test "$use_lapack" != no; then
+    AC_MSG_CHECKING([whether user supplied LAPACKLIB=\"$use_lapack\" works])
+    coin_need_flibs=no
+    use_lapack="$use_lapack $BLAS_LIBS"
+    coin_save_LIBS="$LIBS"
+    LIBS="$use_lapack $LIBS"
+    AC_COIN_TRY_FLINK([dsyev],
+                      [if test $coin_need_flibs = yes ; then
+                         use_lapack="$use_lapack $FLIBS"
+                       fi
+                       AC_MSG_RESULT([yes: $use_lapack])
+                      ],
+                      [AC_MSG_RESULT([no])
+                       AC_MSG_ERROR([user supplied LAPACK library \"$use_lapack\" does not work])])
+    LIBS="$coin_save_LIBS"
+  fi
+else
+  if test x$coin_has_blas = xyes; then
+    # First try to see if LAPACK is already available with BLAS library
+    AC_MSG_CHECKING([whether LAPACK is already available with BLAS library])
+    coin_save_LIBS="$LIBS"
+    coin_need_flibs=no
+    LIBS="$BLAS_LIBS $LIBS"
+    AC_COIN_TRY_FLINK([dsyev],
+                      [use_lapack="$BLAS_LIBS"
+                       if test $coin_need_flibs = yes ; then
+                         use_lapack="$use_lapack $FLIBS"
+                       fi
+                       AC_MSG_RESULT([yes: $use_lapack])
+                      ],
+                      [AC_MSG_RESULT([no])])
+    LIBS="$coin_save_LIBS"
+  fi
+
+  if test -z "$use_lapack" ; then
+    AC_MSG_CHECKING([whether -llapack has LAPACK])
+    coin_need_flibs=no
+    coin_save_LIBS="$LIBS"
+    LIBS="-llapack $BLAS_LIBS $LIBS"
+    AC_COIN_TRY_FLINK([dsyev],
+                      [use_lapack='-llapack'
+                       if test $coin_need_flibs = yes ; then
+                         use_lapack="$use_lapack $FLIBS"
+                       fi
+                       AC_MSG_RESULT([yes: $use_lapack])
+                      ],
+                      [AC_MSG_RESULT([no])])
+    LIBS="$coin_save_LIBS"
+  fi
+
+  # If we have no other ideas, consider building LAPACK.
+  if test -z "$use_lapack" ; then
+    use_lapack=BUILD
+  fi
+fi
+
+if test "x$use_lapack" = xBUILD ; then
+  AC_COIN_CHECK_PACKAGE(Lapack, [coinlapack], [$1])
+
+elif test "x$use_lapack" != x && test "$use_lapack" != no; then
+  coin_has_lapack=yes
+  AM_CONDITIONAL([COIN_HAS_LAPACK],[test 0 = 0])
+  AC_DEFINE([COIN_HAS_LAPACK],[1], [If defined, the LAPACK Library is available.])
+  LAPACK_LIBS="$use_lapack"
+  LAPACK_CFLAGS=
+  LAPACK_DATA=
+  AC_SUBST(LAPACK_LIBS)
+  AC_SUBST(LAPACK_CFLAGS)
+  AC_SUBST(LAPACK_DATA)
+  m4_foreach_w([myvar], [$1], [
+    m4_toupper(myvar)_LIBS="$LAPACK_LIBS $m4_toupper(myvar)_LIBS"
+  ])
+  
+else
+  coin_has_lapack=no
+  AM_CONDITIONAL([COIN_HAS_LAPACK],[test 0 = 1])
+fi
+
+m4_foreach_w([myvar], [$1], [
+  AC_SUBST(m4_toupper(myvar)_LIBS)
+])
+
+]) # AC_COIN_CHECK_PACKAGE_LAPACK
+
 
 ###########################################################################
 #                           COIN_MAIN_PACKAGEDIR                          #
@@ -810,6 +1166,37 @@ if test "$m4_tolower(coin_has_$1)" != no; then
     [])
 fi
 
+m4_if(m4_tolower($1), blas, [
+  if test $m4_tolower(coin_has_$1) != no; then
+    #--with-blas can overwrite --with-blas-lib, and can be set to BUILD to enforce building blas
+    AC_ARG_WITH([blas],
+      AC_HELP_STRING([--with-blas], [specify BLAS library (or BUILD to enforce use of ThirdParty/Blas)]),
+        [if test x"$withval" = "xno" ; then
+           coin_has_blas="no"
+           coin_reason="--without-blas has been specified"
+         elif test x"$withval" != "xBUILD" ; then
+           coin_has_blas="no"
+           coin_reason="--with-blas has been specified"
+         fi],
+        [])
+  fi
+])
+
+m4_if(m4_tolower($1), lapack, [
+  if test $m4_tolower(coin_has_$1) != no; then
+    #--with-lapack can overwrite --with-lapack-lib, and can be set to BUILD to enforce building lapack
+    AC_ARG_WITH([lapack],
+      AC_HELP_STRING([--with-lapack], [specify LAPACK library (or BUILD to enforce use of ThirdParty/Lapack)]),
+        [if test x"$withval" = "xno" ; then
+           coin_has_lapack="no"
+           coin_reason="--without-lapack has been specified"
+         elif test x"$withval" != "xBUILD" ; then
+           coin_has_lapack="no"
+           coin_reason="--with-lapack has been specified"
+         fi],
+        [])
+  fi
+])
 
 # check if project is available in present directory
 if test "$m4_tolower(coin_has_$1)" = notGiven; then
