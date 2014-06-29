@@ -405,6 +405,7 @@ AC_PREFIX_DEFAULT([`pwd`])
 AC_CANONICAL_BUILD
 
 # initialize automake, don't define PACKAGE or VERSION
+# TODO should we enable warnings by passing an option like -Wall
 AM_INIT_AUTOMAKE([no-define])
 
 # disable automatic rebuild of configure/Makefile
@@ -1272,3 +1273,93 @@ if test "$m4_tolower(coin_has_$1)" = yes ; then
   fi
 fi
 ])
+
+
+###########################################################################
+#                           COIN_DOXYGEN                                  #
+###########################################################################
+#
+# This macro determines the configuration information for doxygen, the tool
+# used to generate online documentation of COIN code. It takes one parameter,
+# a list of projects (mixed-case, to match the directory names) that should
+# be processed as external tag files. E.g., COIN_DOXYGEN([Clp Osi]).
+#
+# This macro will define the following variables:
+#  coin_have_doxygen    "yes", if doxygen is found, "no" otherwise
+#  coin_doxy_usedot     Defaults to 'YES'; --with-dot will still check to see if dot is available
+#  coin_doxy_tagname    Name of doxygen tag file (placed in doxydoc directory)
+#  coin_doxy_logname    Name of doxygen log file (placed in doxydoc directory)
+#  coin_doxy_tagfiles   List of doxygen tag files used to reference other doxygen documentation
+#  coin_doxy_excludes   Directories to exclude from doxygen processing
+
+AC_DEFUN([AC_COIN_DOXYGEN],
+[
+AC_MSG_NOTICE([configuring doxygen documentation options])
+
+# Check to see if doxygen is available.
+AC_CHECK_PROG([coin_have_doxygen],[doxygen],[yes],[no])
+
+# Look for the dot tool from the graphviz package, unless the user has
+# disabled it.
+AC_ARG_WITH([dot],
+  AS_HELP_STRING([--with-dot],[use dot (from graphviz) when creating documentation with doxygen if available; --without-dot to disable]),
+  [],[withval=yes])
+if test x"$withval" = xno ; then
+  coin_doxy_usedot=NO
+  AC_MSG_CHECKING([for dot])
+  AC_MSG_RESULT([disabled])
+else
+  AC_CHECK_PROG([coin_doxy_usedot],[dot],[YES],[NO])
+fi
+
+# Generate a tag file name and a log file name
+AC_SUBST([coin_doxy_tagname],[doxydoc/${PACKAGE}_doxy.tag])
+AC_SUBST([coin_doxy_logname],[doxydoc/${PACKAGE}_doxy.log])
+
+# Process the list of project names and massage them into possible doxygen
+# doc'n directories. Prefer 1) classic external, source processed using
+# a project-specific doxygen.conf, we use the tag file; 2) classic
+# external, source processed using package doxygen.conf; 3) installed
+# doxydoc. Alternatives 1) and 2) are only possible if the directory will be
+# configured, which we can't know unless this is the package base configure,
+# since coin_subdirs is only set there. Hence it's sufficient to check for
+# membership. If we use a tag file from a classic external, exclude the
+# source from doxygen processing when doxygen runs in the base directory.
+coin_doxy_tagfiles=
+coin_doxy_excludes=
+m4_foreach_w([proj],[$1],[
+  AC_MSG_CHECKING([for doxygen documentation for proj])
+  doxytag=m4_tolower(proj)_doxy.tag
+  doxyfound=no
+  for chkProj in $coin_subdirs ; do
+    if test "$chkProj" = proj ; then
+      # proj will be configured, hence doxydoc present in build tree
+      doxysrcdir="${srcdir}/proj"
+      if test -d "$doxysrcdir" ; then
+        # with a doxydoc directory?
+        doxydir="$doxysrcdir/doxydoc"
+        if test -d "$doxydir" ; then
+          # use tag file; don't process source
+          doxydir="`pwd`/proj/doxydoc"
+          coin_doxy_tagfiles="$coin_doxy_tagfiles $doxydir/$doxytag=$doxydir/html"
+          AC_MSG_RESULT([$doxydir (tag)])
+          coin_doxy_excludes="$coin_doxy_excludes */proj"
+        else
+          # will process the source -- nothing further to be done here
+          AC_MSG_RESULT([$doxysrcdir (src)])
+        fi
+      doxyfound=yes
+      fi
+    fi
+  done
+  # Not built, fall back to installed tag file
+  if test $doxyfound = no ; then
+    doxydir="${datadir}/coin/doc/proj/doxydoc"
+    coin_doxy_tagfiles="$coin_doxy_tagfiles $doxydir/$doxytag=$doxydir/html"
+    AC_MSG_RESULT([$doxydir (tag)])
+  fi
+])
+AC_SUBST([coin_doxy_tagfiles])
+AC_SUBST([coin_doxy_excludes])
+
+]) # AC_COIN_DOXYGEN
