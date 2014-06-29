@@ -570,17 +570,14 @@ fi
 m4_toupper($1_LIBS)=
 m4_toupper($1_CFLAGS)=
 m4_toupper($1_DATA)=
-m4_toupper($1_DEPENDENCIES)=
 m4_toupper($1_PCREQUIRES)=
 AC_SUBST(m4_toupper($1_LIBS))
 AC_SUBST(m4_toupper($1_CFLAGS))
 AC_SUBST(m4_toupper($1_DATA))
-AC_SUBST(m4_toupper($1_DEPENDENCIES))
 m4_foreach_w([myvar], [$3], [
-  AC_SUBST(m4_toupper(myvar)_CFLAGS)
   AC_SUBST(m4_toupper(myvar)_LIBS)
+  AC_SUBST(m4_toupper(myvar)_CFLAGS)
   AC_SUBST(m4_toupper(myvar)_PCREQUIRES)
-  AC_SUBST(m4_toupper(myvar)_DEPENDENCIES)
 ])
 
 #check if user provided LIBS for package or disables use of package
@@ -712,11 +709,10 @@ export PKG_CONFIG_PATH
 
 m4_foreach_w([myvar],[$1],[
   if test -n "${m4_toupper(myvar)_PCREQUIRES}" ; then
-    m4_toupper(myvar)_CFLAGS=`$PKG_CONFIG --define-variable prefix=${COIN_DESTDIR}${prefix} ${m4_toupper(myvar)_PCREQUIRES}` --cflags ${m4_toupper(myvar)_CFLAGS}
-    m4_toupper(myvar)_LIBS=`$PKG_CONFIG --define-variable prefix=${COIN_DESTDIR}${prefix} ${m4_toupper(myvar)_PCREQUIRES}` --libs ${m4_toupper(myvar)_LIBS}
-    #TODO setup _DEPENDENCIES from _LIBS
+    m4_toupper(myvar)_CFLAGS=`$PKG_CONFIG --define-variable prefix=${COIN_DESTDIR}${prefix} --cflags ${m4_toupper(myvar)_PCREQUIRES}` ${m4_toupper(myvar)_CFLAGS}
+    m4_toupper(myvar)_LIBS=`$PKG_CONFIG --define-variable prefix=${COIN_DESTDIR}${prefix} --libs ${m4_toupper(myvar)_PCREQUIRES}` ${m4_toupper(myvar)_LIBS}
   fi
-    
+
   if test 1 = 0 ; then  #change this test to enable a bit of debugging output
     if test -n "${m4_toupper(myvar)_CFLAGS}" ; then
       AC_MSG_NOTICE([myvar CFLAGS are ${m4_toupper(myvar)_CFLAGS}])
