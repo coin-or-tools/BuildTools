@@ -325,7 +325,7 @@ done
 #done
 #
 #AC_SUBST(EXAMPLE_UNCOMPRESSED_FILES)
-#AC_SUBST(EXAMPLE_FILES)
+AC_SUBST(EXAMPLE_FILES)
 #AC_SUBST(EXAMPLE_CLEAN_FILES)
 ]) #AC_COIN_EXAMPLE_FILES
 
@@ -646,7 +646,7 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
       [ m4_tolower(coin_has_$1)=yes
         AC_MSG_RESULT([yes: $m4_toupper($1)_VERSIONS])
 
-        m4_toupper($1_DATA)=`$PKG_CONFIG --variable=datadir --define-variable prefix=${COIN_DESTDIR}${prefix} $2 2>/dev/null`
+        m4_toupper($1_DATA)=`$PKG_CONFIG --define-variable prefix=${COIN_DESTDIR}${prefix} --variable=datadir $2 2>/dev/null`
         
         m4_toupper($1_PCREQUIRES)="$2"
         # augment X_PCREQUIRES for each build target X in $3
@@ -712,8 +712,8 @@ export PKG_CONFIG_PATH
 
 m4_foreach_w([myvar],[$1],[
   if test -n "${m4_toupper(myvar)_PCREQUIRES}" ; then
-    m4_toupper(myvar)_CFLAGS=`$PKG_CONFIG --cflags --define-variable prefix=${COIN_DESTDIR}${prefix} ${m4_toupper(myvar)_PCREQUIRES} ` ${m4_toupper(myvar)_CFLAGS}
-    m4_toupper(myvar)_LIBS=`$PKG_CONFIG --libs --define-variable prefix=${COIN_DESTDIR}${prefix} ${m4_toupper(myvar)_PCREQUIRES} ` ${m4_toupper(myvar)_LIBS}
+    m4_toupper(myvar)_CFLAGS=`$PKG_CONFIG --define-variable prefix=${COIN_DESTDIR}${prefix} ${m4_toupper(myvar)_PCREQUIRES}` --cflags ${m4_toupper(myvar)_CFLAGS}
+    m4_toupper(myvar)_LIBS=`$PKG_CONFIG --define-variable prefix=${COIN_DESTDIR}${prefix} ${m4_toupper(myvar)_PCREQUIRES}` --libs ${m4_toupper(myvar)_LIBS}
     #TODO setup _DEPENDENCIES from _LIBS
   fi
     
