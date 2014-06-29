@@ -344,9 +344,9 @@ AC_DEFUN([AC_COIN_PROJECTVERSION],
   [coin_majorver=`echo $PACKAGE_VERSION | sed -n -e 's/^\([0-9]*\).*/\1/gp'`]
   [coin_minorver=`echo $PACKAGE_VERSION | sed -n -e 's/^[0-9]*\.\([0-9]*\).*/\1/gp'`]
   [coin_releasever=`echo $PACKAGE_VERSION | sed -n -e 's/^[0-9]*\.[0-9]*\.\([0-9]*\).*/\1/gp'`]
-  if test "x$coin_majorver" = x ; then coin_majorver=9999 ; fi
-  if test "x$coin_minorver" = x ; then coin_minorver=9999 ; fi
-  if test "x$coin_releasever" = x ; then coin_releasever=9999 ; fi
+  test -z "$coin_majorver"   && coin_majorver=9999
+  test -z "$coin_minorver"   && coin_minorver=9999
+  test -z "$coin_releasever" && coin_releasever=9999
   AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MAJOR),   [$coin_majorver],   [Major Version number of project])
   AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MINOR),   [$coin_minorver],   [Minor Version number of project])
   AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_RELEASE), [$coin_releasever], [Release Version number of project])
@@ -374,34 +374,64 @@ AC_DEFUN([AC_COIN_PROJECTVERSION],
 ])
 
 ###########################################################################
-#                            COIN_INITALIZE                               #
+#                            COIN*INITALIZE                               #
 ###########################################################################
 
-# This macro does everything that is required in the early part in the
+# These macros do everything that is required in the early part in the
 # configure script, such as defining a few variables.
 # The first parameter is the project name.
 # The second (optional) is the libtool library version (important for releases,
 # less so for stable or trunk).
+# You should not call AC_COIN_INITIALIZE, but call AC_COIN_BASEDIR_INITIALIZE
+# or AC_COIN_PROJECTDIR_INITIALIZE instead, depending on what is appropriate.
 
 AC_DEFUN([AC_COIN_INITIALIZE],
 [
+AC_PREREQ(2.69)
+
+# Set the project's version numbers
+AC_COIN_PROJECTVERSION($1, $2)
+
+# A useful makefile conditional that is always false
+AM_CONDITIONAL(ALWAYS_FALSE, false)
+
+# Where should everything be installed by default?  Here, we want it
+# to be installed directly in 'bin', 'lib', 'include' subdirectories
+# of the directory where configure is run.  The default would be
+# /usr/local.      
+AC_PREFIX_DEFAULT([`pwd`])
+
+# Get the system type
+AC_CANONICAL_BUILD
+])
+
+
+AC_DEFUN([AC_COIN_BASEDIR_INITIALIZE],
+[
+AC_COIN_INITIALIZE([$1],[$2])
+
+COIN_DESTDIR=`pwd`/.coinstash
+AC_SUBST(COIN_DESTDIR)
+])
+
+
+AC_DEFUN([AC_COIN_PROJECTDIR_INITIALIZE],
+[
+AC_COIN_INITIALIZE([$1],[$2])
+
 # figure out whether there is a base directory up from here
 coin_base_directory=
-if test -e ../coin_subdirs.txt ; then
+if test -e ../.coin_subdirs.txt ; then
   coin_base_directory=`cd ..; pwd`
-elif test -e ../../coin_subdirs.txt ; then
+elif test -e ../../.coin_subdirs.txt ; then
   coin_base_directory=`cd ../..; pwd`
 fi
 
 if test "x$coin_base_directory" != x ; then 
-  COIN_DESTDIR=$coin_base_directory/coinstash
+  COIN_DESTDIR=$coin_base_directory/.coinstash
 fi
 AC_SUBST(COIN_DESTDIR)
-
-# Set the project's version numbers
-AC_COIN_PROJECTVERSION($1, $2)
 ])
-
 
 ###########################################################################
 #                              COIN_FINALIZE                              #
@@ -419,7 +449,7 @@ AC_DEFUN([AC_COIN_FINALIZE],
 # need to come before AC_OUTPUT
 if test "x$coin_subdirs" != x; then
   # write coin_subdirs to a file so that project configuration knows where to find uninstalled projects
-  echo $coin_subdirs > coin_subdirs.txt
+  echo $coin_subdirs > .coin_subdirs.txt
 else
   # substitute for OBJDIR, needed to setup .pc file for uninstalled project
   #ABSBUILDDIR="`pwd`"
@@ -500,8 +530,8 @@ AC_SUBST(PKG_CONFIG)
 # assemble pkg-config search path to find projects under base directory
 COIN_PKG_CONFIG_PATH=
 if test "x$coin_base_directory" != x ; then
-  if test -f $coin_base_directory/coin_subdirs.txt ; then
-    for i in `cat $coin_base_directory/coin_subdirs.txt` ; do
+  if test -f $coin_base_directory/.coin_subdirs.txt ; then
+    for i in `cat $coin_base_directory/.coin_subdirs.txt` ; do
       if test -d $coin_base_directory/$i ; then
         COIN_PKG_CONFIG_PATH="$coin_base_directory/$i:${COIN_PKG_CONFIG_PATH}"
       fi
