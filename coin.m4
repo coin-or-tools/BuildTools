@@ -1274,6 +1274,177 @@ if test "$m4_tolower(coin_has_$1)" = yes ; then
 fi
 ])
 
+#######################################################################
+#                           COIN_CHECK_LIBM                           #
+#######################################################################
+
+# Check for the math library.
+# For a (space separated) list of arguments X, this macro adds the flags
+# for linking against the math library to a X_LIBS.
+
+AC_DEFUN([AC_COIN_CHECK_LIBM],
+[AC_REQUIRE([AC_PROG_CC])
+
+coin_save_LIBS="$LIBS"
+
+AC_LANG_PUSH(C)
+AC_SEARCH_LIBS([cos],[m],
+  [m4_foreach_w([myvar], [$1], [m4_toupper(myvar)_LIBS="-lm $m4_toupper(myvar)_LIBS"])]
+)
+AC_LANG_POP(C)
+
+LIBS="$coin_save_LIBS"
+
+]) # AC_COIN_CHECK_LIBM
+
+###########################################################################
+#                           COIN_CHECK_ZLIB                               #
+###########################################################################
+
+# This macro checks for the libz library.  If found, it sets the automake
+# conditional COIN_HAS_ZLIB and defines the C preprocessor variable
+# COIN_HAS_ZLIB.  Further, for a (space separated) list of arguments X,
+# it adds the linker flag to the variables X_LIBS.
+
+AC_DEFUN([AC_COIN_CHECK_ZLIB],
+[AC_REQUIRE([AC_PROG_CC])
+
+coin_has_zlib=no
+
+AC_ARG_ENABLE([zlib],
+              [AC_HELP_STRING([--disable-zlib],[do not compile with compression library zlib])],
+              [coin_enable_zlib=$enableval],
+              [coin_enable_zlib=yes])
+
+if test $coin_enable_zlib = yes; then
+  AC_LANG_PUSH(C)
+  AC_CHECK_HEADER([zlib.h],[coin_has_zlib=yes])
+
+  if test $coin_has_zlib = yes; then
+    AC_CHECK_LIB([z],[gzopen],[:],[coin_has_zlib=no])
+  fi
+
+  if test $coin_has_zlib = yes; then
+    m4_foreach_w([myvar], [$1], [m4_toupper(myvar)_LIBS="-lz $m4_toupper(myvar)_LIBS"])
+    AC_DEFINE([COIN_HAS_ZLIB],[1],[Define to 1 if zlib is available])
+  fi
+  AC_LANG_POP(C)
+fi
+
+AM_CONDITIONAL(COIN_HAS_ZLIB, test x$coin_has_zlib = xyes)
+]) # AC_COIN_CHECK_ZLIB
+
+
+###########################################################################
+#                            COIN_CHECK_BZLIB                             #
+###########################################################################
+
+# This macro checks for the libbz2 library.  If found, it defines the C
+# preprocessor variable COIN_HAS_BZLIB.  Further, for a (space separated) list
+# of arguments X, it adds the linker flag to the variables X_LIBS.
+
+AC_DEFUN([AC_COIN_CHECK_BZLIB],
+[AC_REQUIRE([AC_PROG_CC])
+
+AC_ARG_ENABLE([bzlib],
+              [AC_HELP_STRING([--disable-bzlib],[do not compile with compression library bzlib])],
+              [coin_enable_bzlib=$enableval],
+              [coin_enable_bzlib=yes])
+
+coin_has_bzlib=no
+if test $coin_enable_bzlib = yes; then
+  AC_LANG_PUSH(C)
+  AC_CHECK_HEADER([bzlib.h],[coin_has_bzlib=yes])
+
+  if test $coin_has_bzlib = yes; then
+    AC_CHECK_LIB([bz2],[BZ2_bzReadOpen],[:],[coin_has_bzlib=no])
+  fi
+
+  if test $coin_has_bzlib = yes; then
+    m4_foreach_w([myvar], [$1], [m4_toupper(myvar)_LIBS="-lbz2 $m4_toupper(myvar)_LIBS"])
+    AC_DEFINE([COIN_HAS_BZLIB],[1],[Define to 1 if bzlib is available])
+  fi
+  AC_LANG_POP(C)
+fi
+]) # AC_COIN_CHECK_BZLIB
+
+
+###########################################################################
+#                         COIN_CHECK_GNU_READLINE                         #
+###########################################################################
+
+# This macro checks for GNU's readline.  It verifies that the header
+# readline/readline.h is available, and that the -lreadline library
+# contains "readline".  It is assumed that #include <stdio.h> is included
+# in the source file before the #include<readline/readline.h>
+# If found, it defines the C preprocessor variable COIN_HAS_READLINE.
+# Further, for a (space separated) list of arguments X, it adds the
+# linker flag to the variable X_LIBS, X_PCLIBS, and X_LIBS_INSTALLED.
+
+AC_DEFUN([AC_COIN_CHECK_GNU_READLINE],
+[AC_REQUIRE([AC_PROG_CC])
+
+AC_ARG_ENABLE([readline],
+              [AC_HELP_STRING([--disable-readline],[do not compile with readline library])],
+              [coin_enable_readline=$enableval],
+              [coin_enable_readline=yes])
+
+coin_has_readline=no
+if test $coin_enable_readline = yes; then
+  AC_LANG_PUSH(C)
+  AC_CHECK_HEADER([readline/readline.h],[coin_has_readline=yes],[],[#include <stdio.h>])
+
+  coin_save_LIBS="$LIBS"
+  LIBS=
+  # First we check if tputs and friends are available
+  if test $coin_has_readline = yes; then
+    AC_SEARCH_LIBS([tputs],[ncurses termcap curses],[],[coin_has_readline=no])
+  fi
+
+  # Now we check for readline
+  if test $coin_has_readline = yes; then
+    AC_CHECK_LIB([readline],[readline],[],[coin_has_readline=no])
+  fi
+
+  if test $coin_has_readline = yes; then
+    m4_foreach_w([myvar], [$1], [m4_toupper(myvar)_LIBS="-lreadline $LIBS $m4_toupper(myvar)_LIBS"])
+    AC_DEFINE([COIN_HAS_READLINE],[1],[Define to 1 if readline is available])
+  fi
+
+  LIBS="$coin_save_LIBS"
+  AC_LANG_POP(C)
+fi
+]) # AC_COIN_CHECK_GNU_READLINE
+
+###########################################################################
+#                              COIN_CHECK_GMP                             #
+###########################################################################
+
+# This macro checks for the gmp library.  If found, it defines the C
+# preprocessor variable COIN_HAS_GMP.  Further, for a (space separated) list
+# of arguments X, it adds the linker flag to the variables X_LIBS.
+
+AC_DEFUN([AC_COIN_CHECK_GMP],
+[AC_REQUIRE([AC_PROG_CC])
+
+AC_ARG_ENABLE([gmp],
+              [AC_HELP_STRING([--disable-gmp],[do not compile with GNU multiple precision library])],
+              [coin_enable_gmp=$enableval],
+              [coin_enable_gmp=yes])
+
+coin_has_gmp=no
+if test $coin_enable_gmp = yes; then
+  AC_LANG_PUSH(C)
+  AC_CHECK_HEADER([gmp.h],[AC_CHECK_LIB([gmp],[__gmpz_init],[coin_has_gmp=yes])])
+  
+  if test $coin_has_gmp = yes ; then
+    m4_foreach_w([myvar], [$1], [m4_toupper(myvar)_LIBS="-lgmp $m4_toupper(myvar)_LIBS"])
+    AC_DEFINE([COIN_HAS_GMP],[1],[Define to 1 if GMP is available])
+  fi
+  AC_LANG_POP(C)
+fi
+]) # AC_COIN_CHECK_GMP
+
 
 ###########################################################################
 #                           COIN_DOXYGEN                                  #
