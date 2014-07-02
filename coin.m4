@@ -2059,7 +2059,6 @@ fi
 # This macro defined the --enable-gnu-packages flag.  This can be used
 # to check if a user wants to compile GNU packges (such as readline)
 # into the executable.  By default, GNU packages are disabled.
-# This also defines the automake conditional COIN_ENABLE_GNU_PACKAGES
 
 AC_DEFUN([AC_COIN_ENABLE_GNU_PACKAGES],
 [AC_ARG_ENABLE([gnu-packages],
@@ -3270,7 +3269,7 @@ m4_if(m4_tolower($1), blas, [
 ])
 
 m4_if(m4_tolower($1), lapack, [
-  if test $m4_tolower(coin_has_$1) != skipping; then
+  if test $m4_tolower(coin_has_$1) != no; then
     #--with-lapack can overwrite --with-lapack-lib, and can be set to BUILD to enforce building lapack
     AC_ARG_WITH([lapack],
       AC_HELP_STRING([--with-lapack], [specify LAPACK library (or BUILD to enforce use of ThirdParty/Lapack)]),
@@ -3381,7 +3380,6 @@ m4_toupper($1_DATA)=
 m4_toupper($1_DEPENDENCIES)=
 m4_toupper($1_PCLIBS)=
 m4_toupper($1_PCREQUIRES)=
-m4_toupper($1_DATA)=
 AC_SUBST(m4_toupper($1_LIBS))
 AC_SUBST(m4_toupper($1_CFLAGS))
 AC_SUBST(m4_toupper($1_DATA))
