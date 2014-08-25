@@ -719,6 +719,7 @@ case $build in
 	       comps="xlc gcc pgcc icc cc"
 	     fi
 	     ;;
+  *-*-darwin*) comps="clang gcc" ;;
   *-linux-gnu*) comps="gcc cc pgcc icc xlc" ;;
   *-linux-*) comps="xlc gcc cc pgcc icc" ;;
   *)         comps="xlc_r xlc cc gcc pgcc icc" ;;
