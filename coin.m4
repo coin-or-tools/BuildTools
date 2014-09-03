@@ -297,7 +297,7 @@ case $build in
       fi ;;
   *-*-solaris*)
   	     comps="CC xlC_r aCC g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC" ;;
-  *-darwin*) comps="g++ c++ CC" ;;
+  *-darwin*) comps="clang++ g++ c++ CC" ;;
   *-linux-gnu*)
              comps="g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC xlC_r aCC CC" ;;
           *) comps="xlC_r aCC CC g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC" ;;
@@ -324,7 +324,7 @@ AC_LANG_POP(C++)
 coin_cxx_is_cl=false
 # It seems that we need to cleanup something here for the Windows
 case "$CXX" in
-  clang* ) ;;
+  clang* | */clang*) ;;
   cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
     sed -e 's/^void exit (int);//' confdefs.h >> confdefs.hh
     mv confdefs.hh confdefs.h
@@ -719,7 +719,7 @@ case $build in
 	       comps="xlc gcc pgcc icc cc"
 	     fi
 	     ;;
-  *-*-darwin*) comps="clang gcc" ;;
+  *-*-darwin*) comps="clang gcc cc" ;;
   *-linux-gnu*) comps="gcc cc pgcc icc xlc" ;;
   *-linux-*) comps="xlc gcc cc pgcc icc" ;;
   *)         comps="xlc_r xlc cc gcc pgcc icc" ;;
