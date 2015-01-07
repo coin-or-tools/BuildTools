@@ -1662,7 +1662,7 @@ fi
 
 AC_ARG_ENABLE([dependency-linking],[],
   [dependency_linking="$enableval"],
-  [dependency_linking=no])
+  [dependency_linking=yes])
 
 # ToDo
 # For now, don't use the -no-undefined flag, since the Makefiles are
