@@ -3954,9 +3954,9 @@ else
       AC_MSG_CHECKING([for BLAS in Veclib])
       coin_need_flibs=no
       coin_save_LIBS="$LIBS"
-      LIBS="-framework vecLib $LIBS"
+      LIBS="-framework Accelerate $LIBS"
       AC_COIN_TRY_FLINK([daxpy],
-                        [use_blas='-framework vecLib'
+                        [use_blas='-framework Accelerate'
                          if test $coin_need_flibs = yes ; then
                            use_blas="$use_blas $FLIBS"
                          fi
