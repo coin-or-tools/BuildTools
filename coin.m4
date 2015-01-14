@@ -1536,27 +1536,26 @@ if test "x$1" = xforce_shared; then
   fi
   enable_shared=yes;
 else
-  # On Cygwin and AIX, building DLLs doesn't work
   case $build in
     *-cygwin* | *-mingw*)
       coin_disable_shared=yes
       if test x"$enable_shared" = xyes; then
         case "$CC" in
           clang* )
-            AC_MSG_WARN([DLL building not supported. I'm disabling your choice.])
+            AC_MSG_WARN([Building of DLLs not supported in this configuration.])
             ;;
           cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
-            AC_MSG_NOTICE([DLL building not supported, but will build with -MD(d) instead of -MT(d).])
+            AC_MSG_NOTICE([Building of DLLs not supported in this configuration.])
             ;;
           *gcc*)
 	    if test x"$enable_dependency_linking" = xyes; then
               coin_disable_shared=no
             else
-              AC_MSG_WARN([To build shared libraries with gcc on CYGWIN or MSys, use --enable-dependency-linking])
+              AC_MSG_WARN([Dependency linking seems to be disabled, so shared libraries (DLLs) will not be built])
             fi
             ;;
           *)
-            AC_MSG_WARN([DLL building not supported. I'm disabling your choice.])
+            AC_MSG_WARN([Building of DLLs not supported in this configuration.])
             ;;
         esac
       fi
@@ -1565,7 +1564,7 @@ else
       coin_disable_shared=yes
       platform=AIX
       if test x"$enable_shared" = xyes; then
-        AC_MSG_WARN([Shared objects are not supported. I'm disabling your choice.])
+        AC_MSG_WARN([Shared objects are not supported.])
       fi
     ;;
   esac
@@ -1662,12 +1661,36 @@ fi
 
 AC_ARG_ENABLE([dependency-linking],[],
   [dependency_linking="$enableval"],
-  [dependency_linking=yes])
+  [dependency_linking=auto])
 
-# ToDo
-# For now, don't use the -no-undefined flag, since the Makefiles are
-# not yet set up that way.  But we need to fix this, when we want
-# to comile DLLs under Windows.
+if test "$dependency_linking" = auto; then
+  # On Cygwin and AIX, building DLLs doesn't work
+  dependency_linking=no
+  if test x"$enable_shared" = xyes; then
+    case $build in
+      *-cygwin* | *-mingw*)
+        case "$CC" in
+          clang* )
+	    dependency_linking=yes
+            ;;
+          cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+	    dependency_linking=no
+            ;;
+          *gcc*)
+	    dependency_linking=yes
+            ;;
+          *)
+	    dependency_linking=yes
+            ;;
+        esac
+        ;;
+      *)
+        dependency_linking=yes
+        ;;
+    esac
+  fi
+fi
+
 if test "$dependency_linking" = yes ;
 then
   LT_LDFLAGS="-no-undefined"
