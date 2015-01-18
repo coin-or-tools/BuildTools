@@ -1548,7 +1548,7 @@ else
             AC_MSG_NOTICE([Building of DLLs not supported in this configuration.])
             ;;
           *gcc*)
-	    if test x"$enable_dependency_linking" = xyes; then
+            if test x"$enable_dependency_linking" = xyes; then
               coin_disable_shared=no
             else
               AC_MSG_WARN([Dependency linking seems to be disabled, so shared libraries (DLLs) will not be built])
@@ -1659,7 +1659,9 @@ fi
 
 # AC_MSG_NOTICE([End of INIT_AUTO_TOOLS.])
 
-AC_ARG_ENABLE([dependency-linking],[],
+AC_ARG_ENABLE([dependency-linking],
+  [AC_HELP_STRING([--disable-dependency-linking],
+                  [disable linking library dependencies into shared libraries])],
   [dependency_linking="$enableval"],
   [dependency_linking=auto])
 
@@ -1671,16 +1673,16 @@ if test "$dependency_linking" = auto; then
       *-cygwin* | *-mingw*)
         case "$CC" in
           clang* )
-	    dependency_linking=yes
+            dependency_linking=yes
             ;;
           cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
-	    dependency_linking=no
+            dependency_linking=no
             ;;
           *gcc*)
-	    dependency_linking=yes
+            dependency_linking=yes
             ;;
           *)
-	    dependency_linking=yes
+            dependency_linking=yes
             ;;
         esac
         ;;
