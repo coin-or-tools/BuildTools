@@ -1668,7 +1668,7 @@ AC_ARG_ENABLE([dependency-linking],
 if test "$dependency_linking" = auto; then
   # On Cygwin and AIX, building DLLs doesn't work
   dependency_linking=no
-  if test x"$enable_shared" = xyes; then
+  if test x"$coin_disable_shared" = xno; then
     case $build in
       *-cygwin* | *-mingw*)
         case "$CC" in
