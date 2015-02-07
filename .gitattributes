@@ -1,26 +1,4 @@
 * text=auto !eol
-0.8/MSVisualStudio/v10/Common.props -text
-0.8/MSVisualStudio/v10/Debug.props -text
-0.8/MSVisualStudio/v10/Release.props -text
-0.8/MSVisualStudio/v9/BuildTools.vcproj -text
-0.8/Makemain.inc -text
-0.8/coin-functions -text
-0.8/coin.m4 -text
-0.8/commit_new_release -text
-0.8/commit_new_stable -text
-0.8/compile_f2c/INSTALL -text
-0.8/compile_f2c/README -text
-0.8/compile_f2c/compile_f2c -text
-0.8/config.guess -text
-0.8/config.sub -text
-0.8/depcomp -text
-0.8/install-sh -text
-0.8/missing -text
-0.8/prepare_new_release -text
-0.8/prepare_new_stable -text
-0.8/run_autotools -text
-0.8/set_externals -text
-0.8/share/config.site -text
 MSVisualStudio/v10/Common.props -text
 MSVisualStudio/v10/Debug.props -text
 MSVisualStudio/v10/Release.props -text
