@@ -2915,6 +2915,7 @@ AC_MSG_NOTICE([configuring doxygen documentation options])
 # Check to see if doxygen is available.
 
 AC_CHECK_PROG([coin_have_doxygen],[doxygen],[yes],[no])
+AC_CHECK_PROG([coin_have_latex],[latex],[yes],[no])
 
 # Look for the dot tool from the graphviz package, unless the user has
 # disabled it.
@@ -2936,6 +2937,8 @@ fi
 
 AC_SUBST([coin_doxy_tagname],[doxydoc/${PACKAGE}_doxy.tag])
 AC_SUBST([coin_doxy_logname],[doxydoc/${PACKAGE}_doxy.log])
+AM_CONDITIONAL(COIN_HAS_DOXYGEN, [test $coin_have_doxygen = yes])
+AM_CONDITIONAL(COIN_HAS_LATEX, [test $coin_have_latex = yes])
 
 # Process the list of project names and massage them into possible doxygen
 # doc'n directories. Prefer 1) classic external, source processed using
