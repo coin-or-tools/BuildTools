@@ -2958,30 +2958,26 @@ for proj in $tmp ; do
   AC_MSG_CHECKING([for doxygen doc'n for $proj ])
   doxytag=${lc_proj}_doxy.tag
   doxyfound=no
-  for chkProj in $coin_subdirs ; do
-    if test "$chkProj" = "$proj" ; then
-      # proj will be configured, hence doxydoc present in build tree
-      doxysrcdir="${srcdir}/${proj}"
-      # AC_MSG_NOTICE([Considering $doxysrcdir (base)])
-      if test -d "$doxysrcdir" ; then
-	# with a doxydoc directory?
-	doxydir="$doxysrcdir/doxydoc"
-	# AC_MSG_NOTICE([Considering $doxydir (base)])
-	# AC_MSG_NOTICE([Subdirs: $coin_subdirs)])
-	if test -d "$doxydir" ; then
-	  # use tag file; don't process source
-	  eval doxydir="`pwd`/${proj}/doxydoc"
-	  coin_doxy_tagfiles="$coin_doxy_tagfiles $doxydir/$doxytag=$doxydir/html"
-	  AC_MSG_RESULT([$doxydir (tag)])
-	  coin_doxy_excludes="$coin_doxy_excludes */${proj}"
-	else
-	  # will process the source -- nothing further to be done here
-	  AC_MSG_RESULT([$doxysrcdir (src)])
-	fi
-	doxyfound=yes
-      fi
+  # proj will be configured, hence doxydoc present in build tree
+  doxysrcdir="${srcdir}/../${proj}"
+  # AC_MSG_NOTICE([Considering $doxysrcdir (base)])
+  if test -d "$doxysrcdir" ; then
+    # with a doxydoc directory?
+    doxydir="$doxysrcdir/doxydoc"
+    # AC_MSG_NOTICE([Considering $doxydir (base)])
+    # AC_MSG_NOTICE([Subdirs: $coin_subdirs)])
+    if test -d "$doxydir" ; then
+      # use tag file; don't process source
+      doxydir="../${proj}/doxydoc"
+      coin_doxy_tagfiles="$coin_doxy_tagfiles $doxydir/$doxytag=../../$doxydir/html"
+      AC_MSG_RESULT([$doxydir (tag)])
+      coin_doxy_excludes="$coin_doxy_excludes */${proj}"
+    else
+      # will process the source -- nothing further to be done here
+      AC_MSG_RESULT([$doxysrcdir (src)])
     fi
-  done
+    doxyfound=yes
+  fi
   # Not built, fall back to installed tag file
   if test $doxyfound = no ; then
     eval doxydir="${datadir}/coin/doc/${proj}/doxydoc"
