@@ -1846,7 +1846,6 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
   case $build in
     *-mingw*)
       CYGPATH_W=echo
-      mydos2unix=
       ;;
   esac
 
