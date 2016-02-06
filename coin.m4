@@ -1251,7 +1251,7 @@ AC_DEFUN([AC_COIN_F77_COMPS],
 [case $build in
   *-cygwin* | *-mingw*)
      if test "$enable_msvc" = yes ; then
-       coin_f77_comps="ifort fl32 compile_f2c gfortran g95 g77"
+       coin_f77_comps="ifort fl32 compile_f2c"
      else
        coin_f77_comps="gfortran ifort g95 g77 fl32 compile_f2c"
      fi ;;
