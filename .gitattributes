@@ -14,6 +14,7 @@ compile_f2c/compile_f2c -text
 /config.guess -text
 /config.sub -text
 /depcomp -text
+/get.dependencies.sh -text
 /install-sh -text
 /missing -text
 /prepare_new_release -text
