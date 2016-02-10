@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Author: Ted Ralphs (ted@lehigh.edu)
+# Copyright 2016, Ted Ralphs
+# Released Under the Eclipse Public License 
+
 #Exit when command fails
 set -e
 
@@ -24,13 +28,10 @@ get_third_party=true
 quiet=false
 
 #If this is an already checked out project, which one?
-if [ -e configure.ac ]; then
-    main_proj=`fgrep AC_INIT configure.ac | cut -d '[' -f 2 | cut -d ']' -f 1`
-else
-    echo "Unable to find root configure script."
-    echo "Please run script in root directory of checkout."
-    exit 2
-fi
+echo "Welcome to the COIN-OR fetch and build utility"
+echo 
+echo "For help, run script without arguments."
+echo 
 
 echo "$@" > .config
 
@@ -162,6 +163,14 @@ if [ $num_actions == 0 ]; then
     echo "General options:"
     echo "  --debug: Turn on debugging output"
     echo 
+fi
+
+if [ -e configure.ac ]; then
+    main_proj=`fgrep AC_INIT configure.ac | cut -d '[' -f 2 | cut -d ']' -f 1`
+else
+    echo "Unable to find root configure script."
+    echo "Please run script in root directory of checkout."
+    exit 2
 fi
 
 #Build list of sources for dependencies
