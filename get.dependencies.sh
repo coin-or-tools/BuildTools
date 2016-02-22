@@ -45,12 +45,15 @@ do
             case $option in
                 --prefix)
                     if [ "x$option_arg" != x ]; then
-			if [[ "$option_arg" = /* ]]; then 
-                            prefix=$option_arg
-			else
-                            echo "Prefix path must be absolute."
-			    exit 3
-			fi
+			case $option_arg in
+			    [\\/$]* | ?:[\\/]* | NONE | '' )
+			        prefix=$option_arg
+				;;
+			    *)  
+				echo "Prefix path must be absolute."
+				exit 3
+				;;
+			esac
                     else
                         echo "No path provided for --prefix"
                         exit 3
@@ -58,12 +61,14 @@ do
                     ;;
                 --build-dir)
                     if [ "x$option_arg" != x ]; then
-			if [[ "$option_arg" = /* ]]; then 
-                            build_dir=$option_arg
-			else
-                            echo "Path to build directory must be absolute."
-			    exit 3
-			fi
+			case $option_arg in
+			    [\\/$]* | ?:[\\/]* | NONE | '' )
+				build_dir=$option_arg
+				;;
+			    *)
+				build_dir=`pwd`/$option_arg
+				;;
+			esac
                     else
                         echo "No path provided for --build-dir"
                         exit 3
@@ -79,12 +84,15 @@ do
                     ;;
                 DESTDIR)
                     if [ "x$option_arg" != x ]; then
-			if [[ "$option_arg" = /* ]]; then 
-                            dest_dir=$option_arg
-			else
-                            echo "DESTDIR path must be absolute."
-			    exit 3
-			fi
+			case $option_arg in
+			    [\\/$]* | ?:[\\/]* | NONE | '' )
+			        dest_dir=$option_arg
+				;;
+			    *)  
+				echo "DESTDIR path must be absolute."
+				exit 3
+				;;
+			esac
                     else
                         echo "No path provided for DESTDIR"
                         exit 3
