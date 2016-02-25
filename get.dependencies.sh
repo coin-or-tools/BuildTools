@@ -83,16 +83,6 @@ do
                         exit 3
                     fi
                     ;;
-		--host)
-                    if [ "x$option_arg" != x ]; then
-                        if [ $option_arg = i686-w64-mingw32 ]; then
-			    MAKE=mingw32-make
-			fi
-                    else
-                        echo "No thread number specified for --threads"
-                        exit 3
-                    fi
-                    ;;
                 DESTDIR)
                     if [ "x$option_arg" != x ]; then
 			case $option_arg in
