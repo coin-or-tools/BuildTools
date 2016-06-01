@@ -3907,7 +3907,6 @@ if test x"$use_blas" != x; then
                         [AC_MSG_RESULT([no])
                          AC_MSG_ERROR([user supplied BLAS library \"$use_blas\" does not work])])
       use_blas="$use_blas $FLIBS"
-      AC_MSG_RESULT([yes: $use_blas])
     else
       AC_MSG_NOTICE([checking whether user supplied BLASLIB=\"$use_blas\" works with C linkage])
       AC_LANG_PUSH(C)
@@ -3973,7 +3972,9 @@ else
                               [AC_MSG_RESULT([no])])
           else
             AC_MSG_NOTICE([for BLAS in MKL (32bit) using C linkage])
+            AC_LANG_PUSH(C)
             AC_CHECK_FUNC([daxpy],[use_blas='mkl_intel_c.lib mkl_sequential.lib mkl_core.lib'])
+            AC_LANG_POP(C)
           fi
           LIBS="$coin_save_LIBS"
           
@@ -3988,6 +3989,8 @@ else
                                 [AC_MSG_RESULT([no])])
             else
               AC_MSG_NOTICE([for BLAS in MKL (64bit) using C linkage])
+              # unset cached outcome of test with 32bit MKL
+              unset ac_cv_func_daxpy
               AC_LANG_PUSH(C)
               AC_CHECK_FUNC([daxpy],[use_blas='mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib'])
               AC_LANG_POP(C)
