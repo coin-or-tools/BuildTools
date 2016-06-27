@@ -262,8 +262,9 @@ if [ $fetch = "true" ]; then
 	    # Otherwise, convert SVN URL to a Github one and check out with git
 	    svn_repo=`echo $url | cut -d '/' -f 5`
 	    if [ $svn_repo = 'Data' ]; then
-                svn co $url Data/Sample
-                subdirs+="Data/Sample "
+		data_proj=`echo $url | cut -d '/' -f 6`
+                svn co $url Data/$data_proj
+                subdirs+="Data/$data_proj "
 	    elif [ $svn_repo = 'BuildTools' ]; then
                 if [ `echo $url | cut -d '/' -f 6` = "ThirdParty" ]; then
 		    tp_proj=`echo $url | cut -d '/' -f 7`
