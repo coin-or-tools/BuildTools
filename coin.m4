@@ -4111,21 +4111,26 @@ if test x"$use_lapack" != x; then
     # we come to this later
     :
   elif test "$use_lapack" != no; then
-    AC_MSG_CHECKING([whether user supplied LAPACKLIB=\"$use_lapack\" works])
-    coin_need_flibs=no
     use_lapack="$use_lapack $BLAS_LIBS"
     coin_save_LIBS="$LIBS"
     LIBS="$use_lapack $LIBS"
-    #AC_COIN_TRY_FLINK([dsyev],
-    #                  [if test $coin_need_flibs = yes ; then
-    #                     use_lapack="$use_lapack $FLIBS"
-    #                   fi
-    #                   AC_MSG_RESULT([yes: $use_lapack])
-    #                  ],
-    #                  [AC_MSG_RESULT([no])
-    #                   AC_MSG_ERROR([user supplied LAPACK library \"$use_lapack\" does not work])])
-    use_lapack="$use_lapack $FLIBS"
-    AC_MSG_RESULT([yes: $use_lapack])
+    if test "$F77" != unavailable; then
+      AC_MSG_CHECKING([whether user supplied LAPACKLIB=\"$use_lapack\" works])
+      coin_need_flibs=no
+      AC_COIN_TRY_FLINK([dsyev],
+                        [if test $coin_need_flibs = yes ; then
+                           use_lapack="$use_lapack $FLIBS"
+                         fi
+                         AC_MSG_RESULT([yes: $use_lapack])
+                        ],
+                        [AC_MSG_RESULT([no])
+                         AC_MSG_ERROR([user supplied LAPACK library \"$use_lapack\" does not work])])
+    else
+      AC_MSG_NOTICE([whether user supplied LAPACKLIB=\"$use_lapack\" works with C linkage])
+      AC_LANG_PUSH(C)
+      AC_CHECK_FUNC([dsyev],[],[AC_MSG_ERROR([user supplied LAPACK library \"$use_lapack\" does not work])])
+      AC_LANG_POP(C)
+    fi
     LIBS="$coin_save_LIBS"
   fi
 else
