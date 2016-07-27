@@ -168,6 +168,7 @@ if [ $num_actions == 0 ]; then
     echo "             --test run unit test of main project before install"
     echo "             --test-all run unit tests of all projects before install"
     echo "             --quiet suppress build output to stdout"
+    echo "             --reconfigure run configure also for already configured projects"
     echo
     echo "General options:"
     echo "  --debug: Turn on debugging output"
