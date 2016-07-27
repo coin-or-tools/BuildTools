@@ -46,15 +46,15 @@ do
             case $option in
                 --prefix)
                     if [ "x$option_arg" != x ]; then
-			case $option_arg in
-			    [\\/$]* | ?:[\\/]* | NONE | '' )
-			        prefix=$option_arg
-				;;
-			    *)  
-				echo "Prefix path must be absolute."
-				exit 3
-				;;
-			esac
+                        case $option_arg in
+                            [\\/$]* | ?:[\\/]* | NONE | '' )
+                                prefix=$option_arg
+                                ;;
+                            *)  
+                                echo "Prefix path must be absolute."
+                                exit 3
+                                ;;
+                        esac
                     else
                         echo "No path provided for --prefix"
                         exit 3
@@ -62,20 +62,20 @@ do
                     ;;
                 --build-dir)
                     if [ "x$option_arg" != x ]; then
-			case $option_arg in
-			    [\\/$]* | ?:[\\/]* | NONE | '' )
-				build_dir=$option_arg
-				;;
-			    *)
-				build_dir=`pwd`/$option_arg
-				;;
-			esac
+                        case $option_arg in
+                            [\\/$]* | ?:[\\/]* | NONE | '' )
+                                build_dir=$option_arg
+                                ;;
+                            *)
+                                build_dir=`pwd`/$option_arg
+                                ;;
+                        esac
                     else
                         echo "No path provided for --build-dir"
                         exit 3
                     fi
                     ;;
-		--threads)
+                --threads)
                     if [ "x$option_arg" != x ]; then
                         threads=$option_arg
                     else
@@ -85,15 +85,15 @@ do
                     ;;
                 DESTDIR)
                     if [ "x$option_arg" != x ]; then
-			case $option_arg in
-			    [\\/$]* | ?:[\\/]* | NONE | '' )
-			        dest_dir=$option_arg
-				;;
-			    *)  
-				echo "DESTDIR path must be absolute."
-				exit 3
-				;;
-			esac
+                        case $option_arg in
+                            [\\/$]* | ?:[\\/]* | NONE | '' )
+                                dest_dir=$option_arg
+                                ;;
+                            *)  
+                                echo "DESTDIR path must be absolute."
+                                exit 3
+                                ;;
+                        esac
                     else
                         echo "No path provided for DESTDIR"
                         exit 3
@@ -116,24 +116,24 @@ do
         --debug)
             set -x
             ;;
-	--monolithic)
-	    monolithic=true
-	    ;;
-	--reconfigure)
-	    reconfigure=true
-	    ;;
-	--test)
-	    run_test=true
-	    ;;
-	--test-all)
-	    run_all_tests=true
-	    ;;
-	--no-third-party)
-	    get_third_party=false
-	    ;;
-	--quiet)
-	    quiet=true
-	    ;;
+        --monolithic)
+            monolithic=true
+            ;;
+        --reconfigure)
+            reconfigure=true
+            ;;
+        --test)
+            run_test=true
+            ;;
+        --test-all)
+            run_all_tests=true
+            ;;
+        --no-third-party)
+            get_third_party=false
+            ;;
+        --quiet)
+            quiet=true
+            ;;
         --*)
             configure_options+="$arg "
             ;;
@@ -197,154 +197,154 @@ if [ $fetch = "true" ]; then
     for url in $deps
     do
         if [ `echo $url | cut -d '/' -f 3` != "projects.coin-or.org" ]; then
-	    # If this is a URL of something other than a COIN-OR project on SVN,
-	    # then we assume it's a git project
-	    git_url=`echo $url | tr '\t' ' ' | tr -s ' '| cut -d ' ' -f 1`
-	    branch=`echo $url | tr '\t' ' ' | tr -s ' '| cut -d ' ' -f 2`
-	    dir=`echo $git_url | cut -d '/' -f 5`
-	    if [ ! -e $dir ]; then
-		git clone --branch=$branch $git_url
-	    else
-		cd $dir
-		git pull origin $branch
-		cd -
-	    fi
-	    subdirs+="$dir "
-	elif [ $svn = "true" ]; then
-	    # Here, we are supposed to check out from SVN
+            # If this is a URL of something other than a COIN-OR project on SVN,
+            # then we assume it's a git project
+            git_url=`echo $url | tr '\t' ' ' | tr -s ' '| cut -d ' ' -f 1`
+            branch=`echo $url | tr '\t' ' ' | tr -s ' '| cut -d ' ' -f 2`
+            dir=`echo $git_url | cut -d '/' -f 5`
+            if [ ! -e $dir ]; then
+                git clone --branch=$branch $git_url
+            else
+                cd $dir
+                git pull origin $branch
+                cd -
+            fi
+            subdirs+="$dir "
+        elif [ $svn = "true" ]; then
+            # Here, we are supposed to check out from SVN
             svn_repo=`echo $url | cut -d '/' -f 5`
-	    if [ $svn_repo = "BuildTools" ]; then
+            if [ $svn_repo = "BuildTools" ]; then
                 if [ `echo $url | cut -d '/' -f 6` = 'ThirdParty' ]; then
-		    tp_proj=`echo $url | cut -d '/' -f 7`
-		    if [ `echo $url | cut -d '/' -f 8` = trunk ]; then
-			version=trunk
-		    else
-			version=`echo $url | cut -d '/' -f 9`
-		    fi
-		    mkdir -p ThirdParty
-		    svn co --non-interactive --trust-server-cert $url \
+                    tp_proj=`echo $url | cut -d '/' -f 7`
+                    if [ `echo $url | cut -d '/' -f 8` = trunk ]; then
+                        version=trunk
+                    else
+                        version=`echo $url | cut -d '/' -f 9`
+                    fi
+                    mkdir -p ThirdParty
+                    svn co --non-interactive --trust-server-cert $url \
                         ThirdParty/$tp_proj
-		    if [ $get_third_party = "true" ] &&
-		       [ -e ThirdParty/$tp_proj/get.$tp_proj ]; then
-			cd ThirdParty/$tp_proj
-			./get.$tp_proj
-			cd -
-			subdirs+="ThirdParty/$tp_proj "
-		    fi
+                    if [ $get_third_party = "true" ] &&
+                       [ -e ThirdParty/$tp_proj/get.$tp_proj ]; then
+                        cd ThirdParty/$tp_proj
+                        ./get.$tp_proj
+                        cd -
+                        subdirs+="ThirdParty/$tp_proj "
+                    fi
                 fi
-	    else
+            else
                 if [ $svn_repo = "CHiPPS" ]; then
-		    proj=`echo $url | cut -d '/' -f 6`
-		    if [ `echo $url | cut -d '/' -f 7` = trunk ]; then
-			version=trunk
-		    else
-			version=`echo $url | cut -d '/' -f 8`
-		    fi
+                    proj=`echo $url | cut -d '/' -f 6`
+                    if [ `echo $url | cut -d '/' -f 7` = trunk ]; then
+                        version=trunk
+                    else
+                        version=`echo $url | cut -d '/' -f 8`
+                    fi
                 elif [ $svn_repo = "Data" ]; then
-		    proj=`echo $url | cut -d '/' -f 5-6`
-		    if [ `echo $url | cut -d '/' -f 7` = trunk ]; then
-			version=trunk
-		    else
-			version=`echo $url | cut -d '/' -f 8`
-		    fi
+                    proj=`echo $url | cut -d '/' -f 5-6`
+                    if [ `echo $url | cut -d '/' -f 7` = trunk ]; then
+                        version=trunk
+                    else
+                        version=`echo $url | cut -d '/' -f 8`
+                    fi
                 else
-		    proj=`echo $url | cut -d '/' -f 5`
-		    if [ `echo $url | cut -d '/' -f 6` = trunk ]; then
-			version=trunk
-		    else
-			version=`echo $url | cut -d '/' -f 7`
-		    fi
+                    proj=`echo $url | cut -d '/' -f 5`
+                    if [ `echo $url | cut -d '/' -f 6` = trunk ]; then
+                        version=trunk
+                    else
+                        version=`echo $url | cut -d '/' -f 7`
+                    fi
                 fi
                 svn co --non-interactive --trust-server-cert $url $proj
-		subdirs+="$proj "
-	    fi
-	else
-	    # Otherwise, convert SVN URL to a Github one and check out with git
-	    svn_repo=`echo $url | cut -d '/' -f 5`
-	    if [ $svn_repo = 'Data' ]; then
-		data_proj=`echo $url | cut -d '/' -f 6`
+                subdirs+="$proj "
+            fi
+        else
+            # Otherwise, convert SVN URL to a Github one and check out with git
+            svn_repo=`echo $url | cut -d '/' -f 5`
+            if [ $svn_repo = 'Data' ]; then
+                data_proj=`echo $url | cut -d '/' -f 6`
                 svn co $url Data/$data_proj
                 subdirs+="Data/$data_proj "
-	    elif [ $svn_repo = 'BuildTools' ]; then
+            elif [ $svn_repo = 'BuildTools' ]; then
                 if [ `echo $url | cut -d '/' -f 6` = "ThirdParty" ]; then
-		    tp_proj=`echo $url | cut -d '/' -f 7`
-		    proj=ThirdParty-$tp_proj
-		    mkdir -p ThirdParty
-		    if [ `echo $url | cut -d '/' -f 8` = "trunk" ]; then
+                    tp_proj=`echo $url | cut -d '/' -f 7`
+                    proj=ThirdParty-$tp_proj
+                    mkdir -p ThirdParty
+                    if [ `echo $url | cut -d '/' -f 8` = "trunk" ]; then
                         branch=master
-			version=trunk
-		    else
+                        version=trunk
+                    else
                         branch=`echo $url | cut -d '/' -f 8-9`
                         version=`echo $url | cut -d '/' -f 9`
-		    fi
-		    if [ ! -e ThirdParty/$tp_proj ]; then
-			git clone --branch=$branch \
-			    https://github.com/coin-or-tools/$proj \
-			    ThirdParty/$tp_proj
-			if [ $get_third_party = "true" ] && \
-			   [ -e ThirdParty/$tp_proj/get.$tp_proj ]; then
-			    cd ThirdParty/$tp_proj
-			    ./get.$tp_proj
-			    cd -
-			    subdirs+="ThirdParty/$tp_proj "
-			fi
-		    else
-			cd ThirdParty/$tp_proj
-			git pull origin $branch
-			if [ $get_third_party = "true" ] && \
-			   [ -e get.$tp_proj ]; then
-			    ./get.$tp_proj
-			    subdirs+="ThirdParty/$tp_proj "
-			fi
-			cd -
-		    fi
+                    fi
+                    if [ ! -e ThirdParty/$tp_proj ]; then
+                        git clone --branch=$branch \
+                            https://github.com/coin-or-tools/$proj \
+                            ThirdParty/$tp_proj
+                        if [ $get_third_party = "true" ] && \
+                           [ -e ThirdParty/$tp_proj/get.$tp_proj ]; then
+                            cd ThirdParty/$tp_proj
+                            ./get.$tp_proj
+                            cd -
+                            subdirs+="ThirdParty/$tp_proj "
+                        fi
+                    else
+                        cd ThirdParty/$tp_proj
+                        git pull origin $branch
+                        if [ $get_third_party = "true" ] && \
+                           [ -e get.$tp_proj ]; then
+                            ./get.$tp_proj
+                            subdirs+="ThirdParty/$tp_proj "
+                        fi
+                        cd -
+                    fi
                 fi
-	    else
+            else
                 if [ $svn_repo = "CHiPPS" ]; then
-		    git_repo=CHiPPS-`echo $url | cut -d '/' -f 6`
-		    proj=`echo $url | cut -d '/' -f 6`
-		    if [ `echo $url | cut -d '/' -f 7` = 'trunk' ]; then
+                    git_repo=CHiPPS-`echo $url | cut -d '/' -f 6`
+                    proj=`echo $url | cut -d '/' -f 6`
+                    if [ `echo $url | cut -d '/' -f 7` = 'trunk' ]; then
                         branch=master
-			version=trunk
-		    else
+                        version=trunk
+                    else
                         branch=`echo $url | cut -d '/' -f 7-8`
                         version=`echo $url | cut -d '/' -f 8`
-		    fi
+                    fi
                 else
-		    git_repo=`echo $url | cut -d '/' -f 5`
-		    proj=`echo $url | cut -d '/' -f 5`
-		    if [ `echo $url | cut -d '/' -f 6` = 'trunk' ]; then
+                    git_repo=`echo $url | cut -d '/' -f 5`
+                    proj=`echo $url | cut -d '/' -f 5`
+                    if [ `echo $url | cut -d '/' -f 6` = 'trunk' ]; then
                         branch=master
-			version=trunk
-		    else
+                        version=trunk
+                    else
                         branch=`echo $url | cut -d '/' -f 6-7`
                         version=`echo $url | cut -d '/' -f 7`
-		    fi
+                    fi
                 fi
                 if [ sparse = "true" ]; then
-		    mkdir $proj
-		    cd $proj
-		    git init
-		    git remote add origin \
+                    mkdir $proj
+                    cd $proj
+                    git init
+                    git remote add origin \
                         https://github.com/coin-or/$git_repo 
-		    git config core.sparsecheckout true
-		    echo $proj/ >> .git/info/sparse-checkout
-		    git fetch
-		    git checkout $branch
-		    cd ..
+                    git config core.sparsecheckout true
+                    echo $proj/ >> .git/info/sparse-checkout
+                    git fetch
+                    git checkout $branch
+                    cd ..
                 else
-		    if [ ! -e $proj ]; then
-			git clone --branch=$branch \
+                    if [ ! -e $proj ]; then
+                        git clone --branch=$branch \
                             https://github.com/coin-or/$git_repo $proj
-		    else
-			cd $proj
-			git pull origin $branch
-			cd -
-		    fi
+                    else
+                        cd $proj
+                        git pull origin $branch
+                        cd -
+                    fi
                 fi
                 subdirs+="$proj/$proj "
-	    fi
-	fi
+            fi
+        fi
     done
     echo $subdirs > .subdirs
 fi
@@ -353,128 +353,128 @@ unset IFS
 #Build (and possibly test) the code
 if [ $build = "true" ]; then
     if [ $monolithic = "false" ]; then
-	if [ ! -e ".subdirs" ]; then
-	    echo "No .subdirs file. Please fetch first"
-	fi
+        if [ ! -e ".subdirs" ]; then
+            echo "No .subdirs file. Please fetch first"
+        fi
         for dir in `cat .subdirs`
         do
-	    if [ build_dir != "./" ]; then
-		proj_dir=`echo $dir | cut -d '/' -f 1`
-		if [ $proj_dir = "Data" ] || [ $proj_dir = "ThirdParty" ]; then
-		    proj_dir=$dir
-		fi
-		mkdir -p $build_dir/$proj_dir
-		cd $build_dir/$proj_dir
-	    else
-		cd $dir
-	    fi
-            if [ ! -e config.status ] || [ $reconfigure = true ]; then
-		if [ $quiet = "false" ]; then
-                    $root_dir/$dir/configure --disable-dependency-tracking \
-          	      --prefix=$prefix $configure_options
-		else
-                    $root_dir/$dir/configure --disable-dependency-tracking \
-		      --prefix=$prefix $configure_options > /dev/null
-		fi
-            fi
-	    if [ $run_all_tests = "true" ]; then
-		if [ $quiet = "true" ]; then
-		    $MAKE -j $threads > /dev/null
-		fi
-                $MAKE -j $threads test
-	    fi
-            if [ "x$dest_dir" != x ]; then
-		if [ $quiet = "true" ]; then
-                    $MAKE -j $threads DESTDIR="$dest_dir" install > /dev/null
-		else
-                    $MAKE -j $threads DESTDIR="$dest_dir" install
-		fi
+            if [ build_dir != "./" ]; then
+                proj_dir=`echo $dir | cut -d '/' -f 1`
+                if [ $proj_dir = "Data" ] || [ $proj_dir = "ThirdParty" ]; then
+                    proj_dir=$dir
+                fi
+                mkdir -p $build_dir/$proj_dir
+                cd $build_dir/$proj_dir
             else
-		if [ $quiet = "true" ]; then
+                cd $dir
+            fi
+            if [ ! -e config.status ] || [ $reconfigure = true ]; then
+                if [ $quiet = "false" ]; then
+                    $root_dir/$dir/configure --disable-dependency-tracking \
+                        --prefix=$prefix $configure_options
+                else
+                    $root_dir/$dir/configure --disable-dependency-tracking \
+                      --prefix=$prefix $configure_options > /dev/null
+                fi
+            fi
+            if [ $run_all_tests = "true" ]; then
+                if [ $quiet = "true" ]; then
+                    $MAKE -j $threads > /dev/null
+                fi
+                $MAKE -j $threads test
+            fi
+            if [ "x$dest_dir" != x ]; then
+                if [ $quiet = "true" ]; then
+                    $MAKE -j $threads DESTDIR="$dest_dir" install > /dev/null
+                else
+                    $MAKE -j $threads DESTDIR="$dest_dir" install
+                fi
+            else
+                if [ $quiet = "true" ]; then
                     $MAKE -j $threads install > /dev/null
-		else
+                else
                     $MAKE -j $threads install
-		fi
+                fi
             fi
             cd $root_dir
         done
         if [ -e $main_proj ]; then
-	    if [ build_dir != "./" ]; then
-		mkdir -p $build_dir/$main_proj
-		cd $build_dir/$main_proj
-	    else
-		cd $main_proj
-	    fi
-	fi
-        if [ ! -e config.status ] || [ $reconfigure = true ]; then
-	    #First, check whether this is a "rootless" project
-	    if [ -e $root_dir/$main_proj/configure ]; then
-		root_config=$root_dir/$main_proj/configure
-	    else
-		root_config=$root_dir/configure
-	    fi
-	    #Now, do the actual configuration
-	    if [ $quiet = "false" ]; then
-		$root_config --disable-dependency-tracking \
-			     --prefix=$prefix $configure_options
-	    else
-		$root_config --disable-dependency-tracking \
-			     --prefix=$prefix $configure_options > /dev/null
-	    fi
+            if [ build_dir != "./" ]; then
+                mkdir -p $build_dir/$main_proj
+                cd $build_dir/$main_proj
+            else
+                cd $main_proj
+            fi
         fi
-	if [ $run_test = "true" ]; then
-	    if [ $quiet = "true" ]; then
-		$MAKE -j $threads > /dev/null
-	    fi
+        if [ ! -e config.status ] || [ $reconfigure = true ]; then
+            #First, check whether this is a "rootless" project
+            if [ -e $root_dir/$main_proj/configure ]; then
+                root_config=$root_dir/$main_proj/configure
+            else
+                root_config=$root_dir/configure
+            fi
+            #Now, do the actual configuration
+            if [ $quiet = "false" ]; then
+                $root_config --disable-dependency-tracking \
+                             --prefix=$prefix $configure_options
+            else
+                $root_config --disable-dependency-tracking \
+                             --prefix=$prefix $configure_options > /dev/null
+            fi
+        fi
+        if [ $run_test = "true" ]; then
+            if [ $quiet = "true" ]; then
+                $MAKE -j $threads > /dev/null
+            fi
             $MAKE -j $threads test
-	fi
-	if [ "x$dest_dir" != x ]; then
-	    if [ $quiet = "true" ]; then
-		$MAKE -j $threads DESTDIR="$dest_dir" install > /dev/null
-	    else
-		$MAKE -j $threads DESTDIR="$dest_dir" install
-	    fi
-	else
-	    if [ $quiet = "true" ]; then
-		$MAKE -j $threads install > /dev/null
-	    else
-		$MAKE -j $threads install
-	    fi
-	fi
+        fi
+        if [ "x$dest_dir" != x ]; then
+            if [ $quiet = "true" ]; then
+                $MAKE -j $threads DESTDIR="$dest_dir" install > /dev/null
+            else
+                $MAKE -j $threads DESTDIR="$dest_dir" install
+            fi
+        else
+            if [ $quiet = "true" ]; then
+                $MAKE -j $threads install > /dev/null
+            else
+                $MAKE -j $threads install
+            fi
+        fi
         cd $root_dir
     else
-	if [ build_dir != "./" ]; then
-	    mkdir -p $build_dir
-	    cd $build_dir
-	fi
-        if [ ! -e config.status ] || [ $reconfigure = true ]; then
-	    if [ $quiet = "false" ]; then
-		$root_dir/configure --disable-dependency-tracking \
-			    --prefix=$prefix $configure_options
-	    else
-		$root_dir/configure --disable-dependency-tracking \
-			    --prefix=$prefix $configure_options > /dev/null
-	    fi
+        if [ build_dir != "./" ]; then
+            mkdir -p $build_dir
+            cd $build_dir
         fi
-	if [ $quiet = "true" ]; then
-	    $MAKE -j $threads > /dev/null
-	fi
-	if [ $run_test = "true" ]; then 
+        if [ ! -e config.status ] || [ $reconfigure = true ]; then
+            if [ $quiet = "false" ]; then
+                $root_dir/configure --disable-dependency-tracking \
+                            --prefix=$prefix $configure_options
+            else
+                $root_dir/configure --disable-dependency-tracking \
+                            --prefix=$prefix $configure_options > /dev/null
+            fi
+        fi
+        if [ $quiet = "true" ]; then
+            $MAKE -j $threads > /dev/null
+        fi
+        if [ $run_test = "true" ]; then 
             $MAKE -j $threads test
-	fi
-	if [ "x$dest_dir" != x ]; then
-	    if [ $quiet = "true" ]; then
-		$MAKE -j $threads DESTDIR="$dest_dir" install > /dev/null
-	    else
-		$MAKE -j $threads DESTDIR="$dest_dir" install
-	    fi
-	else
-	    if [ $quiet = "true" ]; then
-		$MAKE -j $threads install > /dev/null
-	    else
-		$MAKE -j $threads install
-	    fi
-	fi
-	cd $root_dir
+        fi
+        if [ "x$dest_dir" != x ]; then
+            if [ $quiet = "true" ]; then
+                $MAKE -j $threads DESTDIR="$dest_dir" install > /dev/null
+            else
+                $MAKE -j $threads DESTDIR="$dest_dir" install
+            fi
+        else
+            if [ $quiet = "true" ]; then
+                $MAKE -j $threads install > /dev/null
+            else
+                $MAKE -j $threads install
+            fi
+        fi
+        cd $root_dir
     fi
 fi
