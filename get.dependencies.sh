@@ -157,10 +157,10 @@ if [ $num_actions == 0 ]; then
     echo "  fetch: Checkout source code for all dependencies"
     echo "    options: --svn (checkout from SVN)"
     echo "             --git (checkout from git)"
-    echo "             --no-third-party don't download third party source"
+    echo "             --no-third-party don't download third party source (getter-scripts)"
     echo
     echo "  build: Checkout source code for all dependencies"
-    echo "    options: --prefix=\dir\to\install (where to install)"
+    echo "    options: --prefix=\dir\to\install (where to install, default: $PWD)"
     echo "             --xxx=yyy (will be passed through to configure)"
     echo "             --monlithic do 'old style' monlithic build"
     echo "             --threads=n build in parallel with 'n' threads"
@@ -202,6 +202,7 @@ if [ $fetch = "true" ]; then
             git_url=`echo $url | tr '\t' ' ' | tr -s ' '| cut -d ' ' -f 1`
             branch=`echo $url | tr '\t' ' ' | tr -s ' '| cut -d ' ' -f 2`
             dir=`echo $git_url | cut -d '/' -f 5`
+            echo "Clone $git_url branch $branch"
             if [ ! -e $dir ]; then
                 git clone --branch=$branch $git_url
             else
@@ -222,6 +223,7 @@ if [ $fetch = "true" ]; then
                         version=`echo $url | cut -d '/' -f 9`
                     fi
                     mkdir -p ThirdParty
+                    echo "Checkout ThirdParty/$tp_proj"
                     svn co --non-interactive --trust-server-cert $url \
                         ThirdParty/$tp_proj
                     if [ $get_third_party = "true" ] &&
@@ -255,6 +257,7 @@ if [ $fetch = "true" ]; then
                         version=`echo $url | cut -d '/' -f 7`
                     fi
                 fi
+                echo "Checkout $url"
                 svn co --non-interactive --trust-server-cert $url $proj
                 subdirs+="$proj "
             fi
@@ -263,6 +266,7 @@ if [ $fetch = "true" ]; then
             svn_repo=`echo $url | cut -d '/' -f 5`
             if [ $svn_repo = 'Data' ]; then
                 data_proj=`echo $url | cut -d '/' -f 6`
+                echo "Checkout Data/$data_proj"
                 svn co $url Data/$data_proj
                 subdirs+="Data/$data_proj "
             elif [ $svn_repo = 'BuildTools' ]; then
@@ -277,6 +281,7 @@ if [ $fetch = "true" ]; then
                         branch=`echo $url | cut -d '/' -f 8-9`
                         version=`echo $url | cut -d '/' -f 9`
                     fi
+                    echo "Clone $proj branch $branch"
                     if [ ! -e ThirdParty/$tp_proj ]; then
                         git clone --branch=$branch \
                             https://github.com/coin-or-tools/$proj \
@@ -322,6 +327,7 @@ if [ $fetch = "true" ]; then
                     fi
                 fi
                 if [ sparse = "true" ]; then
+                    echo "Clone (sparse-checkout) $git_repo branch $branch"
                     mkdir $proj
                     cd $proj
                     git init
@@ -333,6 +339,7 @@ if [ $fetch = "true" ]; then
                     git checkout $branch
                     cd ..
                 else
+                    echo "Clone $git_repo branch $branch"
                     if [ ! -e $proj ]; then
                         git clone --branch=$branch \
                             https://github.com/coin-or/$git_repo $proj
