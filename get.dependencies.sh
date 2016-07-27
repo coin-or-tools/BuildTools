@@ -34,7 +34,7 @@ echo
 echo "For help, run script without arguments."
 echo 
 
-echo "$@" > .config
+echo "$@" > .get.dependencies.config
 
 #Parse arguments
 for arg in "$@"
