@@ -99,8 +99,8 @@ runautotoolDir=`echo $runautotoolDir | sed -e 's,/\./,/,g' -e 's,//,/,g'`
 # satisfy this requirement is a fatal error.
 
 ver_autoconf='2.69'
-ver_automake='1.14'
-ver_libtool='2.4.2'
+ver_automake='1.15'
+ver_libtool='2.4.6'
 EGREP='grep -E'
 
 # Check if the correct version of the autotools is used
@@ -150,7 +150,7 @@ fi
 # the user should be warned.
 
 grep_version=`echo  $ver_libtool | sed -e 's/\\./\\\\\\./g'`
-ltfile=$AUTOTOOLS_DIR/share/libtool/config/ltmain.sh
+ltfile=$AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
 if test -r $ltfile; then :; else
   echo WARNING: Cannot find libtool shell $ltfile
 fi
