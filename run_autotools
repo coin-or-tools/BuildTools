@@ -304,7 +304,7 @@ trap 'exit_status=$?
 
 echo "Running autotools in $dirs"
 
-autotoolsFiles="config.guess config.sub depcomp install-sh ltmain.sh missing compile"
+autotoolsFiles="config.guess config.sub depcomp install-sh ltmain.sh missing compile get.dependencies.sh"
 m4Files="$AUTOTOOLS_DIR/share/aclocal/libtool.m4"
 buildtoolsLinks=
 
