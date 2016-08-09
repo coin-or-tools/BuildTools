@@ -12,7 +12,7 @@ root_dir=$PWD
 declare -i num_actions
 num_actions=0
 sparse=false
-prefix=$PWD  # TODO default prefix should be build_dir
+prefix=unset
 dest_dir=
 svn=true
 fetch=false
@@ -161,7 +161,7 @@ if [ $num_actions == 0 ]; then
     echo "             --no-third-party don't download third party source (getter-scripts)"
     echo
     echo "  build: Configure, build, and install all dependencies and project"
-    echo "    options: --prefix=\dir\to\install (where to install, default: $PWD)"
+    echo "    options: --prefix=\dir\to\install (where to install, default: build-dir)"
     echo "             --xxx=yyy (will be passed through to configure)"
     echo "             --monlithic do 'old style' monlithic build"
     echo "             --threads=n build in parallel with 'n' threads"
@@ -174,6 +174,10 @@ if [ $num_actions == 0 ]; then
     echo "General options:"
     echo "  --debug: Turn on debugging output"
     echo 
+fi
+
+if [ "$prefix" = "unset" ]; then
+    prefix="$build_dir"
 fi
 
 if [ -e configure.ac ]; then
