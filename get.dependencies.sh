@@ -7,6 +7,10 @@
 #Exit when command fails
 set -e
 
+# script debugging
+#set -x
+#PS4='${LINENO}:${PWD}: '
+
 #Set defaults
 root_dir=$PWD
 declare -i num_actions
@@ -418,6 +422,8 @@ if [ $build = "true" ]; then
             else
                 cd $main_proj
             fi
+        else
+           cd $build_dir
         fi
         if [ ! -e config.status ] || [ $reconfigure = true ]; then
             #First, check whether this is a "rootless" project
