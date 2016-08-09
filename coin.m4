@@ -374,19 +374,18 @@ AC_DEFUN([AC_COIN_PROJECTVERSION],
 ])
 
 ###########################################################################
-#                            COIN*INITALIZE                               #
+#                            COIN_INITALIZE                               #
 ###########################################################################
 
-# These macros do everything that is required in the early part in the
+# This macro does everything that is required in the early part in the
 # configure script, such as defining a few variables.
 # The first parameter is the project name.
 # The second (optional) is the libtool library version (important for releases,
 # less so for stable or trunk).
-# You should not call AC_COIN_INITIALIZE, but call AC_COIN_BASEDIR_INITIALIZE
-# or AC_COIN_PROJECTDIR_INITIALIZE instead, depending on what is appropriate.
 
 AC_DEFUN([AC_COIN_INITIALIZE],
 [
+# required autoconf version
 AC_PREREQ(2.69)
 
 # Set the project's version numbers
@@ -415,34 +414,6 @@ AM_MAINTAINER_MODE
 AC_PROG_LIBTOOL
 ])
 
-
-AC_DEFUN([AC_COIN_BASEDIR_INITIALIZE],
-[
-AC_COIN_INITIALIZE([$1],[$2])
-
-COIN_DESTDIR=`pwd`/.coinstash
-AC_SUBST(COIN_DESTDIR)
-])
-
-
-AC_DEFUN([AC_COIN_PROJECTDIR_INITIALIZE],
-[
-AC_COIN_INITIALIZE([$1],[$2])
-
-# figure out whether there is a base directory up from here
-coin_base_directory=
-if test -e ../.coin_subdirs.txt ; then
-  coin_base_directory=`cd ..; pwd`
-elif test -e ../../.coin_subdirs.txt ; then
-  coin_base_directory=`cd ../..; pwd`
-fi
-
-if test "x$coin_base_directory" != x ; then 
-  COIN_DESTDIR=$coin_base_directory/.coinstash
-fi
-AC_SUBST(COIN_DESTDIR)
-])
-
 ###########################################################################
 #                              COIN_FINALIZE                              #
 ###########################################################################
@@ -456,17 +427,6 @@ AC_SUBST(COIN_DESTDIR)
 
 AC_DEFUN([AC_COIN_FINALIZE],
 [
-# need to come before AC_OUTPUT
-if test "x$coin_subdirs" != x; then
-  # write coin_subdirs to a file so that project configuration knows where to find uninstalled projects
-  echo $coin_subdirs > .coin_subdirs.txt
-else
-  # substitute for OBJDIR, needed to setup .pc file for uninstalled project
-  #ABSBUILDDIR="`pwd`"
-  #AC_SUBST(ABSBUILDDIR)
-  :
-fi
-
 AC_OUTPUT
 
 AC_MSG_NOTICE([In case of trouble, first consult the troubleshooting page at https://projects.coin-or.org/BuildTools/wiki/user-troubleshooting])
@@ -492,10 +452,7 @@ AC_MSG_NOTICE([In case of trouble, first consult the troubleshooting page at htt
 # Further, the AM_CONDITIONAL COIN_HAS_PKGCONFIG is set and PKGCONFIG is
 # AC_SUBST'ed.  Finally, if this setup belongs to a project directory, then
 # the search path for .pc files is assembled from the value of
-# $PKG_CONFIG_PATH and the directories named in a file
-# $coin_base_directory/coin_subdirs.txt in a variable
-# COIN_PKG_CONFIG_PATH, which is also AC_SUBST'ed. For a path xxx given in the
-# coin-subdirs.txt, also the directory xxx/pkgconfig is added, if existing.
+# $PKG_CONFIG_PATH in a variable COIN_PKG_CONFIG_PATH, which is also AC_SUBST'ed.
 
 AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
 [AC_ARG_VAR([PKG_CONFIG], [path to pkg-config utility])
@@ -537,20 +494,8 @@ fi
 AM_CONDITIONAL([COIN_HAS_PKGCONFIG], [test -n "$PKG_CONFIG"])
 AC_SUBST(PKG_CONFIG)
 
-# assemble pkg-config search path to find projects under base directory
+# assemble pkg-config search path
 COIN_PKG_CONFIG_PATH=
-if test "x$coin_base_directory" != x ; then
-  if test -f $coin_base_directory/.coin_subdirs.txt ; then
-    for i in `cat $coin_base_directory/.coin_subdirs.txt` ; do
-      if test -d $coin_base_directory/$i ; then
-        COIN_PKG_CONFIG_PATH="$coin_base_directory/$i:${COIN_PKG_CONFIG_PATH}"
-      fi
-      if test -d $coin_base_directory/$i/pkgconfig ; then
-        COIN_PKG_CONFIG_PATH="$coin_base_directory/$i/pkgconfig:${COIN_PKG_CONFIG_PATH}"
-      fi
-    done
-  fi
-fi
 AC_SUBST(COIN_PKG_CONFIG_PATH)
 
 ])
@@ -683,7 +628,7 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
       [ m4_tolower(coin_has_$1)=yes
         AC_MSG_RESULT([yes: $m4_toupper($1)_VERSIONS])
 
-        m4_toupper($1_DATA)=`$PKG_CONFIG --define-variable prefix=${COIN_DESTDIR}${prefix} --variable=datadir $2 2>/dev/null`
+        m4_toupper($1_DATA)=`$PKG_CONFIG --variable=datadir $2 2>/dev/null`
         
         m4_toupper($1_PCREQUIRES)="$2"
         # augment X_PCREQUIRES for each build target X in $3
@@ -749,8 +694,8 @@ export PKG_CONFIG_PATH
 
 m4_foreach_w([myvar],[$1],[
   if test -n "${m4_toupper(myvar)_PCREQUIRES}" ; then
-    m4_toupper(myvar)_CFLAGS="`$PKG_CONFIG --define-variable prefix=${COIN_DESTDIR}${prefix} --cflags ${m4_toupper(myvar)_PCREQUIRES}` ${m4_toupper(myvar)_CFLAGS}"
-    m4_toupper(myvar)_LIBS="`$PKG_CONFIG --define-variable prefix=${COIN_DESTDIR}${prefix} --libs ${m4_toupper(myvar)_PCREQUIRES}` ${m4_toupper(myvar)_LIBS}"
+    m4_toupper(myvar)_CFLAGS="`$PKG_CONFIG --cflags ${m4_toupper(myvar)_PCREQUIRES}` ${m4_toupper(myvar)_CFLAGS}"
+    m4_toupper(myvar)_LIBS="`$PKG_CONFIG --libs ${m4_toupper(myvar)_PCREQUIRES}` ${m4_toupper(myvar)_LIBS}"
   fi
 
   if test 1 = 0 ; then  #change this test to enable a bit of debugging output
@@ -1365,7 +1310,6 @@ fi
 
 if test "$m4_tolower(coin_has_$1)" = yes ; then
   if test -r $srcdir/m4_ifval($2,[$2/],)$1/configure; then
-    coin_subdirs="$coin_subdirs m4_ifval($2,[$2/],)$1"
     AC_CONFIG_SUBDIRS(m4_ifval($2,[$2/],)$1)
   fi
 fi
