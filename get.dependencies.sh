@@ -12,7 +12,7 @@ root_dir=$PWD
 declare -i num_actions
 num_actions=0
 sparse=false
-prefix=$PWD
+prefix=$PWD  # TODO default prefix should be build_dir
 dest_dir=
 svn=true
 fetch=false
@@ -34,6 +34,7 @@ echo
 echo "For help, run script without arguments."
 echo 
 
+# TODO this should move into the build_dir
 echo "$@" > .get.dependencies.config
 
 #Parse arguments
@@ -75,7 +76,7 @@ do
                         exit 3
                     fi
                     ;;
-                --threads)
+                --threads)   # FIXME these are actually not threads, but parallel processes (--jobs in makefile-speak)
                     if [ "x$option_arg" != x ]; then
                         threads=$option_arg
                     else
@@ -159,7 +160,7 @@ if [ $num_actions == 0 ]; then
     echo "             --git (checkout from git)"
     echo "             --no-third-party don't download third party source (getter-scripts)"
     echo
-    echo "  build: Checkout source code for all dependencies"
+    echo "  build: Configure, build, and install all dependencies and project"
     echo "    options: --prefix=\dir\to\install (where to install, default: $PWD)"
     echo "             --xxx=yyy (will be passed through to configure)"
     echo "             --monlithic do 'old style' monlithic build"
