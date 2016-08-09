@@ -38,7 +38,10 @@ echo
 echo "For help, run script without arguments."
 echo 
 
-# TODO this should move into the build_dir
+# TODO if we do a build, then this should move into builddir
+# but if doing a fetch, it shouldn't
+# we might want to save away fetch and build configuration
+# we might not want to allow both fetch and build (?)
 echo "$@" > .get.dependencies.config
 
 #Parse arguments
