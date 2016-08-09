@@ -3,9 +3,18 @@
 # Author: Ted Ralphs (ted@lehigh.edu)
 # Copyright 2016, Ted Ralphs
 # Released Under the Eclipse Public License 
+#
+# TODO
+# - fix dependency-tracking or remove it from configure
+# - consider using pushd/popd instead of cd somewhere/cd ..
+# - look at TODO and FIXME below
 
 #Exit when command fails
 set -e
+
+# TODO consider using these options for safety
+#set -u
+#set -o pipefail
 
 # script debugging
 #set -x
