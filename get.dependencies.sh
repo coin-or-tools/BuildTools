@@ -181,7 +181,7 @@ if [ $num_actions == 0 ]; then
     echo "             --xxx=yyy (will be passed through to configure)"
     echo "             --monlithic do 'old style' monlithic build"
     echo "             --threads=n build in parallel with 'n' threads"
-    echo "             --build-dir=\dir\to\build\in do a VPATH build"
+    echo "             --build-dir=\dir\to\build\in do a VPATH build (default: $PWD/build)"
     echo "             --test run unit test of main project before install"
     echo "             --test-all run unit tests of all projects before install"
     echo "             --quiet suppress build output to stdout"
