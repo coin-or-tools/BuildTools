@@ -867,26 +867,41 @@ if test x"$use_blas" != x; then
     # we come to this later
     :
   elif test "$use_blas" != "no"; then
-    AC_MSG_CHECKING([whether user supplied BLASLIB=\"$use_blas\" works])
     coin_save_LIBS="$LIBS"
     LIBS="$use_blas $LIBS"
-    AC_COIN_TRY_FLINK([daxpy],
-                      [test $coin_need_flibs = yes && use_blas="$use_blas $FLIBS"
-                       AC_MSG_RESULT([yes: $use_blas])],
-                      [AC_MSG_RESULT([no])
-                       AC_MSG_ERROR([user supplied BLAS library \"$use_blas\" does not work])])
+    if test "$F77" != unavailable ; then
+      coin_need_flibs=no
+      AC_MSG_CHECKING([whether user supplied BLASLIB=\"$use_blas\" works])
+      AC_COIN_TRY_FLINK([daxpy],
+                        [if test $coin_need_flibs = yes ; then
+                           use_blas="$use_blas $FLIBS"
+                         fi
+                         AC_MSG_RESULT([yes: $use_blas])],
+                        [AC_MSG_RESULT([no])
+                         AC_MSG_ERROR([user supplied BLAS library \"$use_blas\" does not work])])
+      use_blas="$use_blas $FLIBS"
+    else
+      AC_MSG_NOTICE([checking whether user supplied BLASLIB=\"$use_blas\" works with C linkage])
+      AC_LANG_PUSH(C)
+      AC_CHECK_FUNC([daxpy],[],[AC_MSG_ERROR([user supplied BLAS library \"$use_blas\" does not work])])
+      AC_LANG_POP(C)
+    fi
     LIBS="$coin_save_LIBS"
   fi
 else
-  # Try to autodetect the library for blas based on build system
+# Try to autodetect the library for blas based on build system
+  #AC_MSG_CHECKING([default locations for BLAS])
   case $build in
     *-sgi-*) 
       AC_MSG_CHECKING([whether -lcomplib.sgimath has BLAS])
+      coin_need_flibs=no
       coin_save_LIBS="$LIBS"
       LIBS="-lcomplib.sgimath $LIBS"
       AC_COIN_TRY_FLINK([daxpy],
                         [use_blas="-lcomplib.sgimath"
-                         test $coin_need_flibs = yes && use_blas="$use_blas $FLIBS"
+                         if test $coin_need_flibs = yes ; then
+                           use_blas="$use_blas $FLIBS"
+                         fi
                          AC_MSG_RESULT([yes: $use_blas])
                         ],
                         [AC_MSG_RESULT([no])])
@@ -901,11 +916,14 @@ else
       # that CC and cc will understand -library in Studio 13. The main extra
       # function of -xlic_lib and -library is to arrange for the Fortran run-time
       # libraries to be linked for C++ and C. We can arrange that explicitly.
+      coin_need_flibs=no
       coin_save_LIBS="$LIBS"
       LIBS="-lsunperf $FLIBS $LIBS"
       AC_COIN_TRY_FLINK([daxpy],
                         [use_blas='-lsunperf'
-                         test $coin_need_flibs = yes && use_blas="$use_blas $FLIBS"
+                         if test $coin_need_flibs = yes ; then
+                           use_blas="$use_blas $FLIBS"
+                         fi
                          AC_MSG_RESULT([yes: $use_blas])
                         ],
                         [AC_MSG_RESULT([no])])
@@ -917,23 +935,39 @@ else
         clang* ) ;;
         cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
           coin_save_LIBS="$LIBS"
-          AC_MSG_CHECKING([for BLAS in MKL (32bit)])
           LIBS="mkl_intel_c.lib mkl_sequential.lib mkl_core.lib $LIBS"
-          AC_COIN_TRY_FLINK([daxpy],
-                            [use_blas='mkl_intel_c.lib mkl_sequential.lib mkl_core.lib'
-                             AC_MSG_RESULT([yes: $use_blas])
-                            ],
-                            [AC_MSG_RESULT([no])])
-          LIBS="$coin_save_LIBS"
-          
-          if test "x$use_blas" = x ; then
-            AC_MSG_CHECKING([for BLAS in MKL (64bit)])
-            LIBS="mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib $LIBS"
+          if test "$F77" != unavailable ; then
+            AC_MSG_CHECKING([for BLAS in MKL (32bit)])
             AC_COIN_TRY_FLINK([daxpy],
-                              [use_blas='mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib'
+                              [use_blas='mkl_intel_c.lib mkl_sequential.lib mkl_core.lib'
                                AC_MSG_RESULT([yes: $use_blas])
                               ],
                               [AC_MSG_RESULT([no])])
+          else
+            AC_MSG_NOTICE([for BLAS in MKL (32bit) using C linkage])
+            AC_LANG_PUSH(C)
+            AC_CHECK_FUNC([daxpy],[use_blas='mkl_intel_c.lib mkl_sequential.lib mkl_core.lib'])
+            AC_LANG_POP(C)
+          fi
+          LIBS="$coin_save_LIBS"
+          
+          if test "x$use_blas" = x ; then
+            LIBS="mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib $LIBS"
+            if test "$F77" != unavailable ; then
+              AC_MSG_CHECKING([for BLAS in MKL (64bit)])
+              AC_COIN_TRY_FLINK([daxpy],
+                                [use_blas='mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib'
+                                 AC_MSG_RESULT([yes: $use_blas])
+                                ],
+                                [AC_MSG_RESULT([no])])
+            else
+              AC_MSG_NOTICE([for BLAS in MKL (64bit) using C linkage])
+              # unset cached outcome of test with 32bit MKL
+              unset ac_cv_func_daxpy
+              AC_LANG_PUSH(C)
+              AC_CHECK_FUNC([daxpy],[use_blas='mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib'])
+              AC_LANG_POP(C)
+            fi
             LIBS="$coin_save_LIBS"
           fi
           ;;
@@ -942,11 +976,14 @@ else
       
      *-darwin*)
       AC_MSG_CHECKING([for BLAS in Veclib])
+      coin_need_flibs=no
       coin_save_LIBS="$LIBS"
-      LIBS="-framework vecLib $LIBS"
+      LIBS="-framework Accelerate $LIBS"
       AC_COIN_TRY_FLINK([daxpy],
-                        [use_blas='-framework vecLib'
-                         test $coin_need_flibs = yes && use_blas="$use_blas $FLIBS"
+                        [use_blas='-framework Accelerate'
+                         if test $coin_need_flibs = yes ; then
+                           use_blas="$use_blas $FLIBS"
+                         fi
                          AC_MSG_RESULT([yes: $use_blas])
                         ],
                         [AC_MSG_RESULT([no])])
@@ -956,11 +993,14 @@ else
 
   if test -z "$use_blas" ; then
     AC_MSG_CHECKING([whether -lblas has BLAS])
+    coin_need_flibs=no
     coin_save_LIBS="$LIBS"
     LIBS="-lblas $LIBS"
     AC_COIN_TRY_FLINK([daxpy],
                       [use_blas='-lblas'
-                       test $coin_need_flibs = yes && use_blas="$use_blas $FLIBS"
+                       if test $coin_need_flibs = yes ; then
+                         use_blas="$use_blas $FLIBS"
+                       fi
                        AC_MSG_RESULT([yes: $use_blas])
                       ],
                       [AC_MSG_RESULT([no])])
@@ -1040,37 +1080,94 @@ if test x"$use_lapack" != x; then
     # we come to this later
     :
   elif test "$use_lapack" != no; then
-    AC_MSG_CHECKING([whether user supplied LAPACKLIB=\"$use_lapack\" works])
-    coin_need_flibs=no
     use_lapack="$use_lapack $BLAS_LIBS"
     coin_save_LIBS="$LIBS"
     LIBS="$use_lapack $LIBS"
-    AC_COIN_TRY_FLINK([dsyev],
-                      [if test $coin_need_flibs = yes ; then
-                         use_lapack="$use_lapack $FLIBS"
-                       fi
-                       AC_MSG_RESULT([yes: $use_lapack])
-                      ],
-                      [AC_MSG_RESULT([no])
-                       AC_MSG_ERROR([user supplied LAPACK library \"$use_lapack\" does not work])])
+    if test "$F77" != unavailable; then
+      AC_MSG_CHECKING([whether user supplied LAPACKLIB=\"$use_lapack\" works])
+      coin_need_flibs=no
+      AC_COIN_TRY_FLINK([dsyev],
+                        [if test $coin_need_flibs = yes ; then
+                           use_lapack="$use_lapack $FLIBS"
+                         fi
+                         AC_MSG_RESULT([yes: $use_lapack])
+                        ],
+                        [AC_MSG_RESULT([no])
+                         AC_MSG_ERROR([user supplied LAPACK library \"$use_lapack\" does not work])])
+    else
+      AC_MSG_NOTICE([whether user supplied LAPACKLIB=\"$use_lapack\" works with C linkage])
+      AC_LANG_PUSH(C)
+      AC_CHECK_FUNC([dsyev],[],[AC_MSG_ERROR([user supplied LAPACK library \"$use_lapack\" does not work])])
+      AC_LANG_POP(C)
+    fi
     LIBS="$coin_save_LIBS"
   fi
 else
   if test x$coin_has_blas = xyes; then
     # First try to see if LAPACK is already available with BLAS library
-    AC_MSG_CHECKING([whether LAPACK is already available with BLAS library])
     coin_save_LIBS="$LIBS"
-    coin_need_flibs=no
     LIBS="$BLAS_LIBS $LIBS"
-    AC_COIN_TRY_FLINK([dsyev],
-                      [use_lapack="$BLAS_LIBS"
-                       if test $coin_need_flibs = yes ; then
-                         use_lapack="$use_lapack $FLIBS"
-                       fi
-                       AC_MSG_RESULT([yes: $use_lapack])
-                      ],
-                      [AC_MSG_RESULT([no])])
+    if test "$F77" != unavailable; then
+      coin_need_flibs=no
+      AC_MSG_CHECKING([whether LAPACK is already available with BLAS library])
+      AC_COIN_TRY_FLINK([dsyev],
+                        [use_lapack="$BLAS_LIBS"
+                         if test $coin_need_flibs = yes ; then
+                           use_lapack="$use_lapack $FLIBS"
+                         fi
+                         AC_MSG_RESULT([yes: $use_lapack])
+                        ],
+                        [AC_MSG_RESULT([no])])
+    else
+      AC_MSG_NOTICE([checking whether LAPACK is already available with BLAS library])
+      AC_LANG_PUSH(C)
+      AC_CHECK_FUNC([dsyev],[use_lapack="$BLAS_LIBS"])
+      AC_LANG_POP(C)
+    fi
     LIBS="$coin_save_LIBS"
+  fi
+  if test -z "$use_lapack"; then
+    # Try to autodetect the library for lapack based on build system
+    case $build in
+      # TODO: Is this check actually needed here, since -lcomplib.sigmath should have been recognized as Blas library,
+      #       and above it is checked whether the Blas library already contains Lapack
+      *-sgi-*) 
+        AC_MSG_CHECKING([whether -lcomplib.sgimath has LAPACK])
+        coin_save_LIBS="$LIBS"
+        coin_need_flibs=no
+        LIBS="-lcomplib.sgimath $BLAS_LIBS $LIBS"
+        AC_COIN_TRY_FLINK([dsyev],
+                          [use_lapack="-lcomplib.sgimath $BLAS_LIBS"
+                           if test $coin_need_flibs = yes ; then
+                             use_lapack="$use_lapack $FLIBS"
+                           fi
+                           AC_MSG_RESULT([yes: $use_lapack])
+                          ],
+                          [AC_MSG_RESULT([no])])
+        LIBS="$coin_save_LIBS"
+        ;;
+
+      # See comments in COIN_CHECK_PACKAGE_BLAS.
+      # TODO: Is this check actually needed here, since -lsunperf should have been recognized as Blas library,
+      #       and above it is checked whether the Blas library already contains Lapack
+      *-*-solaris*)
+        AC_MSG_CHECKING([for LAPACK in libsunperf])
+        coin_need_flibs=no
+        coin_save_LIBS="$LIBS"
+        LIBS="-lsunperf $BLAS_LIBS $FLIBS $LIBS"
+        AC_COIN_TRY_FLINK([dsyev],
+                          [use_lapack='-lsunperf $BLAS_LIBS'
+                           if test $coin_need_flibs = yes ; then
+                             use_lapack="$use_lapack $FLIBS"
+                           fi
+                           AC_MSG_RESULT([yes: $use_lapack])
+                          ],
+                          [AC_MSG_RESULT([no])])
+        LIBS="$coin_save_LIBS"
+        ;;
+        # On cygwin, do this check only if doscompile is disabled. The prebuilt library
+        # will want to link with cygwin, hence won't run standalone in DOS.
+    esac
   fi
 
   if test -z "$use_lapack" ; then
@@ -1456,36 +1553,47 @@ fi
 # be processed as external tag files. E.g., COIN_DOXYGEN([Clp Osi]).
 #
 # This macro will define the following variables:
-#  coin_have_doxygen    "yes", if doxygen is found, "no" otherwise
-#  coin_doxy_usedot     Defaults to 'YES'; --with-dot will still check to see if dot is available
-#  coin_doxy_tagname    Name of doxygen tag file (placed in doxydoc directory)
+#  coin_have_doxygen	Yes if doxygen is found, no otherwise
+#  coin_doxy_usedot     Defaults to `yes'; --with-dot will still check to see
+#			if dot is available
+#  coin_doxy_tagname	Name of doxygen tag file (placed in doxydoc directory)
 #  coin_doxy_logname    Name of doxygen log file (placed in doxydoc directory)
-#  coin_doxy_tagfiles   List of doxygen tag files used to reference other doxygen documentation
-#  coin_doxy_excludes   Directories to exclude from doxygen processing
+#  coin_doxy_tagfiles   List of doxygen tag files used to reference other
+#                       doxygen documentation
+#  coin_doxy_excludes	Directories to exclude from doxygen processing
 
 AC_DEFUN([AC_COIN_DOXYGEN],
 [
+
 AC_MSG_NOTICE([configuring doxygen documentation options])
 
 # Check to see if doxygen is available.
+
 AC_CHECK_PROG([coin_have_doxygen],[doxygen],[yes],[no])
+AC_CHECK_PROG([coin_have_latex],[latex],[yes],[no])
 
 # Look for the dot tool from the graphviz package, unless the user has
 # disabled it.
+
 AC_ARG_WITH([dot],
-  AS_HELP_STRING([--with-dot],[use dot (from graphviz) when creating documentation with doxygen if available; --without-dot to disable]),
+  AS_HELP_STRING([--with-dot],
+		 [use dot (from graphviz) when creating documentation with
+		  doxygen if available; --without-dot to disable]),
   [],[withval=yes])
 if test x"$withval" = xno ; then
   coin_doxy_usedot=NO
-  AC_MSG_CHECKING([for dot])
+  AC_MSG_CHECKING([for dot ])
   AC_MSG_RESULT([disabled])
 else
   AC_CHECK_PROG([coin_doxy_usedot],[dot],[YES],[NO])
 fi
 
 # Generate a tag file name and a log file name
+
 AC_SUBST([coin_doxy_tagname],[doxydoc/${PACKAGE}_doxy.tag])
 AC_SUBST([coin_doxy_logname],[doxydoc/${PACKAGE}_doxy.log])
+AM_CONDITIONAL(COIN_HAS_DOXYGEN, [test $coin_have_doxygen = yes])
+AM_CONDITIONAL(COIN_HAS_LATEX, [test $coin_have_latex = yes])
 
 # Process the list of project names and massage them into possible doxygen
 # doc'n directories. Prefer 1) classic external, source processed using
@@ -1496,40 +1604,44 @@ AC_SUBST([coin_doxy_logname],[doxydoc/${PACKAGE}_doxy.log])
 # since coin_subdirs is only set there. Hence it's sufficient to check for
 # membership. If we use a tag file from a classic external, exclude the
 # source from doxygen processing when doxygen runs in the base directory.
+
 coin_doxy_tagfiles=
 coin_doxy_excludes=
-m4_foreach_w([proj],[$1],[
-  AC_MSG_CHECKING([for doxygen documentation for proj])
-  doxytag=m4_tolower(proj)_doxy.tag
+tmp="$1"
+for proj in $tmp ; do
+  lc_proj=`echo $proj | [tr [A-Z] [a-z]]`
+  AC_MSG_CHECKING([for doxygen doc'n for $proj ])
+  doxytag=${lc_proj}_doxy.tag
   doxyfound=no
-  for chkProj in $coin_subdirs ; do
-    if test "$chkProj" = proj ; then
-      # proj will be configured, hence doxydoc present in build tree
-      doxysrcdir="${srcdir}/proj"
-      if test -d "$doxysrcdir" ; then
-        # with a doxydoc directory?
-        doxydir="$doxysrcdir/doxydoc"
-        if test -d "$doxydir" ; then
-          # use tag file; don't process source
-          doxydir="`pwd`/proj/doxydoc"
-          coin_doxy_tagfiles="$coin_doxy_tagfiles $doxydir/$doxytag=$doxydir/html"
-          AC_MSG_RESULT([$doxydir (tag)])
-          coin_doxy_excludes="$coin_doxy_excludes */proj"
-        else
-          # will process the source -- nothing further to be done here
-          AC_MSG_RESULT([$doxysrcdir (src)])
-        fi
-      doxyfound=yes
-      fi
+  # proj will be configured, hence doxydoc present in build tree
+  doxysrcdir="${srcdir}/../${proj}"
+  # AC_MSG_NOTICE([Considering $doxysrcdir (base)])
+  if test -d "$doxysrcdir" ; then
+    # with a doxydoc directory?
+    doxydir="$doxysrcdir/doxydoc"
+    # AC_MSG_NOTICE([Considering $doxydir (base)])
+    # AC_MSG_NOTICE([Subdirs: $coin_subdirs)])
+    if test -d "$doxydir" ; then
+      # use tag file; don't process source
+      doxydir="../${proj}/doxydoc"
+      coin_doxy_tagfiles="$coin_doxy_tagfiles $doxydir/$doxytag=../../$doxydir/html"
+      AC_MSG_RESULT([$doxydir (tag)])
+      coin_doxy_excludes="$coin_doxy_excludes */${proj}"
+    else
+      # will process the source -- nothing further to be done here
+      AC_MSG_RESULT([$doxysrcdir (src)])
     fi
-  done
+    doxyfound=yes
+  fi
   # Not built, fall back to installed tag file
   if test $doxyfound = no ; then
-    doxydir="${datadir}/coin/doc/proj/doxydoc"
+    eval doxydir="${datadir}/coin/doc/${proj}/doxydoc"
+    # AC_MSG_NOTICE([Considering $doxydir (install)])
+    # AC_MSG_NOTICE([Subdirs: $coin_subdirs)])
     coin_doxy_tagfiles="$coin_doxy_tagfiles $doxydir/$doxytag=$doxydir/html"
     AC_MSG_RESULT([$doxydir (tag)])
   fi
-])
+done
 AC_SUBST([coin_doxy_tagfiles])
 AC_SUBST([coin_doxy_excludes])
 
