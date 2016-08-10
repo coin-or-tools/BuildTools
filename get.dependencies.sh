@@ -196,6 +196,10 @@ function parse_args {
                 num_actions+=1
                 uninstall=true
                 ;;
+	    *)
+		echo "Unrecognized command...exiting"
+		exit 3
+		;;
         esac
     done
 }
