@@ -636,13 +636,15 @@ if [ -e $build_dir/.config ]; then
     fi
     configure_options=`cat $build_dir/.config`
 else
-    if [ x"$configure_options" != x ] && [ build = "false" ]; then
+    if [ x"$configure_options" != x ] && [ $build = "false" ]; then
         echo "Configuration options should be specified with build command"
         exit 3
     fi
-    echo "Caching configuration options..."
-    mkdir -p $build_dir
-    echo "$configure_options" > $build_dir/.config
+    if [ $build = "true" ]; then
+	echo "Caching configuration options..."
+	mkdir -p $build_dir
+	echo "$configure_options" > $build_dir/.config
+    fi
 fi
 
 # Help
