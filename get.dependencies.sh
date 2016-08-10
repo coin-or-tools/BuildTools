@@ -624,7 +624,7 @@ if [ x"$prefix" = x ]; then
     prefix=$build_dir
 fi
 
-if [ -e $build_dir/.config ]; then
+if [ -e $build_dir/.config ] && [ $build = "true" ]; then
     echo "Previous configuration options found."
     if [ x"$configure_options" != x ]; then
         echo "Options cannot be changed after initial configuration."
