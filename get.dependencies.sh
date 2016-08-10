@@ -620,7 +620,7 @@ echo
 if [ -e configure.ac ]; then
     main_proj=`fgrep AC_INIT configure.ac | cut -d '[' -f 2 | cut -d ']' -f 1`
 elif git remote > /dev/null; then
-    main_proj=`git remote show origin | fgrep "Fetch URL" | xargs | cut -d " " -f 3 | cut -d "/" -f 5`
+    main_proj=`git remote show origin | fgrep "Fetch URL" | xargs | cut -d " " -f 3 | cut -d "/" -f 5 | cut -d "." -f 1`
 elif svn info; then
     main_proj=`svn info | fgrep "URL: https" | cut -d " " -f 2 | cut -d "/" -f 5`
 else
