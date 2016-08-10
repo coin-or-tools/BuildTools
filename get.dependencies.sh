@@ -66,6 +66,20 @@ function invoke_make {
     fi
 }
 
+function get_project {
+    TMP_IFS=$IFS
+    unset IFS
+    for i in $coin_skip_projects
+    do
+	if [ $1 = $i ]; then
+	    IFS=$TMP_IFS
+	    return 1
+	fi
+    done
+    IFS=$TMP_IFS
+    return 0
+}
+
 # Parse arguments
 function parse_args {
     for arg in "$@"
@@ -207,15 +221,7 @@ function fetch {
             branch=`echo $url | tr '\t' ' ' | tr -s ' '| cut -d ' ' -f 2`
             dir=`echo $git_url | cut -d '/' -f 5`
             proj=`echo $git_url | cut -d "/" -f 5`
-            # Check whether we're supposed to skip this project
-            skip_proj=false
-            for i in $coin_skip_projects
-            do
-                if [ $proj = $i ]; then
-                    skip_proj=true
-                fi
-            done
-            if [ $skip_proj = "false" ]; then
+	    if get_project $proj; then
                 print_action "Clone $git_url branch $branch"
                 if [ ! -e $dir ]; then
                     git clone --branch=$branch $git_url
@@ -239,14 +245,7 @@ function fetch {
                     else
                         version=`echo $url | cut -d '/' -f 9`
                     fi
-                    skip_proj=false
-                    for i in $coin_skip_projects
-                    do
-                        if [ $tp_proj = $i ]; then
-                            skip_proj=true
-                        fi
-                    done
-                    if [ $skip_proj = "false" ]; then
+                    if get_project $tp_proj; then
                         mkdir -p ThirdParty
                         print_action "Checking out ThirdParty/$tp_proj"
                         svn co --non-interactive --trust-server-cert $url \
@@ -287,14 +286,7 @@ function fetch {
                         version=`echo $url | cut -d '/' -f 7`
                     fi
                 fi
-                skip_proj=false
-                for i in $coin_skip_projects
-                do
-                    if [ $proj = $i ]; then
-                        skip_proj=true
-                    fi
-                done
-                if [ $skip_proj = "false" ]; then
+                if get_project $proj; then
                     print_action "Checking out $proj"
                     svn co --non-interactive --trust-server-cert $url $proj
                     subdirs+="$proj "
@@ -322,14 +314,7 @@ function fetch {
                         branch=`echo $url | cut -d '/' -f 8-9`
                         version=`echo $url | cut -d '/' -f 9`
                     fi
-                    skip_proj=false
-                    for i in $coin_skip_projects
-                    do
-                        if [ $tp_proj = $i ]; then
-                            skip_proj=true
-                        fi
-                    done
-                    if [ $skip_proj = "false" ]; then
+                    if get_project $tp_proj; then
                         print_action "Getting ThirdParty/$tp_proj branch $branch"
                         if [ ! -e ThirdParty/$tp_proj ]; then
                             git clone --branch=$branch \
@@ -378,14 +363,7 @@ function fetch {
                         version=`echo $url | cut -d '/' -f 7`
                     fi
                 fi
-                skip_proj=false
-                for i in $coin_skip_projects
-                do
-                    if [ $proj = $i ]; then
-                        skip_proj=true
-                    fi
-                done
-                if [ $skip_proj = "false" ]; then
+                if get_project $proj; then
                     print_action "Getting $git_repo branch $branch"
                     if [ sparse = "true" ]; then
                         mkdir $proj
