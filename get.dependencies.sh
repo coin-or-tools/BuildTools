@@ -214,8 +214,15 @@ function fetch {
     subdirs=
 
     # Build list of sources for dependencies
-    deps=`cat Dependencies | tr '\t' ' ' | tr -s ' '| cut -d ' ' -f 2-`
-
+    if [ -e Dependencies ]; then
+	deps=`cat Dependencies | tr '\t' ' ' | tr -s ' '| cut -d ' ' -f 2-`
+    elif [ -e $main_proj/Dependencies ]; then 
+	deps=`cat $main_proj/Dependencies | tr '\t' ' ' | tr -s ' '| cut -d ' ' -f 2-`
+    else
+	echo "Can't find dependencies file...exiting"
+	exit 3
+    fi
+	
     for url in $deps
     do
         if [ `echo $url | cut -d '/' -f 3` != "projects.coin-or.org" ]; then
@@ -612,11 +619,17 @@ echo
 
 if [ -e configure.ac ]; then
     main_proj=`fgrep AC_INIT configure.ac | cut -d '[' -f 2 | cut -d ']' -f 1`
+elif git remote > /dev/null; then
+    main_proj=`git remote show origin | fgrep "Fetch URL" | xargs | cut -d " " -f 3 | cut -d "/" -f 5`
+elif svn info; then
+    main_proj=`svn info | fgrep "URL: https" | cut -d " " -f 2 | cut -d "/" -f 5`
 else
-    echo "Unable to find root configure script."
+    echo "Unable to figure out what project this is."
     echo "Please run script in root directory of checkout."
     exit 2
 fi
+
+print_action "Main project is $main_proj"
 
 parse_args "$@"
 
