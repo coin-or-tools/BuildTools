@@ -161,7 +161,7 @@ fi
 # Set up to process parameters. No parameters is the default.
 
 printHelp=0
-doRecurse=1
+doRecurse=0
 forceScripts=0
 userSpecifiedDirs=0
 dirsToProcess=
@@ -174,8 +174,8 @@ while test $# -gt 0 && test $printHelp = 0 ; do
     -h* | --h* )
       printHelp=1
       ;;
-    -nr* | --no-recursion )
-      doRecurse=0
+    -r* | --recursion )
+      doRecurse=1
       ;;
     -i | --independent )
       forceScripts=1
