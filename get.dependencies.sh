@@ -70,119 +70,119 @@ function invoke_make {
 function parse_args {
     for arg in "$@"
     do
-	case $arg in
+        case $arg in
             *=*)
-		option=`expr "x$arg" : 'x\(.*\)=[^=]*'`
-		option_arg=`expr "x$arg" : 'x[^=]*=\(.*\)'`
-		case $option in
+                option=`expr "x$arg" : 'x\(.*\)=[^=]*'`
+                option_arg=`expr "x$arg" : 'x[^=]*=\(.*\)'`
+                case $option in
                     --prefix)
-			if [ "x$option_arg" != x ]; then
+                        if [ "x$option_arg" != x ]; then
                             case $option_arg in
-				[\\/$]* | ?:[\\/]* | NONE | '' )
+                                [\\/$]* | ?:[\\/]* | NONE | '' )
                                     prefix=$option_arg
                                     ;;
-				*)  
+                                *)  
                                     echo "Prefix path must be absolute."
                                     exit 3
                                     ;;
                             esac
-			else
+                        else
                             echo "No path provided for --prefix"
                             exit 3
-			fi
-			;;
+                        fi
+                        ;;
                     --build-dir)
-			if [ "x$option_arg" != x ]; then
+                        if [ "x$option_arg" != x ]; then
                             case $option_arg in
-				[\\/$]* | ?:[\\/]* | NONE | '' )
+                                [\\/$]* | ?:[\\/]* | NONE | '' )
                                     build_dir=$option_arg
                                     ;;
-				*)
+                                *)
                                     build_dir=$PWD/$option_arg
                                     ;;
                             esac
-			else
+                        else
                             echo "No path provided for --build-dir"
                             exit 3
-			fi
-			;;
+                        fi
+                        ;;
                     --threads)  # FIXME these are actually not threads, but parallel processes (--jobs in makefile-speak)
-			if [ "x$option_arg" != x ]; then
+                        if [ "x$option_arg" != x ]; then
                             threads=$option_arg
-			else
+                        else
                             echo "No thread number specified for --threads"
                             exit 3
-			fi
-			;;
-		    --verbosity)
-			if [ "x$option_arg" != x ]; then
+                        fi
+                        ;;
+                    --verbosity)
+                        if [ "x$option_arg" != x ]; then
                             verbosity=$option_arg
-			else
+                        else
                             echo "No verbosity specified for --verbosity"
                             exit 3
-			fi
-			;;
+                        fi
+                        ;;
                     DESTDIR)
-			echo "DESTDIR installation not supported"
-			exit 3
-			;;
+                        echo "DESTDIR installation not supported"
+                        exit 3
+                        ;;
                     --skip)
-			if [ "x$option_arg" != x ]; then
+                        if [ "x$option_arg" != x ]; then
                             coin_skip_projects=$option_arg
-			fi
-			;;
+                        fi
+                        ;;
                     *)
-			configure_options+="$arg "
-			;;            
-		esac
-		;;
+                        configure_options+="$arg "
+                        ;;            
+                esac
+                ;;
             --sparse)
-		sparse=true
-		;;
+                sparse=true
+                ;;
             --svn)
-		svn=true
-		;;
+                svn=true
+                ;;
             --git)
-		svn=false
-		;;
+                svn=false
+                ;;
             --debug)
-		set -x
-		;;
+                set -x
+                ;;
             --monolithic)
-		monolithic=true
-		;;
+                monolithic=true
+                ;;
             --reconfigure)
-		reconfigure=true
-		;;
+                reconfigure=true
+                ;;
             --test)
-		run_test=true
-		;;
+                run_test=true
+                ;;
             --test-all)
-		run_all_tests=true
-		;;
+                run_all_tests=true
+                ;;
             --no-third-party)
-		get_third_party=false
-		;;
+                get_third_party=false
+                ;;
             --*)
-		configure_options+="$arg "
-		;;
+                configure_options+="$arg "
+                ;;
             fetch)
-		num_actions+=1
-		fetch=true
-		;;
+                num_actions+=1
+                fetch=true
+                ;;
             build)
-		num_actions+=1
-		build=true
-		;;
+                num_actions+=1
+                build=true
+                ;;
             install)
-		num_actions+=1
-		install=true
-		;;
+                num_actions+=1
+                install=true
+                ;;
             uninstall)
-		num_actions+=1
-		uninstall=true
-		;;
-	esac
+                num_actions+=1
+                uninstall=true
+                ;;
+        esac
     done
 }
 
@@ -202,32 +202,32 @@ function fetch {
     do
         if [ `echo $url | cut -d '/' -f 3` != "projects.coin-or.org" ]; then
             # If this is a URL of something other than a COIN-OR project on
-	    # SVN, then we assume it's a git project
+            # SVN, then we assume it's a git project
             git_url=`echo $url | tr '\t' ' ' | tr -s ' '| cut -d ' ' -f 1`
             branch=`echo $url | tr '\t' ' ' | tr -s ' '| cut -d ' ' -f 2`
             dir=`echo $git_url | cut -d '/' -f 5`
-	    proj=`echo $git_url | cut -d "/" -f 5`
-	    # Check whether we're supposed to skip this project
-	    skip_proj=false
-	    for i in $coin_skip_projects
-	    do
-		if [ $proj = $i ]; then
-		    skip_proj=true
-		fi
-	    done
-	    if [ $skip_proj = "false" ]; then
-		print_action "Clone $git_url branch $branch"
-		if [ ! -e $dir ]; then
+            proj=`echo $git_url | cut -d "/" -f 5`
+            # Check whether we're supposed to skip this project
+            skip_proj=false
+            for i in $coin_skip_projects
+            do
+                if [ $proj = $i ]; then
+                    skip_proj=true
+                fi
+            done
+            if [ $skip_proj = "false" ]; then
+                print_action "Clone $git_url branch $branch"
+                if [ ! -e $dir ]; then
                     git clone --branch=$branch $git_url
-		else
+                else
                     cd $dir
                     git pull origin $branch
                     cd -
-		fi
-		subdirs+="$dir "
-	    else
-		echo "Skipping $proj..."
-	    fi
+                fi
+                subdirs+="$dir "
+            else
+                echo "Skipping $proj..."
+            fi
         elif [ $svn = "true" ]; then
             # Here, we are supposed to check out from SVN
             svn_repo=`echo $url | cut -d '/' -f 5`
@@ -239,21 +239,21 @@ function fetch {
                     else
                         version=`echo $url | cut -d '/' -f 9`
                     fi
-		    skip_proj=false
-		    for i in $coin_skip_projects
-		    do
-			if [ $tp_proj = $i ]; then
-			    skip_proj=true
-			fi
-		    done
+                    skip_proj=false
+                    for i in $coin_skip_projects
+                    do
+                        if [ $tp_proj = $i ]; then
+                            skip_proj=true
+                        fi
+                    done
                     if [ $skip_proj = "false" ]; then
-			mkdir -p ThirdParty
-			print_action "Checking out ThirdParty/$tp_proj"
-			svn co --non-interactive --trust-server-cert $url \
+                        mkdir -p ThirdParty
+                        print_action "Checking out ThirdParty/$tp_proj"
+                        svn co --non-interactive --trust-server-cert $url \
                             ThirdParty/$tp_proj
                     else
-			echo "Skipping $tp_proj..."
-		    fi
+                        echo "Skipping $tp_proj..."
+                    fi
                     if [ $get_third_party = "true" ] &&
                        [ -e ThirdParty/$tp_proj/get.$tp_proj ]; then
                         cd ThirdParty/$tp_proj
@@ -261,8 +261,8 @@ function fetch {
                         cd -
                         subdirs+="ThirdParty/$tp_proj "
                     else
-			echo "Not downloading source for $tp_proj..."
-		    fi
+                        echo "Not downloading source for $tp_proj..."
+                    fi
                 fi
             else
                 if [ $svn_repo = "CHiPPS" ]; then
@@ -287,27 +287,27 @@ function fetch {
                         version=`echo $url | cut -d '/' -f 7`
                     fi
                 fi
-		skip_proj=false
-		for i in $coin_skip_projects
-		do
-		    if [ $proj = $i ]; then
-			skip_proj=true
-		    fi
-		done
-		if [ $skip_proj = "false" ]; then
-		    print_action "Checking out $proj"
+                skip_proj=false
+                for i in $coin_skip_projects
+                do
+                    if [ $proj = $i ]; then
+                        skip_proj=true
+                    fi
+                done
+                if [ $skip_proj = "false" ]; then
+                    print_action "Checking out $proj"
                     svn co --non-interactive --trust-server-cert $url $proj
                     subdirs+="$proj "
-		else
-		    echo "Skipping $proj..."
-		fi
+                else
+                    echo "Skipping $proj..."
+                fi
             fi
         else
             # Otherwise, convert SVN URL to a Github one and check out with git
             svn_repo=`echo $url | cut -d '/' -f 5`
             if [ $svn_repo = 'Data' ]; then
                 data_proj=`echo $url | cut -d '/' -f 6`
-		print_action "Checking out Data/$data_proj"
+                print_action "Checking out Data/$data_proj"
                 svn co $url Data/$data_proj
                 subdirs+="Data/$data_proj "
             elif [ $svn_repo = 'BuildTools' ]; then
@@ -322,40 +322,40 @@ function fetch {
                         branch=`echo $url | cut -d '/' -f 8-9`
                         version=`echo $url | cut -d '/' -f 9`
                     fi
-		    skip_proj=false
-		    for i in $coin_skip_projects
-		    do
-			if [ $tp_proj = $i ]; then
-			    skip_proj=true
-			fi
-		    done
+                    skip_proj=false
+                    for i in $coin_skip_projects
+                    do
+                        if [ $tp_proj = $i ]; then
+                            skip_proj=true
+                        fi
+                    done
                     if [ $skip_proj = "false" ]; then
-			print_action "Getting ThirdParty/$tp_proj branch $branch"
-			if [ ! -e ThirdParty/$tp_proj ]; then
+                        print_action "Getting ThirdParty/$tp_proj branch $branch"
+                        if [ ! -e ThirdParty/$tp_proj ]; then
                             git clone --branch=$branch \
-				https://github.com/coin-or-tools/$proj \
-				ThirdParty/$tp_proj
+                                https://github.com/coin-or-tools/$proj \
+                                ThirdParty/$tp_proj
                             if [ $get_third_party = "true" ] && \
-				   [ -e ThirdParty/$tp_proj/get.$tp_proj ]; then
-				cd ThirdParty/$tp_proj
-				./get.$tp_proj
-				cd -
-				subdirs+="ThirdParty/$tp_proj "
+                                   [ -e ThirdParty/$tp_proj/get.$tp_proj ]; then
+                                cd ThirdParty/$tp_proj
+                                ./get.$tp_proj
+                                cd -
+                                subdirs+="ThirdParty/$tp_proj "
                             fi
-			else
+                        else
                             cd ThirdParty/$tp_proj
                             git pull origin $branch
                             if [ $get_third_party = "true" ] && \
-				   [ -e get.$tp_proj ]; then
-				./get.$tp_proj
-				subdirs+="ThirdParty/$tp_proj "
+                                   [ -e get.$tp_proj ]; then
+                                ./get.$tp_proj
+                                subdirs+="ThirdParty/$tp_proj "
                             fi
                             cd -
-			fi
+                        fi
                     else
-			echo "Skipping $tp_proj..."
-		    fi
-		fi
+                        echo "Skipping $tp_proj..."
+                    fi
+                fi
             else
                 if [ $svn_repo = "CHiPPS" ]; then
                     git_repo=CHiPPS-`echo $url | cut -d '/' -f 6`
@@ -378,40 +378,40 @@ function fetch {
                         version=`echo $url | cut -d '/' -f 7`
                     fi
                 fi
-		skip_proj=false
-		for i in $coin_skip_projects
-		do
-		    if [ $proj = $i ]; then
-			skip_proj=true
-		    fi
-		done
+                skip_proj=false
+                for i in $coin_skip_projects
+                do
+                    if [ $proj = $i ]; then
+                        skip_proj=true
+                    fi
+                done
                 if [ $skip_proj = "false" ]; then
-		    print_action "Getting $git_repo branch $branch"
+                    print_action "Getting $git_repo branch $branch"
                     if [ sparse = "true" ]; then
-			mkdir $proj
-			cd $proj
-			git init
-			git remote add origin \
+                        mkdir $proj
+                        cd $proj
+                        git init
+                        git remote add origin \
                             https://github.com/coin-or/$git_repo 
-			git config core.sparsecheckout true
-			echo $proj/ >> .git/info/sparse-checkout
-			git fetch
-			git checkout $branch
-			cd ..
+                        git config core.sparsecheckout true
+                        echo $proj/ >> .git/info/sparse-checkout
+                        git fetch
+                        git checkout $branch
+                        cd ..
                     else
-			if [ ! -e $proj ]; then
+                        if [ ! -e $proj ]; then
                             git clone --branch=$branch \
-				https://github.com/coin-or/$git_repo $proj
-			else
+                                https://github.com/coin-or/$git_repo $proj
+                        else
                             cd $proj
                             git pull origin $branch
                             cd -
-			fi
+                        fi
                     fi
                     subdirs+="$proj/$proj "
-		else
-		    echo "Skipping $proj..."
-		fi
+                else
+                    echo "Skipping $proj..."
+                fi
             fi
         fi
     done
@@ -424,9 +424,9 @@ function build {
         if [ ! -e ".subdirs" ]; then
             echo "No .subdirs file. Please fetch first"
         else
-	    mkdir -p $build_dir
-	    cp .subdirs $build_dir/coin_subdirs.txt
-	fi
+            mkdir -p $build_dir
+            cp .subdirs $build_dir/coin_subdirs.txt
+        fi
         for dir in `cat .subdirs`
         do
             if [ $build_dir != $PWD ]; then
@@ -440,31 +440,31 @@ function build {
                 cd $dir
             fi
             if [ ! -e config.status ] || [ $reconfigure = "true" ]; then
-		if [ $reconfigure = "true" ]; then
-		    print_action "Reconfiguring $proj_dir"
-		else
-		    print_action "Configuring $proj_dir"
-		fi
+                if [ $reconfigure = "true" ]; then
+                    print_action "Reconfiguring $proj_dir"
+                else
+                    print_action "Configuring $proj_dir"
+                fi
                 if [ $verbosity != 0 ]; then
                     $root_dir/$dir/configure --disable-dependency-tracking \
-			--prefix=$1 $configure_options
+                        --prefix=$1 $configure_options
                 else
                     $root_dir/$dir/configure --disable-dependency-tracking \
-			--prefix=$1 $configure_options > /dev/null
+                        --prefix=$1 $configure_options > /dev/null
                 fi
             fi
-	    print_action "Building $proj_dir"
-	    invoke_make $verbosity
+            print_action "Building $proj_dir"
+            invoke_make $verbosity
             if [ $run_all_tests = "true" ]; then
-		print_action "Running $proj_dir unit test"
+                print_action "Running $proj_dir unit test"
                 invoke_make "false" test
-	    fi
-	    if [ $1 = $build_dir ]; then
-		print_action "Pre-installing $proj_dir"
-	    else
-		print_action "Installing $proj_dir"
-	    fi
-	    invoke_make $verbosity install
+            fi
+            if [ $1 = $build_dir ]; then
+                print_action "Pre-installing $proj_dir"
+            else
+                print_action "Installing $proj_dir"
+            fi
+            invoke_make $verbosity install
             cd $root_dir
         done
         if [ -e $main_proj ]; then
@@ -478,11 +478,11 @@ function build {
             cd $build_dir
         fi
         if [ ! -e config.status ] || [ $reconfigure = "true" ]; then 
-	    if [ $reconfigure = "true" ]; then
-		print_action "Reconfiguring $main_proj"
-	    else
-		print_action "Configuring $main_proj"
-	    fi
+            if [ $reconfigure = "true" ]; then
+                print_action "Reconfiguring $main_proj"
+            else
+                print_action "Configuring $main_proj"
+            fi
             # First, check whether this is a "rootless" project
             if [ -e $root_dir/$main_proj/configure ]; then
                 root_config=$root_dir/$main_proj/configure
@@ -492,24 +492,24 @@ function build {
             # Now, do the actual configuration
             if [ $verbosity != 0 ]; then
                 $root_config --disable-dependency-tracking \
-			--prefix=$1 $configure_options
+                        --prefix=$1 $configure_options
             else
                 $root_config --disable-dependency-tracking \
-			--prefix=$1 $configure_options > /dev/null
+                        --prefix=$1 $configure_options > /dev/null
             fi
-	fi
-	print_action "Building $main_proj"
-	invoke_make $verbosity
+        fi
+        print_action "Building $main_proj"
+        invoke_make $verbosity
         if [ $run_test = "true" ]; then
-	    print_action "Running $main_proj unit test"
+            print_action "Running $main_proj unit test"
             invoke_make "false" test
-	fi
-	if [ $1 = $build_dir ]; then
-	    print_action "Pre-installing $main_proj"
-	else
-	    print_action "Installing $main_proj"
-	fi
-	invoke_make $verbosity install
+        fi
+        if [ $1 = $build_dir ]; then
+            print_action "Pre-installing $main_proj"
+        else
+            print_action "Installing $main_proj"
+        fi
+        invoke_make $verbosity install
         cd $root_dir
     else
         if [ build_dir != $PWD ]; then
@@ -517,40 +517,40 @@ function build {
             cd $build_dir
         fi
         if [ ! -e config.status ]; then
-	    print_action "Configuring"
+            print_action "Configuring"
         else
-	    if [ $reconfigure = true ]; then
-		print_action "Reconfiguring"
-	    fi
-	fi
+            if [ $reconfigure = true ]; then
+                print_action "Reconfiguring"
+            fi
+        fi
         if [ $verbosity != 0 ]; then
             $root_dir/configure --disable-dependency-tracking \
-				--prefix=$1 $configure_options
+                                --prefix=$1 $configure_options
         else
             $root_dir/configure --disable-dependency-tracking \
-				--prefix=$1 $configure_options > /dev/null
+                                --prefix=$1 $configure_options > /dev/null
         fi
-	if [ $run_all_tests = "true"]; then
-	    echo "Warning: Can't run all tests with a monolithic build."
-	    echo "Disabling setting"
-	    run_test=true
-	fi
-	print_action "Building"
-	invoke_make $verbosity
-	if [ $run_test = "true" ]; then 
-	    print_action "Running unit test"
+        if [ $run_all_tests = "true"]; then
+            echo "Warning: Can't run all tests with a monolithic build."
+            echo "Disabling setting"
+            run_test=true
+        fi
+        print_action "Building"
+        invoke_make $verbosity
+        if [ $run_test = "true" ]; then 
+            print_action "Running unit test"
             invoke_make "false" test
         fi
-	invoke_make $verbosity install
+        invoke_make $verbosity install
         cd $root_dir
     fi
 }
 
 function install {
     if [ prefix != $build_dir ]; then
-	print_action "Reconfiguring projects and doing final install"
-	reconfigure=true
-	build $prefix
+        print_action "Reconfiguring projects and doing final install"
+        reconfigure=true
+        build $prefix
     fi
 }
 
@@ -559,9 +559,9 @@ function uninstall {
         if [ ! -e ".subdirs" ]; then
             echo "No .subdirs file. Please fetch first"
         fi
-	subdirs=(`cat .subdirs`)
-	# We have to uninstall in reverse order
-	for ((dir=${#subdirs[@]}-1; i>=0; i--))
+        subdirs=(`cat .subdirs`)
+        # We have to uninstall in reverse order
+        for ((dir=${#subdirs[@]}-1; i>=0; i--))
         do
             if [ build_dir != $PWD ]; then
                 proj_dir=`echo $dir | cut -d '/' -f 1`
@@ -572,8 +572,8 @@ function uninstall {
             else
                 cd $dir
             fi
-	    print_action "Uninstalling $proj_dir"
-	    invoke_make $verbosity uninstall
+            print_action "Uninstalling $proj_dir"
+            invoke_make $verbosity uninstall
             cd $root_dir
         done
         if [ -e $main_proj ]; then
@@ -584,15 +584,15 @@ function uninstall {
                 cd $main_proj
             fi
         fi
-	print_action "Uninstalling $main_proj"
-	invoke_make $verbosity uninstall
+        print_action "Uninstalling $main_proj"
+        invoke_make $verbosity uninstall
         cd $root_dir
     else
         if [ build_dir != $PWD ]; then
             cd $build_dir
         fi
-	print_action "Uninstalling"
-	invoke_make $verbosity uninstall
+        print_action "Uninstalling"
+        invoke_make $verbosity uninstall
         cd $root_dir
     fi
 }
@@ -649,18 +649,18 @@ fi
 if [ -e $build_dir/.config ]; then
     echo "Previous configuration options found."
     if [ x"$configure_options" != x ]; then
-	echo "Options cannot be changed after initial configuration."
-	echo "To build with a new configuration:"
-	echo "   1. Specify new build directory"
-	echo "   2. Delete $build_dir/.config and"
+        echo "Options cannot be changed after initial configuration."
+        echo "To build with a new configuration:"
+        echo "   1. Specify new build directory"
+        echo "   2. Delete $build_dir/.config and"
         echo "      re-run with --reconfigure (not recommended)"
-	exit 3
+        exit 3
     fi
     configure_options=`cat $build_dir/.config`
 else
     if [ x"$configure_options" != x ] && [ build = "false" ]; then
-	echo "Configuration options should be specified with build command"
-	exit 3
+        echo "Configuration options should be specified with build command"
+        exit 3
     fi
     echo "Caching configuration options..."
     mkdir -p $build_dir
