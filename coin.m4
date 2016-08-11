@@ -446,9 +446,9 @@ AC_MSG_NOTICE([Configuration of $PACKAGE_NAME successful])
 # include an URL field, which breaks pkg-config version <= 0.15.
 # This macro is a modified version of PKG_PROG_PKG_CONFIG in pkg.m4.
 # Further, the AM_CONDITIONAL COIN_HAS_PKGCONFIG is set and PKGCONFIG is
-# AC_SUBST'ed.  Finally, if this setup belongs to a project directory, then
-# the search path for .pc files is assembled from the value of
-# $PKG_CONFIG_PATH in a variable COIN_PKG_CONFIG_PATH, which is also AC_SUBST'ed.
+# AC_SUBST'ed.  Finally, the search path for .pc files is assembled from the
+# value of $prefix and $PKG_CONFIG_PATH in a variable COIN_PKG_CONFIG_PATH,
+# which is also AC_SUBST'ed.
 
 AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
 [AC_ARG_VAR([PKG_CONFIG], [path to pkg-config utility])
@@ -622,18 +622,13 @@ fi
 # now use pkg-config, if nothing of the above applied
 if test $m4_tolower(coin_has_$1) = notGiven; then
   if test -n "$PKG_CONFIG" ; then
-    # set search path for pkg-config
-    # need to export variable to be sure that the following pkg-config gets these values
-    coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
-    PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH"
-    export PKG_CONFIG_PATH
     
     # let pkg-config do it's magic
     AC_COIN_PKG_CHECK_MODULE_EXISTS([$1],[$2],
       [ m4_tolower(coin_has_$1)=yes
         AC_MSG_RESULT([yes: $m4_toupper($1)_VERSIONS])
 
-        m4_toupper($1_DATA)=`$PKG_CONFIG --variable=datadir $2 2>/dev/null`
+        m4_toupper($1_DATA)=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --variable=datadir $2 2>/dev/null`
         
         m4_toupper($1_PCREQUIRES)="$2"
         # augment X_PCREQUIRES for each build target X in $3
@@ -644,10 +639,6 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
       [ m4_tolower(coin_has_$1)=notGiven
         AC_MSG_RESULT([not given: $m4_toupper($1)_PKG_ERRORS])
       ])
-
-    # reset PKG_CONFIG_PATH variable 
-    PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
-    export PKG_CONFIG_PATH
 
     m4_foreach_w([myvar], [$3], [
       m4_toupper(myvar)_PCREQUIRES="$2 $m4_toupper(myvar)_PCREQUIRES"
@@ -693,14 +684,12 @@ AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
 AC_DEFUN([AC_COIN_FINALIZE_FLAGS],[
 
 # do pkg-config calls to complete LIBS and CFLAGS
-coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
-PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH"
-export PKG_CONFIG_PATH
-
 m4_foreach_w([myvar],[$1],[
   if test -n "${m4_toupper(myvar)_PCREQUIRES}" ; then
-    m4_toupper(myvar)_CFLAGS="`$PKG_CONFIG --cflags ${m4_toupper(myvar)_PCREQUIRES}` ${m4_toupper(myvar)_CFLAGS}"
-    m4_toupper(myvar)_LIBS="`$PKG_CONFIG --libs ${m4_toupper(myvar)_PCREQUIRES}` ${m4_toupper(myvar)_LIBS}"
+    temp_CFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --cflags ${m4_toupper(myvar)_PCREQUIRES}`
+    temp_LIBS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs ${m4_toupper(myvar)_PCREQUIRES}`
+    m4_toupper(myvar)_CFLAGS="$temp_CFLAGS ${m4_toupper(myvar)_CFLAGS}"
+    m4_toupper(myvar)_LIBS="$temp_LIBS ${m4_toupper(myvar)_LIBS}"
   fi
 
   if test 1 = 0 ; then  #change this test to enable a bit of debugging output
@@ -713,8 +702,6 @@ m4_foreach_w([myvar],[$1],[
   fi
 ])
 
-# reset PKG_CONFIG_PATH variable 
-PKG_CONFIG_PATH="$coin_save_PKG_CONFIG_PATH"
 ])
 
 
