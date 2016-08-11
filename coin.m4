@@ -409,6 +409,9 @@ AC_CANONICAL_BUILD
 # - enable more automake warnings (all except override)
 AM_INIT_AUTOMAKE([no-define no-dist -Wall -Wno-override])
 
+# make silent build rules the default (https://www.gnu.org/software/automake/manual/html_node/Automake-Silent-Rules.html)
+AM_SILENT_RULES([yes])
+
 # disable automatic rebuild of configure/Makefile
 AM_MAINTAINER_MODE
 
