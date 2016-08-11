@@ -403,9 +403,11 @@ AC_PREFIX_DEFAULT([`pwd`])
 # Get the system type
 AC_CANONICAL_BUILD
 
-# initialize automake, don't define PACKAGE or VERSION
-# TODO should we enable warnings by passing an option like -Wall
-AM_INIT_AUTOMAKE([no-define])
+# initialize automake
+# - don't define PACKAGE or VERSION
+# - disable dist target
+# - TODO should we enable warnings by passing an option like -Wall
+AM_INIT_AUTOMAKE([no-define no-dist])
 
 # disable automatic rebuild of configure/Makefile
 AM_MAINTAINER_MODE
