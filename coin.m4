@@ -1,4 +1,4 @@
-# Copyright (C) 2013
+# Copyright (C) 2013-2016
 # All Rights Reserved.
 # This file is distributed under the Eclipse Public License.
 #
@@ -1291,7 +1291,7 @@ if test $coin_enable_readline = yes; then
   fi
 
   if test $coin_has_readline = yes; then
-    m4_foreach_w([myvar], [$1], [m4_toupper(myvar)_LIBS="-lreadline $LIBS $m4_toupper(myvar)_LIBS"])
+    m4_foreach_w([myvar], [$1], [m4_toupper(myvar)_LIBS="-lreadline $m4_toupper(myvar)_LIBS"])
     AC_DEFINE([COIN_HAS_READLINE],[1],[Define to 1 if readline is available])
   fi
 
