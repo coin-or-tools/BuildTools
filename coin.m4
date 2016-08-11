@@ -406,8 +406,8 @@ AC_CANONICAL_BUILD
 # initialize automake
 # - don't define PACKAGE or VERSION
 # - disable dist target
-# - enable more automake warnings (all except override)
-AM_INIT_AUTOMAKE([no-define no-dist -Wall -Wno-override])
+# - enable all automake warnings
+AM_INIT_AUTOMAKE([no-define no-dist -Wall])
 
 # make silent build rules the default (https://www.gnu.org/software/automake/manual/html_node/Automake-Silent-Rules.html)
 AM_SILENT_RULES([yes])
