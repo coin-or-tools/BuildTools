@@ -406,8 +406,8 @@ AC_CANONICAL_BUILD
 # initialize automake
 # - don't define PACKAGE or VERSION
 # - disable dist target
-# - TODO should we enable warnings by passing an option like -Wall
-AM_INIT_AUTOMAKE([no-define no-dist])
+# - enable more automake warnings (all except override)
+AM_INIT_AUTOMAKE([no-define no-dist -Wall -Wno-override])
 
 # disable automatic rebuild of configure/Makefile
 AM_MAINTAINER_MODE
