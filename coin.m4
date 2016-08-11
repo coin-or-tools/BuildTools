@@ -645,10 +645,6 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
         AC_MSG_RESULT([not given: $m4_toupper($1)_PKG_ERRORS])
       ])
 
-    m4_foreach_w([myvar], [$3], [
-      m4_toupper(myvar)_PCREQUIRES="$2 $m4_toupper(myvar)_PCREQUIRES"
-    ])
-
   else
     AC_MSG_ERROR([skipped check via pkg-config, redirect to fallback... -- oops, not there yet])
     # TODO
