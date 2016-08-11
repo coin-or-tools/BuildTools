@@ -491,8 +491,17 @@ AM_CONDITIONAL([COIN_HAS_PKGCONFIG], [test -n "$PKG_CONFIG"])
 AC_SUBST(PKG_CONFIG)
 
 # assemble pkg-config search path
-COIN_PKG_CONFIG_PATH=
+COIN_PKG_CONFIG_PATH="${PKG_CONFIG_PATH}"
 AC_SUBST(COIN_PKG_CONFIG_PATH)
+
+# let's assume that when installing into $prefix, then the user may have installed some other coin projects there before, so it's worth to have a look into there
+# best would actually to use ${libdir}, since .pc files get installed into ${libdir}/pkgconfig,
+# unfortunately, ${libdir} expands to ${exec_prefix}/lib and ${exec_prefix} to ${prefix}...
+if test "x${prefix}" = xNONE ; then
+  COIN_PKG_CONFIG_PATH="${ac_default_prefix}/lib64/pkgconfig:${ac_default_prefix}/lib/pkgconfig:${ac_default_prefix}/share/pkgconfig:${COIN_PKG_CONFIG_PATH}"
+else
+  COIN_PKG_CONFIG_PATH="${prefix}/lib64/pkgconfig:${prefix}/lib/pkgconfig:${prefix}/share/pkgconfig:${COIN_PKG_CONFIG_PATH}"
+fi
 
 ])
 
@@ -616,7 +625,7 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
     # set search path for pkg-config
     # need to export variable to be sure that the following pkg-config gets these values
     coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
-    PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH:$PKG_CONFIG_PATH"
+    PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH"
     export PKG_CONFIG_PATH
     
     # let pkg-config do it's magic
@@ -685,7 +694,7 @@ AC_DEFUN([AC_COIN_FINALIZE_FLAGS],[
 
 # do pkg-config calls to complete LIBS and CFLAGS
 coin_save_PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
-PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH:$COIN_PKG_CONFIG_PATH_UNINSTALLED"
+PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH"
 export PKG_CONFIG_PATH
 
 m4_foreach_w([myvar],[$1],[
