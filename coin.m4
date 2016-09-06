@@ -377,6 +377,17 @@ AC_DEFUN([AC_COIN_PROJECTVERSION],
 #                            COIN_INITALIZE                               #
 ###########################################################################
 
+AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
+[
+# change default compiler flags (should we have an enable-debug again?)
+# - some compilers doesn't understand -g
+# - set -DNDEBUG for C/C++ code
+: ${FFLAGS:=""}
+: ${FCFLAGS:=""}
+: ${CFLAGS:="-DNDEBUG"}
+: ${CXXFLAGS:="-DNDEBUG"}
+])
+
 # This macro does everything that is required in the early part in the
 # configure script, such as defining a few variables.
 # The first parameter is the project name.
@@ -385,6 +396,8 @@ AC_DEFUN([AC_COIN_PROJECTVERSION],
 
 AC_DEFUN([AC_COIN_INITIALIZE],
 [
+AC_REQUIRE([AC_COIN_COMPFLAGS_DEFAULTS])
+
 # required autoconf version
 AC_PREREQ(2.69)
 
@@ -420,14 +433,6 @@ LT_INIT([disable-static])
 
 # create libtool
 AC_PROG_LIBTOOL
-
-# change default compiler flags (should we have an enable-debug again?)
-# - some compilers doesn't understand -g
-# - set -DNDEBUG for C/C++ code
-: ${FFLAGS:=""}
-: ${FCFLAGS:=""}
-: ${CFLAGS:="-DNDEBUG"}
-: ${CXXFLAGS:="-DNDEBUG"}
 ])
 
 ###########################################################################
