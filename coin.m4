@@ -415,6 +415,9 @@ AM_SILENT_RULES([yes])
 # disable automatic rebuild of configure/Makefile
 AM_MAINTAINER_MODE
 
+# setup libtool parameters (https://www.gnu.org/software/libtool/manual/html_node/LT_005fINIT.html)
+LT_INIT([disable-static])
+
 # create libtool
 AC_PROG_LIBTOOL
 ])
