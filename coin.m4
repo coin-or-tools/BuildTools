@@ -420,6 +420,14 @@ LT_INIT([disable-static])
 
 # create libtool
 AC_PROG_LIBTOOL
+
+# change default compiler flags (should we have an enable-debug again?)
+# - some compilers doesn't understand -g
+# - set -DNDEBUG for C/C++ code
+: ${FFLAGS:=""}
+: ${FCFLAGS:=""}
+: ${CFLAGS:="-DNDEBUG"}
+: ${CXXFLAGS:="-DNDEBUG"}
 ])
 
 ###########################################################################
