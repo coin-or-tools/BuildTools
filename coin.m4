@@ -410,7 +410,7 @@ AC_BEFORE([$0],[AC_PROG_FC])
 if test "$enable_msvc" = yes ; then
   : ${FFLAGS:=""}
   : ${FCFLAGS:=""}
-  : ${CFLAGS:="-DNDEBUG -EHsc"}
+  : ${CFLAGS:="-DNDEBUG"}
   : ${CXXFLAGS:="-DNDEBUG -EHsc"}
 else
   : ${FFLAGS:=""}
