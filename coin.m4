@@ -377,15 +377,47 @@ AC_DEFUN([AC_COIN_PROJECTVERSION],
 #                            COIN_INITALIZE                               #
 ###########################################################################
 
+AC_DEFUN([AC_COIN_ENABLE_MSVC],
+[
+  AC_ARG_ENABLE([msvc],
+    [AC_HELP_STRING([--enable-msvc],
+                    [Allow only Intel/Microsoft compilers on MinGW/MSys/Cygwin.])],
+    [enable_msvc=$enableval],
+    [enable_msvc=no])
+    
+  if test "$enable_msvc" = yes; then
+    case $build in
+      *-cygwin* | *-mingw* | *-msys*) ;;
+      *) AC_MSG_ERROR([--enable-msvc option makes sense only under Cygwin or MinGW or MSys]) ;;
+    esac
+  fi
+])
+
 AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
 [
-# change default compiler flags (should we have an enable-debug again?)
-# - some compilers doesn't understand -g
-# - set -DNDEBUG for C/C++ code
-: ${FFLAGS:=""}
-: ${FCFLAGS:=""}
-: ${CFLAGS:="-DNDEBUG"}
-: ${CXXFLAGS:="-DNDEBUG"}
+# we want --enable-msvc setup and checked
+AC_REQUIRE([AC_COIN_ENABLE_MSVC])
+
+# this macro should run before the compiler checks (doesn't seem to be sufficient for CFLAGS)
+AC_BEFORE([$0],[AC_PROG_CXX])
+AC_BEFORE([$0],[AC_PROG_CC])
+AC_BEFORE([$0],[AC_PROG_F77])
+AC_BEFORE([$0],[AC_PROG_FC])
+
+# change default compiler flags (TODO bring back --enable-debug)
+# - disable debugging (remove -g, set -DNDEBUG)
+# - enable exceptions for (i)cl
+if test "$enable_msvc" = yes ; then
+  : ${FFLAGS:=""}
+  : ${FCFLAGS:=""}
+  : ${CFLAGS:="-DNDEBUG -EHsc"}
+  : ${CXXFLAGS:="-DNDEBUG -EHsc"}
+else
+  : ${FFLAGS:=""}
+  : ${FCFLAGS:=""}
+  : ${CFLAGS:="-DNDEBUG"}
+  : ${CXXFLAGS:="-DNDEBUG"}
+fi
 ])
 
 # This macro does everything that is required in the early part in the
@@ -396,8 +428,6 @@ AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
 
 AC_DEFUN([AC_COIN_INITIALIZE],
 [
-AC_REQUIRE([AC_COIN_COMPFLAGS_DEFAULTS])
-
 # required autoconf version
 AC_PREREQ(2.69)
 
@@ -412,6 +442,9 @@ AM_CONDITIONAL(ALWAYS_FALSE, false)
 # of the directory where configure is run.  The default would be
 # /usr/local.      
 AC_PREFIX_DEFAULT([`pwd`])
+
+# change default compiler flags; this needs to run very early (before AC_CANONICAL_BUILD)
+AC_REQUIRE([AC_COIN_COMPFLAGS_DEFAULTS])
 
 # Get the system type
 AC_CANONICAL_BUILD
