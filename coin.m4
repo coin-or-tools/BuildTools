@@ -384,13 +384,6 @@ AC_DEFUN([AC_COIN_ENABLE_MSVC],
                     [Allow only Intel/Microsoft compilers on MinGW/MSys/Cygwin.])],
     [enable_msvc=$enableval],
     [enable_msvc=no])
-    
-  if test "$enable_msvc" = yes; then
-    case $build in
-      *-cygwin* | *-mingw* | *-msys*) ;;
-      *) AC_MSG_ERROR([--enable-msvc option makes sense only under Cygwin or MinGW or MSys]) ;;
-    esac
-  fi
 ])
 
 AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
