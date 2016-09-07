@@ -374,8 +374,11 @@ AC_DEFUN([AC_COIN_PROJECTVERSION],
 ])
 
 ###########################################################################
-#                            COIN_INITALIZE                               #
+#                          COIN_ENABLE_MSVC                               # 
 ###########################################################################
+
+# This macro is invoked by any PROG_compiler macro to establish the
+# --enable-msvc option.
 
 AC_DEFUN([AC_COIN_ENABLE_MSVC],
 [
@@ -385,6 +388,10 @@ AC_DEFUN([AC_COIN_ENABLE_MSVC],
     [enable_msvc=$enableval],
     [enable_msvc=no])
 ])
+
+###########################################################################
+#                            COIN_INITALIZE                               #
+###########################################################################
 
 AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
 [
@@ -453,12 +460,6 @@ AM_SILENT_RULES([yes])
 
 # disable automatic rebuild of configure/Makefile
 AM_MAINTAINER_MODE
-
-# setup libtool parameters (https://www.gnu.org/software/libtool/manual/html_node/LT_005fINIT.html)
-LT_INIT([disable-static])
-
-# create libtool
-AC_PROG_LIBTOOL
 ])
 
 ###########################################################################
@@ -481,6 +482,78 @@ AC_MSG_NOTICE([Configuration of $PACKAGE_NAME successful])
 
 ]) #AC_COIN_FINALIZE
 
+###########################################################################
+#                           COIN_PROG_LIBTOOL                             #
+###########################################################################
+
+AC_DEFUN([AC_COIN_PROG_LIBTOOL],
+[
+# setup libtool parameters (https://www.gnu.org/software/libtool/manual/html_node/LT_005fINIT.html)
+LT_INIT([disable-static])
+
+# create libtool
+AC_PROG_LIBTOOL
+])
+
+###########################################################################
+#     COIN_PROG_CC   COIN_PROG_CXX    COIN_PROG_F77    COIN_PROG_FC       #
+###########################################################################
+
+AC_DEFUN_ONCE([AC_COIN_PROG_CC],
+[
+AC_REQUIRE([AC_COIN_ENABLE_MSVC])
+# setting up libtool invokes AC_PROG_CC, but as we may want to change the
+# order of compilers, we want to invoke it from this macro first
+AC_BEFORE([$0],[LT_INIT])
+AC_BEFORE([$0],[AC_PROG_LIBTOOL])
+
+# if enable-msvc, then test only for MS and Intel (on Windows) C compiler
+# otherwise, test a long list of C compilers that comes into our mind
+if test $enable_msvc = yes ; then
+  comps="icl cl"
+else
+  # TODO old buildtools was doing some $build specific logic here, we still need this?
+  comps="gcc clang cc icc icl cl cc xlc xlc_r pgcc"  
+fi
+AC_PROG_CC([$comps])
+])
+
+AC_DEFUN_ONCE([AC_COIN_PROG_CXX],
+[
+AC_REQUIRE([AC_COIN_ENABLE_MSVC])
+
+# if enable-msvc, then test only for MS and Intel (on Windows) C++ compiler
+# otherwise, test a long list of C++ compilers that comes into our mind
+if test $enable_msvc = yes ; then
+  comps="cl icl"
+else
+  # TODO old buildtools was doing some $build specific logic here, we still need this?
+  comps="g++ clang++ c++ pgCC icpc gpp cxx cc++ cl icl FCC KCC RCC xlC_r aCC CC"
+fi
+AC_PROG_CXX([$comps])
+])
+
+AC_DEFUN_ONCE([AC_COIN_PROG_F77],
+[
+AC_REQUIRE([AC_COIN_ENABLE_MSVC])
+
+# if enable-msvc, then test only for Intel (on Windows) Fortran compiler
+if test $enable_msvc = yes ; then
+  comps="ifort"
+else
+  # TODO old buildtools was doing some $build specific logic here, we still need this?
+  comps="gfortran ifort g95 fort77 f77 f95 f90 g77 pgf90 pgf77 ifc frt af77 xlf_r fl32"
+fi
+AC_PROG_F77([$comps])
+])
+
+AC_DEFUN_ONCE([AC_COIN_PROG_FC],
+[
+AC_REQUIRE([AC_COIN_ENABLE_MSVC])
+
+# TODO
+AC_MSG_ERROR(["AC_COIN_PROG_FC not implemented yet"])
+])
 
 ###########################################################################
 #                           COIN_HAS_PKGCONFIG                            #
