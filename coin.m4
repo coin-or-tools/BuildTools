@@ -521,6 +521,7 @@ AC_PROG_CC([$comps])
 AC_DEFUN_ONCE([AC_COIN_PROG_CXX],
 [
 AC_REQUIRE([AC_COIN_ENABLE_MSVC])
+AC_REQUIRE([AC_COIN_PROG_CC])
 
 # if enable-msvc, then test only for MS and Intel (on Windows) C++ compiler
 # otherwise, test a long list of C++ compilers that comes into our mind

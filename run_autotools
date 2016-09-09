@@ -66,7 +66,7 @@ set -e
 cleanupOnErrorExit ()
 { for link in $buildtoolsLinks; do
     echo Trap: removing $link
-    rm -f $link
+    rm -rf $link
   done
   cd $startDir
 }
@@ -398,7 +398,7 @@ if test -n "$buildtoolsLinks" ; then
   echo "Removing temporary links to BuildTools."
   for link in $buildtoolsLinks ; do
     # echo "  removing temporary link for BuildTools: $link"
-    rm $link
+    rm -rf $link
   done
   buildtoolsLinks=
 fi
