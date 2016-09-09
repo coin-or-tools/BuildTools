@@ -639,7 +639,7 @@ fi
 AC_DEFUN([AC_COIN_PKG_CHECK_MODULE_EXISTS],
 [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
 if test -n "$PKG_CONFIG" ; then
-  if $PKG_CONFIG --exists "$2"; then
+  if PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --exists "$2"; then
     m4_toupper($1)[]_VERSIONS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --modversion "$2" 2>/dev/null | tr '\n' ' '`
     $3
   else
