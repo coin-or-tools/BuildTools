@@ -412,6 +412,8 @@ if test "$enable_msvc" = yes ; then
   : ${FCFLAGS:=""}
   : ${CFLAGS:="-DNDEBUG -nologo"}
   : ${CXXFLAGS:="-DNDEBUG -EHsc -nologo"}
+  : ${AR:="lib"}
+  : ${AR_FLAGS:="-nologo -out:"}
 else
   : ${FFLAGS:=""}
   : ${FCFLAGS:=""}
@@ -493,6 +495,19 @@ LT_INIT([disable-static])
 
 # create libtool
 AC_PROG_LIBTOOL
+
+# setup patch-up for libtool (need to be run after config.status created libtool)
+case "$AR" in
+  *lib* | *LIB* )
+     AC_CONFIG_COMMANDS([libtoolpatch],[
+       # eliminate space after AR_FLAGS
+       sed -e 's|AR_FLAGS |AR_FLAGS|g' libtool > libtool.tmp
+       mv libtool.tmp libtool
+       chmod 755 libtool
+	 ])
+	 ;;
+esac
+
 ])
 
 ###########################################################################
