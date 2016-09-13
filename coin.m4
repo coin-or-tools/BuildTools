@@ -547,6 +547,14 @@ else
   comps="g++ clang++ c++ pgCC icpc gpp cxx cc++ cl icl FCC KCC RCC xlC_r aCC CC"
 fi
 AC_PROG_CXX([$comps])
+
+# if compiler does not support -c -o, then wrap compile script around it
+# for CC, this happens automatically by AC_PROG_CC already, but not for CXX apparently
+AC_PROG_CXX_C_O
+if test $ac_cv_prog_cxx_c_o = no
+then
+  CXX="$am_aux_dir/compile $CXX"
+fi
 ])
 
 AC_DEFUN_ONCE([AC_COIN_PROG_F77],
@@ -561,6 +569,8 @@ else
   comps="gfortran ifort g95 fort77 f77 f95 f90 g77 pgf90 pgf77 ifc frt af77 xlf_r fl32"
 fi
 AC_PROG_F77([$comps])
+
+#TODO if AC_PROG_F77_C_O returns no, then wrap compile script around $F77 ?
 ])
 
 AC_DEFUN_ONCE([AC_COIN_PROG_FC],
