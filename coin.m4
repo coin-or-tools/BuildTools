@@ -448,8 +448,15 @@ AC_PREFIX_DEFAULT([`pwd`])
 # change default compiler flags; this needs to run very early (before AC_CANONICAL_BUILD)
 AC_REQUIRE([AC_COIN_COMPFLAGS_DEFAULTS])
 
-# Get the system type
+# Get the build and host types
 AC_CANONICAL_BUILD
+AC_CANONICAL_HOST
+
+# libtool has some magic for host_os=mingw, but doesn't know about msys
+if test $host_os = msys ; then
+  host_os=mingw
+  host=`echo $host | sed -e 's/msys/mingw/'`
+fi
 
 # initialize automake
 # - don't define PACKAGE or VERSION
@@ -491,7 +498,16 @@ AC_MSG_NOTICE([Configuration of $PACKAGE_NAME successful])
 AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 [
 # setup libtool parameters (https://www.gnu.org/software/libtool/manual/html_node/LT_005fINIT.html)
-LT_INIT([disable-static])
+
+case $host_os in
+  cygwin* | mingw* | msys* )
+    # on Windows, shared C++ libraries do not work with current libtool (handles only exports for C functions, not C++)
+    AC_DISABLE_SHARED
+	;;
+  *)
+    AC_DISABLE_STATIC
+	;;
+esac
 
 # create libtool
 AC_PROG_LIBTOOL
@@ -508,6 +524,9 @@ case "$AR" in
 	 ;;
 esac
 
+# -no-undefined is required for DLLs on Windows
+LT_LDFLAGS="-no-undefined"
+AC_SUBST([LT_LDFLAGS])
 ])
 
 ###########################################################################
