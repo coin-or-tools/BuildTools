@@ -39,7 +39,7 @@ function help {
     echo "             --reconfigure re-run configure"
     echo
     echo "  install: Install all projects in location specified by prefix"
-    echo "    options: --prefix=\dir\to\install (where to install, default: $PWD)"
+    echo "    options: --prefix=\dir\to\install (where to install, default: $PWD/build)"
     echo
     echo "  uninstall: Uninstall all projects"
     echo
@@ -456,16 +456,8 @@ function build {
             invoke_make $verbosity install
             cd $root_dir
         done
-        if [ -e $main_proj ]; then
-            if [ build_dir != $PWD ]; then
-                mkdir -p $build_dir/$main_proj
-                cd $build_dir/$main_proj
-            else
-                cd $main_proj
-            fi
-        else
-            cd $build_dir
-        fi
+        mkdir -p $build_dir/$main_proj
+        cd $build_dir/$main_proj
         if [ ! -e config.status ] || [ $reconfigure = "true" ]; then 
             if [ $reconfigure = "true" ]; then
                 print_action "Reconfiguring $main_proj"
