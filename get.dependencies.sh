@@ -9,13 +9,25 @@
 # - consider using pushd/popd instead of cd somewhere/cd ..
 # - look at TODO and FIXME below
 
-# TODO consider using these options for safety
-#set -u
-#set -o pipefail
-
 # script debugging
 #set -x
 #PS4='${LINENO}:${PWD}: '
+
+#!!!!!!!!!!!!!!!!!!!!!!!!WARNING!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+# This script now uses eval to get around some bashisms.
+# The way it is used is safe for non-malicious users, but
+# you should not let this script be run by potentially evil
+# users! It can be abused by passing in configure options
+# as arguments that will subsequently be run as commands on
+# the system. For example, do not do something like this:
+#
+# get.dependencies.sh build VARIABLE="var value; rm -rf *"
+#
+# I'm looking for a better way, but I have so far failed.
+# As long as you pass valid configuration options, this is
+# and don't intentionally try to do something malicious,
+# the script is safe.
 
 function help {
     echo "Usage: get.dependencies.sh <command> --option1 --option2"
@@ -591,6 +603,11 @@ function uninstall {
     
 # Exit when command fails
 set -e
+#Attempt to use undefined variable outputs error message, and forces an exit
+set -u
+#Causes a pipeline to return the exit status of the last command in the pipe
+#that returned a non-zero return value.
+set -o pipefail
 
 # Set defaults
 root_dir=$PWD
