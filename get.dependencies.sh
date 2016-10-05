@@ -31,7 +31,7 @@ function help {
     echo "  build: Configure, build, test (optional), and pre-install all projects"
     echo "    options: --xxx=yyy (will be passed through to configure)"
     echo "             --monolithic do 'old style' monolithic build"
-    echo "             --threads=n build in parallel with 'n' threads"
+    echo "             --parallel-jobs=n build in parallel with maximum 'n' jobs"
     echo "             --build-dir=\dir\to\build\in do a VPATH build (default: $PWD/build)"
     echo "             --test run unit test of main project before install"
     echo "             --test-all run unit tests of all projects before install"
@@ -58,11 +58,11 @@ function print_action {
 
 function invoke_make {
     if [ $1 = 0 ]; then
-        $MAKE -j $threads $2 >& /dev/null
+        $MAKE -j $jobs $2 >& /dev/null
     elif [ $1 = 1 ]; then
-        $MAKE -j $threads $2 > /dev/null
+        $MAKE -j $jobs $2 > /dev/null
     else
-        $MAKE -j $threads $2
+        $MAKE -j $jobs $2
     fi
 }
 
@@ -84,10 +84,15 @@ function get_project {
 function parse_args {
     for arg in "$@"
     do
+	echo arg: $arg
+	option=
+	option_arg=
         case $arg in
             *=*)
                 option=`expr "x$arg" : 'x\(.*\)=[^=]*'`
                 option_arg=`expr "x$arg" : 'x[^=]*=\(.*\)'`
+		echo option: $option
+		echo option_arg: $option_arg
                 case $option in
                     --prefix)
                         if [ "x$option_arg" != x ]; then
@@ -120,11 +125,11 @@ function parse_args {
                             exit 3
                         fi
                         ;;
-                    --threads)  # FIXME these are actually not threads, but parallel processes (--jobs in makefile-speak)
+                    --parallel-jobs)
                         if [ "x$option_arg" != x ]; then
-                            threads=$option_arg
+                            jobs=$option_arg
                         else
-                            echo "No thread number specified for --threads"
+                            echo "No number specified for --parallel-jobs"
                             exit 3
                         fi
                         ;;
@@ -146,7 +151,8 @@ function parse_args {
                         fi
                         ;;
                     *)
-                        configure_options+="$arg "
+                        configure_options+=$option=\"$option_arg\"\ 
+			echo configure_options: $configure_options
                         ;;            
                 esac
                 ;;
@@ -178,7 +184,13 @@ function parse_args {
                 get_third_party=false
                 ;;
             --*)
-                configure_options+="$arg "
+                if [ "x$option_arg" != x ]; then
+                    configure_options+=$option=\"$option_arg\"
+		else
+                    configure_options+=$arg
+		fi
+                configure_options+=" "
+		echo configure_options: $configure_options
                 ;;
             fetch)
                 num_actions+=1
@@ -435,11 +447,9 @@ function build {
                     print_action "Configuring $proj_dir"
                 fi
                 if [ $verbosity != 0 ]; then
-                    $root_dir/$dir/configure --disable-dependency-tracking \
-                        --prefix=$1 $configure_options
+                    eval "$root_dir/$dir/configure --disable-dependency-tracking --prefix=$1 $configure_options"
                 else
-                    $root_dir/$dir/configure --disable-dependency-tracking \
-                        --prefix=$1 $configure_options > /dev/null
+                    eval "$root_dir/$dir/configure --disable-dependency-tracking --prefix=$1 $configure_options" > /dev/null
                 fi
             fi
             print_action "Building $proj_dir"
@@ -472,11 +482,9 @@ function build {
             fi
             # Now, do the actual configuration
             if [ $verbosity != 0 ]; then
-                $root_config --disable-dependency-tracking \
-                        --prefix=$1 $configure_options
+                eval "$root_config --disable-dependency-tracking --prefix=$1 $configure_options"
             else
-                $root_config --disable-dependency-tracking \
-                        --prefix=$1 $configure_options > /dev/null
+                eval "$root_config --disable-dependency-tracking --prefix=$1 $configure_options" > /dev/null
             fi
         fi
         print_action "Building $main_proj"
@@ -506,10 +514,10 @@ function build {
         fi
         if [ $verbosity != 0 ]; then
             $root_dir/configure --disable-dependency-tracking \
-                                --prefix=$1 $configure_options
+                                --prefix=$1 "$configure_options"
         else
             $root_dir/configure --disable-dependency-tracking \
-                                --prefix=$1 $configure_options > /dev/null
+                                --prefix=$1 "$configure_options" > /dev/null
         fi
         if [ $run_all_tests = "true"]; then
             echo "Warning: Can't run all tests with a monolithic build."
@@ -597,7 +605,7 @@ run_test=false
 run_all_tests=false
 configure_options=
 monolithic=false
-threads=1
+jobs=1
 build_dir=$PWD/build
 reconfigure=false
 get_third_party=true
@@ -633,7 +641,8 @@ if [ x"$prefix" = x ]; then
     prefix=$build_dir
 fi
 
-if [ -e $build_dir/.config ] && [ $build = "true" ]; then
+if [ -e $build_dir/.config ] && [ $build = "true" ] && \
+       [ $reconfigure = false ]; then
     echo "Previous configuration options found."
     if [ x"$configure_options" != x ]; then
         echo "Options cannot be changed after initial configuration."
@@ -646,7 +655,7 @@ if [ -e $build_dir/.config ] && [ $build = "true" ]; then
     configure_options=`cat $build_dir/.config`
 else
     if [ x"$configure_options" != x ] && [ $build = "false" ]; then
-        echo "Configuration options should be specified with build command"
+        echo "Configuration options should be specified only with build command"
         exit 3
     fi
     if [ $build = "true" ]; then
