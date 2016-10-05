@@ -82,17 +82,16 @@ function get_project {
 
 # Parse arguments
 function parse_args {
+    echo "Script run with the following arguments:"
     for arg in "$@"
     do
-	echo arg: $arg
+	echo $arg
 	option=
 	option_arg=
         case $arg in
             *=*)
                 option=`expr "x$arg" : 'x\(.*\)=[^=]*'`
                 option_arg=`expr "x$arg" : 'x[^=]*=\(.*\)'`
-		echo option: $option
-		echo option_arg: $option_arg
                 case $option in
                     --prefix)
                         if [ "x$option_arg" != x ]; then
@@ -133,6 +132,11 @@ function parse_args {
                             exit 3
                         fi
                         ;;
+		    --threads)
+			echo "The 'threads' argument has been re-named 'parallel-jobs'."
+			echo "Please re-run with correct argument name"
+			exit 3
+			;;
                     --verbosity)
                         if [ "x$option_arg" != x ]; then
                             verbosity=$option_arg
@@ -152,7 +156,6 @@ function parse_args {
                         ;;
                     *)
                         configure_options+=$option=\"$option_arg\"\ 
-			echo configure_options: $configure_options
                         ;;            
                 esac
                 ;;
@@ -190,7 +193,6 @@ function parse_args {
                     configure_options+=$arg
 		fi
                 configure_options+=" "
-		echo configure_options: $configure_options
                 ;;
             fetch)
                 num_actions+=1
@@ -214,6 +216,7 @@ function parse_args {
 		;;
         esac
     done
+    echo "Options to be passed to configure:" $configure_options
 }
 
 function fetch {
