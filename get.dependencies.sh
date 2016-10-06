@@ -468,7 +468,7 @@ function build {
                 fi
             fi
             print_action "Building $proj_dir"
-            invoke_make $verbosity
+            invoke_make $verbosity ""
             if [ $run_all_tests = "true" ]; then
                 print_action "Running $proj_dir unit test"
                 invoke_make "false" test
@@ -503,7 +503,7 @@ function build {
             fi
         fi
         print_action "Building $main_proj"
-        invoke_make $verbosity
+        invoke_make $verbosity ""
         if [ $run_test = "true" ]; then
             print_action "Running $main_proj unit test"
             invoke_make "false" test
@@ -540,7 +540,7 @@ function build {
             run_test=true
         fi
         print_action "Building"
-        invoke_make $verbosity
+        invoke_make $verbosity ""
         if [ $run_test = "true" ]; then 
             print_action "Running unit test"
             invoke_make "false" test
