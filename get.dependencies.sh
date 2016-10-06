@@ -439,6 +439,7 @@ function build {
     if [ $monolithic = "false" ]; then
         if [ ! -e ".subdirs" ]; then
             echo "No .subdirs file. Please fetch first"
+	    exit 3
         else
             mkdir -p $build_dir
             cp .subdirs $build_dir/coin_subdirs.txt
@@ -527,12 +528,10 @@ function build {
                 print_action "Reconfiguring"
             fi
         fi
-        if [ $verbosity != 0 ]; then
-            $root_dir/configure --disable-dependency-tracking \
-                                --prefix=$1 "$configure_options"
+        if [ $verbosity != 1 ]; then
+            eval "$root_dir/configure --disable-dependency-tracking --prefix=$1 $configure_options"
         else
-            $root_dir/configure --disable-dependency-tracking \
-                                --prefix=$1 "$configure_options" > /dev/null
+            eval "$root_dir/configure --disable-dependency-tracking --prefix=$1 $configure_options" > /dev/null
         fi
         if [ $run_all_tests = "true"]; then
             echo "Warning: Can't run all tests with a monolithic build."
@@ -666,6 +665,8 @@ if [ -e $build_dir/.config ] && [ $build = "true" ] && \
     echo "Previous configuration options found."
     if [ x"$configure_options" != x ]; then
         echo "Options cannot be changed after initial configuration."
+        echo "If you are trying to run the build again with the same options,"
+        echo "remove all arguments that are configuration options and re-run."
         echo "To build with a new configuration:"
         echo "   1. Specify new build directory"
         echo "   2. Delete $build_dir/.config and"
