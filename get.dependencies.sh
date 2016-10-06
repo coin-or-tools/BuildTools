@@ -47,7 +47,7 @@ function help {
     echo "             --build-dir=\dir\to\build\in do a VPATH build (default: $PWD/build)"
     echo "             --test run unit test of main project before install"
     echo "             --test-all run unit tests of all projects before install"
-    echo "             --verbosity=i set verbosity level"
+    echo "             --verbosity=i set verbosity level (1-3)"
     echo "             --reconfigure re-run configure"
     echo
     echo "  install: Install all projects in location specified by prefix"
@@ -69,9 +69,9 @@ function print_action {
 }
 
 function invoke_make {
-    if [ $1 = 0 ]; then
+    if [ $1 = 1 ]; then
         $MAKE -j $jobs $2 >& /dev/null
-    elif [ $1 = 1 ]; then
+    elif [ $1 = 2 ]; then
         $MAKE -j $jobs $2 > /dev/null
     else
         $MAKE -j $jobs $2
@@ -100,7 +100,7 @@ function parse_args {
 	echo $arg
 	option=
 	option_arg=
-        case $arg in
+	case $arg in
             *=*)
                 option=`expr "x$arg" : 'x\(.*\)=[^=]*'`
                 option_arg=`expr "x$arg" : 'x[^=]*=\(.*\)'`
@@ -461,7 +461,7 @@ function build {
                 else
                     print_action "Configuring $proj_dir"
                 fi
-                if [ $verbosity != 0 ]; then
+                if [ $verbosity != 1 ]; then
                     eval "$root_dir/$dir/configure --disable-dependency-tracking --prefix=$1 $configure_options"
                 else
                     eval "$root_dir/$dir/configure --disable-dependency-tracking --prefix=$1 $configure_options" > /dev/null
@@ -496,7 +496,7 @@ function build {
                 root_config=$root_dir/configure
             fi
             # Now, do the actual configuration
-            if [ $verbosity != 0 ]; then
+            if [ $verbosity != 1 ]; then
                 eval "$root_config --disable-dependency-tracking --prefix=$1 $configure_options"
             else
                 eval "$root_config --disable-dependency-tracking --prefix=$1 $configure_options" > /dev/null
@@ -629,7 +629,7 @@ jobs=1
 build_dir=$PWD/build
 reconfigure=false
 get_third_party=true
-verbosity=2
+verbosity=3
 MAKE=make
 
 echo "Welcome to the COIN-OR fetch and build utility"
