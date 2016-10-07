@@ -13,22 +13,6 @@
 #set -x
 #PS4='${LINENO}:${PWD}: '
 
-#!!!!!!!!!!!!!!!!!!!!!!!!WARNING!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-# This script now uses eval to get around some bashisms.
-# The way it is used is safe for non-malicious users, but
-# you should not let this script be run by potentially evil
-# users! It can be abused by passing in configure options
-# as arguments that will subsequently be run as commands on
-# the system. For example, do not do something like this:
-#
-# get.dependencies.sh build VARIABLE="var value; rm -rf *"
-#
-# I'm looking for a better way, but I have so far failed.
-# As long as you pass valid configuration options, this is
-# and don't intentionally try to do something malicious,
-# the script is safe.
-
 function help {
     echo "Usage: get.dependencies.sh <command> --option1 --option2"
     echo
@@ -170,7 +154,7 @@ function parse_args {
                         fi
                         ;;
                     *)
-                        configure_options+=$option=\"$option_arg\"\ 
+                        configure_options["$arg"]=""
                         ;;            
                 esac
                 ;;
@@ -202,12 +186,7 @@ function parse_args {
                 get_third_party=false
                 ;;
             --*)
-                if [ "x$option_arg" != x ]; then
-                    configure_options+=$option=\"$option_arg\"
-                else
-                    configure_options+=$arg
-                fi
-                configure_options+=" "
+                configure_options["$arg"]=""
                 ;;
             fetch)
                 num_actions+=1
@@ -231,7 +210,7 @@ function parse_args {
                 ;;
         esac
     done
-    echo "Options to be passed to configure:" $configure_options
+    echo "Options to be passed to configure: ${!configure_options[@]}"
 }
 
 function fetch {
@@ -466,9 +445,9 @@ function build {
                     print_action "Configuring $proj_dir"
                 fi
                 if [ $verbosity -ge 3 ]; then
-                    eval "$root_dir/$dir/configure --disable-dependency-tracking --prefix=$1 $configure_options"
+                    "$root_dir/$dir/configure" --disable-dependency-tracking --prefix=$1 "${!configure_options[@]}"
                 else
-                    eval "$root_dir/$dir/configure --disable-dependency-tracking --prefix=$1 $configure_options" > /dev/null
+                    "$root_dir/$dir/configure" --disable-dependency-tracking --prefix=$1 "${!configure_options[@]}" > /dev/null
                 fi
             fi
             print_action "Building $proj_dir"
@@ -509,9 +488,9 @@ function build {
             fi
             # Now, do the actual configuration
             if [ $verbosity -ge 2 ]; then
-                eval "$root_config --disable-dependency-tracking --prefix=$1 $configure_options"
+                "$root_config" --disable-dependency-tracking --prefix=$1 "${!configure_options[@]}"
             else
-                eval "$root_config --disable-dependency-tracking --prefix=$1 $configure_options" > /dev/null
+                "$root_config" --disable-dependency-tracking --prefix=$1 "${!configure_options[@]}" > /dev/null
             fi
         fi
         print_action "Building $main_proj"
@@ -548,9 +527,9 @@ function build {
             fi
         fi
         if [ $verbosity != 1 ]; then
-            eval "$root_dir/configure --disable-dependency-tracking --prefix=$1 $configure_options"
+            "$root_dir/configure" --disable-dependency-tracking --prefix=$1 "${!configure_options[@]}"
         else
-            eval "$root_dir/configure --disable-dependency-tracking --prefix=$1 $configure_options" > /dev/null
+            "$root_dir/configure" --disable-dependency-tracking --prefix=$1 "${!configure_options[@]}" > /dev/null
         fi
         if [ $run_all_tests = "true"]; then
             echo "Warning: Can't run all tests with a monolithic build."
@@ -641,7 +620,8 @@ install=false
 uninstall=false
 run_test=false
 run_all_tests=false
-configure_options=
+declare -A configure_options
+configure_options=()
 monolithic=false
 jobs=1
 build_dir=$PWD/build
@@ -682,7 +662,7 @@ fi
 if [ -e $build_dir/.config ] && [ $build = "true" ] && \
        [ $reconfigure = false ]; then
     echo "Previous configuration options found."
-    if [ x"$configure_options" != x ]; then
+    if [ x"${#configure_options[*]}" != x0 ]; then
         echo "Options cannot be changed after initial configuration."
         echo "If you are trying to run the build again with the same options,"
         echo "remove all arguments that are configuration options and re-run."
@@ -692,16 +672,24 @@ if [ -e $build_dir/.config ] && [ $build = "true" ] && \
         echo "      re-run with --reconfigure (not recommended)"
         exit 3
     fi
-    configure_options=`cat $build_dir/.config`
+    # read options from file, one option per line, and store into array copts
+    readarray -t copts < "$build_dir/.config"
+    # move options from copts[0], copts[1], ... into configure_options, where
+    # they are stored as the keys
+    for c in ${!copts[*]} ; do
+        configure_options["${copts[$c]}"]=""
+    done
+    # print configuration options, one per line  (TODO might need verbosity level check)
+    printf "%s\n" "${!configure_options[@]}"
 else
-    if [ x"$configure_options" != x ] && [ $build = "false" ]; then
+    if [ x"${#configure_options[*]}" != x0 ] && [ $build = "false" ]; then
         echo "Configuration options should be specified only with build command"
         exit 3
     fi
     if [ $build = "true" ]; then
         echo "Caching configuration options..."
         mkdir -p $build_dir
-        echo "$configure_options" > $build_dir/.config
+        printf "%s\n" "${!configure_options[@]}" > $build_dir/.config
     fi
 fi
 
