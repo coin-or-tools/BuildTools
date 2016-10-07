@@ -47,7 +47,7 @@ function help {
     echo "             --build-dir=\dir\to\build\in do a VPATH build (default: $PWD/build)"
     echo "             --test run unit test of main project before install"
     echo "             --test-all run unit tests of all projects before install"
-    echo "             --verbosity=i set verbosity level (1-3)"
+    echo "             --verbosity=i set verbosity level (1-4)"
     echo "             --reconfigure re-run configure"
     echo
     echo "  install: Install all projects in location specified by prefix"
@@ -462,14 +462,18 @@ function build {
                 else
                     print_action "Configuring $proj_dir"
                 fi
-                if [ $verbosity != 1 ]; then
+                if [ $verbosity -ge 3 ]; then
                     eval "$root_dir/$dir/configure --disable-dependency-tracking --prefix=$1 $configure_options"
                 else
                     eval "$root_dir/$dir/configure --disable-dependency-tracking --prefix=$1 $configure_options" > /dev/null
                 fi
             fi
             print_action "Building $proj_dir"
-            invoke_make $verbosity ""
+	    if [ $verbosity -ge 3 ]; then
+		invoke_make $(($verbosity-1)) ""
+	    else
+		invoke_make 1 ""
+	    fi
             if [ $run_all_tests = "true" ]; then
                 print_action "Running $proj_dir unit test"
                 invoke_make "false" test
@@ -479,7 +483,11 @@ function build {
             else
                 print_action "Installing $proj_dir"
             fi
-            invoke_make $verbosity install
+	    if [ $verbosity -ge 3 ]; then
+		invoke_make $(($verbosity-1)) install
+	    else
+		invoke_make 1 install
+	    fi
             cd $root_dir
         done
         mkdir -p $build_dir/$main_proj
@@ -497,14 +505,18 @@ function build {
                 root_config=$root_dir/configure
             fi
             # Now, do the actual configuration
-            if [ $verbosity != 1 ]; then
+            if [ $verbosity -ge 2 ]; then
                 eval "$root_config --disable-dependency-tracking --prefix=$1 $configure_options"
             else
                 eval "$root_config --disable-dependency-tracking --prefix=$1 $configure_options" > /dev/null
             fi
         fi
         print_action "Building $main_proj"
-        invoke_make $verbosity ""
+	if [ $verbosity -ge 2 ]; then
+	    invoke_make 3 ""
+	else
+	    invoke_make 1 ""
+	fi
         if [ $run_test = "true" ]; then
             print_action "Running $main_proj unit test"
             invoke_make "false" test
@@ -514,7 +526,11 @@ function build {
         else
             print_action "Installing $main_proj"
         fi
-        invoke_make $verbosity install
+	if [ $verbosity -ge 2 ]; then
+	    invoke_make 3 install
+	else
+	    invoke_make 1 install
+	fi
         cd $root_dir
     else
         if [ build_dir != $PWD ]; then
