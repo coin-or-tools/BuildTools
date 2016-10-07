@@ -104,6 +104,9 @@ function parse_args {
             *=*)
                 option=`expr "x$arg" : 'x\(.*\)=[^=]*'`
                 option_arg=`expr "x$arg" : 'x[^=]*=\(.*\)'`
+                # with bash, one could also do it in the following way:
+                # option=${arg%%=*}    # remove longest suffix matching =*
+                # option_arg=${arg#*=} # remove shortest prefix matching *=
                 case $option in
                     --prefix)
                         if [ "x$option_arg" != x ]; then
