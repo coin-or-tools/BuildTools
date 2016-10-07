@@ -224,7 +224,6 @@ function parse_args {
                 ;;
         esac
     done
-    echo "Options to be passed to configure: ${!configure_options[@]}"
 }
 
 function fetch {
@@ -732,12 +731,15 @@ if [ x"${#configure_options[*]}" != x0 ] && [ $build = "false" ]; then
     exit 3
 fi
 
-if [ $build = "true" ] && [ ! -e $build_dir/.config ] ; then
-    echo "Caching configuration options..."
-    mkdir -p $build_dir
-    printf "%s\n" "${!configure_options[@]}" > $build_dir/.config
-else
-    get_cached_options
+if [ $build = "true" ]; then
+    if [ ! -e $build_dir/.config ] ; then
+	echo "Caching configuration options..."
+	mkdir -p $build_dir
+	printf "%s\n" "${!configure_options[@]}" > $build_dir/.config
+    else
+	get_cached_options
+    fi
+    echo "Options to be passed to configure: ${!configure_options[@]}"
 fi
 
 # Help
