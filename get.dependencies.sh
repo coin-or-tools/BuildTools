@@ -83,10 +83,10 @@ function get_project {
     unset IFS
     for i in $coin_skip_projects
     do
-	if [ $1 = $i ]; then
-	    IFS=$TMP_IFS
-	    return 1
-	fi
+        if [ $1 = $i ]; then
+            IFS=$TMP_IFS
+            return 1
+        fi
     done
     IFS=$TMP_IFS
     return 0
@@ -97,10 +97,10 @@ function parse_args {
     echo "Script run with the following arguments:"
     for arg in "$@"
     do
-	echo $arg
-	option=
-	option_arg=
-	case $arg in
+        echo $arg
+        option=
+        option_arg=
+        case $arg in
             *=*)
                 option=`expr "x$arg" : 'x\(.*\)=[^=]*'`
                 option_arg=`expr "x$arg" : 'x[^=]*=\(.*\)'`
@@ -144,11 +144,11 @@ function parse_args {
                             exit 3
                         fi
                         ;;
-		    --threads)
-			echo "The 'threads' argument has been re-named 'parallel-jobs'."
-			echo "Please re-run with correct argument name"
-			exit 3
-			;;
+                    --threads)
+                        echo "The 'threads' argument has been re-named 'parallel-jobs'."
+                        echo "Please re-run with correct argument name"
+                        exit 3
+                        ;;
                     --verbosity)
                         if [ "x$option_arg" != x ]; then
                             verbosity=$option_arg
@@ -201,9 +201,9 @@ function parse_args {
             --*)
                 if [ "x$option_arg" != x ]; then
                     configure_options+=$option=\"$option_arg\"
-		else
+                else
                     configure_options+=$arg
-		fi
+                fi
                 configure_options+=" "
                 ;;
             fetch)
@@ -222,10 +222,10 @@ function parse_args {
                 num_actions+=1
                 uninstall=true
                 ;;
-	    *)
-		echo "Unrecognized command...exiting"
-		exit 3
-		;;
+            *)
+                echo "Unrecognized command...exiting"
+                exit 3
+                ;;
         esac
     done
     echo "Options to be passed to configure:" $configure_options
@@ -242,14 +242,14 @@ function fetch {
 
     # Build list of sources for dependencies
     if [ -e Dependencies ]; then
-	deps=`cat Dependencies | tr '\t' ' ' | tr -s ' '| cut -d ' ' -f 2-`
+        deps=`cat Dependencies | tr '\t' ' ' | tr -s ' '| cut -d ' ' -f 2-`
     elif [ -e $main_proj/Dependencies ]; then 
-	deps=`cat $main_proj/Dependencies | tr '\t' ' ' | tr -s ' '| cut -d ' ' -f 2-`
+        deps=`cat $main_proj/Dependencies | tr '\t' ' ' | tr -s ' '| cut -d ' ' -f 2-`
     else
-	echo "Can't find dependencies file...exiting"
-	exit 3
+        echo "Can't find dependencies file...exiting"
+        exit 3
     fi
-	
+        
     for url in $deps
     do
         if [ `echo $url | cut -d '/' -f 3` != "projects.coin-or.org" ]; then
@@ -259,7 +259,7 @@ function fetch {
             branch=`echo $url | tr '\t' ' ' | tr -s ' '| cut -d ' ' -f 2`
             dir=`echo $git_url | cut -d '/' -f 5`
             proj=`echo $git_url | cut -d "/" -f 5`
-	    if get_project $proj; then
+            if get_project $proj; then
                 print_action "Clone $git_url branch $branch"
                 if [ ! -e $dir ]; then
                     git clone --branch=$branch $git_url
@@ -439,7 +439,7 @@ function build {
     if [ $monolithic = "false" ]; then
         if [ ! -e ".subdirs" ]; then
             echo "No .subdirs file. Please fetch first"
-	    exit 3
+            exit 3
         else
             mkdir -p $build_dir
             cp .subdirs $build_dir/coin_subdirs.txt
@@ -469,11 +469,11 @@ function build {
                 fi
             fi
             print_action "Building $proj_dir"
-	    if [ $verbosity -ge 3 ]; then
-		invoke_make $(($verbosity-1)) ""
-	    else
-		invoke_make 1 ""
-	    fi
+            if [ $verbosity -ge 3 ]; then
+                invoke_make $(($verbosity-1)) ""
+            else
+                invoke_make 1 ""
+            fi
             if [ $run_all_tests = "true" ]; then
                 print_action "Running $proj_dir unit test"
                 invoke_make "false" test
@@ -483,11 +483,11 @@ function build {
             else
                 print_action "Installing $proj_dir"
             fi
-	    if [ $verbosity -ge 3 ]; then
-		invoke_make $(($verbosity-1)) install
-	    else
-		invoke_make 1 install
-	    fi
+            if [ $verbosity -ge 3 ]; then
+                invoke_make $(($verbosity-1)) install
+            else
+                invoke_make 1 install
+            fi
             cd $root_dir
         done
         mkdir -p $build_dir/$main_proj
@@ -512,11 +512,11 @@ function build {
             fi
         fi
         print_action "Building $main_proj"
-	if [ $verbosity -ge 2 ]; then
-	    invoke_make 3 ""
-	else
-	    invoke_make 1 ""
-	fi
+        if [ $verbosity -ge 2 ]; then
+            invoke_make 3 ""
+        else
+            invoke_make 1 ""
+        fi
         if [ $run_test = "true" ]; then
             print_action "Running $main_proj unit test"
             invoke_make "false" test
@@ -526,11 +526,11 @@ function build {
         else
             print_action "Installing $main_proj"
         fi
-	if [ $verbosity -ge 2 ]; then
-	    invoke_make 3 install
-	else
-	    invoke_make 1 install
-	fi
+        if [ $verbosity -ge 2 ]; then
+            invoke_make 3 install
+        else
+            invoke_make 1 install
+        fi
         cd $root_dir
     else
         if [ build_dir != $PWD ]; then
@@ -696,9 +696,9 @@ else
         exit 3
     fi
     if [ $build = "true" ]; then
-	echo "Caching configuration options..."
-	mkdir -p $build_dir
-	echo "$configure_options" > $build_dir/.config
+        echo "Caching configuration options..."
+        mkdir -p $build_dir
+        echo "$configure_options" > $build_dir/.config
     fi
 fi
 
