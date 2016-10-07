@@ -52,6 +52,20 @@ function print_action {
     echo
 }
 
+function get_cached_options {
+    echo "Reading cached options:"
+    # read options from file, one option per line, and store into array copts
+    readarray -t copts < "$build_dir/.config"
+    # move options from copts[0], copts[1], ... into
+    # configure_options, where they are stored as the keys
+    for c in ${!copts[*]} ; do
+	configure_options["${copts[$c]}"]=""
+    done
+    # print configuration options, one per line
+    # (TODO might need verbosity level check)
+    printf "%s\n" "${!configure_options[@]}"
+}
+
 function invoke_make {
     if [ $1 = 1 ]; then
         $MAKE -j $jobs $2 >& /dev/null
@@ -627,7 +641,7 @@ jobs=1
 build_dir=$PWD/build
 reconfigure=false
 get_third_party=true
-verbosity=3
+verbosity=4
 MAKE=make
 
 echo "Welcome to the COIN-OR fetch and build utility"
@@ -663,34 +677,67 @@ if [ -e $build_dir/.config ] && [ $build = "true" ] && \
        [ $reconfigure = false ]; then
     echo "Previous configuration options found."
     if [ x"${#configure_options[*]}" != x0 ]; then
-        echo "Options cannot be changed after initial configuration."
-        echo "If you are trying to run the build again with the same options,"
-        echo "remove all arguments that are configuration options and re-run."
-        echo "To build with a new configuration:"
-        echo "   1. Specify new build directory"
-        echo "   2. Delete $build_dir/.config and"
-        echo "      re-run with --reconfigure (not recommended)"
-        exit 3
+	echo
+        echo "You are trying to run the build again and have specified"
+	echo "configuration options on the command line."
+	echo
+	echo "Please choose one of the following options:"
+        echo "1. Run the build again with the options specified previously."
+        echo "   Note that this can also be accomplished invoking the build"
+	echo "   command without any arguments."
+        echo "2. Configure in a new build directory with new options."
+        echo "3. Delete $build_dir/.config"
+	echo "   and re-run with --reconfigure. This option is not"
+	echo "   recommended unless you know what you're doing!."
+	echo "4. Quit"
+	echo
+	got_choice=false
+	while [ $got_choice = "false" ]; do
+	    echo "Please type 1, 2, 3, or 4"
+	    read choice
+	    case $choice in
+		1|2|3|4) got_choice=true;;
+		*) ;;
+	    esac
+	done
+	case $choice in
+	    1)  ;;
+	    2)
+		echo "Please enter a new build directory:"
+		read dir
+                if [ "x$dir" != x ]; then
+                    case $dir in
+                        [\\/$]* | ?:[\\/]* | NONE | '' )
+                            build_dir=$dir
+                            ;;
+                        *)
+                            build_dir=$PWD/$dir
+                            ;;
+                    esac
+		fi
+		;;
+	    3)
+		rm $build_dir/.config
+		reconfigure=true
+		;;
+	    4)
+		exit 0
+	esac
     fi
-    # read options from file, one option per line, and store into array copts
-    readarray -t copts < "$build_dir/.config"
-    # move options from copts[0], copts[1], ... into configure_options, where
-    # they are stored as the keys
-    for c in ${!copts[*]} ; do
-        configure_options["${copts[$c]}"]=""
-    done
-    # print configuration options, one per line  (TODO might need verbosity level check)
-    printf "%s\n" "${!configure_options[@]}"
+
+fi
+
+if [ x"${#configure_options[*]}" != x0 ] && [ $build = "false" ]; then
+    echo "Configuration options should be specified only with build command"
+    exit 3
+fi
+
+if [ $build = "true" ] && [ ! -e $build_dir/.config ] ; then
+    echo "Caching configuration options..."
+    mkdir -p $build_dir
+    printf "%s\n" "${!configure_options[@]}" > $build_dir/.config
 else
-    if [ x"${#configure_options[*]}" != x0 ] && [ $build = "false" ]; then
-        echo "Configuration options should be specified only with build command"
-        exit 3
-    fi
-    if [ $build = "true" ]; then
-        echo "Caching configuration options..."
-        mkdir -p $build_dir
-        printf "%s\n" "${!configure_options[@]}" > $build_dir/.config
-    fi
+    get_cached_options
 fi
 
 # Help
