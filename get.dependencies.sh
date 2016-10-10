@@ -58,7 +58,9 @@ function get_cached_options {
     readarray -t copts < "$build_dir/.config"
     # move options from copts[0], copts[1], ... into
     # configure_options, where they are stored as the keys
+    # skip options that are empty (happens when reading empty .config file)
     for c in ${!copts[*]} ; do
+        [ -z "${copts[$c]}" ] && continue
         configure_options["${copts[$c]}"]=""
     done
     # print configuration options, one per line
