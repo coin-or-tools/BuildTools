@@ -59,7 +59,7 @@ function get_cached_options {
     # move options from copts[0], copts[1], ... into
     # configure_options, where they are stored as the keys
     for c in ${!copts[*]} ; do
-	configure_options["${copts[$c]}"]=""
+        configure_options["${copts[$c]}"]=""
     done
     # print configuration options, one per line
     # (TODO might need verbosity level check)
@@ -676,34 +676,34 @@ if [ -e $build_dir/.config ] && [ $build = "true" ] && \
        [ $reconfigure = false ]; then
     echo "Previous configuration options found."
     if [ x"${#configure_options[*]}" != x0 ]; then
-	echo
+        echo
         echo "You are trying to run the build again and have specified"
-	echo "configuration options on the command line."
-	echo
-	echo "Please choose one of the following options:"
+        echo "configuration options on the command line."
+        echo
+        echo "Please choose one of the following options:"
         echo "1. Run the build again with the options specified previously."
         echo "   Note that this can also be accomplished invoking the build"
-	echo "   command without any arguments."
+        echo "   command without any arguments."
         echo "2. Configure in a new build directory with new options."
         echo "3. Delete $build_dir/.config"
-	echo "   and re-run with --reconfigure. This option is not"
-	echo "   recommended unless you know what you're doing!."
-	echo "4. Quit"
-	echo
-	got_choice=false
-	while [ $got_choice = "false" ]; do
-	    echo "Please type 1, 2, 3, or 4"
-	    read choice
-	    case $choice in
-		1|2|3|4) got_choice=true;;
-		*) ;;
-	    esac
-	done
-	case $choice in
-	    1)  ;;
-	    2)
-		echo "Please enter a new build directory:"
-		read dir
+        echo "   and re-run with --reconfigure. This option is not"
+        echo "   recommended unless you know what you're doing!."
+        echo "4. Quit"
+        echo
+        got_choice=false
+        while [ $got_choice = "false" ]; do
+            echo "Please type 1, 2, 3, or 4"
+            read choice
+            case $choice in
+                1|2|3|4) got_choice=true;;
+                *) ;;
+            esac
+        done
+        case $choice in
+            1)  ;;
+            2)
+                echo "Please enter a new build directory:"
+                read dir
                 if [ "x$dir" != x ]; then
                     case $dir in
                         [\\/$]* | ?:[\\/]* | NONE | '' )
@@ -713,15 +713,15 @@ if [ -e $build_dir/.config ] && [ $build = "true" ] && \
                             build_dir=$PWD/$dir
                             ;;
                     esac
-		fi
-		;;
-	    3)
-		rm $build_dir/.config
-		reconfigure=true
-		;;
-	    4)
-		exit 0
-	esac
+                fi
+                ;;
+            3)
+                rm $build_dir/.config
+                reconfigure=true
+                ;;
+            4)
+                exit 0
+        esac
     fi
 
 fi
@@ -733,11 +733,11 @@ fi
 
 if [ $build = "true" ]; then
     if [ ! -e $build_dir/.config ] ; then
-	echo "Caching configuration options..."
-	mkdir -p $build_dir
-	printf "%s\n" "${!configure_options[@]}" > $build_dir/.config
+        echo "Caching configuration options..."
+        mkdir -p $build_dir
+        printf "%s\n" "${!configure_options[@]}" > $build_dir/.config
     else
-	get_cached_options
+        get_cached_options
     fi
     echo "Options to be passed to configure: ${!configure_options[@]}"
 fi
