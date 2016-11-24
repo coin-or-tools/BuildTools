@@ -682,14 +682,16 @@ if [ -e $build_dir/.config ] && [ $build = "true" ] && \
         echo "You are trying to run the build again and have specified"
         echo "configuration options on the command line."
         echo
-        echo "Please choose one of the following options:"
-        echo "1. Run the build again with the options specified previously."
-        echo "   Note that this can also be accomplished invoking the build"
+        echo "Please choose one of the following options."
+        echo " The indicated action will be performed for you AUTOMATICALLY"
+        echo "1. Run the build again with the previously specified options."
+        echo "   This can also be accomplished invoking the build"
         echo "   command without any arguments."
-        echo "2. Configure in a new build directory with new options."
-        echo "3. Delete $build_dir/.config"
-        echo "   and re-run with --reconfigure. This option is not"
-        echo "   recommended unless you know what you're doing!."
+        echo "2. Configure in a new build directory (whose name you will be"
+        echo "   prmpted to specify) with new options."
+        echo "3. Re-configure in the same build directory with the new"
+        echo "   options. This option is not recommended unless you know"
+        echo "   what you're doing!."
         echo "4. Quit"
         echo
         got_choice=false
