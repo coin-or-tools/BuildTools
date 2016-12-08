@@ -66,6 +66,9 @@ function get_cached_options {
     # print configuration options, one per line
     # (TODO might need verbosity level check)
     printf "%s\n" "${!configure_options[@]}"
+    if [ -e $build_dir/.monolithic ]; then
+        monolithic=true
+    fi
 }
 
 function invoke_make {
@@ -537,16 +540,18 @@ function build {
         if [ ! -e config.status ]; then
             print_action "Configuring"
         else
-            if [ $reconfigure = true ]; then
+            if [ $reconfigure = "true" ]; then
                 print_action "Reconfiguring"
             fi
         fi
-        if [ $verbosity != 1 ]; then
-            "$root_dir/configure" --disable-dependency-tracking --prefix=$1 "${!configure_options[@]}"
-        else
-            "$root_dir/configure" --disable-dependency-tracking --prefix=$1 "${!configure_options[@]}" > /dev/null
+        if [ ! -e config.status ] || [ $reconfigure = "true" ]; then
+            if [ $verbosity != 1 ]; then
+                "$root_dir/configure" --disable-dependency-tracking --prefix=$1 "${!configure_options[@]}"
+            else
+                "$root_dir/configure" --disable-dependency-tracking --prefix=$1 "${!configure_options[@]}" > /dev/null
+            fi
         fi
-        if [ $run_all_tests = "true"]; then
+        if [ $run_all_tests = "true" ]; then
             echo "Warning: Can't run all tests with a monolithic build."
             echo "Disabling setting"
             run_test=true
@@ -740,6 +745,9 @@ if [ $build = "true" ]; then
         echo "Caching configuration options..."
         mkdir -p $build_dir
         printf "%s\n" "${!configure_options[@]}" > $build_dir/.config
+        if [ $monolithic = "true" ]; then
+            touch $build_dir/.monolithic
+        fi
     else
         get_cached_options
     fi
