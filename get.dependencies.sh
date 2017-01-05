@@ -268,7 +268,17 @@ function fetch {
                     git pull origin $branch
                     cd -
                 fi
-                subdirs+="$dir "
+                if [ `echo $proj | cut -d '-' -f 1` = "CHiPPS" ]; then
+                    subdir=`echo $proj | cut -d '-' -f 2`
+                    case $subdir in
+                        ALPS) subdir=Alps;;
+                        BiCePS) subdir=Bcps;;
+                        BLIS) subdir=Blis;;
+                    esac
+                    subdirs+="$dir/$subdir "
+                else
+                    subdirs+="$dir/$dir "
+                fi
             else
                 echo "Skipping $proj..."
             fi
