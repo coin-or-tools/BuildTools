@@ -650,7 +650,7 @@ install=false
 uninstall=false
 run_test=false
 run_all_tests=false
-declare -A configure_options
+declare -a configure_options
 configure_options=()
 monolithic=false
 jobs=1
