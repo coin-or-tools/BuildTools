@@ -1,4 +1,4 @@
-#!/bin/bash
+#!usr/bin/env bash
 
 # Author: Ted Ralphs (ted@lehigh.edu)
 # Copyright 2016, Ted Ralphs
