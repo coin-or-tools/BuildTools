@@ -631,7 +631,8 @@ function uninstall {
 # Exit when command fails
 set -e
 #Attempt to use undefined variable outputs error message, and forces an exit
-set -u
+#Commenting out for now, since this seems to break with MinGW bash.
+#set -u
 #Causes a pipeline to return the exit status of the last command in the pipe
 #that returned a non-zero return value.
 set -o pipefail
