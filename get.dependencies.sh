@@ -205,7 +205,7 @@ function parse_args {
                 get_third_party=false
                 ;;
             --*)
-                configure_options["$arg"]=""
+                configure_options['$arg']=x
                 ;;
             fetch)
                 num_actions+=1
@@ -631,8 +631,7 @@ function uninstall {
 # Exit when command fails
 set -e
 #Attempt to use undefined variable outputs error message, and forces an exit
-#Commenting out for now, since this seems to break with MinGW bash.
-#set -u
+set -u
 #Causes a pipeline to return the exit status of the last command in the pipe
 #that returned a non-zero return value.
 set -o pipefail
