@@ -173,7 +173,7 @@ function parse_args {
                         fi
                         ;;
                     *)
-                        configure_options['$arg']=""
+                        configure_options["$arg"]=""
                         ;;            
                 esac
                 ;;
@@ -205,7 +205,7 @@ function parse_args {
                 get_third_party=false
                 ;;
             --*)
-                configure_options['$arg']=""
+                configure_options["$arg"]=""
                 ;;
             fetch)
                 num_actions+=1
@@ -650,7 +650,7 @@ install=false
 uninstall=false
 run_test=false
 run_all_tests=false
-declare -a configure_options
+declare -A configure_options
 configure_options=()
 monolithic=false
 jobs=1
