@@ -276,8 +276,10 @@ function fetch {
                         BLIS) subdir=Blis;;
                     esac
                     subdirs+="$dir/$subdir "
-                else
+                elif [ -e $dir/$dir/configure ]; then 
                     subdirs+="$dir/$dir "
+                else
+                    subdirs+="$dir "
                 fi
             else
                 echo "Skipping $proj..."
