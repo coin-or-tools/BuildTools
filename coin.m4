@@ -260,74 +260,81 @@ fi
 AC_LANG_POP(C++)
 ])
 
+
+###########################################################################
+#                           COIN_CHECK_VPATH                              #
+###########################################################################
+
+# This macro sets the variable coin_vpath_config to true if this is a
+# VPATH configuration, otherwise it sets it to false. `VPATH' just means we're
+# following best practices and not building in the source directory.
+
+AC_DEFUN([AC_COIN_CHECK_VPATH],
+[
+AC_MSG_CHECKING(whether this is a VPATH configuration)
+if test `cd $srcdir ; pwd` != `pwd`; then
+  coin_vpath_config=yes
+else
+  coin_vpath_config=no
+fi
+AC_MSG_RESULT($coin_vpath_config)
+]) # AC_COIN_CHECK_VPATH
+
+
 ###########################################################################
 #                          COIN_EXAMPLE_FILES                             #
 ###########################################################################
 
-# This macro determines the names of the example files (using the
-# argument in an "ls" command) and sets up the variables EXAMPLE_FILES
-# and EXAMPLE_CLEAN_FILES.  If this is a VPATH configuration, it also
-# creates soft links to the example files.
+# This macro deals with `example' files. Its original use is for data files
+# associated with the Data projects. It allows for uniform handling of files
+# that are not processed but should be present in the build directory. Most of
+# the work is done by make. This macro just sets up the necessary variables.
+# The justification for this approach is to allow the use of file name wild
+# cards in the argument. The underlying machinery of autoconf and automake
+# kind of breaks down when the file names are not literal text.
+
+# One tradeoff for allowing the use of wildcards is that it's not possible to
+# give the created link a name that's different from the source file.
+
+# The variables (file names accumulate over calls):
+# EXAMPLE_DIST_FILES: The originals that should be distributed
+# EXAMPLE_UNCOMP_FILES: like EXAMPLE_DIST_FILES, but names of compressed files
+# are stripped of their .gz suffix.
+# EXAMPLE_CLEAN_FILES: contains only the names of files that were stripped of
+# .gz. Essential for distclean in a non-VPATH build.
+# One of EXAMPLE_DIST_FILES or EXAMPLE_UNCOMP_FILES will be the list of file
+# names for install / uninstall. See Makefile.am in a Data project for usage.
 
 AC_DEFUN([AC_COIN_EXAMPLE_FILES],
 [
-#AC_REQUIRE([AC_COIN_CHECK_VPATH])
-#AC_REQUIRE([AC_COIN_ENABLE_MSVC])
-#AC_REQUIRE([AC_PROG_LN_S])
+AC_REQUIRE([AC_COIN_CHECK_VPATH])[]dnl
+AC_REQUIRE([AC_PROG_LN_S])[]dnl
+AM_CONDITIONAL([COIN_VPATH_BUILD],[test x$coin_vpath_config = xyes])
+
+# Get the names of the files and sort them to the various variables. As
+# a convenient side-effect, the loop will remove newlines from the list
+# of files. Avoid adding duplicate file names. (Allowing wild cards makes
+# duplicates far too likely.)
 
 files=`cd $srcdir; ls $1`
-# We need to do the following loop to make sure that there are no newlines
-# in the variable
 for file in $files; do
-  EXAMPLE_FILES="$EXAMPLE_FILES $file"
-  # using AC_CONFIG_LINKS is much simpler here, but due to a bug
-  # in autoconf (even latest autoconf), the AC_COIN_EXAMPLE_FILES
-  # macro can only be called once if the links are made this way
-  # (otherwise autoconf thinks $file is a duplicate...)
-  AC_CONFIG_LINKS([$file:$file])
+  if expr " $EXAMPLE_DIST_FILES " : '.* '"$file"' .*' >/dev/null 2>&1 ; then
+    continue ;
+  fi
+  EXAMPLE_DIST_FILES="$EXAMPLE_DIST_FILES $file"
+  if expr "$file" : '.*\.gz$' >/dev/null 2>&1 ; then
+    EXAMPLE_UNCOMP_FILES="$EXAMPLE_UNCOMP_FILES `expr "$file" : '\(.*\)\.gz$'`"
+    EXAMPLE_CLEAN_FILES="$EXAMPLE_CLEAN_FILES `expr "$file" : '\(.*\)\.gz$'`"
+  else
+    EXAMPLE_UNCOMP_FILES="$EXAMPLE_UNCOMP_FILES $file"
+  fi
 done
 
-# potentially add some of this back as needed:
-#if test $coin_vpath_config = yes; then
-#  lnkcmd=
-#  if test "$enable_msvc" != no; then
-#    lnkcmd=cp
-#  fi
-#  case "$CC" in
-#    clang* ) ;;
-#    cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
-#      lnkcmd=cp ;;
-#  esac
-#  if test "x$lnkcmd" = xcp; then
-#    AC_MSG_NOTICE([Copying example files ($1)])
-#  else
-#    AC_MSG_NOTICE([Creating links to the example files ($1)])
-#    lnkcmd="$LN_S"
-#  fi
-#  for file in $EXAMPLE_FILES; do
-#    rm -f $file
-#    $lnkcmd $srcdir/$file $file
-#  done
-#  EXAMPLE_CLEAN_FILES="$EXAMPLE_CLEAN_FILES $1"
-#else
-#  EXAMPLE_CLEAN_FILES="$EXAMPLE_CLEAN_FILES"
-#fi
-#
-# In case there are compressed files, we create a variable with the
-# uncompressed names
-#EXAMPLE_UNCOMPRESSED_FILES=
-#for file in $EXAMPLE_FILES; do
-#  case $file in
-#    *.gz)
-#      EXAMPLE_UNCOMPRESSED_FILES="$EXAMPLE_UNCOMPRESSED_FILES `echo $file | sed -e s/.gz//`"
-#      ;;
-#  esac
-#done
-#
-#AC_SUBST(EXAMPLE_UNCOMPRESSED_FILES)
-AC_SUBST(EXAMPLE_FILES)
-#AC_SUBST(EXAMPLE_CLEAN_FILES)
-]) #AC_COIN_EXAMPLE_FILES
+AC_SUBST(EXAMPLE_DIST_FILES)
+AC_SUBST(EXAMPLE_UNCOMP_FILES)
+AC_SUBST(EXAMPLE_CLEAN_FILES)
+
+]) # AC_COIN_EXAMPLE_FILES
 
 
 ###########################################################################
@@ -1357,26 +1364,28 @@ AC_DEFUN([AC_COIN_CHECK_ZLIB],
 coin_has_zlib=no
 
 AC_ARG_ENABLE([zlib],
-              [AC_HELP_STRING([--disable-zlib],[do not compile with compression library zlib])],
-              [coin_enable_zlib=$enableval],
-              [coin_enable_zlib=yes])
+    [AC_HELP_STRING([--disable-zlib],
+        [do not compile with compression library zlib])],
+    [coin_enable_zlib=$enableval],
+    [coin_enable_zlib=yes])
 
-if test $coin_enable_zlib = yes; then
+if test x$coin_enable_zlib = xyes; then
   AC_LANG_PUSH(C)
   AC_CHECK_HEADER([zlib.h],[coin_has_zlib=yes])
 
-  if test $coin_has_zlib = yes; then
+  if test x$coin_has_zlib = xyes; then
     AC_CHECK_LIB([z],[gzopen],[:],[coin_has_zlib=no])
   fi
 
-  if test $coin_has_zlib = yes; then
-    m4_foreach_w([myvar], [$1], [m4_toupper(myvar)_LIBS="-lz $m4_toupper(myvar)_LIBS"])
+  if test x$coin_has_zlib = xyes; then
+    m4_foreach_w([myvar],[$1],
+		 [m4_toupper(myvar)_LIBS="-lz $m4_toupper(myvar)_LIBS"])
     AC_DEFINE([COIN_HAS_ZLIB],[1],[Define to 1 if zlib is available])
   fi
   AC_LANG_POP(C)
 fi
 
-AM_CONDITIONAL(COIN_HAS_ZLIB, test x$coin_has_zlib = xyes)
+AM_CONDITIONAL([COIN_HAS_ZLIB],[test x$coin_has_zlib = xyes])
 ]) # AC_COIN_CHECK_ZLIB
 
 
