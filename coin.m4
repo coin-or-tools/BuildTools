@@ -625,38 +625,26 @@ AC_MSG_ERROR(["AC_COIN_PROG_FC not implemented yet"])
 AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
 [AC_ARG_VAR([PKG_CONFIG], [path to pkg-config utility])
 
-AC_ARG_ENABLE([pkg-config],
-  [AC_HELP_STRING([--disable-pkg-config],[disable use of pkg-config (if available)])],
-  [use_pkgconfig="$enableval"],
-  [#if test x$coin_cc_is_cl = xtrue; then
-   #  use_pkgconfig=no
-   #else
-     use_pkgconfig=yes
-   #fi
-  ])
+if test -z "$PKG_CONFIG"; then
+ AC_CHECK_TOOLS([PKG_CONFIG], [pkg-config pkgconf])
+fi
+if test -n "$PKG_CONFIG"; then
+ _pkg_min_version=m4_default([$1], [0.16.0])
+ AC_MSG_CHECKING([$PKG_CONFIG is at least version $_pkg_min_version])
+ if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
+   AC_MSG_RESULT([yes])
+ else
+   AC_MSG_RESULT([no])
+   PKG_CONFIG=""
+ fi
+fi
 
-if test $use_pkgconfig = yes ; then
-  if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
-    AC_CHECK_TOOL([PKG_CONFIG], [pkg-config])
-  fi
-  if test -n "$PKG_CONFIG"; then
-    _pkg_min_version=m4_default([$1], [0.16.0])
-    AC_MSG_CHECKING([pkg-config is at least version $_pkg_min_version])
-    if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
-      AC_MSG_RESULT([yes])
-    else
-      AC_MSG_RESULT([no])
-      PKG_CONFIG=""
-    fi
-  fi
-
-  # check if pkg-config supports the short-errors flag
-  if test -n "$PKG_CONFIG" && \
-    $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-    pkg_short_errors=" --short-errors "
-  else
-    pkg_short_errors=""
-  fi
+# check if pkg-config supports the short-errors flag
+if test -n "$PKG_CONFIG" && \
+ $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+ pkg_short_errors=" --short-errors "
+else
+ pkg_short_errors=""
 fi
 
 AM_CONDITIONAL([COIN_HAS_PKGCONFIG], [test -n "$PKG_CONFIG"])
@@ -791,7 +779,7 @@ if test $m4_tolower(coin_has_$1) != skipping; then
     [])
 fi
 
-# now use pkg-config, if nothing of the above applied
+# now use pkg-config, if available and nothing of the above applied
 if test $m4_tolower(coin_has_$1) = notGiven; then
   if test -n "$PKG_CONFIG" ; then
     
@@ -813,9 +801,7 @@ if test $m4_tolower(coin_has_$1) = notGiven; then
       ])
 
   else
-    AC_MSG_ERROR([skipped check via pkg-config, redirect to fallback... -- oops, not there yet])
-    # TODO
-    #AC_COIN_CHECK_PACKAGE_FALLBACK([$1], [$2], [$3])
+    AC_MSG_WARN([skipped check via pkg-config as no pkg-config available])
   fi
 
 else
