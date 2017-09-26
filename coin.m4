@@ -265,8 +265,8 @@ AC_LANG_POP(C++)
 #                           COIN_CHECK_VPATH                              #
 ###########################################################################
 
-# This macro sets the variable coin_vpath_config to true if this is a
-# VPATH configuration, otherwise it sets it to false. `VPATH' just means we're
+# This macro sets the variable coin_vpath_config to true if this is a VPATH
+# configuration, otherwise it sets it to false. `VPATH' just means we're
 # following best practices and not building in the source directory.
 
 AC_DEFUN([AC_COIN_CHECK_VPATH],
@@ -397,15 +397,16 @@ AC_DEFUN([AC_COIN_ENABLE_MSVC],
 ])
 
 ###########################################################################
-#                            COIN_INITALIZE                               #
+#                            COIN_INITIALIZE                               #
 ###########################################################################
 
 AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
 [
-# we want --enable-msvc setup and checked
+# We want --enable-msvc setup and checked
 AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 
-# this macro should run before the compiler checks (doesn't seem to be sufficient for CFLAGS)
+# This macro should run before the compiler checks (doesn't seem to be
+# sufficient for CFLAGS)
 AC_BEFORE([$0],[AC_PROG_CXX])
 AC_BEFORE([$0],[AC_PROG_CC])
 AC_BEFORE([$0],[AC_PROG_F77])
@@ -429,53 +430,66 @@ else
 fi
 ])
 
-# This macro does everything that is required in the early part in the
+# AC_COIN_INITIALIZE(name,version)
+# This macro does everything that is required in the early part of the
 # configure script, such as defining a few variables.
-# The first parameter is the project name.
-# The second (optional) is the libtool library version (important for releases,
-# less so for stable or trunk).
+#   name: project name
+#   version (optional): the libtool library version (important for releases,
+#     less so for stable or trunk).
 
 AC_DEFUN([AC_COIN_INITIALIZE],
 [
 # required autoconf version
-AC_PREREQ(2.69)
+
+  AC_PREREQ(2.69)
 
 # Set the project's version numbers
-AC_COIN_PROJECTVERSION($1, $2)
+
+  AC_COIN_PROJECTVERSION($1, $2)
 
 # A useful makefile conditional that is always false
-AM_CONDITIONAL(ALWAYS_FALSE, false)
 
-# Where should everything be installed by default?  Here, we want it
-# to be installed directly in 'bin', 'lib', 'include' subdirectories
-# of the directory where configure is run.  The default would be
-# /usr/local.      
-AC_PREFIX_DEFAULT([`pwd`])
+  AM_CONDITIONAL(ALWAYS_FALSE, false)
 
-# change default compiler flags; this needs to run very early (before AC_CANONICAL_BUILD)
-AC_REQUIRE([AC_COIN_COMPFLAGS_DEFAULTS])
+# Where should everything be installed by default?  The COIN default is to
+# install directly into subdirectories of the directory where configure is
+# run. The default would be to install under /usr/local.
+
+  AC_PREFIX_DEFAULT([`pwd`])
+
+# Change the default compiler flags. This needs to run before
+# AC_CANONICAL_BUILD.
+
+  AC_REQUIRE([AC_COIN_COMPFLAGS_DEFAULTS])
 
 # Get the build and host types
-AC_CANONICAL_BUILD
-AC_CANONICAL_HOST
+
+  AC_CANONICAL_BUILD
+  AC_CANONICAL_HOST
 
 # libtool has some magic for host_os=mingw, but doesn't know about msys
-if test $host_os = msys ; then
-  host_os=mingw
-  host=`echo $host | sed -e 's/msys/mingw/'`
-fi
 
-# initialize automake
+  if test $host_os = msys ; then
+    host_os=mingw
+    host=`echo $host | sed -e 's/msys/mingw/'`
+  fi
+
+# Make silent build rules the default (https://www.gnu.org/software/automake/
+# manual/html_node/Automake-Silent-Rules.html). Run before AM_INIT_AUTOMAKE,
+# which will AC_REQUIRE it anyway.
+
+  AM_SILENT_RULES([yes])
+
+# Initialize automake
 # - don't define PACKAGE or VERSION
 # - disable dist target
 # - enable all automake warnings
-AM_INIT_AUTOMAKE([no-define no-dist -Wall])
 
-# make silent build rules the default (https://www.gnu.org/software/automake/manual/html_node/Automake-Silent-Rules.html)
-AM_SILENT_RULES([yes])
+  AM_INIT_AUTOMAKE([no-define no-dist -Wall])
 
-# disable automatic rebuild of configure/Makefile
-AM_MAINTAINER_MODE
+# Disable automatic rebuild of configure/Makefile. Use run_autotools.
+
+  AM_MAINTAINER_MODE
 ])
 
 ###########################################################################
@@ -537,75 +551,69 @@ AC_SUBST([LT_LDFLAGS])
 ])
 
 ###########################################################################
-#     COIN_PROG_CC   COIN_PROG_CXX    COIN_PROG_F77    COIN_PROG_FC       #
+#                    COIN_PROG_CC   COIN_PROG_CXX                         #
 ###########################################################################
+
+# Macros to find C and C++ compilers according to specified lists of compiler
+# names. For Fortran compilers, see coin_fortran.m4.
+
+# Note that automake redefines AC_PROG_CC to invoke _AM_PROG_CC_C_O (an
+# equivalent to AC_PROG_CC_C_O, plus wrap CC in the compile script if needed)
+# and _AM_DEPENDENCIES (`dependency style'). Look in aclocal.m4 to see this.
 
 AC_DEFUN_ONCE([AC_COIN_PROG_CC],
 [
-AC_REQUIRE([AC_COIN_ENABLE_MSVC])
-# setting up libtool invokes AC_PROG_CC, but as we may want to change the
-# order of compilers, we want to invoke it from this macro first
-AC_BEFORE([$0],[LT_INIT])
-AC_BEFORE([$0],[AC_PROG_LIBTOOL])
+  AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 
-# if enable-msvc, then test only for MS and Intel (on Windows) C compiler
+# Setting up libtool with LT_INIT will AC_REQUIRE AC_PROG_CC, but we want
+# to invoke it from this macro first so that we can supply a parameter.
+
+  AC_BEFORE([$0],[LT_INIT])
+  AC_BEFORE([$0],[AC_PROG_LIBTOOL])
+
+# If enable-msvc, then test only for MS and Intel (on Windows) C compiler
 # otherwise, test a long list of C compilers that comes into our mind
-if test $enable_msvc = yes ; then
-  comps="icl cl"
-else
-  # TODO old buildtools was doing some $build specific logic here, we still need this?
-  comps="gcc clang cc icc icl cl cc xlc xlc_r pgcc"  
-fi
-AC_PROG_CC([$comps])
+
+  if test $enable_msvc = yes ; then
+    comps="icl cl"
+  else
+    # TODO old buildtools was doing some $build specific logic here, do we
+    # still need this?
+    comps="gcc clang cc icc icl cl cc xlc xlc_r pgcc"  
+  fi
+  AC_PROG_CC([$comps])
 ])
+
+# Note that automake redefines AC_PROG_CXX to invoke _AM_DEPENDENCIES
+# (`dependency style') but does not add an equivalent for AC_PROG_CXX_C_O,
+# hence we need an explicit call.
 
 AC_DEFUN_ONCE([AC_COIN_PROG_CXX],
 [
-AC_REQUIRE([AC_COIN_ENABLE_MSVC])
-AC_REQUIRE([AC_COIN_PROG_CC])
+  AC_REQUIRE([AC_COIN_ENABLE_MSVC])
+  AC_REQUIRE([AC_COIN_PROG_CC])
 
-# if enable-msvc, then test only for MS and Intel (on Windows) C++ compiler
+# If enable-msvc, then test only for MS and Intel (on Windows) C++ compiler
 # otherwise, test a long list of C++ compilers that comes into our mind
-if test $enable_msvc = yes ; then
-  comps="cl icl"
-else
-  # TODO old buildtools was doing some $build specific logic here, we still need this?
-  comps="g++ clang++ c++ pgCC icpc gpp cxx cc++ cl icl FCC KCC RCC xlC_r aCC CC"
-fi
-AC_PROG_CXX([$comps])
 
-# if compiler does not support -c -o, then wrap compile script around it
-# for CC, this happens automatically by AC_PROG_CC already, but not for CXX apparently
-AC_PROG_CXX_C_O
-if test $ac_cv_prog_cxx_c_o = no
-then
-  CXX="$am_aux_dir/compile $CXX"
-fi
+  if test $enable_msvc = yes ; then
+    comps="cl icl"
+  else
+    # TODO old buildtools was doing some $build specific logic here, do we
+    # still need this?
+    comps="g++ clang++ c++ pgCC icpc gpp cxx cc++ cl icl FCC KCC RCC xlC_r aCC CC"
+  fi
+  AC_PROG_CXX([$comps])
+
+# If the compiler does not support -c -o, then wrap the compile script around
+# it.
+
+  AC_PROG_CXX_C_O
+  if test $ac_cv_prog_cxx_c_o = no ; then
+    CXX="$am_aux_dir/compile $CXX"
+  fi
 ])
 
-AC_DEFUN_ONCE([AC_COIN_PROG_F77],
-[
-AC_REQUIRE([AC_COIN_ENABLE_MSVC])
-
-# if enable-msvc, then test only for Intel (on Windows) Fortran compiler
-if test $enable_msvc = yes ; then
-  comps="ifort"
-else
-  # TODO old buildtools was doing some $build specific logic here, we still need this?
-  comps="gfortran ifort g95 fort77 f77 f95 f90 g77 pgf90 pgf77 ifc frt af77 xlf_r fl32"
-fi
-AC_PROG_F77([$comps])
-
-#TODO if AC_PROG_F77_C_O returns no, then wrap compile script around $F77 ?
-])
-
-AC_DEFUN_ONCE([AC_COIN_PROG_FC],
-[
-AC_REQUIRE([AC_COIN_ENABLE_MSVC])
-
-# TODO
-AC_MSG_ERROR(["AC_COIN_PROG_FC not implemented yet"])
-])
 
 ###########################################################################
 #                           COIN_HAS_PKGCONFIG                            #
@@ -860,70 +868,6 @@ m4_foreach_w([myvar],[$1],[
 
 
 ###########################################################################
-#                            COIN_TRY_FLINK                               #
-###########################################################################
-
-# Auxilliary macro to test if a Fortran function name can be linked,
-# given the current settings of LIBS.  We determine from the context, what
-# the currently active programming language is, and cast the name accordingly.
-# The first argument is the name of the function/subroutine, in small letters,
-# the second argument are the actions taken when the test works, and the
-# third argument are the actions taken if the test fails.
-
-AC_DEFUN([AC_COIN_TRY_FLINK],[
-case $ac_ext in
-  f)
-    AC_TRY_LINK(,[      call $1],[flink_try=yes],[flink_try=no])
-    ;;
-  c)
-    coin_need_flibs=no
-    flink_try=no
-    AC_F77_FUNC($1,cfunc$1)
-    AC_LINK_IFELSE(
-      [AC_LANG_PROGRAM([void $cfunc$1();],[$cfunc$1()])],
-      [flink_try=yes],
-      [if test x"$FLIBS" != x; then
-         flink_save_libs="$LIBS"
-         LIBS="$LIBS $FLIBS"
-         AC_LINK_IFELSE(
-           [AC_LANG_PROGRAM([void $cfunc$1();],[$cfunc$1()])],
-           [coin_need_flibs=yes
-            flint_try=yes]
-         )
-         LIBS="$flink_save_libs"
-       fi
-      ]
-    )
-    ;;
-  cc|cpp)
-    coin_need_flibs=no
-    flink_try=no
-    AC_F77_FUNC($1,cfunc$1)
-    AC_LINK_IFELSE(
-      [AC_LANG_PROGRAM([extern "C" {void $cfunc$1();}],[$cfunc$1()])],
-      [flink_try=yes],
-      [if test x"$FLIBS" != x; then
-         flink_save_libs="$LIBS"
-         LIBS="$LIBS $FLIBS"
-         AC_LINK_IFELSE(
-           [AC_LANG_PROGRAM([extern "C" {void $cfunc$1();}],[$cfunc$1()])],
-           [coin_need_flibs=yes
-            flink_try=yes]
-         )
-         LIBS="$flink_save_libs"
-       fi
-      ]
-    )
-    ;;
-esac
-if test $flink_try = yes; then
-  $2
-else
-  $3
-fi
-]) # AC_COIN_TRY_FLINK
-
-###########################################################################
 #                         COIN_CHECK_PACKAGE_BLAS                         #
 ###########################################################################
 
@@ -945,7 +889,7 @@ AC_DEFUN([AC_COIN_CHECK_PACKAGE_BLAS],
 [
 AC_ARG_WITH([blas],
             AC_HELP_STRING([--with-blas],
-                           [specify BLAS library (or BUILD to enforce use of ThirdParty/Blas)]),
+                           [specify BLAS library (or BUILD to force use of ThirdParty/Blas)]),
             [use_blas="$withval"], [use_blas=])
 
 # if user specified --with-blas-lib, then we should give COIN_CHECK_PACKAGE
@@ -1195,22 +1139,23 @@ if test x"$use_lapack" != x; then
   fi
 else
   if test x$coin_has_blas = xyes; then
-    # First try to see if LAPACK is already available with BLAS library
+    # First try to see if LAPACK is already available with BLAS library. Try a
+    # direct C call if Fortran linkage doesn't work.
     coin_save_LIBS="$LIBS"
     LIBS="$BLAS_LIBS $LIBS"
-    if test "$F77" != unavailable; then
-      coin_need_flibs=no
-      AC_MSG_CHECKING([whether LAPACK is already available with BLAS library])
-      AC_COIN_TRY_FLINK([dsyev],
-                        [use_lapack="$BLAS_LIBS"
-                         if test $coin_need_flibs = yes ; then
-                           use_lapack="$use_lapack $FLIBS"
-                         fi
-                         AC_MSG_RESULT([yes: $use_lapack])
-                        ],
-                        [AC_MSG_RESULT([no])])
-    else
-      AC_MSG_NOTICE([checking whether LAPACK is already available with BLAS library])
+    coin_need_flibs=no
+    AC_MSG_CHECKING([whether LAPACK is already available in the BLAS library
+    with Fortran interface])
+    AC_COIN_TRY_FLINK([dsyev],
+		      [use_lapack="$BLAS_LIBS"
+		       if test $coin_need_flibs = yes ; then
+			 use_lapack="$use_lapack $FLIBS"
+		       fi
+		       AC_MSG_RESULT([yes: $use_lapack])
+		      ],
+		      [AC_MSG_RESULT([no])])
+    if test -z "$use_lapack" ; then
+      AC_MSG_NOTICE([Trying again with C interface.])
       AC_LANG_PUSH(C)
       AC_CHECK_FUNC([dsyev],[use_lapack="$BLAS_LIBS"])
       AC_LANG_POP(C)
