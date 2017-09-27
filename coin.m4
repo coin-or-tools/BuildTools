@@ -1290,7 +1290,7 @@ LIBS="$coin_save_LIBS"
 # it adds the linker flag to the variables X_LIBS.
 
 AC_DEFUN([AC_COIN_CHECK_ZLIB],
-[AC_REQUIRE([AC_PROG_CC])
+[AC_REQUIRE([AC_COIN_PROG_CC])
 
 coin_has_zlib=no
 
