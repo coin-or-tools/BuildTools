@@ -48,7 +48,7 @@
 
 AC_DEFUN_ONCE([AC_COIN_PROG_F77],
 [
-  AC_MSG_NOTICE([In COIN_PROG_F77])
+  # AC_MSG_NOTICE([In COIN_PROG_F77])
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 
 # If enable-msvc, then test only for Intel (on Windows) Fortran compiler
@@ -68,7 +68,7 @@ AC_DEFUN_ONCE([AC_COIN_PROG_F77],
     F77=unavailable
     AC_MSG_NOTICE([No Fortran compiler available.])
   fi
-  AC_MSG_NOTICE([Leaving COIN_PROG_F77])
+  # AC_MSG_NOTICE([Leaving COIN_PROG_F77])
 ])
 
 
@@ -97,7 +97,7 @@ AC_DEFUN_ONCE([AC_COIN_PROG_FC],
 
 AC_DEFUN([AC_COIN_F77_SETUP],
 [
-  AC_MSG_NOTICE([In COIN_F77_SETUP])
+  # AC_MSG_NOTICE([In COIN_F77_SETUP])
 
 # F77_WRAPPERS will trigger the necessary F77 setup macros (F77_MAIN,
 # F77_LIBRARY_LDFLAGS, etc.)
@@ -107,7 +107,7 @@ AC_DEFUN([AC_COIN_F77_SETUP],
   if test $ac_cv_prog_f77_c_o = no ; then
     F77="$am_aux_dir/compile $F77"
   fi
-  AC_MSG_NOTICE([Leaving COIN_F77_SETUP])
+  # AC_MSG_NOTICE([Leaving COIN_F77_SETUP])
 ])
 
 # COIN_F77_WRAPPERS (lib,func)
@@ -234,7 +234,7 @@ AC_DEFUN([AC_COIN_TRY_FLINK],
       AC_LINK_IFELSE(
 	[AC_LANG_PROGRAM([void $cfunc$1();],[$cfunc$1()])],
 	[flink_try=yes],
-	[if test x"$FLIBS" != x; then
+	[if test x"$FLIBS" != x ; then
 	   flink_save_libs="$LIBS"
 	   LIBS="$LIBS $FLIBS"
 	   AC_LINK_IFELSE(
@@ -254,7 +254,7 @@ AC_DEFUN([AC_COIN_TRY_FLINK],
       AC_LINK_IFELSE(
 	[AC_LANG_PROGRAM([extern "C" {void $cfunc$1();}],[$cfunc$1()])],
 	[flink_try=yes],
-	[if test x"$FLIBS" != x; then
+	[if test x"$FLIBS" != x ; then
 	   flink_save_libs="$LIBS"
 	   LIBS="$LIBS $FLIBS"
 	   AC_LINK_IFELSE(
@@ -268,7 +268,7 @@ AC_DEFUN([AC_COIN_TRY_FLINK],
       )
       ;;
   esac
-  if test $flink_try = yes; then
+  if test $flink_try = yes ; then
     $2
   else
     $3

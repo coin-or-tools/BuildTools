@@ -488,7 +488,8 @@ for dir in ${dirs[@]} ; do
 
     echo "  creating acinclude.m4 in $dir"
     cat $m4Files $toolsDir/coin.m4 > acinclude.m4
-    cat $m4Files $toolsDir/coin_fortran.m4 >> acinclude.m4
+    cat $toolsDir/coin_fortran.m4 >> acinclude.m4
+    cat $toolsDir/coin_math.m4 >> acinclude.m4
     echo "  running aclocal in $dir"
     if test -d m4; then
       aclocal -I m4 || exit 1
