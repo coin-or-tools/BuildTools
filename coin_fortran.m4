@@ -140,8 +140,7 @@ AC_DEFUN([AC_COIN_F77_WRAPPERS],
   AC_CACHE_CHECK(
     [Fortran name mangling scheme],
     [ac_cv_f77_mangling],
-    [AC_LANG_PUSH([C++])
-     ac_save_LIBS=$LIBS
+    [ac_save_LIBS=$LIBS
      LIBS="-l$1"
      for ac_case in "lower case" "upper case" ; do
        for ac_trail in "underscore" "no underscore" ; do
@@ -161,7 +160,12 @@ AC_DEFUN([AC_COIN_F77_WRAPPERS],
 	   fi
 	   # AC_MSG_CHECKING([$2 -> $ac_name])
 	   AC_LINK_IFELSE(
-	     [AC_LANG_PROGRAM([extern "C" {void $ac_name();}],[$ac_name()])],
+	     [AC_LANG_PROGRAM(
+	        [#ifdef __cplusplus
+		  extern "C"
+		 #endif
+		 void $ac_name();],
+		[$ac_name()])],
 	     [ac_result=success],
 	     [ac_result=failure])
 	   # AC_MSG_RESULT([$result])
@@ -173,10 +177,9 @@ AC_DEFUN([AC_COIN_F77_WRAPPERS],
      done
      if test "$ac_result" = "failure" ; then
        ac_cv_f77_mangling=unknown
-       AC_MSG_WARN([Unable to determine correct Fortran name-mangling scheme])
+       AC_MSG_WARN([Unable to determine correct Fortran name mangling scheme])
      fi
-     LIBS=$ac_save_LIBS
-     AC_LANG_POP([C++])])
+     LIBS=$ac_save_LIBS])
 
 # Invoke the second-level internal autoconf macro _AC_FC_WRAPPERS to give the
 # functionality of AC_F77_WRAPPERS.
@@ -275,4 +278,282 @@ AC_DEFUN([AC_COIN_TRY_FLINK],
   fi
   # AC_MSG_NOTICE([Done COIN_TRY_FLINK])
 ]) # AC_COIN_TRY_FLINK
+
+
+###########################################################################
+#                       COIN_CHECK_PACKAGE_FLINK                          #
+###########################################################################
+
+# This is a helper macro, common code for checking if a library can be linked.
+#   COIN_CHECK_PACKAGE_FLINK(varname,func,extra_libs)
+# If func can be linked with extra_libs, varname is set to extra_libs,
+# possibly augmented with $FLIBS if these are required. If func cannot be
+# linked, varname is set to the null string.
+
+AC_DEFUN([AC_COIN_CHECK_PACKAGE_FLINK],
+[
+  coin_save_LIBS="$LIBS"
+  LIBS="$3 $LIBS"
+  AC_COIN_TRY_FLINK([$2],
+    [if test $coin_need_flibs = no ; then
+       $1="$3"
+     else
+       $1="$3 $FLIBS"
+     fi
+     AC_MSG_RESULT([yes: $[]$1])],
+    [$1=
+     AC_MSG_RESULT([no])])
+  LIBS="$coin_save_LIBS"
+])
+
+###########################################################################
+#                         COIN_CHECK_PACKAGE_BLAS                         #
+###########################################################################
+
+# This macro checks for a library containing the BLAS library.  It
+# 1. checks the --with-blas argument
+# 2. if --with-blas=build has been specified goes to point 5
+# 3. if --with-blas has been specified to a working library, sets BLAS_LIBS
+#    to its value
+# 4. tries standard libraries
+# 5. calls COIN_CHECK_PACKAGE(Blas,[build],[],[$1]) to check for
+#    ThirdParty/Blas
+# The makefile conditional and preprocessor macro COIN_HAS_BLAS is defined.
+# BLAS_LIBS is set to the flags required to link with a Blas library.
+# For each build target X in $1, X_LIBS is extended with $BLAS_LIBS.
+# In case 3 and 4, the flags to link to Blas are added to X_PCLIBS too.
+# In case 5, Blas is added to X_PCREQUIRES.
+
+AC_DEFUN([AC_COIN_CHECK_PACKAGE_BLAS],
+[
+  AC_REQUIRE([AC_COIN_PROG_F77])
+
+# Grab the value (if any) given by the user for --with-blas.
+
+  use_blas=$with_blas
+
+# Check if a user-supplied library actually works. "build" is considered in a
+# later section. Failure here is an error.
+
+  if test x"$use_blas" != x ; then
+    if test "$use_blas" != "build" && test "$use_blas" != "no" ; then
+      AC_MSG_CHECKING([whether user supplied BLAS library \"$use_blas\" works])
+      AC_COIN_CHECK_PACKAGE_FLINK([use_blas],[daxpy],[$use_blas])
+      if test x"$use_blas" = x ; then
+	AC_MSG_ERROR([user supplied BLAS library \"$with_blas\" does not work.])
+      fi
+    fi
+
+# No user-supplied option.  Try to autodetect the library.  Try some
+# specialised checks based on the host system type first.
+
+  else
+    # AC_MSG_CHECKING([default locations for BLAS])
+    case $build in
+      *-sgi-*) 
+	AC_MSG_CHECKING([for BLAS in -lcomplib.sgimath])
+	AC_COIN_CHECK_PACKAGE_FLINK([use_blas],[daxpy],[-lcomplib.sgimath])
+	;;
+
+      *-*-solaris*)
+	# Ideally, we'd use -library=sunperf, but it's an imperfect world.
+	# Studio cc doesn't recognise -library, it wants -xlic_lib. Studio 12
+	# CC doesn't recognise -xlic_lib. Libtool doesn't like -xlic_lib
+	# anyway. Sun claims that CC and cc will understand -library in Studio
+	# 13. The main extra function of -xlic_lib and -library is to arrange
+	# for the Fortran run-time libraries to be linked for C++ and C. We
+	# can arrange that explicitly.
+	AC_MSG_CHECKING([for BLAS in -lsunperf])
+	AC_COIN_CHECK_PACKAGE_FLINK([use_blas],[daxpy],[-lsunperf])
+	;;
+	
+      *-cygwin* | *-mingw*)
+	case "$CC" in
+	  clang* ) ;;
+	  cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+	    AC_MSG_CHECKING([for BLAS in MKL (32bit)])
+	    AC_COIN_CHECK_PACKAGE_FLINK([use_blas],[daxpy],
+	      [mkl_intel_c.lib mkl_sequential.lib mkl_core.lib])
+	    if test "x$use_blas" = x ; then
+	      AC_MSG_CHECKING([for BLAS in MKL (64bit)])
+	      AC_COIN_CHECK_PACKAGE_FLINK([use_blas],[daxpy],
+		[mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib])
+	    fi
+	    ;;
+	esac
+	;;
+	
+       *-darwin*)
+	AC_MSG_CHECKING([for BLAS in Veclib])
+	AC_COIN_CHECK_PACKAGE_FLINK([use_blas],[daxpy],[-framework Accelerate])
+	;;
+    esac
+
+# If none of the specialised checks were applicable, or failed, try the
+# generic -lblas.
+
+    if test -z "$use_blas" ; then
+      AC_MSG_CHECKING([whether -lblas has BLAS])
+      AC_COIN_CHECK_PACKAGE_FLINK([use_blas],[daxpy],[-lblas])
+    fi
+
+# If we were unable to find a BLAS library, give a shot at building it.
+
+    if test -z "$use_blas" ; then
+      use_blas=build
+    fi
+  fi
+
+# Sort out the results. If the user requested we build, or we couldn't find
+# any of the usual suspects, try for a built COIN package. If the user said
+# `no BLAS', go with that. Otherwise, the user-specified library worked,
+# or we found something.
+
+  if test "x$use_blas" = xbuild ; then
+    AC_COIN_CHECK_PACKAGE(Blas,[build],[],[$1])
+  elif test "$use_blas" = no ; then
+    coin_has_blas=no
+    AM_CONDITIONAL([COIN_HAS_BLAS],[test 0 = 1])
+  else
+    coin_has_blas=yes
+    AM_CONDITIONAL([COIN_HAS_BLAS],[test 0 = 0])
+    AC_DEFINE([COIN_HAS_BLAS],[1],[If defined, the BLAS Library is available.])
+    BLAS_LIBS="$use_blas"
+    BLAS_CFLAGS=
+    BLAS_DATA=
+    AC_SUBST(BLAS_LIBS)
+    AC_SUBST(BLAS_CFLAGS)
+    AC_SUBST(BLAS_DATA)
+    m4_foreach_w([myvar],[$1],
+      [m4_toupper(myvar)_LIBS="$BLAS_LIBS $m4_toupper(myvar)_LIBS"])
+  fi
+
+  m4_foreach_w([myvar],[$1],[AC_SUBST(m4_toupper(myvar)_LIBS)])
+
+]) # AC_COIN_CHECK_PACKAGE_BLAS
+
+###########################################################################
+#                       COIN_CHECK_PACKAGE_LAPACK                         #
+###########################################################################
+
+# This macro checks for a library containing the LAPACK library.  It
+# 1. checks the --with-lapack argument
+# 2. if --with-lapack=build has been specified goes to point 5
+# 3. if --with-lapack has been specified to a working library, sets
+#    LAPACK_LIBS to its value
+# 4. tries standard libraries
+# 5. calls COIN_CHECK_PACKAGE(Lapack,[build],[],[$1]) to check for
+#    ThirdParty/Lapack
+# The makefile conditional and preprocessor macro COIN_HAS_LAPACK is defined.
+# LAPACK_LIBS is set to the flags required to link with a Lapack library.
+# For each build target X in $1, X_LIBS is extended with $LAPACK_LIBS.
+# In case 3 and 4, the flags to link to Lapack are added to X_PCLIBS too.
+# In case 5, Lapack is added to X_PCREQUIRES.
+
+# The flow here is nearly identical to COIN_CHECK_PACKAGE_BLAS, but there are
+# enough detail differences that it's not worth trying to create a generic
+# macro for both.
+
+# 171116 (lh) Below we check if libblas provides LAPACK. Given the dependency
+# relationship, does liblapack ever include BLAS?
+
+AC_DEFUN([AC_COIN_CHECK_PACKAGE_LAPACK],
+[
+  AC_REQUIRE([AC_COIN_PROG_F77])
+
+# Grab the value (if any) given by the user for --with-blas.
+
+  use_lapack=$with_lapack
+
+# Check if a user-supplied library actually works. "build" is considered in a
+# later section. Failure here is an error.
+
+  if test x"$use_lapack" != x ; then
+    if test "$use_lapack" != "build" && test "$use_lapack" != "no" ; then
+      AC_MSG_CHECKING([whether user supplied LAPACK library \"$use_lapack\" works])
+      AC_COIN_CHECK_PACKAGE_FLINK([use_lapack],[dsyev],[$use_lapack])
+      if test x"$use_lapack" = x ; then
+	AC_MSG_ERROR([user supplied LAPACK library \"$use_lapack\" does not work.])
+      fi
+    fi
+
+# No user-supplied option. First, check if the library for BLAS already
+# includes LAPACK. If not, try to autodetect the library.  Try some specialised
+# checks first based on the host system type.
+
+  else
+    if test x"$coin_has_blas" = xyes ; then
+      AC_MSG_CHECKING([whether LAPACK is already available in the BLAS library])
+      AC_COIN_CHECK_PACKAGE_FLINK([use_lapack],[dsyev],[$BLAS_LIBS])
+    fi
+
+# 171116 (lh) Note that the libraries tested for SGI and Solaris are the same
+# ones we tested for BLAS. Since LAPACK needs BLAS, we should have already
+# performed those tests, hence the tests here are repetitive. I've left them
+# in on the sole justification that rechecking is robust against changes in
+# library content.
+
+    if test -z "$use_lapack" ; then
+      case $build in
+	*-sgi-*) 
+	  AC_MSG_CHECKING([for LAPACK in -lcomplib.sgimath])
+	  AC_COIN_CHECK_PACKAGE_FLINK([use_lapack],[dsyev],[-lcomplib.sgimath])
+	  ;;
+
+	*-*-solaris*)
+	  # See comments in COIN_CHECK_PACKAGE_BLAS.
+	  AC_MSG_CHECKING([for LAPACK in -lsunperf])
+	  AC_COIN_CHECK_PACKAGE_FLINK([use_lapack],[dsyev],[-lsunperf])
+	  ;;
+
+	  # On cygwin, do this check only if doscompile is disabled. The
+	  # prebuilt library will want to link with cygwin, hence won't run
+	  # standalone in DOS.
+
+      esac
+    fi
+
+# If none of the specialised checks were applicable, or failed, try the
+# generic -llapack.
+
+    if test -z "$use_lapack" ; then
+      AC_MSG_CHECKING([whether -llapack has LAPACK])
+      AC_COIN_CHECK_PACKAGE_FLINK([use_lapack],[dsyev],[-llapack])
+    fi
+
+# If we were unable to find a LAPACK library, give a shot at building it.
+
+    if test -z "$use_lapack" ; then
+      use_lapack=build
+    fi
+  fi
+
+# Sort out the results. If the user requested we build, or we couldn't find
+# any of the usual suspects, try for the built COIN package. If the user said
+# `no LAPACK', go with that. Otherwise, the user-specified library worked,
+# or we found something.
+
+  if test "x$use_lapack" = xbuild ; then
+    AC_COIN_CHECK_PACKAGE(Lapack,[build],[],[$1])
+  elif test "$use_lapack" = no ; then
+    coin_has_lapack=no
+    AM_CONDITIONAL([COIN_HAS_LAPACK],[test 0 = 1])
+  else
+    coin_has_lapack=yes
+    AM_CONDITIONAL([COIN_HAS_LAPACK],[test 0 = 0])
+    AC_DEFINE([COIN_HAS_LAPACK],[1],
+      [If defined, the LAPACK Library is available.])
+    LAPACK_LIBS="$use_lapack"
+    LAPACK_CFLAGS=
+    LAPACK_DATA=
+    AC_SUBST(LAPACK_LIBS)
+    AC_SUBST(LAPACK_CFLAGS)
+    AC_SUBST(LAPACK_DATA)
+    m4_foreach_w([myvar],[$1],
+      [m4_toupper(myvar)_LIBS="$LAPACK_LIBS $m4_toupper(myvar)_LIBS"])
+  fi
+
+  m4_foreach_w([myvar],[$1],[AC_SUBST(m4_toupper(myvar)_LIBS)])
+
+]) # AC_COIN_CHECK_PACKAGE_LAPACK
 

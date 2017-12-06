@@ -62,11 +62,9 @@ AC_DEFUN([AC_COIN_MATH_HDRS],
 
 AC_DEFUN([AC_COIN_CHECK_MATH_HDRS],
 [
-  AC_LANG_PUSH(C++)
   AC_CHECK_HEADERS([cmath math.h],[break],[])
   AC_CHECK_HEADERS([cfloat float.h],[break],[])
   AC_CHECK_HEADERS([cieeefp ieeefp.h],[break],[])
-  AC_LANG_POP(C++)
 ])
 
 
@@ -113,7 +111,6 @@ AC_DEFUN([AC_COIN_CHECK_NAMESPACE_DECL],
 
 AC_DEFUN([AC_COIN_CHECK_ISFINITE],
 [
-  AC_LANG_PUSH(C++)
   AC_REQUIRE([AC_COIN_CHECK_MATH_HDRS])
 
   COIN_C_FINITE=
@@ -137,8 +134,6 @@ AC_DEFUN([AC_COIN_CHECK_ISFINITE],
     AC_DEFINE_UNQUOTED(COIN_C_FINITE,[$COIN_C_FINITE],
 		       [Define to be the name of C-function for Inf check])
   fi
-  
-  AC_LANG_POP(C++)
 ])
 
 ###########################################################################
@@ -152,7 +147,6 @@ AC_DEFUN([AC_COIN_CHECK_ISFINITE],
 
 AC_DEFUN([AC_COIN_CHECK_ISNAN],
 [ 
-  AC_LANG_PUSH(C++)
   AC_REQUIRE([AC_COIN_CHECK_MATH_HDRS])
 
   COIN_C_ISNAN=
@@ -176,7 +170,5 @@ AC_DEFUN([AC_COIN_CHECK_ISNAN],
     AC_DEFINE_UNQUOTED(COIN_C_ISNAN,[$COIN_C_ISNAN],
 		       [Define to be the name of C-function for NaN check])
   fi
-
-  AC_LANG_POP(C++)
 ])
 
