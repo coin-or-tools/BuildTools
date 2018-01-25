@@ -6,19 +6,42 @@
 
 # Author:  Andreas Waechter           IBM    2006-04-13
 
+
+########################################################################
+#        Variables for documentation and data directories              #
+########################################################################
+
+# COIN overrides the default definitions of datadir and docdir.
+
+datadir = @datarootdir@/coin/data
+docdir  = @datarootdir@/coin/doc
+pkgdatadir = $(datadir)/$(PACKAGE_NAME)
+pkgdocdir = $(docdir)/$(PACKAGE_NAME)
+doxydocdir = $(pkgdocdir)/doxydoc
+doxyhtmldir = $(doxydocdir)
+
 ########################################################################
 #                    Documentation installation                        #
 ########################################################################
 
 DocFiles =  README AUTHORS LICENSE
-DocInstallDir = $(datadir)/coin/doc/$(PACKAGE_NAME)
 
 COIN_HAS_DOXYGEN = @COIN_HAS_DOXYGEN_TRUE@TRUE
 COIN_HAS_LATEX = @COIN_HAS_LATEX_TRUE@TRUE
 
+# Needless to say, it's important that doxydocdir_nosub not be a target for
+# autoconf substitution.
+
+DOXYTAG_EDIT = sed -e 's|@docdir_nosub@|$(docdir)|g'
+
 doxygen-docs: 
 	if test "$(COIN_HAS_DOXYGEN)" = TRUE; then \
 	  if test -d "doxydoc/"; then \
+	    if test -f doxydoc/doxygen.conf ; then \
+	      $(DOXYTAG_EDIT) \
+	        doxydoc/doxygen.conf > doxydoc/doxygen.conf.tmp ; \
+	      mv doxydoc/doxygen.conf.tmp doxydoc/doxygen.conf ; \
+	    fi ; \
 	    doxygen doxydoc/doxygen.conf;\
 	  fi;\
 	fi
@@ -35,56 +58,58 @@ pdf-doxygen-docs: doxygen-docs
 	fi
 
 clean-doxygen-docs:
-	if test -d "doxydoc/"; then \
+	if test -d "doxydoc"; then \
 	  cd doxydoc ;\
 	  rm -rf html latex *.log *.tag;\
 	fi
 
 install-doxygen-docs: doxygen-docs
 	if test "$(COIN_HAS_DOXYGEN)" = TRUE; then \
-	  if test -d "doxydoc/"; then \
-	    test -d "$(DESTDIR)$(DocInstallDir)/doxydoc" || \
-	         $(mkdir_p) "$(DESTDIR)$(DocInstallDir)/doxydoc"; \
-	    $(INSTALL_DATA) @coin_doxy_tagname@ \
-	        "$(DESTDIR)$(DocInstallDir)/@coin_doxy_tagname@";\
+	  if test -d "doxydoc"; then \
+	    test -d "$(DESTDIR)$(doxydocdir)" || \
+	         $(mkdir_p) "$(DESTDIR)$(doxydocdir)"; \
+	    $(INSTALL_DATA) doxydoc/@coin_doxy_tagname@ \
+	        "$(DESTDIR)$(doxydocdir)"; \
 	    if test -f "doxydoc/latex/refman.pdf"; then \
 	      $(INSTALL_DATA) doxydoc/latex/refman.pdf \
-	          "$(DESTDIR)$(DocInstallDir)";\
+	          "$(DESTDIR)$(doxydocdir)";\
 	    fi;\
 	    if test -d "doxydoc/html"; then \
-	      test -d "$(DESTDIR)$(DocInstallDir)/doxydoc/search/" || \
-	           $(mkdir_p) "$(DESTDIR)$(DocInstallDir)/doxydoc/search/"; \
+	      test -d "$(DESTDIR)$(doxyhtmldir)/search/" || \
+	           $(mkdir_p) "$(DESTDIR)$(doxyhtmldir)/search/"; \
 	      $(INSTALL_DATA) doxydoc/html/*.* \
-	          "$(DESTDIR)$(DocInstallDir)/doxydoc";\
+	          "$(DESTDIR)$(doxyhtmldir)";\
 	      $(INSTALL_DATA) doxydoc/html/search/*.* \
-	          "$(DESTDIR)$(DocInstallDir)/doxydoc/search";\
+	          "$(DESTDIR)$(doxyhtmldir)/search";\
             fi;\
           fi;\
         fi
 
+# It's not clear that uninstall-doc should also remove doxygen doc'n. Write
+# the rules so that the last one will remove pkgdocdir (which should be empty
+# by then).
+
 uninstall-doxygen-docs:
-	if test -d "$(DESTDIR)$(DocInstallDir)/doxydoc/"; then \
-	  rm -rf "$(DESTDIR)$(DocInstallDir)/doxydoc/"; \
+	if test -d "$(DESTDIR)$(doxydocdir)"; then \
+	  rm -rf "$(DESTDIR)$(doxydocdir)"; \
 	fi
-	if test -f "$(DESTDIR)$(DocInstallDir)/refman.pdf"; then \
-	  rm -f "$(DESTDIR)$(DocInstallDir)/refman.pdf"; \
-	fi
-	rmdir "$(DESTDIR)$(DocInstallDir)"
+	rmdir $(DESTDIR)$(pkgdocdir) || true
 
 install-doc: $(DocFiles)
-	test -z "$(DocInstallDir)" || $(mkdir_p) "$(DESTDIR)$(DocInstallDir)"
+	$(mkdir_p) "$(DESTDIR)$(pkgdocdir)"
 	for file in $(DocFiles); do \
 	  if test -f "$$file"; then dir=; else dir="$(srcdir)/"; fi; \
 	  if test -f "$$dir$$file"; then \
 	    $(INSTALL_DATA) "$$dir$$file" \
-	        "$(DESTDIR)$(DocInstallDir)/$$file"; \
+	        "$(DESTDIR)$(pkgdocdir)/$$file"; \
 	  fi; \
 	done
 
 uninstall-doc:
 	for file in $(DocFiles); do \
-	  rm -f "$(DESTDIR)$(DocInstallDir)/$$file"; \
+	  rm -f "$(DESTDIR)$(pkgdocdir)/$$file"; \
 	done
+	rmdir $(DESTDIR)$(pkgdocdir) || true
 
 ########################################################################
 #                         Maintainer Stuff                             #
