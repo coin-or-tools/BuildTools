@@ -1064,13 +1064,10 @@ AC_SUBST(EXAMPLE_CLEAN_FILES)
 
 AC_DEFUN([AC_COIN_FINALIZE_FLAGS],
 [
-  save_pkgconfig_path=$PKG_CONFIG_PATH
-  PKG_CONFIG_PATH=$COIN_PKG_CONFIG_PATH
-
   m4_foreach_w([myvar],[$1],
     [if test -n "${m4_toupper(myvar)_PCFILES}" ; then
-       temp_CFLAGS=`$PKG_CONFIG --cflags ${m4_toupper(myvar)_PCFILES}`
-       temp_LIBS=`$PKG_CONFIG --libs ${m4_toupper(myvar)_PCFILES}`
+       temp_CFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --cflags ${m4_toupper(myvar)_PCFILES}`
+       temp_LIBS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs ${m4_toupper(myvar)_PCFILES}`
        m4_toupper(myvar)_CFLAGS="$temp_CFLAGS ${m4_toupper(myvar)_CFLAGS}"
        m4_toupper(myvar)_LIBS="$temp_LIBS ${m4_toupper(myvar)_LIBS}"
      fi
@@ -1083,8 +1080,6 @@ AC_DEFUN([AC_COIN_FINALIZE_FLAGS],
        AC_MSG_NOTICE([m4_toupper(myvar)_LIBS is "${m4_toupper(myvar)_LIBS}"])
        AC_MSG_NOTICE([m4_toupper(myvar)_CFLAGS is "${m4_toupper(myvar)_CFLAGS}"])
      fi])
-
-  PKG_CONFIG_PATH=$save_pkgconfig_path
 ])
 
 ###########################################################################
