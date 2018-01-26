@@ -1095,13 +1095,14 @@ fi
 
 # Try if FFLAGS works
 if test "$F77" != "unavailable" ; then
+  orig_FFLAGS="FFLAGS"
   AC_TRY_LINK(,[      integer i],[],[FFLAGS=])
   if test -z "$FFLAGS"; then
-    AC_MSG_WARN([The flags FFLAGS="$FFLAGS" do not work.  I will now just try '-O', but you might want to set FFLAGS manually.])
+    AC_MSG_WARN([The flags FFLAGS="$orig_FFLAGS" do not work.  I will now just try '-O', but you might want to set FFLAGS manually.])
     FFLAGS='-O'
     AC_TRY_LINK(,[      integer i],[],[FFLAGS=])
     if test -z "$FFLAGS"; then
-      AC_MSG_WARN([This value for FFLAGS does not work.  I will continue with empty FFLAGS, but you might want to set FFLAGS manually.])
+      AC_MSG_WARN([The flags FFLAGS=-O do not work. I will continue with empty FFLAGS, but you might want to set FFLAGS manually.])
     fi
   fi
 fi
