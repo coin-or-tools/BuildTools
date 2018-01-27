@@ -189,7 +189,8 @@ AC_DEFUN([AC_COIN_INITIALIZE],
   AM_SILENT_RULES([yes])
 
 # Initialize automake
-# - don't define PACKAGE or VERSION
+# - don't AC_DEFINE PACKAGE or VERSION (but there're still defined as shell
+#   variables in configure, and as make variables).
 # - disable dist target
 # - enable all automake warnings
 
@@ -969,8 +970,9 @@ fi
 
 # Generate a tag file name and a log file name
 
-AC_SUBST([coin_doxy_tagname],[${PACKAGE}_doxy.tag])
-AC_SUBST([coin_doxy_logname],[${PACKAGE}_doxy.log])
+lc_pkg=`echo ${PACKAGE_NAME} | [tr [A-Z] [a-z]]`
+AC_SUBST([coin_doxy_tagname],[${lc_pkg}_doxy.tag])
+AC_SUBST([coin_doxy_logname],[${lc_pkg}_doxy.log])
 AM_CONDITIONAL(COIN_HAS_DOXYGEN, [test $coin_have_doxygen = yes])
 AM_CONDITIONAL(COIN_HAS_LATEX, [test $coin_have_latex = yes])
 
@@ -983,7 +985,8 @@ tmp="$1"
 for proj in $tmp ; do
   lc_proj=`echo $proj | [tr [A-Z] [a-z]]`
   doxytag=${lc_proj}_doxy.tag
-  coin_doxy_tagfiles="$coin_doxy_tagfiles @docdir_nosub@/$proj/doxydoc/$doxytag=@docdir_nosub@/$proj/doxydoc"
+  doxydir="@baredocdir_nosub@/coin-or-${lc_proj}/doxydoc"
+  coin_doxy_tagfiles="$coin_doxy_tagfiles $doxydir/$doxytag=$doxydir/html"
 done
 AC_SUBST([coin_doxy_tagfiles])
 

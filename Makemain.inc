@@ -11,14 +11,22 @@
 #        Variables for documentation and data directories              #
 ########################################################################
 
-# COIN overrides the default definitions of datadir and docdir.
+# Set these up to provide some uniformity in naming while also conforming
+# to Gnu directory standards. For reasons known only to the autoconf
+# developers, autoconf leaves datadir = $(datarootdir) but forces docdir
+# to $(datarootdir)/doc/$(PACKAGE_TARNAME).
 
-datadir = @datarootdir@/coin/data
-docdir  = @datarootdir@/coin/doc
-pkgdatadir = $(datadir)/$(PACKAGE_NAME)
-pkgdocdir = $(docdir)/$(PACKAGE_NAME)
+pkgincludedir = $(includedir)/coin-or
+pkgdatadir = $(datadir)/$(PACKAGE_TARNAME)
+pkgdocdir = $(docdir)
+
+# doxydocdir is the top-level directory for doxygen documentation. It holds
+# the tag file and possibly the PDF or Postscript version. doxyhtmldir is
+# typically a subdirectory containing all the files doxygen creates for
+# html documentation.
+
 doxydocdir = $(pkgdocdir)/doxydoc
-doxyhtmldir = $(doxydocdir)
+doxyhtmldir = $(doxydocdir)/html
 
 ########################################################################
 #                    Documentation installation                        #
@@ -32,7 +40,7 @@ COIN_HAS_LATEX = @COIN_HAS_LATEX_TRUE@TRUE
 # Needless to say, it's important that doxydocdir_nosub not be a target for
 # autoconf substitution.
 
-DOXYTAG_EDIT = sed -e 's|@docdir_nosub@|$(docdir)|g'
+DOXYTAG_EDIT = sed -e 's|@baredocdir_nosub@|$(datarootdir)/doc|g'
 
 doxygen-docs: 
 	if test "$(COIN_HAS_DOXYGEN)" = TRUE; then \
