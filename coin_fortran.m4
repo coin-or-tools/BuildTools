@@ -318,9 +318,9 @@ AC_DEFUN([AC_COIN_CHK_PKG_FLINK],
 # Libs.private, Cflags.private, and Requires.private, respectively, in a .pc
 # file. To add to the public variables, specify 'public' as $2.
 
-# The algorithm first invokes COIN_CHK_PKG_CORE. The parameters --with-blas,
-# --with-blas-libs, --with-blas-cflags, and --with-blas-data are interpreted
-# there. If nothing is found, default locations are checked.
+# The algorithm first invokes FIND_PRIM_PKG. The parameters --with-blas,
+# --with-blas-libs, and --with-blas-cflags are interpreted there. If nothing
+# is found, default locations are checked.
 
 # When checking default locations, the macro uses a link check because it's
 # the easiest way to decide if a guess is correct. But a link check is always
@@ -345,15 +345,16 @@ AC_DEFUN([AC_COIN_CHK_PKG_BLAS],
      AC_SUBST(m4_toupper(myvar)_CFLAGS_PUB)
      AC_SUBST(m4_toupper(myvar)_PCFILES_PUB)])
 
-# Give CHK_PKG_CORE a chance. The result (coin_has_blas) will be one of yes
-# (either the user specified something or pkgconfig found something), no
-# (user specified nothing and pkgconfig found nothing) or skipping (user
-# said do not use). We'll also have variables blas_libs, blas_cflags,
-# blas_data, and blas_pcfiles.
+# Set up command line arguments with DEF_PRIM_ARGS and give FIND_PRIM_PKG
+# a chance. The result (coin_has_blas) will be one of yes (either the user
+# specified something or pkgconfig found something), no (user specified nothing
+# and pkgconfig found nothing) or skipping (user said do not use). We'll
+# also have variables blas_libs, blas_cflags, blas_data, and blas_pcfiles.
 
-  AC_COIN_CHK_PKG_CORE([blas])
+  AC_COIN_DEF_PRIM_ARGS([blas],yes,yes,yes,no)
+  AC_COIN_FIND_PRIM_PKG([blas])
 
-# If CHK_PKG_CORE found something and the user wants a link check, do it. For
+# If FIND_PRIM_PKG found something and the user wants a link check, do it. For
 # a successful link check, update blas_libs just in case FLIBS was added.
 
   if test "$coin_has_blas" = yes ; then
@@ -366,7 +367,7 @@ AC_DEFUN([AC_COIN_CHK_PKG_BLAS],
          AC_MSG_WARN([BLAS failed to link with "$blas_libs"])
        fi])
 
-# If CHK_PKG_CORE didn't find anything, try a few guesses.  Try some
+# If FIND_PRIM_PKG didn't find anything, try a few guesses.  Try some
 # specialised checks based on the host system type first.  If none of them
 # are applicable, or the applicable one fails, try the generic -lblas.
 
@@ -461,9 +462,9 @@ AC_DEFUN([AC_COIN_CHK_PKG_BLAS],
 # Libs.private, Cflags.private, and Requires.private, respectively, in a .pc
 # file. To add to the public variables, specify 'public' as $2.
 
-# The algorithm first invokes COIN_CHK_PKG_CORE. The parameters --with-blas,
-# --with-blas-libs, --with-blas-cflags, and --with-blas-data are interpreted
-# there. If nothing is found, default locations are checked.
+# The algorithm first invokes FIND_PRIM_PKG. The parameters --with-lapack,
+# --with-lapack-libs, and --with-lapack-cflags are interpreted there. If
+# nothing is found, default locations are checked.
 
 # When checking default locations, the macro uses a link check because it's
 # the easiest way to decide if a guess is correct. But a link check is always
@@ -488,15 +489,16 @@ AC_DEFUN([AC_COIN_CHK_PKG_LAPACK],
      AC_SUBST(m4_toupper(myvar)_CFLAGS_PUB)
      AC_SUBST(m4_toupper(myvar)_PCFILES_PUB)])
 
-# Give CHK_PKG_CORE a chance. The result (coin_has_lapack) will be one of yes
-# (either the user specified something or pkgconfig found something), no
-# (user specified nothing and pkgconfig found nothing) or skipping (user
-# said do not use). We'll also have variables lapack_libs, lapack_cflags,
-# lapack_data, and lapack_pcfiles.
+# Set up command line arguments with DEF_PRIM_ARGS and give FIND_PRIM_PKG
+# a chance. The result (coin_has_blas) will be one of yes (either the user
+# specified something or pkgconfig found something), no (user specified nothing
+# and pkgconfig found nothing) or skipping (user said do not use). We'll
+# also have variables blas_libs, blas_cflags, blas_data, and blas_pcfiles.
 
-  AC_COIN_CHK_PKG_CORE([lapack])
+  AC_COIN_DEF_PRIM_ARGS([lapack],yes,yes,yes,no)
+  AC_COIN_FIND_PRIM_PKG([lapack])
 
-# If CHK_PKG_CORE found something and the user wants a link check, do it. For
+# If FIND_PRIM_PKG found something and the user wants a link check, do it. For
 # a successful link check, update lapack_libs just in case FLIBS was added.
 
   if test "$coin_has_lapack" = yes ; then
@@ -509,7 +511,7 @@ AC_DEFUN([AC_COIN_CHK_PKG_LAPACK],
          AC_MSG_WARN([LAPACK failed to link with "$lapack_libs"])
        fi])
 
-# If CHK_PKG_CORE didn't find anything, try a few guesses. First, check if
+# If FIND_PRIM_PKG didn't find anything, try a few guesses. First, check if
 # the library for BLAS already includes LAPACK. Then try some specialised
 # checks based on the host system type first.  If none of them are applicable,
 # or the applicable one fails, try the generic -llapack.
