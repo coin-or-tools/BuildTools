@@ -189,9 +189,7 @@ findProjects () {
 if [[ -z "$AUTOTOOLS_DIR" ]] ; then
   AUTOTOOLS_DIR=/usr
 fi
-if ! ( expr "$PATH" : '.*:'"${AUTOTOOLS_DIR}"'/bin:.*' &>/dev/null ||
-       expr "$PATH" : "${AUTOTOOLS_DIR}"'/bin:.*' &>/dev/null ||
-       expr "$PATH" : '.*:'"${AUTOTOOLS_DIR}"'/bin' &>/dev/null ) ; then
+if ! expr ":${PATH}:" : '.*:'"${AUTOTOOLS_DIR}"'/bin:.*' &>/dev/null ; then
   export PATH=$AUTOTOOLS_DIR/bin:$PATH
 fi
 
@@ -420,7 +418,7 @@ trap 'exit_status=$?
 
 echo "Running autotools in ${dirs[*]}"
 
-m4Files="$AUTOTOOLS_DIR/share/aclocal/libtool.m4"
+# m4Files="$AUTOTOOLS_DIR/share/aclocal/libtool.m4"
 buildtoolsLinks=
 
 for dir in ${dirs[@]} ; do
@@ -486,16 +484,13 @@ for dir in ${dirs[@]} ; do
 
 # Get on with running the autotools.
 
-    echo "  creating acinclude.m4 in $dir"
-    cat $m4Files $toolsDir/coin.m4 > acinclude.m4
-    cat $toolsDir/coin_fortran.m4 >> acinclude.m4
-    cat $toolsDir/coin_math.m4 >> acinclude.m4
-    echo "  running aclocal in $dir"
-    if test -d m4; then
-      aclocal -I m4 || exit 1
-    else
-      aclocal || exit 1
+    m4Dirs="-I $AUTOTOOLS_DIR/share/aclocal"
+    m4Dirs="$m4Dirs -I $toolsDir"
+    if test -d m4 ; then
+      m4Dirs="$m4Dirs -I m4"
     fi
+    echo "  running aclocal in $dir"
+    aclocal $m4Dirs
     if grep AC_CONFIG_HEADER configure.ac >/dev/null 2>&1; then
       echo "  running autoheader in $dir"
       autoheader || exit 1

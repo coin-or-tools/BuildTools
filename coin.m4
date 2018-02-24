@@ -451,7 +451,7 @@ AC_DEFUN([AC_COIN_CHK_MOD_EXISTS],
 # variable as specified in the autoconf doc'n.
 
 # Setting the final parameter to 'build' will cause the phrase "'build' will
-# prefer a COIN ThirdParty package" to be inserted in the documentation for
+# look for a COIN ThirdParty package" to be inserted in the documentation for
 # --with-prim.
 
 AC_DEFUN([AC_COIN_DEF_PRIM_ARGS],
@@ -461,7 +461,7 @@ AC_DEFUN([AC_COIN_DEF_PRIM_ARGS],
       ['yes' is equivalent to --with-m4_tolower($1),]
       m4_case($6,build,
       ['no' is equivalent to --without-m4_tolower($1)[,]
-       'build' will prefer a COIN ThirdParty package.],
+       'build' will look for a COIN ThirdParty package.],
       ['no' is equivalent to --without-m4_tolower($1).])
       m4_case($3$4$5,nonono,,
         nonoyes,
@@ -501,7 +501,7 @@ AC_DEFUN([AC_COIN_DEF_PRIM_ARGS],
 ###########################################################################
 # COIN_FIND_PRIM_PKG([prim],[.pc file name],[default action],[cmdlineopts])
 
-# Determine whether we can use primary package prim ($1) and collect
+# Determine whether we can use primary package prim ($1) and assemble
 # information on the required library flags (prim_libs), compiler flags
 # (prim_cflags), and data directories (prim_data) as specified by cmdlineopts.
 
@@ -515,7 +515,7 @@ AC_DEFUN([AC_COIN_DEF_PRIM_ARGS],
 # --with-prim is interpreted as follows: --with-prim=no is equivalent to
 # --without-prim. Any of --with-prim, --with-prim=yes, or --with-prim=build,
 # cause the macro to look for a .pc file. Any other value is taken as
-# equivalent to --with-prim-data=value (dataonly) or --with-prim-libs-value
+# equivalent to --with-prim-data=value (dataonly) or --with-prim-libs=value
 # (anything else).
 
 # The algorithm first checks for a user-specified value of --with-prim;
@@ -710,7 +710,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
 # COIN_CHK_PKG([prim],[client packages],[.pc file name],
 #              [default action],[public/private],[cmdopts])
 
-# Determine whether we can use primary package prim ($1) and collect
+# Determine whether we can use primary package prim ($1) and assemble
 # information on the required library flags (prim_libs), compiler flags
 # (prim_cflags), and data directories (prim_data).
 
@@ -790,15 +790,21 @@ AC_DEFUN([AC_COIN_CHK_PKG],
     AC_MSG_RESULT([$m4_tolower(coin_has_$1) due to COIN_SKIP_PROJECTS])
   fi
 
+# Possibilities are `yes', 'no', or `skipping'. Normalise to `yes' or `no'.
+
+  if test "$m4_tolower(coin_has_$1)" != yes ; then
+    m4_tolower(coin_has_$1)=no
+  fi
+
 # Create an automake conditional COIN_HAS_PRIM.
 
   AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
   		 [test $m4_tolower(coin_has_$1) = yes])
 
-# If we've located the package, define preprocessor symbol COIN_HAS_PRIM
-# and augment the necessary variables for the client packages. We need the
-# final ':' (noop) below because it's possible that PRIM is data-only and the
-# list of client packages is empty.
+# If we've located the package, define preprocessor symbol COIN_HAS_PRIM and
+# augment the necessary variables for the client packages. We need the final
+# ':' (noop) below because it's possible that the list of client packages
+# is empty.
 
   if test $m4_tolower(coin_has_$1) = yes ; then
     AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],
@@ -833,7 +839,7 @@ AC_DEFUN([AC_COIN_CHK_PKG],
 # COIN_FIND_PRIM_LIB([prim],[linkflgs],[cflgs],[dataflgs],
 #                    [dfltaction],[cmdlineopts])
 
-# Determine whether we can use primary package prim ($1) and collect
+# Determine whether we can use primary library prim ($1) and assemble
 # information on the required library flags (prim_libs), compiler flags
 # (prim_cflags), and data directories (prim_data) as specified by cmdlineopts.
 
@@ -844,11 +850,19 @@ AC_DEFUN([AC_COIN_CHK_PKG],
 # command line options. Shell code produced by the macro is tailored based
 # on cmdlineopts. `nodata' is the default.
 
-# --with-prim is interpreted as follows: --with-prim=no is equivalent to
-# --without-prim. Any of --with-prim, --with-prim=yes, or --with-prim=build,
-# cause the macro to look for a .pc file. Any other value is taken as
-# equivalent to --with-prim-data=value (dataonly) or --with-prim-libs-value
-# (anything else).
+# --with-prim is interpreted as follows:
+#   * --with-prim=no is equivalent to --without-prim.
+#   * --with-prim or --with-prim=yes is equivalent to
+#       --with-prim-libs=-lprim
+#       --with-prim-data=/usr/local/share
+#   * --with-prim=build attempts to invent something that will find a COIN
+#     ThirdParty library or data
+#       --with-prim-libs="-L\$(libdir) -lcoinprim"
+#       --with-prim-cflgs="-I\$(pkgincludedir)/ThirdParty"
+#       --with-prim-data="\$(pkgdatadir)"
+#   * Any other value is taken as equivalent to
+#       --with-prim-data=value (dataonly) or
+#       --with-prim-libs=value (anything else)
 
 # The algorithm first checks for a user-specified value of --with-prim;
 # if this is no, prim is skipped. Next, it looks for user specified values
@@ -857,17 +871,10 @@ AC_DEFUN([AC_COIN_CHK_PKG],
 # passed as parameters. It's all or none: any command line options disable all
 # parameters.
 
-# Default action ($5) (no, yes, build) is the default action if the user
-# offers no guidance via command line parameters. In turn, it defaults to yes.
-
-# `build' will attempt to invent something that prefers COIN ThirdParty
-# packages, e.g.,
-#     glpk_libs="-L$(libdir) -lcoinglpk"
-#     glpk_cflags="-I$(includedir)/ThirdParty"
-# vs
-#     glpk_libs="-lglpk"
-#     glpk_cflags=""
-# but it's pretty shaky and has no hope except for ThirdParty packages.
+# Default action ($5) (no, yes, build) is the default value of --with-prim
+# if the user offers no guidance via command line parameters. In turn,
+# it defaults to yes. `build' doesn't have a hope of working except for COIN
+# ThirdParty packages, and even then it's pretty shaky.
 
 # The macro doesn't test that the specified values actually work. This is
 # deliberate --- there's no guarantee that the specified values actually
@@ -878,7 +885,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 [
   dflt_action=m4_default([$5],[yes])
 
-# Initialize variables for the primary package.
+# Initialize variables for the primary library.
 
   m4_tolower(coin_has_$1)=noInfo
   m4_tolower($1_libs)=
@@ -1006,7 +1013,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
       m4_if(m4_default($6,nodata),nodata,[],
         [m4_tolower($1_data)=m4_default([$3],
            [if test "$m4_tolower(coin_has_$1)" = build ; then
-	      m4_tolower($1_data)="$(pkgdatadir)"
+	      m4_tolower($1_data)="\$(pkgdatadir)"
 	    else
 	      m4_tolower($1_data)="/usr/local/share"
 	    fi])])
@@ -1019,10 +1026,9 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
       ;;
   esac
 
-# The final value of coin_has_prim will be yes, no, or skipping. No means
-# we looked (with pkgconfig) and didn't find anything. Skipping means the
-# user said `don't use.' Yes means we have something, from the user or macro
-# parameters or invented. Note that we haven't run a useability test!
+# The final value of coin_has_prim will be yes or skipping.  Skipping means
+# the user said `don't use.' Yes means we have something, from the user or
+# macro parameters or invented. Note that we haven't run a useability test!
 
 # Change the test to enable / disable debugging output
 
@@ -1044,7 +1050,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 # COIN_CHK_LIB([prim],[client packages],[linkflgs],[cflgs],[dataflgs],
 #              [dfltaction],[public/private],[cmdopts])
 
-# Determine whether we can use primary package prim ($1) and collect
+# Determine whether we can use primary library prim ($1) and assemble
 # information on the required library flags (prim_libs), compiler flags
 # (prim_cflags), and data directories (prim_data).
 
@@ -1054,25 +1060,24 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 # 'all' offers all four. DEF_PRIM_ARGS and FIND_PRIM_PKG are tailored
 # accordingly. The (hardwired) default is 'nodata'.
 
-# Default action ($4) (no, yes, build) is the default action if the user
+# Macro parameters linkflgs ($3), cflgs ($4), and dataflgs ($5) are used for
+# --with-prim-libs, --with-prim-cflgs, and --with-prim-data if and only if
+# there are no user-supplied values on the command line. It's all or nothing;
+# any user-supplied value causes all macro parameters to be ignored.
+
+# Default action ($6) (no, yes, build) is the default action if the user
 # offers no guidance via command line parameters. Really, 'build' has no hope
 # of working except for COIN ThirdParty packages. Don't use it for other COIN
 # packages.
-
-# If no .pc file names are specified, the macro will look for prim.pc if the
-# default is yes, coinprim.pc if the default is build.  If a .pc file name
-# ($3) is specified, it overrides the macro defaults.
 
 # Define an automake conditional COIN_HAS_PRIM to record the result. If we
 # decide to use prim, also define a preprocessor symbol COIN_HAS_PRIM.
 
 # Linker and compiler flag information will be propagated to the space-
-# separated list of client packages ($2) using the _PCFILES variable if
-# a .pc file is used, otherwise by the _LIBS and _CFLAGS variables of
-# client packages. These variables match Requires.private, Libs.private,
-# and Cflags.private, respectively, in a .pc file. To force information about
-# prim to be added to the public variables in a .pc file, set public/private
-# ($5) to public.
+# separated list of client packages ($2) using the _LIBS and _CFLAGS variables
+# of client packages. These variables match Libs.private and Cflags.private,
+# respectively, in a .pc file. To force information about prim to be added
+# to the public variables in a .pc file, set public/private ($7) to public.
 
 # The macro doesn't test that the specified values actually work. This is
 # deliberate.  There's no guarantee that user-specified libraries and/or
@@ -1118,6 +1123,12 @@ AC_DEFUN([AC_COIN_CHK_LIB],
     AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
   else
     AC_MSG_RESULT([$m4_tolower(coin_has_$1) due to COIN_SKIP_PROJECTS])
+  fi
+
+# Possibilities are `yes' or `skipping'. Normalise to `yes' or `no'.
+
+  if test "$m4_tolower(coin_has_$1)" != yes ; then
+    m4_tolower(coin_has_$1)=no
   fi
 
 # Create an automake conditional COIN_HAS_PRIM.
