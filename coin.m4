@@ -84,6 +84,7 @@ AC_DEFUN([AC_COIN_PROJECTVERSION],
   m4_ifvaln([$2],[coin_libversion=$2],[])
 ])
 
+
 ###########################################################################
 #                          COIN_ENABLE_MSVC                               # 
 ###########################################################################
@@ -100,8 +101,38 @@ AC_DEFUN([AC_COIN_ENABLE_MSVC],
     [enable_msvc=no])
 ])
 
+
 ###########################################################################
-#                            COIN_INITIALIZE                               #
+#                      COIN_DEPENDENCY_LINKING                            # 
+###########################################################################
+
+# Control whether all dependencies are linked into shared libraries. `Yes' is
+# the recommended best practice now-a-days. This can be overridden on the
+# configure command line.
+
+# In BuildTools/stable, dependency linking is disabled for cl and icl on
+# cygwin and mingw, enabled for everything else. That may need to be
+# reintroduced. --lh, 180228 --
+
+AC_DEFUN([AC_COIN_DEPENDENCY_LINKING],
+[
+  AC_ARG_ENABLE([dependency-linking],
+    [AC_HELP_STRING([--enable-dependency-linking],
+       [Link all library dependencies into shared libraries at
+        creation (default=yes)])],
+    [dependency_linking="$enableval"],
+    [dependency_linking=yes])
+
+# AC_SUBST([LT_LDFLAGS])
+# if test "$dependency_linking" = yes ; then
+#   LT_LDFLAGS="$LT_LDFLAGS -no-undefined"
+# fi
+
+  AM_CONDITIONAL(DEPENDENCY_LINKING, [test "$dependency_linking" = yes])
+])
+
+###########################################################################
+#                        COIN_COMPFLAGS_DEFAULTS                          #
 ###########################################################################
 
 AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
@@ -136,6 +167,10 @@ AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
     : ${CXXFLAGS:="-DNDEBUG"}
   fi
 ])
+
+###########################################################################
+#                            COIN_INITIALIZE                               #
+###########################################################################
 
 # AC_COIN_INITIALIZE(name,version)
 
@@ -212,20 +247,28 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 [
 # On Windows, shared C++ libraries do not work with the current libtool (it
 # handles only exports for C functions, not C++). On all other systems, build
-# shared libraries.
+# only shared libraries.
 
-  case $host_os in
-    cygwin* | mingw* | msys* )
-      AC_DISABLE_SHARED
-      ;;
-    *)
-      AC_DISABLE_STATIC
-      ;;
-  esac
+# (lh, 180302) Sadly, we can't use the obvious libtool macros
+# (AC_{ENABLE,DISABLE}_{SHARED,STATIC}, nor parameters to LT_INIT,
+# precisely because these macros record the default behaviour by defining
+# a macro, _LT_ENABLE_{SHARED,STATIC}_DEFAULT. No shell code involved, hence
+# any shell conditional has no effect. Either we trust libtool or we need
+# something more inventive. The relevant libtool macros are in ltoptions.m4,
+# _LT_ENABLE_SHARED and _LT_ENABLE_STATIC.
 
-# Create libtool
+# case $host_os in
+#   cygwin* | mingw* | msys* )
+#     AC_DISABLE_SHARED
+#     ;;
+#   *)
+#     AC_DISABLE_STATIC
+#     ;;
+# esac
 
-  AC_PROG_LIBTOOL
+# Create libtool.
+
+  LT_INIT
 
 # Patch libtool to eliminate a trailing space after AR_FLAGS. This needs to be
 # run after config.status has created libtool. Apparently necessary on
@@ -240,10 +283,22 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
       ;;
   esac
 
-# -no-undefined is required for DLLs on Windows
+# Set up LT_LDFLAGS. Add the library version string to LT_LDFLAGS, if one
+# is supplied.
 
-  LT_LDFLAGS="-no-undefined"
   AC_SUBST([LT_LDFLAGS])
+  AC_MSG_CHECKING([if the library version is set])
+  if test x"$coin_libversion" != x ; then
+    LT_LDFLAGS="$LT_LDFLAGS -version-info $coin_libversion"
+    AC_MSG_RESULT([$coin_libversion])
+  else
+    AC_MSG_RESULT([no])
+  fi
+
+# Check if dependency linking is enabled or disabled.
+
+  AC_COIN_DEPENDENCY_LINKING
+
 ])
 
 ###########################################################################
@@ -265,7 +320,6 @@ AC_DEFUN_ONCE([AC_COIN_PROG_CC],
 # to invoke it from this macro first so that we can supply a parameter.
 
   AC_BEFORE([$0],[LT_INIT])
-  AC_BEFORE([$0],[AC_PROG_LIBTOOL])
 
 # If enable-msvc, then test only for MS and Intel (on Windows) C compiler
 # otherwise, test a long list of C compilers that comes into our mind
@@ -340,7 +394,8 @@ AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
     pkg_min_version=m4_default([$1],[0.16.0])
     AC_MSG_CHECKING([$PKG_CONFIG is at least version $pkg_min_version])
     if $PKG_CONFIG --atleast-pkgconfig-version $pkg_min_version ; then
-      AC_MSG_RESULT([yes: `$PKG_CONFIG --version`])
+      pkg_version=`$PKG_CONFIG --version`
+      AC_MSG_RESULT([yes: $pkg_version])
     else
      AC_MSG_RESULT([no])
      PKG_CONFIG=""
@@ -366,10 +421,10 @@ AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
 # directory for .pc files for COIN packages.  Coin .pc files are installed in
 # ${libdir}/pkgconfig. But autoconf sets $libdir to '${exec_prefix}/lib', and
 # $exec_prefix to '${prefix}'.  COIN_INITIALIZE will set ac_default_prefix
-# correctly. Unless the user specifies --prefix, it is set to NONE
-# until the end of configuration, at which point it will be set to
-# $ac_default_prefix. Unless the user specifies --exec-prefix, it is
-# set to NONE until the end of configuration, at which point it's set to
+# correctly. Unless the user specifies --prefix, prefix is set to
+# NONE until the end of configuration, at which point it will be set to
+# $ac_default_prefix. Unless the user specifies --exec-prefix, exec-prefix
+# is set to NONE until the end of configuration, at which point it's set to
 # '${prefix}'. Sheesh.  So do the expansion, then back it out. Of course,
 # this whole house of cards balances on the shaky assumption that the user is
 # sane and has installed all packages in the same place and does not change
@@ -418,7 +473,7 @@ AC_DEFUN([AC_COIN_CHK_MOD_EXISTS],
 
   if test -n "$PKG_CONFIG" ; then
     if PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --exists "$2" ; then
-      m4_toupper($1)[]_VERSIONS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --modversion "$2" 2>/dev/null | tr '\n' ' '`
+      m4_toupper($1)_VERSIONS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --modversion "$2" 2>/dev/null | tr '\n' ' '`
       $3
     else
       m4_toupper($1)_PKG_ERRORS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "$2"`
@@ -430,6 +485,86 @@ AC_DEFUN([AC_COIN_CHK_MOD_EXISTS],
 ])
 
 ###########################################################################
+#                          COIN_INIT_LIBVARS                              #
+###########################################################################
+
+# COIN_INIT_LIBVARS(lib,lflags,cflags,pcfiles,data)
+
+# This macro sets up the public variables for lib, PROJ_LFLAGS_PUB,
+# PROJ_CFLAGS_PUB, PROJ_PCFILES_PUB, and PROJ_DATA. These variables correspond
+# to Libs, Cflags, Requires, and datadir in the .pc.in file for a project.
+# More generally, this macro is useful when a project builds libraries that
+# are used by other libraries during the project build. For example, Osi
+# builds OsiLib, which is used by OsiCommonTest and the various OsiXxxLib
+# interfaces to third-party solvers.
+
+# PROJ_PCFILES_PUB should be used rarely, if ever. We're exposing public
+# information from lower level libraries at the level of this library, which is
+# not usually necessary.
+
+# The datadir variable is a COIN extension in the .pc file. It defaults
+# to @datadir@/@PACKAGE_TARNAME@ in accordance with Gnu standards.
+
+AC_DEFUN([AC_COIN_INIT_LIBVARS],
+[
+  AC_SUBST(m4_toupper($1_LFLAGS_PUB),["$2"])
+  AC_SUBST(m4_toupper($1_CFLAGS_PUB),["$3"])
+  AC_SUBST(m4_toupper($1_PCFILES_PUB),["$4"])
+  AC_SUBST(m4_toupper($1_DATA),["$5"])
+])
+  
+
+###########################################################################
+#                          COIN_CHK_HERE                                  #
+###########################################################################
+
+# COIN_CHK_HERE([prim],[client packages],[pcfile])
+
+# Augment the _LFLAGS, _CFLAGS, and _PCFILES variables of the client
+# packages with the values from PRIM_LFLAGS_PUB, PRIM_CFLAGS_PUB, and
+# PRIM_PCFILES_PUB. This macro is intended for the case where a single project
+# builds several objects and one object includes another. For example,
+# the various OsiXxxLib solvers, which depend on OsiLib. We can't consult
+# osi.pc (it's not installed yet) but the relevant variables are ready at
+# hand. The name of prim is often different from the name of the .pc file
+# ($3), hence the separate parameter.
+
+# This macro should be called after FINALIZE_FLAGS is invoked for the
+# client packages, for two reasons: First, COIN packages tend to use
+# .pc files, so we're probably adding a package to _PCFILES that isn't yet
+# installed. Also, FINALIZE_FLAGS will have accessed the .pc files already
+# in _PCFILES and expanded them into _LIBS and _CFLAGS, saving the original
+# _LIBS and _CFLAGS in _LIBS_NOPC and _CFLAGS_NOPC.
+
+AC_DEFUN([AC_COIN_CHK_HERE],
+[
+
+# Make sure the necessary variables exist for each client package.
+
+  m4_foreach_w([myvar],[$2],
+    [AC_SUBST(m4_toupper(myvar)_LFLAGS)
+     AC_SUBST(m4_toupper(myvar)_CFLAGS)
+     AC_SUBST(m4_toupper(myvar)_PCFILES)])
+
+# Add the .pc file and augment LFLAGS and CFLAGS.
+
+    m4_foreach_w([myvar],[$2],
+      [m4_toupper(myvar)_PCFILES="$m4_toupper(myvar)_PCFILES $3"
+       m4_toupper(myvar)_LFLAGS="$m4_toupper(myvar)_LFLAGS $m4_toupper($1)_LFLAGS"
+       m4_toupper(myvar)_CFLAGS="$m4_toupper(myvar)_CFLAGS $m4_toupper($1)_CFLAGS"
+
+# Change the test to enable / disable debugging output
+
+       if test 1 = 1 ; then
+	 AC_MSG_NOTICE([CHK_HERE adding $1 to myvar:])
+	 AC_MSG_NOTICE([m4_toupper(myvar)_PCFILES: "${m4_toupper(myvar)_PCFILES}"])
+	 AC_MSG_NOTICE([m4_toupper(myvar)_LFLAGS: "${m4_toupper(myvar)_LFLAGS}"])
+	 AC_MSG_NOTICE([m4_toupper(myvar)_CFLAGS: "${m4_toupper(myvar)_CFLAGS}"])
+       fi ; ])
+
+])   # COIN_CHK_HERE
+
+###########################################################################
 #                      COIN_DEF_PRIM_ARGS                                 #
 ###########################################################################
 
@@ -438,17 +573,17 @@ AC_DEFUN([AC_COIN_CHK_MOD_EXISTS],
 # This is a utility macro to handle the standard arguments that COIN
 # configuration files supply for a component (package or library):
 #   --with-prim: use primitive (yes / no / special)
-#   --with-prim-libs: linker flags for the primitive
+#   --with-prim-lflags: linker flags for the primitive
 #   --with-prim-cflags: preprocessor & compiler flags for the primitive
 #   --with-prim-data: data directory for the primitive
-# These arguments allow the user to override default macro behaviour on the
+# These arguments allow the user to override default macro behaviour from the
 # configure command line.
 # The string prim, lower-cased, is used in the flag name.
 # The parameters base, lflags, cflags, and dflags have the value yes or no and
-# determine whether a --with option will be defined for prim, libs, cflags,
+# determine whether a --with option will be defined for prim, lflags, cflags,
 # and data, respectively. They must be literals, as the macro uses them to cut
 # out unused options. To use the results, construct the name of the shell
-# variable as specified in the autoconf doc'n.
+# variable as specified in the autoconf doc'n for ARG_WITH.
 
 # Setting the final parameter to 'build' will cause the phrase "'build' will
 # look for a COIN ThirdParty package" to be inserted in the documentation for
@@ -469,16 +604,16 @@ AC_DEFUN([AC_COIN_DEF_PRIM_ARGS],
 	noyesno,
 	Any other argument is applied as for --with-m4_tolower($1)-cflags,
 	noyesyes,
-	Any other argument is applied as for --with-m4_tolower($1)-data,
-	Any other argument is applied as for --with-m4_tolower($1)-libs))])
+	Any other argument is applied as for --with-m4_tolower($1)-cflags,
+	Any other argument is applied as for --with-m4_tolower($1)-lflags))])
 
   m4_if($2,yes,
     [AC_ARG_WITH([m4_tolower($1)],
        AS_HELP_STRING([--with-m4_tolower($1)],extraHelp))])
 
   m4_if($3,yes,
-    [AC_ARG_WITH([m4_tolower($1)-libs],
-       AS_HELP_STRING([--with-m4_tolower($1)-libs],
+    [AC_ARG_WITH([m4_tolower($1)-lflags],
+       AS_HELP_STRING([--with-m4_tolower($1)-lflags],
 	 [Linker flags for $1 appropriate for your environment.
 	  (Most often, -l specs for libraries.)]))])
 
@@ -502,36 +637,37 @@ AC_DEFUN([AC_COIN_DEF_PRIM_ARGS],
 # COIN_FIND_PRIM_PKG([prim],[.pc file name],[default action],[cmdlineopts])
 
 # Determine whether we can use primary package prim ($1) and assemble
-# information on the required library flags (prim_libs), compiler flags
+# information on the required library flags (prim_lflags), compiler flags
 # (prim_cflags), and data directories (prim_data) as specified by cmdlineopts.
 
 # cmdlineopts ($4) specifies the set of configure command line options
-# defined and processed: 'nodata' produces --with-prim, --with-prim-libs,
-# and --with-prim-cflags 'dataonly' produces only --with-prim and
-# --with-prim-data Anything else ('all' works well) produces all four
-# command line options. Shell code produced by the macro is tailored based
-# on cmdlineopts. `nodata' is the default.
+# defined and processed: 'nodata' produces --with-prim, --with-prim-libs, and
+# --with-prim-cflags; 'dataonly' produces --with-prim and --with-prim-data;
+# anything else ('all' works well) produces all four command line
+# options. Shell code produced by the macro is tailored based on
+# cmdlineopts. `nodata' is the default.
 
 # --with-prim is interpreted as follows: --with-prim=no is equivalent to
 # --without-prim. Any of --with-prim, --with-prim=yes, or --with-prim=build,
 # cause the macro to look for a .pc file. Any other value is taken as
-# equivalent to --with-prim-data=value (dataonly) or --with-prim-libs=value
+# equivalent to --with-prim-data=value (dataonly) or --with-prim-lflags=value
 # (anything else).
 
 # The algorithm first checks for a user-specified value of --with-prim;
 # if this is no, prim is skipped. Next, it looks for user specified values
-# given with command line parameters --with-prim-libs, --with-prim-cflags,
+# given with command line parameters --with-prim-lflags, --with-prim-cflags,
 # and --with-prim-data. If none of these are specified, it will look for a
 # .pc file for prim using PKG_CONFIG.
 
 # Default action ($3) (no, yes, build) is the default action if the user
-# offers no guidance via command line parameters. In turn, it defaults to yes.
+# offers no guidance via command line parameters. The (hardwired) default is
+# yes.
 
 # If no .pc file names are specified, the macro will look for prim.pc if the
 # default is yes, coinprim.pc if the default is build.  If a .pc file name
 # ($2) is specified, it overrides the macro defaults. Note that for the
-# majority of COIN packages, you should not specify `build' as .pc files for
-# most COIN packages are simply the package name (e.g., clp.pc). But for
+# majority of COIN packages, you should not specify `build' as .pc files
+# for most COIN packages are simply the package name (e.g., clp.pc). For
 # ThirdParty packages, this works (e.g., coinglpk.pc).
 
 # The macro doesn't test that the specified values actually work. This is
@@ -548,7 +684,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
 # Initialize variables for the primary package.
 
   m4_tolower(coin_has_$1)=noInfo
-  m4_tolower($1_libs)=
+  m4_tolower($1_lflags)=
   m4_tolower($1_cflags)=
   m4_tolower($1_data)=
   m4_tolower($1_pcfiles)=
@@ -572,7 +708,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
 	m4_tolower(coin_has_$1)=yes
 	m4_if(m4_default($4,nodata),dataonly,
 	  [m4_tolower($1_data)=$withval],
-	  [m4_tolower($1_libs)=$withval])
+	  [m4_tolower($1_lflags)=$withval])
 	;;
     esac
   fi
@@ -583,7 +719,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
 
   m4_if(m4_default($4,nodata),dataonly,[],
     [if test "$m4_tolower(coin_has_$1)" != skipping ; then
-       withval=$m4_tolower(with_$1_lib)
+       withval=$m4_tolower(with_$1_lflags)
        if test -n "$withval" ; then
 	 case "$withval" in
 	   build | no | yes )
@@ -591,7 +727,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
 	     ;;
 	   * )
 	     m4_tolower(coin_has_$1)=yes
-	     m4_tolower($1_libs)=$withval
+	     m4_tolower($1_lflags)=$withval
 	     ;;
 	 esac
        fi
@@ -695,7 +831,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
     if test 1 = 1 ; then
       AC_MSG_NOTICE([FIND_PRIM_PKG result for $1: "$m4_tolower(coin_has_$1)"])
       AC_MSG_NOTICE([Collected values for package '$1'])
-      AC_MSG_NOTICE([m4_tolower($1_libs) is "$m4_tolower($1_libs)"])
+      AC_MSG_NOTICE([m4_tolower($1_lflags) is "$m4_tolower($1_lflags)"])
       AC_MSG_NOTICE([m4_tolower($1_cflags) is "$m4_tolower($1_cflags)"])
       AC_MSG_NOTICE([m4_tolower($1_data) is "$m4_tolower($1_data)"])
       AC_MSG_NOTICE([m4_tolower($1_pcfiles) is "$m4_tolower($1_pcfiles)"])
@@ -708,14 +844,14 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
 ###########################################################################
 
 # COIN_CHK_PKG([prim],[client packages],[.pc file name],
-#              [default action],[public/private],[cmdopts])
+#              [default action],[cmdopts])
 
 # Determine whether we can use primary package prim ($1) and assemble
-# information on the required library flags (prim_libs), compiler flags
+# information on the required linker flags (prim_lflags), compiler flags
 # (prim_cflags), and data directories (prim_data).
 
 # The configure command line options offered to the user are controlled
-# by cmdopts ($6). 'nodata' offers --with-prim, --with-prim-libs, and
+# by cmdopts ($5). 'nodata' offers --with-prim, --with-prim-lflags, and
 # --with-prim-cflags. 'dataonly' offers --with-prim and --with-prim-data.
 # 'all' offers all four. DEF_PRIM_ARGS and FIND_PRIM_PKG are tailored
 # accordingly. The (hardwired) default is 'nodata'.
@@ -734,11 +870,9 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
 
 # Linker and compiler flag information will be propagated to the space-
 # separated list of client packages ($2) using the _PCFILES variable if
-# a .pc file is used, otherwise by the _LIBS and _CFLAGS variables of
+# a .pc file is used, otherwise by the _LFLAGS and _CFLAGS variables of
 # client packages. These variables match Requires.private, Libs.private,
-# and Cflags.private, respectively, in a .pc file. To force information about
-# prim to be added to the public variables in a .pc file, set public/private
-# ($5) to public.
+# and Cflags.private, respectively, in a .pc file.
 
 # The macro doesn't test that the specified values actually work. This is
 # deliberate.  There's no guarantee that user-specified libraries and/or
@@ -751,20 +885,14 @@ AC_DEFUN([AC_COIN_CHK_PKG],
 
   AC_MSG_CHECKING([for package $1])
 
-  pubpriv=m4_default([$5],[private])
-
 # Make sure the necessary variables exist for each client package.
 
   m4_foreach_w([myvar],[$2],
-    [AC_SUBST(m4_toupper(myvar)_LIBS)
+    [AC_SUBST(m4_toupper(myvar)_LFLAGS)
      AC_SUBST(m4_toupper(myvar)_CFLAGS)
-     AC_SUBST(m4_toupper(myvar)_PCFILES)
-     AC_SUBST(m4_toupper(myvar)_LIBS_PUB)
-     AC_SUBST(m4_toupper(myvar)_CFLAGS_PUB)
-     AC_SUBST(m4_toupper(myvar)_PCFILES_PUB)])
+     AC_SUBST(m4_toupper(myvar)_PCFILES)])
 
-# Check to see if the user has overridden configure parameters from the
-# environment.
+# Check to see if the user has set an override to skip this primary.
 
   m4_tolower(coin_has_$1)=noInfo
   if test x"$COIN_SKIP_PROJECTS" != x ; then
@@ -775,16 +903,16 @@ AC_DEFUN([AC_COIN_CHK_PKG],
     done
   fi
 
-# If we're not skipping this project, define and process the command line
+# If we're not skipping this primary, define and process the command line
 # options according to the cmdopts parameter. Then invoke FIND_PRIM_PKG to do
 # the heavy lifting.
 
   if test "$m4_tolower(coin_has_$1)" != skipping ; then
-    m4_case(m4_default($6,nodata),
+    m4_case(m4_default($5,nodata),
       nodata,[AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,no,$4)],
       dataonly,[AC_COIN_DEF_PRIM_ARGS([$1],yes,no,no,yes,$4)],
       [AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,yes,$4)])
-    AC_COIN_FIND_PRIM_PKG(m4_tolower($1),[$3],[$4],[$6])
+    AC_COIN_FIND_PRIM_PKG(m4_tolower($1),[$3],[$4],[$5])
     AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
   else
     AC_MSG_RESULT([$m4_tolower(coin_has_$1) due to COIN_SKIP_PROJECTS])
@@ -802,30 +930,19 @@ AC_DEFUN([AC_COIN_CHK_PKG],
   		 [test $m4_tolower(coin_has_$1) = yes])
 
 # If we've located the package, define preprocessor symbol COIN_HAS_PRIM and
-# augment the necessary variables for the client packages. We need the final
-# ':' (noop) below because it's possible that the list of client packages
-# is empty.
+# augment the necessary variables for the client packages.
 
   if test $m4_tolower(coin_has_$1) = yes ; then
     AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],
-      [Define to 1 if the $1 package is available])
-    if test $pubpriv = private ; then
-      m4_foreach_w([myvar],[$2],
-        [m4_toupper(myvar)_PCFILES="$m4_tolower($1_pcfiles) $m4_toupper(myvar)_PCFILES"
-         m4_toupper(myvar)_LIBS="$m4_tolower($1_libs) $m4_toupper(myvar)_LIBS"
-         m4_toupper(myvar)_CFLAGS="$m4_tolower($1_cflags) $m4_toupper(myvar)_CFLAGS"])
-      :
-    else
-      m4_foreach_w([myvar],[$2],
-        [m4_toupper(myvar)_PCFILES_PUB="$m4_tolower($1_pcfiles) $m4_toupper(myvar)_PCFILES"_PUB
-         m4_toupper(myvar)_LIBS_PUB="$m4_tolower($1_libs) $m4_toupper(myvar)_LIBS_PUB"
-         m4_toupper(myvar)_CFLAGS_PUB="$m4_tolower($1_cflags) $m4_toupper(myvar)_CFLAGS_PUB"])
-      :
-    fi
+      [Define to 1 if $1 is available.])
+    m4_foreach_w([myvar],[$2],
+      [m4_toupper(myvar)_PCFILES="$m4_tolower($1_pcfiles) $m4_toupper(myvar)_PCFILES"
+       m4_toupper(myvar)_LFLAGS="$m4_tolower($1_lflags) $m4_toupper(myvar)_LFLAGS"
+       m4_toupper(myvar)_CFLAGS="$m4_tolower($1_cflags) $m4_toupper(myvar)_CFLAGS"])
 
 # Finally, set up PRIM_DATA, unless the user specified nodata.
 
-    m4_if(m4_default([$6],nodata),nodata,[],
+    m4_if(m4_default([$5],nodata),nodata,[],
       [AC_SUBST(m4_toupper($1)_DATA)
        m4_toupper($1)_DATA=$m4_tolower($1_data)])
   fi
@@ -836,45 +953,47 @@ AC_DEFUN([AC_COIN_CHK_PKG],
 #                          FIND_PRIM_LIB                                  #
 ###########################################################################
 
-# COIN_FIND_PRIM_LIB([prim],[linkflgs],[cflgs],[dataflgs],
+# COIN_FIND_PRIM_LIB([prim],[lflgs],[cflgs],[dflgs],
 #                    [dfltaction],[cmdlineopts])
 
 # Determine whether we can use primary library prim ($1) and assemble
-# information on the required library flags (prim_libs), compiler flags
+# information on the required linker flags (prim_lflags), compiler flags
 # (prim_cflags), and data directories (prim_data) as specified by cmdlineopts.
 
 # cmdlineopts ($6) specifies the set of configure command line options
-# defined and processed: 'nodata' produces --with-prim, --with-prim-libs,
-# and --with-prim-cflags 'dataonly' produces only --with-prim and
-# --with-prim-data Anything else ('all' works well) produces all four
+# defined and processed: 'nodata' produces --with-prim, --with-prim-lflags,
+# and --with-prim-cflags; 'dataonly' produces only --with-prim and
+# --with-prim-data; anything else ('all' works well) produces all four
 # command line options. Shell code produced by the macro is tailored based
 # on cmdlineopts. `nodata' is the default.
 
 # --with-prim is interpreted as follows:
 #   * --with-prim=no is equivalent to --without-prim.
 #   * --with-prim or --with-prim=yes is equivalent to
-#       --with-prim-libs=-lprim
+#       --with-prim-lflags=-lprim
 #       --with-prim-data=/usr/local/share
 #   * --with-prim=build attempts to invent something that will find a COIN
 #     ThirdParty library or data
-#       --with-prim-libs="-L\$(libdir) -lcoinprim"
+#       --with-prim-lflags="-L\$(libdir) -lcoinprim"
 #       --with-prim-cflgs="-I\$(pkgincludedir)/ThirdParty"
 #       --with-prim-data="\$(pkgdatadir)"
 #   * Any other value is taken as equivalent to
 #       --with-prim-data=value (dataonly) or
-#       --with-prim-libs=value (anything else)
+#       --with-prim-lflags=value (anything else)
 
 # The algorithm first checks for a user-specified value of --with-prim;
 # if this is no, prim is skipped. Next, it looks for user specified values
-# given with command line parameters --with-prim-libs, --with-prim-cflags,
+# given with command line parameters --with-prim-lflags, --with-prim-cflags,
 # and --with-prim-data. If none of these are specified, it will use the values
 # passed as parameters. It's all or none: any command line options disable all
 # parameters.
 
 # Default action ($5) (no, yes, build) is the default value of --with-prim
-# if the user offers no guidance via command line parameters. In turn,
-# it defaults to yes. `build' doesn't have a hope of working except for COIN
-# ThirdParty packages, and even then it's pretty shaky.
+# if the user offers no guidance via command line parameters. The (hardwired)
+# default is yes. `build' doesn't have a hope of working except for COIN
+# ThirdParty packages, and even then it's pretty shaky. You should be
+# using CHK_PKG, because COIN packaging for ThirdParty software creates a .pc
+# file.
 
 # The macro doesn't test that the specified values actually work. This is
 # deliberate --- there's no guarantee that the specified values actually
@@ -888,7 +1007,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 # Initialize variables for the primary library.
 
   m4_tolower(coin_has_$1)=noInfo
-  m4_tolower($1_libs)=
+  m4_tolower($1_lflags)=
   m4_tolower($1_cflags)=
   m4_tolower($1_data)=
 
@@ -916,13 +1035,13 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
     esac
   fi
 
-# --with-prim-libs and --with-prim-cflags are present unless the client
+# --with-prim-lflags and --with-prim-cflags are present unless the client
 # specified dataonly. Specifying --with-prim=no overrides the individual
-# options for libs and cflags.
+# options for lflags and cflags.
 
   m4_if(m4_default($6,nodata),dataonly,[],
     [if test "$m4_tolower(coin_has_$1)" != skipping ; then
-       withval=$m4_tolower(with_$1_lib)
+       withval=$m4_tolower(with_$1_lflags)
        if test -n "$withval" ; then
 	 case "$withval" in
 	   build | no | yes )
@@ -999,11 +1118,11 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
     build | requested)
       m4_if(m4_default($6,nodata),dataonly,[],
         [m4_ifnblank([$2],
-	   [m4_tolower($1_libs)=$2],
+	   [m4_tolower($1_lflags)=$2],
            [if test "$m4_tolower(coin_has_$1)" = build ; then
-	      m4_tolower($1_libs)="-L\$(libdir) -l[]m4_tolower(coin$1)"
+	      m4_tolower($1_lflags)="-L\$(libdir) -l[]m4_tolower(coin$1)"
 	    else
-	      m4_tolower($1_libs)="-l[]m4_tolower($1)"
+	      m4_tolower($1_lflags)="-l[]m4_tolower($1)"
 	    fi])
          m4_ifnblank([$3],
 	   [m4_tolower($1_cflags)=$3],
@@ -1035,7 +1154,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
     if test 1 = 1 ; then
       AC_MSG_NOTICE([FIND_PRIM_LIB result for $1: "$m4_tolower(coin_has_$1)"])
       AC_MSG_NOTICE([Collected values for package '$1'])
-      AC_MSG_NOTICE([m4_tolower($1_libs) is "$m4_tolower($1_libs)"])
+      AC_MSG_NOTICE([m4_tolower($1_lflags) is "$m4_tolower($1_lflags)"])
       AC_MSG_NOTICE([m4_tolower($1_cflags) is "$m4_tolower($1_cflags)"])
       AC_MSG_NOTICE([m4_tolower($1_data) is "$m4_tolower($1_data)"])
       AC_MSG_NOTICE([m4_tolower($1_pcfiles) is "$m4_tolower($1_pcfiles)"])
@@ -1047,37 +1166,37 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 #                          COIN_CHK_LIB                                   #
 ###########################################################################
 
-# COIN_CHK_LIB([prim],[client packages],[linkflgs],[cflgs],[dataflgs],
-#              [dfltaction],[public/private],[cmdopts])
+# COIN_CHK_LIB([prim],[client packages],[lflgs],[cflgs],[dflgs],
+#              [dfltaction],[cmdopts])
 
 # Determine whether we can use primary library prim ($1) and assemble
-# information on the required library flags (prim_libs), compiler flags
+# information on the required linker flags (prim_lflags), compiler flags
 # (prim_cflags), and data directories (prim_data).
 
 # The configure command line options offered to the user are controlled
-# by cmdopts ($8). 'nodata' offers --with-prim, --with-prim-libs, and
-# --with-prim-cflags. 'dataonly' offers --with-prim and --with-prim-data.
-# 'all' offers all four. DEF_PRIM_ARGS and FIND_PRIM_PKG are tailored
+# by cmdopts ($7). 'nodata' offers --with-prim, --with-prim-lflags, and
+# --with-prim-cflags; 'dataonly' offers --with-prim and --with-prim-data;
+# 'all' offers all four. DEF_PRIM_ARGS and FIND_PRIM_LIB are tailored
 # accordingly. The (hardwired) default is 'nodata'.
 
-# Macro parameters linkflgs ($3), cflgs ($4), and dataflgs ($5) are used for
-# --with-prim-libs, --with-prim-cflgs, and --with-prim-data if and only if
+# Macro parameters lflgs ($3), cflgs ($4), and dflgs ($5) are used for
+# --with-prim-lflags, --with-prim-cflags, and --with-prim-data if and only if
 # there are no user-supplied values on the command line. It's all or nothing;
 # any user-supplied value causes all macro parameters to be ignored.
 
 # Default action ($6) (no, yes, build) is the default action if the user
-# offers no guidance via command line parameters. Really, 'build' has no hope
-# of working except for COIN ThirdParty packages. Don't use it for other COIN
-# packages.
+# offers no guidance via command line parameters. Really, 'build' has no
+# hope of working except for COIN ThirdParty packages. Don't use it for
+# other COIN packages. You should be using CHK_PKG because COIN packaging
+# for ThirdParty software creates a .pc file.
 
 # Define an automake conditional COIN_HAS_PRIM to record the result. If we
 # decide to use prim, also define a preprocessor symbol COIN_HAS_PRIM.
 
 # Linker and compiler flag information will be propagated to the space-
-# separated list of client packages ($2) using the _LIBS and _CFLAGS variables
-# of client packages. These variables match Libs.private and Cflags.private,
-# respectively, in a .pc file. To force information about prim to be added
-# to the public variables in a .pc file, set public/private ($7) to public.
+# separated list of client packages ($2) using the _LFLAGS and _CFLAGS
+# variables of client packages. These variables match Libs.private and
+# Cflags.private, respectively, in a .pc file.
 
 # The macro doesn't test that the specified values actually work. This is
 # deliberate.  There's no guarantee that user-specified libraries and/or
@@ -1088,15 +1207,11 @@ AC_DEFUN([AC_COIN_CHK_LIB],
 [
   AC_MSG_CHECKING([for package $1])
 
-  pubpriv=m4_default([$7],[private])
-
 # Make sure the necessary variables exist for each client package.
 
   m4_foreach_w([myvar],[$2],
-    [AC_SUBST(m4_toupper(myvar)_LIBS)
-     AC_SUBST(m4_toupper(myvar)_CFLAGS)
-     AC_SUBST(m4_toupper(myvar)_LIBS_PUB)
-     AC_SUBST(m4_toupper(myvar)_CFLAGS_PUB)])
+    [AC_SUBST(m4_toupper(myvar)_LFLAGS)
+     AC_SUBST(m4_toupper(myvar)_CFLAGS)])
 
 # Check to see if the user has overridden configure parameters from the
 # environment.
@@ -1115,11 +1230,11 @@ AC_DEFUN([AC_COIN_CHK_LIB],
 # the heavy lifting.
 
   if test "$m4_tolower(coin_has_$1)" != skipping ; then
-    m4_case(m4_default($8,nodata),
+    m4_case(m4_default($7,nodata),
       nodata,[AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,no,$4)],
       dataonly,[AC_COIN_DEF_PRIM_ARGS([$1],yes,no,no,yes,$4)],
       [AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,yes,$4)])
-    AC_COIN_FIND_PRIM_LIB(m4_tolower($1),[$3],[$4],[$5],[$6],[$8])
+    AC_COIN_FIND_PRIM_LIB(m4_tolower($1),[$3],[$4],[$5],[$6],[$7])
     AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
   else
     AC_MSG_RESULT([$m4_tolower(coin_has_$1) due to COIN_SKIP_PROJECTS])
@@ -1137,28 +1252,18 @@ AC_DEFUN([AC_COIN_CHK_LIB],
   		 [test $m4_tolower(coin_has_$1) = yes])
 
 # If we've located the package, define preprocessor symbol COIN_HAS_PRIM
-# and augment the necessary variables for the client packages. We need the
-# final ':' (noop) below because it's possible that PRIM is data-only and the
-# list of client packages is empty.
+# and augment the necessary variables for the client packages.
 
   if test $m4_tolower(coin_has_$1) = yes ; then
     AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],
       [Define to 1 if the $1 package is available])
-    if test $pubpriv = private ; then
-      m4_foreach_w([myvar],[$2],
-        [m4_toupper(myvar)_LIBS="$m4_tolower($1_libs) $m4_toupper(myvar)_LIBS"
-         m4_toupper(myvar)_CFLAGS="$m4_tolower($1_cflags) $m4_toupper(myvar)_CFLAGS"])
-      :
-    else
-      m4_foreach_w([myvar],[$2],
-        [m4_toupper(myvar)_LIBS_PUB="$m4_tolower($1_libs) $m4_toupper(myvar)_LIBS_PUB"
-         m4_toupper(myvar)_CFLAGS_PUB="$m4_tolower($1_cflags) $m4_toupper(myvar)_CFLAGS_PUB"])
-      :
-    fi
+    m4_foreach_w([myvar],[$2],
+      [m4_toupper(myvar)_LFLAGS="$m4_tolower($1_lflags) $m4_toupper(myvar)_LFLAGS"
+       m4_toupper(myvar)_CFLAGS="$m4_tolower($1_cflags) $m4_toupper(myvar)_CFLAGS"])
 
 # Finally, set up PRIM_DATA, unless the user specified nodata.
 
-    m4_if(m4_default([$8],nodata),nodata,[],
+    m4_if(m4_default([$7],nodata),nodata,[],
       [AC_SUBST(m4_toupper($1)_DATA)
        m4_toupper($1)_DATA=$m4_tolower($1_data)])
   fi
@@ -1166,14 +1271,14 @@ AC_DEFUN([AC_COIN_CHK_LIB],
 
 
 #######################################################################
-#                           COIN_CHECK_LIBM                           #
+#                           COIN_CHK_LIBM                           #
 #######################################################################
 
-# COIN_CHECK_LIBM([client1 client2 ...])
+# COIN_CHK_LIBM([client1 client2 ...])
 # Check if a library spec is needed for the math library. If something is
-# needed, the macro adds the flags to CLIENT_LIBS for each client.
+# needed, the macro adds the flags to CLIENT_LFLAGS for each client.
 
-AC_DEFUN([AC_COIN_CHECK_LIBM],
+AC_DEFUN([AC_COIN_CHK_LIBM],
 [
   AC_REQUIRE([AC_PROG_CC])
 
@@ -1182,23 +1287,23 @@ AC_DEFUN([AC_COIN_CHECK_LIBM],
   AC_SEARCH_LIBS([cos],[m],
     [if test "$ac_cv_search_cos" != 'none required' ; then
        m4_foreach_w([myvar],[$1],
-	 [m4_toupper(myvar)_LIBS="$ac_cv_search_cos $m4_toupper(myvar)_LIBS"])
+	 [m4_toupper(myvar)_LFLAGS="$ac_cv_search_cos $m4_toupper(myvar)_LFLAGS"])
      fi])
   LIBS="$coin_save_LIBS"
-]) # AC_COIN_CHECK_LIBM
+]) # AC_COIN_CHK_LIBM
 
 ###########################################################################
-#                           COIN_CHECK_ZLIB                               #
+#                           COIN_CHK_ZLIB                               #
 ###########################################################################
 
-# COIN_CHECK_ZLIB([client1 client2 ...])
+# COIN_CHK_ZLIB([client1 client2 ...])
 
 # This macro checks for the libz library.  If found, it sets the automake
 # conditional COIN_HAS_ZLIB and defines the C preprocessor variable
-# COIN_HAS_ZLIB. The default is to use zlib, if it's present.  For each
-# client, it adds the linker flags to the variable CLIENT_LIBS.
+# COIN_HAS_ZLIB. The default is to use zlib, if it's present.  For each client,
+# it adds the linker flags to the variable CLIENT_LFLAGS for each client.
 
-AC_DEFUN([AC_COIN_CHECK_ZLIB],
+AC_DEFUN([AC_COIN_CHK_ZLIB],
 [
   AC_REQUIRE([AC_COIN_PROG_CC])
 
@@ -1217,27 +1322,27 @@ AC_DEFUN([AC_COIN_CHECK_ZLIB],
     fi
     if test x$coin_has_zlib = xyes ; then
       m4_foreach_w([myvar],[$1],
-	[m4_toupper(myvar)_LIBS="-lz $m4_toupper(myvar)_LIBS"])
+	[m4_toupper(myvar)_LFLAGS="-lz $m4_toupper(myvar)_LFLAGS"])
       AC_DEFINE([COIN_HAS_ZLIB],[1],[Define to 1 if zlib is available])
     fi
   fi
 
   AM_CONDITIONAL([COIN_HAS_ZLIB],[test x$coin_has_zlib = xyes])
-]) # AC_COIN_CHECK_ZLIB
+]) # AC_COIN_CHK_ZLIB
 
 
 ###########################################################################
-#                            COIN_CHECK_BZLIB                             #
+#                            COIN_CHK_BZLIB                             #
 ###########################################################################
 
-# COIN_CHECK_BZLIB([client1 client2 ...])
+# COIN_CHK_BZLIB([client1 client2 ...])
 
 # This macro checks for the libbz2 library.  If found, it defines the
 # C preprocessor variable COIN_HAS_BZLIB and the automake conditional
 # COIN_HAS_BZLIB.  Further, for a (space separated) list of clients, it adds
-# the linker flag to the variable CLIENT_LIBS.
+# the linker flag to the variable CLIENT_LFLAGS for each client.
 
-AC_DEFUN([AC_COIN_CHECK_BZLIB],
+AC_DEFUN([AC_COIN_CHK_BZLIB],
 [
   AC_REQUIRE([AC_PROG_CC])
 
@@ -1256,27 +1361,27 @@ AC_DEFUN([AC_COIN_CHECK_BZLIB],
     fi
     if test $coin_has_bzlib = yes ; then
       m4_foreach_w([myvar],[$1],
-        [m4_toupper(myvar)_LIBS="-lbz2 $m4_toupper(myvar)_LIBS"])
+        [m4_toupper(myvar)_LFLAGS="-lbz2 $m4_toupper(myvar)_LFLAGS"])
       AC_DEFINE([COIN_HAS_BZLIB],[1],[Define to 1 if bzlib is available])
     fi
   fi
 
   AM_CONDITIONAL([COIN_HAS_BZLIB],[test x$coin_has_bzlib = xyes])
-]) # AC_COIN_CHECK_BZLIB
+]) # AC_COIN_CHK_BZLIB
 
 
 ###########################################################################
-#                              COIN_CHECK_GMP                             #
+#                              COIN_CHK_GMP                             #
 ###########################################################################
 
-# COIN_CHECK_GMP([client1 client2 ...])
+# COIN_CHK_GMP([client1 client2 ...])
 
 # This macro checks for the gmp library.  If found, it defines the C
 # preprocessor variable COIN_HAS_GMP and the automake conditional COIN_HAS_GMP.
 # Further, for a (space separated) list of clients, it adds the linker
-# flag to the variable CLIENT_LIBS.
+# flag to the variable CLIENT_LFLAGS for each client.
 
-AC_DEFUN([AC_COIN_CHECK_GMP],
+AC_DEFUN([AC_COIN_CHK_GMP],
 [
   AC_REQUIRE([AC_PROG_CC])
 
@@ -1293,29 +1398,30 @@ AC_DEFUN([AC_COIN_CHECK_GMP],
       [AC_CHECK_LIB([gmp],[__gmpz_init],[coin_has_gmp=yes])])
     if test $coin_has_gmp = yes ; then
       m4_foreach_w([myvar],[$1],
-	[m4_toupper(myvar)_LIBS="-lgmp $m4_toupper(myvar)_LIBS"])
+	[m4_toupper(myvar)_LFLAGS="-lgmp $m4_toupper(myvar)_LFLAGS"])
       AC_DEFINE([COIN_HAS_GMP],[1],[Define to 1 if GMP is available])
     fi
   fi
 
   AM_CONDITIONAL([COIN_HAS_GMP],[test x$coin_has_gmp = xyes])
-]) # AC_COIN_CHECK_GMP
+]) # AC_COIN_CHK_GMP
 
 
 ###########################################################################
-#                         COIN_CHECK_GNU_READLINE                         #
+#                         COIN_CHK_GNU_READLINE                         #
 ###########################################################################
 
-# COIN_CHECK_GNU_READLINE([client1 client2 ...])
+# COIN_CHK_GNU_READLINE([client1 client2 ...])
 
 # This macro checks for GNU's readline.  It verifies that the header
 # readline/readline.h is available, and that the -lreadline library contains
 # "readline".  It is assumed that #include <stdio.h> is included in the source
 # file before the #include<readline/readline.h> If found, it defines the C
 # preprocessor variable COIN_HAS_READLINE.  Further, for a (space separated)
-# list of clients, it adds the linker flag to the variable CLIENT_LIBS.
+# list of clients, it adds the linker flag to the variable CLIENT_LFLAGS for
+# each client.
 
-AC_DEFUN([AC_COIN_CHECK_GNU_READLINE],
+AC_DEFUN([AC_COIN_CHK_GNU_READLINE],
 [
   AC_REQUIRE([AC_PROG_CC])
 
@@ -1341,14 +1447,14 @@ AC_DEFUN([AC_COIN_CHECK_GNU_READLINE],
     fi
     if test $coin_has_readline = yes ; then
       m4_foreach_w([myvar],[$1],
-        [m4_toupper(myvar)_LIBS="-lreadline $m4_toupper(myvar)_LIBS"])
+        [m4_toupper(myvar)_LFLAGS="-lreadline $m4_toupper(myvar)_LFLAGS"])
       AC_DEFINE([COIN_HAS_READLINE],[1],[Define to 1 if readline is available])
     fi
     LIBS="$coin_save_LIBS"
   fi
 
   AM_CONDITIONAL([COIN_HAS_READLINE],[test x$coin_has_readline = xyes])
-]) # AC_COIN_CHECK_GNU_READLINE
+]) # AC_COIN_CHK_GNU_READLINE
 
 ###########################################################################
 #                           COIN_DOXYGEN                                  #
@@ -1481,12 +1587,13 @@ AC_SUBST(EXAMPLE_CLEAN_FILES)
 #                           COIN_FINALIZE_FLAGS                           #
 ###########################################################################
 
-# COIN_FINALIZE_FLAGS([client1 client2 ...])
+# COIN_FINALIZE_FLAGS([prim1 prim2 ...])
 
-# For each client, accumulate the necessary flags in CLIENT_LIBS and
-# CLIENT_CFLAGS.  The algorithm accumulates the flags for the packages
-# in CLIENT_PCFILES and tacks on the current value of CLIENT_LIBS and
-# CLIENT_CFLAGS.
+# For each PRIM, produce final versions of variables specifying linker and
+# compiler flags.  PRIM_LFLAGS_NOPC and PRIM_CFLAGS_NOPC are appropriate for
+# use in .pc files together with PRIM_PCFILES. PRIM_LFLAGS and PRIM_CFLAGS
+# are augmented to contain flags obtained by invoking PKG_CONFIG on packages
+# listed in PRIM_PCFILES and are appropriate for use in Makefile.am files.
 
 # TODO this could be moved into COIN_FINALIZE, if we were able to remember
 #   for which variables we need to run pkg-config
@@ -1494,21 +1601,29 @@ AC_SUBST(EXAMPLE_CLEAN_FILES)
 AC_DEFUN([AC_COIN_FINALIZE_FLAGS],
 [
   m4_foreach_w([myvar],[$1],
-    [if test -n "${m4_toupper(myvar)_PCFILES}" ; then
-       temp_CFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --cflags ${m4_toupper(myvar)_PCFILES}`
-       temp_LIBS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs ${m4_toupper(myvar)_PCFILES}`
-       m4_toupper(myvar)_CFLAGS="$temp_CFLAGS ${m4_toupper(myvar)_CFLAGS}"
-       m4_toupper(myvar)_LIBS="$temp_LIBS ${m4_toupper(myvar)_LIBS}"
-     fi
+    [ if test 1 = 1 ; then
+        AC_MSG_NOTICE([FINALIZE_FLAGS for myvar:])
+      fi
+      AC_SUBST(m4_toupper(myvar)_LFLAGS_NOPC,[$m4_toupper(myvar)_LFLAGS])
+      AC_SUBST(m4_toupper(myvar)_CFLAGS_NOPC,[$m4_toupper(myvar)_CFLAGS])
+      if test -n "${m4_toupper(myvar)_PCFILES}" ; then
+        temp_CFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --cflags ${m4_toupper(myvar)_PCFILES}`
+        temp_LFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs ${m4_toupper(myvar)_PCFILES}`
+        m4_toupper(myvar)_CFLAGS="$temp_CFLAGS ${m4_toupper(myvar)_CFLAGS}"
+        m4_toupper(myvar)_LFLAGS="$temp_LFLAGS ${m4_toupper(myvar)_LFLAGS}"
+      fi
 
 # Change the test to enable / disable debugging output
 
-     if test 1 = 1 ; then
-       AC_MSG_NOTICE(
-         [FINALIZE_FLAGS for myvar: adding "${m4_toupper(myvar)_PCFILES}"])
-       AC_MSG_NOTICE([m4_toupper(myvar)_LIBS is "${m4_toupper(myvar)_LIBS}"])
-       AC_MSG_NOTICE([m4_toupper(myvar)_CFLAGS is "${m4_toupper(myvar)_CFLAGS}"])
-     fi ; ])
+      if test 1 = 1 ; then
+        AC_MSG_NOTICE(
+          [m4_toupper(myvar)_LFLAGS_NOPC: "${m4_toupper(myvar)_LFLAGS_NOPC}"])
+        AC_MSG_NOTICE(
+          [m4_toupper(myvar)_CFLAGS_NOPC: "${m4_toupper(myvar)_CFLAGS_NOPC}"])
+        AC_MSG_NOTICE([adding "${m4_toupper(myvar)_PCFILES}"])
+        AC_MSG_NOTICE([m4_toupper(myvar)_LFLAGS: "${m4_toupper(myvar)_LFLAGS}"])
+        AC_MSG_NOTICE([m4_toupper(myvar)_CFLAGS: "${m4_toupper(myvar)_CFLAGS}"])
+      fi ; ])
 ])
 
 ###########################################################################
