@@ -37,7 +37,7 @@ DocFiles =  README AUTHORS LICENSE
 COIN_HAS_DOXYGEN = @COIN_HAS_DOXYGEN_TRUE@TRUE
 COIN_HAS_LATEX = @COIN_HAS_LATEX_TRUE@TRUE
 
-# Needless to say, it's important that doxydocdir_nosub not be a target for
+# Needless to say, it's important that baredocdir_nosub not be a target for
 # autoconf substitution.
 
 DOXYTAG_EDIT = sed -e 's|@baredocdir_nosub@|$(datarootdir)/doc|g'

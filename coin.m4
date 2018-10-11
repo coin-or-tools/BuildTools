@@ -491,26 +491,27 @@ AC_DEFUN([AC_COIN_CHK_MOD_EXISTS],
 # COIN_INIT_LIBVARS(lib,lflags,cflags,pcfiles,data)
 
 # This macro sets up the public variables for lib, PROJ_LFLAGS_PUB,
-# PROJ_CFLAGS_PUB, PROJ_PCFILES_PUB, and PROJ_DATA. These variables correspond
-# to Libs, Cflags, Requires, and datadir in the .pc.in file for a project.
-# More generally, this macro is useful when a project builds libraries that
-# are used by other libraries during the project build. For example, Osi
-# builds OsiLib, which is used by OsiCommonTest and the various OsiXxxLib
-# interfaces to third-party solvers.
+# PROJ_CFLAGS_PUB, PROJ_PCFILES_PUB, and PROJ_DATA_PUB. These variables
+# correspond to Libs, Cflags, Requires, and datadir in the .pc.in file for
+# a project.  More generally, this macro is useful when a project builds
+# libraries that are used by other libraries during the project build. For
+# example, Osi builds OsiLib, which is used by OsiCommonTest and the various
+# OsiXxxLib interfaces to third-party solvers.
 
 # PROJ_PCFILES_PUB should be used rarely, if ever. We're exposing public
 # information from lower level libraries at the level of this library, which is
 # not usually necessary.
 
 # The datadir variable is a COIN extension in the .pc file. It defaults
-# to @datadir@/@PACKAGE_TARNAME@ in accordance with Gnu standards.
+# to ${datarootdir}/PACKAGE_TARNAME in accordance with Gnu standards.
 
 AC_DEFUN([AC_COIN_INIT_LIBVARS],
 [
   AC_SUBST(m4_toupper($1_LFLAGS_PUB),["$2"])
   AC_SUBST(m4_toupper($1_CFLAGS_PUB),["$3"])
   AC_SUBST(m4_toupper($1_PCFILES_PUB),["$4"])
-  AC_SUBST(m4_toupper($1_DATA),["$5"])
+  AC_SUBST(m4_toupper($1_DATA_PUB),
+           [m4_default([$5],[\${datarootdir}/$PACKAGE_TARNAME])])
 ])
   
 
@@ -874,6 +875,10 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
 # client packages. These variables match Requires.private, Libs.private,
 # and Cflags.private, respectively, in a .pc file.
 
+# Data directory information is used differently. Typically what's wanted is
+# individual variables specifying the data directory for each primitive. Hence
+# the macro defines PRIM_DATA for the primitive.
+
 # The macro doesn't test that the specified values actually work. This is
 # deliberate.  There's no guarantee that user-specified libraries and/or
 # directories actually exist yet. The same possibility exists for values
@@ -1198,6 +1203,10 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 # variables of client packages. These variables match Libs.private and
 # Cflags.private, respectively, in a .pc file.
 
+# Data directory information is used differently. Typically what's wanted is
+# individual variables specifying the data directory for each primitive. Hence
+# the macro defines PRIM_DATA for the primitive.
+
 # The macro doesn't test that the specified values actually work. This is
 # deliberate.  There's no guarantee that user-specified libraries and/or
 # directories actually exist yet. The same possibility exists for values
@@ -1474,6 +1483,16 @@ AC_DEFUN([AC_COIN_CHK_GNU_READLINE],
 #  coin_doxy_tagfiles   List of doxygen tag files used to reference other
 #                       doxygen documentation
 
+# It's not immediately obvious, but the code in this macro, configure-time
+# substitions in doxygen.conf.in, and build-time edits of doxygen.conf in
+# Makemain.inc combine to hardwire the assumptions that a tag file is named
+# proj_doxy.tag, that PKG_TARNAME is coin-or-proj, and that the doxygen
+# documentation is in the GNU default location $(docdir)/$PKG_TARNAME. Have
+# a look over the complete machinery before you start changing things. The
+# point of the build-time edits is to allow the user to redefine docdir at
+# build time, as per GNU standards. Failure to use coin-or-proj as PKG_TARNAME
+# will surely break linking of documentation with tag files.
+
 AC_DEFUN([AC_COIN_DOXYGEN],
 [
 
@@ -1500,7 +1519,7 @@ else
   AC_CHECK_PROG([coin_doxy_usedot],[dot],[YES],[NO])
 fi
 
-# Generate a tag file name and a log file name
+# Generate a tag file name and a log file name.
 
 lc_pkg=`echo ${PACKAGE_NAME} | [tr [A-Z] [a-z]]`
 AC_SUBST([coin_doxy_tagname],[${lc_pkg}_doxy.tag])
@@ -1508,9 +1527,10 @@ AC_SUBST([coin_doxy_logname],[${lc_pkg}_doxy.log])
 AM_CONDITIONAL(COIN_HAS_DOXYGEN, [test $coin_have_doxygen = yes])
 AM_CONDITIONAL(COIN_HAS_LATEX, [test $coin_have_latex = yes])
 
-# Process the list of project names and massage each one into the name of a
-# tag file. Further substitution for @doxydocdir@ will happen during make
-# install.
+# Process the list of project names and massage each one into the name of
+# a tag file. The value of coin_doxy_tagfiles is substituted for TAGFILES
+# in doxygen.conf.in. Further substitution for @baredocdir_nosub@ will happen
+# as an edit during make install. See comments in Makemain.inc.
 
 coin_doxy_tagfiles=
 tmp="$1"
