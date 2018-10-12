@@ -545,7 +545,8 @@ AC_DEFUN([AC_COIN_CHK_HERE],
   m4_foreach_w([myvar],[$2],
     [AC_SUBST(m4_toupper(myvar)_LFLAGS)
      AC_SUBST(m4_toupper(myvar)_CFLAGS)
-     AC_SUBST(m4_toupper(myvar)_PCFILES)])
+     AC_SUBST(m4_toupper(myvar)_PCFILES)
+    ])
 
 # Add the .pc file and augment LFLAGS and CFLAGS.
 
@@ -561,7 +562,8 @@ AC_DEFUN([AC_COIN_CHK_HERE],
 	 AC_MSG_NOTICE([m4_toupper(myvar)_PCFILES: "${m4_toupper(myvar)_PCFILES}"])
 	 AC_MSG_NOTICE([m4_toupper(myvar)_LFLAGS: "${m4_toupper(myvar)_LFLAGS}"])
 	 AC_MSG_NOTICE([m4_toupper(myvar)_CFLAGS: "${m4_toupper(myvar)_CFLAGS}"])
-       fi ; ])
+       fi
+      ])
 
 ])   # COIN_CHK_HERE
 
@@ -895,7 +897,8 @@ AC_DEFUN([AC_COIN_CHK_PKG],
   m4_foreach_w([myvar],[$2],
     [AC_SUBST(m4_toupper(myvar)_LFLAGS)
      AC_SUBST(m4_toupper(myvar)_CFLAGS)
-     AC_SUBST(m4_toupper(myvar)_PCFILES)])
+     AC_SUBST(m4_toupper(myvar)_PCFILES)
+    ])
 
 # Check to see if the user has set an override to skip this primary.
 
@@ -943,7 +946,8 @@ AC_DEFUN([AC_COIN_CHK_PKG],
     m4_foreach_w([myvar],[$2],
       [m4_toupper(myvar)_PCFILES="$m4_tolower($1_pcfiles) $m4_toupper(myvar)_PCFILES"
        m4_toupper(myvar)_LFLAGS="$m4_tolower($1_lflags) $m4_toupper(myvar)_LFLAGS"
-       m4_toupper(myvar)_CFLAGS="$m4_tolower($1_cflags) $m4_toupper(myvar)_CFLAGS"])
+       m4_toupper(myvar)_CFLAGS="$m4_tolower($1_cflags) $m4_toupper(myvar)_CFLAGS"
+      ])
 
 # Finally, set up PRIM_DATA, unless the user specified nodata.
 
@@ -1220,7 +1224,8 @@ AC_DEFUN([AC_COIN_CHK_LIB],
 
   m4_foreach_w([myvar],[$2],
     [AC_SUBST(m4_toupper(myvar)_LFLAGS)
-     AC_SUBST(m4_toupper(myvar)_CFLAGS)])
+     AC_SUBST(m4_toupper(myvar)_CFLAGS)
+    ])
 
 # Check to see if the user has overridden configure parameters from the
 # environment.
@@ -1268,7 +1273,8 @@ AC_DEFUN([AC_COIN_CHK_LIB],
       [Define to 1 if the $1 package is available])
     m4_foreach_w([myvar],[$2],
       [m4_toupper(myvar)_LFLAGS="$m4_tolower($1_lflags) $m4_toupper(myvar)_LFLAGS"
-       m4_toupper(myvar)_CFLAGS="$m4_tolower($1_cflags) $m4_toupper(myvar)_CFLAGS"])
+       m4_toupper(myvar)_CFLAGS="$m4_tolower($1_cflags) $m4_toupper(myvar)_CFLAGS"
+      ])
 
 # Finally, set up PRIM_DATA, unless the user specified nodata.
 
@@ -1296,7 +1302,8 @@ AC_DEFUN([AC_COIN_CHK_LIBM],
   AC_SEARCH_LIBS([cos],[m],
     [if test "$ac_cv_search_cos" != 'none required' ; then
        m4_foreach_w([myvar],[$1],
-	 [m4_toupper(myvar)_LFLAGS="$ac_cv_search_cos $m4_toupper(myvar)_LFLAGS"])
+	 [m4_toupper(myvar)_LFLAGS="$ac_cv_search_cos $m4_toupper(myvar)_LFLAGS"
+	 ])
      fi])
   LIBS="$coin_save_LIBS"
 ]) # AC_COIN_CHK_LIBM
@@ -1331,7 +1338,8 @@ AC_DEFUN([AC_COIN_CHK_ZLIB],
     fi
     if test x$coin_has_zlib = xyes ; then
       m4_foreach_w([myvar],[$1],
-	[m4_toupper(myvar)_LFLAGS="-lz $m4_toupper(myvar)_LFLAGS"])
+	[m4_toupper(myvar)_LFLAGS="-lz $m4_toupper(myvar)_LFLAGS"
+	])
       AC_DEFINE([COIN_HAS_ZLIB],[1],[Define to 1 if zlib is available])
     fi
   fi
@@ -1370,7 +1378,8 @@ AC_DEFUN([AC_COIN_CHK_BZLIB],
     fi
     if test $coin_has_bzlib = yes ; then
       m4_foreach_w([myvar],[$1],
-        [m4_toupper(myvar)_LFLAGS="-lbz2 $m4_toupper(myvar)_LFLAGS"])
+        [m4_toupper(myvar)_LFLAGS="-lbz2 $m4_toupper(myvar)_LFLAGS"
+	])
       AC_DEFINE([COIN_HAS_BZLIB],[1],[Define to 1 if bzlib is available])
     fi
   fi
@@ -1407,7 +1416,8 @@ AC_DEFUN([AC_COIN_CHK_GMP],
       [AC_CHECK_LIB([gmp],[__gmpz_init],[coin_has_gmp=yes])])
     if test $coin_has_gmp = yes ; then
       m4_foreach_w([myvar],[$1],
-	[m4_toupper(myvar)_LFLAGS="-lgmp $m4_toupper(myvar)_LFLAGS"])
+	[m4_toupper(myvar)_LFLAGS="-lgmp $m4_toupper(myvar)_LFLAGS"
+	])
       AC_DEFINE([COIN_HAS_GMP],[1],[Define to 1 if GMP is available])
     fi
   fi
@@ -1456,7 +1466,8 @@ AC_DEFUN([AC_COIN_CHK_GNU_READLINE],
     fi
     if test $coin_has_readline = yes ; then
       m4_foreach_w([myvar],[$1],
-        [m4_toupper(myvar)_LFLAGS="-lreadline $m4_toupper(myvar)_LFLAGS"])
+        [m4_toupper(myvar)_LFLAGS="-lreadline $m4_toupper(myvar)_LFLAGS"
+	])
       AC_DEFINE([COIN_HAS_READLINE],[1],[Define to 1 if readline is available])
     fi
     LIBS="$coin_save_LIBS"
@@ -1643,7 +1654,8 @@ AC_DEFUN([AC_COIN_FINALIZE_FLAGS],
         AC_MSG_NOTICE([adding "${m4_toupper(myvar)_PCFILES}"])
         AC_MSG_NOTICE([m4_toupper(myvar)_LFLAGS: "${m4_toupper(myvar)_LFLAGS}"])
         AC_MSG_NOTICE([m4_toupper(myvar)_CFLAGS: "${m4_toupper(myvar)_CFLAGS}"])
-      fi ; ])
+      fi
+    ])
 ])
 
 ###########################################################################

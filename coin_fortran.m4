@@ -339,7 +339,8 @@ AC_DEFUN([AC_COIN_CHK_BLAS],
   m4_foreach_w([myvar],[$1],
     [AC_SUBST(m4_toupper(myvar)_LFLAGS)
      AC_SUBST(m4_toupper(myvar)_CFLAGS)
-     AC_SUBST(m4_toupper(myvar)_PCFILES)])
+     AC_SUBST(m4_toupper(myvar)_PCFILES)
+    ])
 
 # Set up command line arguments with DEF_PRIM_ARGS and give FIND_PRIM_PKG
 # a chance, just in case blas.pc exists. The result (coin_has_blas) will
@@ -432,7 +433,8 @@ AC_DEFUN([AC_COIN_CHK_BLAS],
     m4_foreach_w([myvar],[$1],
       [m4_toupper(myvar)_PCFILES="$blas_pcfiles $m4_toupper(myvar)_PCFILES"
        m4_toupper(myvar)_LFLAGS="$blas_lflags $m4_toupper(myvar)_LFLAGS"
-       m4_toupper(myvar)_CFLAGS="$blas_cflags $m4_toupper(myvar)_CFLAGS"])
+       m4_toupper(myvar)_CFLAGS="$blas_cflags $m4_toupper(myvar)_CFLAGS"
+      ])
   else
     AC_MSG_RESULT([$coin_has_blas])
   fi
@@ -473,7 +475,8 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
   m4_foreach_w([myvar],[$1],
     [AC_SUBST(m4_toupper(myvar)_LIBS)
      AC_SUBST(m4_toupper(myvar)_CFLAGS)
-     AC_SUBST(m4_toupper(myvar)_PCFILES)])
+     AC_SUBST(m4_toupper(myvar)_PCFILES)
+    ])
 
 # Set up command line arguments with DEF_PRIM_ARGS and give FIND_PRIM_PKG
 # a chance, just in case lapack.pc exists. The result (coin_has_lapack)
@@ -544,7 +547,8 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
     m4_foreach_w([myvar],[$1],
       [m4_toupper(myvar)_PCFILES="$lapack_pcfiles $m4_toupper(myvar)_PCFILES"
        m4_toupper(myvar)_LFLAGS="$lapack_lflags $m4_toupper(myvar)_LFLAGS"
-       m4_toupper(myvar)_CFLAGS="$lapack_cflags $m4_toupper(myvar)_CFLAGS"])
+       m4_toupper(myvar)_CFLAGS="$lapack_cflags $m4_toupper(myvar)_CFLAGS"
+      ])
   else
     AC_MSG_RESULT([$coin_has_lapack])
   fi
