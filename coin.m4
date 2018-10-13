@@ -963,13 +963,16 @@ AC_DEFUN([AC_COIN_CHK_PKG],
 ###########################################################################
 
 # COIN_FIND_PRIM_LIB([prim],[lflgs],[cflgs],[dflgs],
+#                    [func],[other libraries],
 #                    [dfltaction],[cmdlineopts])
 
 # Determine whether we can use primary library prim ($1) and assemble
 # information on the required linker flags (prim_lflags), compiler flags
 # (prim_cflags), and data directories (prim_data) as specified by cmdlineopts.
+# Run a link check if the user provides [func]. Linker flags for the link are
+# the concatenation of [lflgs] and [other libraries].
 
-# cmdlineopts ($6) specifies the set of configure command line options
+# cmdlineopts ($8) specifies the set of configure command line options
 # defined and processed: 'nodata' produces --with-prim, --with-prim-lflags,
 # and --with-prim-cflags; 'dataonly' produces only --with-prim and
 # --with-prim-data; anything else ('all' works well) produces all four
@@ -997,21 +1000,22 @@ AC_DEFUN([AC_COIN_CHK_PKG],
 # passed as parameters. It's all or none: any command line options disable all
 # parameters.
 
-# Default action ($5) (no, yes, build) is the default value of --with-prim
+# Default action ($7) (no, yes, build) is the default value of --with-prim
 # if the user offers no guidance via command line parameters. The (hardwired)
 # default is yes. `build' doesn't have a hope of working except for COIN
 # ThirdParty packages, and even then it's pretty shaky. You should be
 # using CHK_PKG, because COIN packaging for ThirdParty software creates a .pc
 # file.
 
-# The macro doesn't test that the specified values actually work. This is
-# deliberate --- there's no guarantee that the specified values actually
-# exist just yet. Really all we're doing here is filling in variables using a
-# complicated algorithm.
+# The macro doesn't test that the specified values actually work unless
+# [func] is given as a parameter. This is deliberate --- there's no guarantee
+# that the specified library can be accessed just yet with the specified
+# flags. Except for the link check, all we're doing here is filling in
+# variables using a complicated algorithm.
 
 AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 [
-  dflt_action=m4_default([$5],[yes])
+  dflt_action=m4_default([$7],[yes])
 
 # Initialize variables for the primary library.
 
@@ -1037,9 +1041,9 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 	;;
       * )
 	m4_tolower(coin_has_$1)=yes
-	m4_if(m4_default($6,nodata),dataonly,
+	m4_if(m4_default($8,nodata),dataonly,
 	  [m4_tolower($1_data)=$withval],
-	  [m4_tolower($1_libs)=$withval])
+	  [m4_tolower($1_lflags)=$withval])
 	;;
     esac
   fi
@@ -1048,7 +1052,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 # specified dataonly. Specifying --with-prim=no overrides the individual
 # options for lflags and cflags.
 
-  m4_if(m4_default($6,nodata),dataonly,[],
+  m4_if(m4_default($8,nodata),dataonly,[],
     [if test "$m4_tolower(coin_has_$1)" != skipping ; then
        withval=$m4_tolower(with_$1_lflags)
        if test -n "$withval" ; then
@@ -1058,7 +1062,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 	     ;;
 	   * )
 	     m4_tolower(coin_has_$1)=yes
-	     m4_tolower($1_libs)=$withval
+	     m4_tolower($1_lflags)=$withval
 	     ;;
 	 esac
        fi
@@ -1080,7 +1084,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 # --with-prim-data will be present unless the client specified nodata.
 # Specifying --with-prim=no overrides the individual option for data.
 
-  m4_if(m4_default($6,nodata),nodata,[],
+  m4_if(m4_default($8,nodata),nodata,[],
     [if test "$m4_tolower(coin_has_$1)" != skipping ; then
        withval=$m4_tolower(with_$1_data)
        if test -n "$withval" ; then
@@ -1125,7 +1129,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 
   case $m4_tolower(coin_has_$1) in
     build | requested)
-      m4_if(m4_default($6,nodata),dataonly,[],
+      m4_if(m4_default($8,nodata),dataonly,[],
         [m4_ifnblank([$2],
 	   [m4_tolower($1_lflags)=$2],
            [if test "$m4_tolower(coin_has_$1)" = build ; then
@@ -1138,7 +1142,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
            [if test "$m4_tolower(coin_has_$1)" = build ; then
 	      m4_tolower($1_cflags)="-I\$(pkgincludedir)/ThirdParty"
 	    fi])])
-      m4_if(m4_default($6,nodata),nodata,[],
+      m4_if(m4_default($8,nodata),nodata,[],
         [m4_tolower($1_data)=m4_default([$3],
            [if test "$m4_tolower(coin_has_$1)" = build ; then
 	      m4_tolower($1_data)="\$(pkgdatadir)"
@@ -1154,9 +1158,31 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
       ;;
   esac
 
-# The final value of coin_has_prim will be yes or skipping.  Skipping means
-# the user said `don't use.' Yes means we have something, from the user or
-# macro parameters or invented. Note that we haven't run a useability test!
+# At this point, coin_has_prim is yes or skipping.  Time to run a link check,
+# if we have a function ($5). Use whatever we've collected for lflags, plus
+# other libraries ($6) as the other libraries parameter to AC_SEARCH_LIBS,
+# leaving the library parameter blank.
+
+  if test $m4_tolower(coin_has_$1) != skipping ; then
+    m4_ifnblank([$5],
+      [ac_save_LIBS=$LIBS
+       LIBS="$m4_tolower($1_lflags) $6"
+       AC_LINK_IFELSE(
+        [AC_LANG_PROGRAM(
+	  [#ifdef __cplusplus
+	     extern "C"
+	   #endif
+	   void $5();],
+	  [$5()])],
+       [],
+       [m4_tolower(coin_has_$1)=no])
+       LIBS=$ac_save_LIBS],
+      [:])
+  fi
+
+# The final value of coin_has_prim will be yes, no, or skipping. No means that
+# the link check failed. Yes means that we passed the link check, or no link
+# check was performed. Skipping means the user said `don't use.'
 
 # Change the test to enable / disable debugging output
 
@@ -1176,14 +1202,17 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 ###########################################################################
 
 # COIN_CHK_LIB([prim],[client packages],[lflgs],[cflgs],[dflgs],
+#              [func],[other libraries],
 #              [dfltaction],[cmdopts])
 
 # Determine whether we can use primary library prim ($1) and assemble
 # information on the required linker flags (prim_lflags), compiler flags
-# (prim_cflags), and data directories (prim_data).
+# (prim_cflags), and data directories (prim_data). A link check will be
+# performed in COIN_FIND_PRIMN_LIB if [func] is specified, using link flags
+# formed by concatenating the values of [lflgs] and [other libraries].
 
 # The configure command line options offered to the user are controlled
-# by cmdopts ($7). 'nodata' offers --with-prim, --with-prim-lflags, and
+# by cmdopts ($9). 'nodata' offers --with-prim, --with-prim-lflags, and
 # --with-prim-cflags; 'dataonly' offers --with-prim and --with-prim-data;
 # 'all' offers all four. DEF_PRIM_ARGS and FIND_PRIM_LIB are tailored
 # accordingly. The (hardwired) default is 'nodata'.
@@ -1193,7 +1222,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 # there are no user-supplied values on the command line. It's all or nothing;
 # any user-supplied value causes all macro parameters to be ignored.
 
-# Default action ($6) (no, yes, build) is the default action if the user
+# Default action ($8) (no, yes, build) is the default action if the user
 # offers no guidance via command line parameters. Really, 'build' has no
 # hope of working except for COIN ThirdParty packages. Don't use it for
 # other COIN packages. You should be using CHK_PKG because COIN packaging
@@ -1210,11 +1239,6 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 # Data directory information is used differently. Typically what's wanted is
 # individual variables specifying the data directory for each primitive. Hence
 # the macro defines PRIM_DATA for the primitive.
-
-# The macro doesn't test that the specified values actually work. This is
-# deliberate.  There's no guarantee that user-specified libraries and/or
-# directories actually exist yet. The same possibility exists for values
-# returned when pkgconf checks the .pc file.
 
 AC_DEFUN([AC_COIN_CHK_LIB],
 [
@@ -1244,17 +1268,17 @@ AC_DEFUN([AC_COIN_CHK_LIB],
 # the heavy lifting.
 
   if test "$m4_tolower(coin_has_$1)" != skipping ; then
-    m4_case(m4_default($7,nodata),
+    m4_case(m4_default($9,nodata),
       nodata,[AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,no,$4)],
       dataonly,[AC_COIN_DEF_PRIM_ARGS([$1],yes,no,no,yes,$4)],
       [AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,yes,$4)])
-    AC_COIN_FIND_PRIM_LIB(m4_tolower($1),[$3],[$4],[$5],[$6],[$7])
+    AC_COIN_FIND_PRIM_LIB(m4_tolower($1),[$3],[$4],[$5],[$6],[$7],[$8],[$9])
     AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
   else
     AC_MSG_RESULT([$m4_tolower(coin_has_$1) due to COIN_SKIP_PROJECTS])
   fi
 
-# Possibilities are `yes' or `skipping'. Normalise to `yes' or `no'.
+# Possibilities are `yes', `no', or `skipping'. Normalise to `yes' or `no'.
 
   if test "$m4_tolower(coin_has_$1)" != yes ; then
     m4_tolower(coin_has_$1)=no
@@ -1278,7 +1302,7 @@ AC_DEFUN([AC_COIN_CHK_LIB],
 
 # Finally, set up PRIM_DATA, unless the user specified nodata.
 
-    m4_if(m4_default([$7],nodata),nodata,[],
+    m4_if(m4_default([$9],nodata),nodata,[],
       [AC_SUBST(m4_toupper($1)_DATA)
        m4_toupper($1)_DATA=$m4_tolower($1_data)])
   fi
