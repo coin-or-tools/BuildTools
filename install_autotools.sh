@@ -5,7 +5,7 @@
 PREFIX=$HOME/local2
 
 acver=2.69
-amver=1.15
+amver=1.15.1
 ltver=2.4.6
 
 # exit immediately if something fails
