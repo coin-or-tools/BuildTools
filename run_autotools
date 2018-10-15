@@ -313,11 +313,19 @@ if [[ $userSpecifiedDirs -eq 1 ]] ; then
       # echo "  $dir will be immune to COIN_SKIP_PROJECTS"
       noSkipDirs+=($dir)
     else
-      dirsToProcess+=(`findProjects $dir`)
+      if [[ doRecurse -eq 1 ]] ; then
+         dirsToProcess+=(`findProjects $dir`)
+      else
+         dirsToProcess+=($dir)
+      fi
     fi
   done
 else
-  dirsToProcess+=(`findProjects .`)
+  if [[ doRecurse -eq 1 ]] ; then
+      dirsToProcess+=(`findProjects .`)
+  else
+      dirsToProcess+=(".")
+  fi
 fi
 
 # echo "dirsToProcess (${#dirsToProcess[@]}): ${dirsToProcess[*]}"

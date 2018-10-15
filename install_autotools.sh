@@ -17,21 +17,21 @@ export PATH=$PREFIX/bin:$PATH
 # cleanup from previous (maybe failed) build
 rm -rf autoconf-$acver* automake-$amver* libtool-$ltver*
 
-wget ftp://ftp.gnu.org/gnu/autoconf/autoconf-$acver.tar.gz
+wget http://ftp.gnu.org/gnu/autoconf/autoconf-$acver.tar.gz
 tar xvzf autoconf-$acver.tar.gz
 cd autoconf-$acver
 ./configure --prefix=$PREFIX
 make install
 cd ..
 
-wget ftp://ftp.gnu.org/gnu/automake/automake-$amver.tar.gz
+wget http://ftp.gnu.org/gnu/automake/automake-$amver.tar.gz
 tar xvzf automake-$amver.tar.gz
 cd automake-$amver
 ./configure --prefix=$PREFIX
 make install
 cd ..
 
-wget ftp://ftp.gnu.org/gnu/libtool/libtool-$ltver.tar.gz
+wget http://ftp.gnu.org/gnu/libtool/libtool-$ltver.tar.gz
 tar xvzf libtool-$ltver.tar.gz
 cd libtool-$ltver
 ./configure --prefix=$PREFIX
