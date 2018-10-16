@@ -144,35 +144,35 @@ AC_DEFUN([AC_COIN_F77_WRAPPERS],
      LIBS="-l$1"
      for ac_case in "lower case" "upper case" ; do
        for ac_trail in "underscore" "no underscore" ; do
-	 for ac_extra in "no extra underscore" "extra underscore" ; do
-	   ac_cv_f77_mangling="${ac_case}, ${ac_trail}, ${ac_extra}"
-	   # AC_MSG_NOTICE([Attempting link for $ac_cv_f77_mangling])
-	   case $ac_case in
-	     "lower case")
-	       ac_name=m4_tolower($2)
-	       ;;
-	     "upper case")
-	       ac_name=m4_toupper($2)
-	       ;;
-	   esac
-	   if test "$ac_trail" = underscore ; then
-	     ac_name=${ac_name}_
-	   fi
-	   # AC_MSG_CHECKING([$2 -> $ac_name])
-	   AC_LINK_IFELSE(
-	     [AC_LANG_PROGRAM(
-	        [#ifdef __cplusplus
-		  extern "C"
-		 #endif
-		 void $ac_name();],
-		[$ac_name()])],
-	     [ac_result=success],
-	     [ac_result=failure])
-	   # AC_MSG_RESULT([$result])
-	   if test $ac_result = success ; then
-	     break 3
-	   fi
-	 done
+         for ac_extra in "no extra underscore" "extra underscore" ; do
+           ac_cv_f77_mangling="${ac_case}, ${ac_trail}, ${ac_extra}"
+           # AC_MSG_NOTICE([Attempting link for $ac_cv_f77_mangling])
+           case $ac_case in
+             "lower case")
+               ac_name=m4_tolower($2)
+               ;;
+             "upper case")
+               ac_name=m4_toupper($2)
+               ;;
+           esac
+           if test "$ac_trail" = underscore ; then
+             ac_name=${ac_name}_
+           fi
+           # AC_MSG_CHECKING([$2 -> $ac_name])
+           AC_LINK_IFELSE(
+             [AC_LANG_PROGRAM(
+                [#ifdef __cplusplus
+                  extern "C"
+                 #endif
+                 void $ac_name();],
+                [$ac_name()])],
+             [ac_result=success],
+             [ac_result=failure])
+           # AC_MSG_RESULT([$result])
+           if test $ac_result = success ; then
+             break 3
+           fi
+         done
        done
      done
      if test "$ac_result" = "failure" ; then
@@ -235,19 +235,19 @@ AC_DEFUN([AC_COIN_TRY_FLINK],
       AC_COIN_F77_FUNC($1,cfunc$1)
       # AC_MSG_NOTICE([COIN_TRY_FLINK: $1 -> $cfunc$1])
       AC_LINK_IFELSE(
-	[AC_LANG_PROGRAM([void $cfunc$1();],[$cfunc$1()])],
-	[flink_try=yes],
-	[if test x"$FLIBS" != x ; then
-	   flink_save_libs="$LIBS"
-	   LIBS="$LIBS $FLIBS"
-	   AC_LINK_IFELSE(
-	     [AC_LANG_PROGRAM([void $cfunc$1();],[$cfunc$1()])],
-	     [coin_need_flibs=yes
-	      flink_try=yes]
-	   )
-	   LIBS="$flink_save_libs"
-	 fi
-	]
+        [AC_LANG_PROGRAM([void $cfunc$1();],[$cfunc$1()])],
+        [flink_try=yes],
+        [if test x"$FLIBS" != x ; then
+           flink_save_libs="$LIBS"
+           LIBS="$LIBS $FLIBS"
+           AC_LINK_IFELSE(
+             [AC_LANG_PROGRAM([void $cfunc$1();],[$cfunc$1()])],
+             [coin_need_flibs=yes
+              flink_try=yes]
+           )
+           LIBS="$flink_save_libs"
+         fi
+        ]
       )
       ;;
     cc|cpp)
@@ -255,19 +255,19 @@ AC_DEFUN([AC_COIN_TRY_FLINK],
       flink_try=no
       AC_COIN_F77_FUNC($1,cfunc$1)
       AC_LINK_IFELSE(
-	[AC_LANG_PROGRAM([extern "C" {void $cfunc$1();}],[$cfunc$1()])],
-	[flink_try=yes],
-	[if test x"$FLIBS" != x ; then
-	   flink_save_libs="$LIBS"
-	   LIBS="$LIBS $FLIBS"
-	   AC_LINK_IFELSE(
-	     [AC_LANG_PROGRAM([extern "C" {void $cfunc$1();}],[$cfunc$1()])],
-	     [coin_need_flibs=yes
-	      flink_try=yes]
-	   )
-	   LIBS="$flink_save_libs"
-	 fi
-	]
+        [AC_LANG_PROGRAM([extern "C" {void $cfunc$1();}],[$cfunc$1()])],
+        [flink_try=yes],
+        [if test x"$FLIBS" != x ; then
+           flink_save_libs="$LIBS"
+           LIBS="$LIBS $FLIBS"
+           AC_LINK_IFELSE(
+             [AC_LANG_PROGRAM([extern "C" {void $cfunc$1();}],[$cfunc$1()])],
+             [coin_need_flibs=yes
+              flink_try=yes]
+           )
+           LIBS="$flink_save_libs"
+         fi
+        ]
       )
       ;;
   esac
@@ -373,42 +373,42 @@ AC_DEFUN([AC_COIN_CHK_BLAS],
     AC_MSG_RESULT([nothing yet])
     case $build in
       *-sgi-*) 
-	AC_MSG_CHECKING([for BLAS in -lcomplib.sgimath])
-	AC_COIN_CHK_PKG_FLINK([blas_lflags],[daxpy],[-lcomplib.sgimath])
-	;;
+        AC_MSG_CHECKING([for BLAS in -lcomplib.sgimath])
+        AC_COIN_CHK_PKG_FLINK([blas_lflags],[daxpy],[-lcomplib.sgimath])
+        ;;
 
       *-*-solaris*)
-	# Ideally, we'd use -library=sunperf, but it's an imperfect world.
-	# Studio cc doesn't recognise -library, it wants -xlic_lib. Studio 12
-	# CC doesn't recognise -xlic_lib. Libtool doesn't like -xlic_lib
-	# anyway. Sun claims that CC and cc will understand -library in Studio
-	# 13. The main extra function of -xlic_lib and -library is to arrange
-	# for the Fortran run-time libraries to be linked for C++ and C. We
-	# can arrange that explicitly.
-	AC_MSG_CHECKING([for BLAS in -lsunperf])
-	AC_COIN_CHK_PKG_FLINK([blas_lflags],[daxpy],[-lsunperf])
-	;;
-	
+        # Ideally, we'd use -library=sunperf, but it's an imperfect world.
+        # Studio cc doesn't recognise -library, it wants -xlic_lib. Studio 12
+        # CC doesn't recognise -xlic_lib. Libtool doesn't like -xlic_lib
+        # anyway. Sun claims that CC and cc will understand -library in Studio
+        # 13. The main extra function of -xlic_lib and -library is to arrange
+        # for the Fortran run-time libraries to be linked for C++ and C. We
+        # can arrange that explicitly.
+        AC_MSG_CHECKING([for BLAS in -lsunperf])
+        AC_COIN_CHK_PKG_FLINK([blas_lflags],[daxpy],[-lsunperf])
+        ;;
+        
       *-cygwin* | *-mingw*)
-	case "$CC" in
-	  clang* ) ;;
-	  cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
-	    AC_MSG_CHECKING([for BLAS in MKL (32bit)])
-	    AC_COIN_CHK_PKG_FLINK([blas_lflags],[daxpy],
-	      [mkl_intel_c.lib mkl_sequential.lib mkl_core.lib])
-	    if test -z "$blas_lflags" ; then
-	      AC_MSG_CHECKING([for BLAS in MKL (64bit)])
-	      AC_COIN_CHK_PKG_FLINK([blas_lflags],[daxpy],
-		[mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib])
-	    fi
-	    ;;
-	esac
-	;;
-	
+        case "$CC" in
+          clang* ) ;;
+          cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+            AC_MSG_CHECKING([for BLAS in MKL (32bit)])
+            AC_COIN_CHK_PKG_FLINK([blas_lflags],[daxpy],
+              [mkl_intel_c.lib mkl_sequential.lib mkl_core.lib])
+            if test -z "$blas_lflags" ; then
+              AC_MSG_CHECKING([for BLAS in MKL (64bit)])
+              AC_COIN_CHK_PKG_FLINK([blas_lflags],[daxpy],
+                [mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib])
+            fi
+            ;;
+        esac
+        ;;
+        
        *-darwin*)
-	AC_MSG_CHECKING([for BLAS in Veclib])
-	AC_COIN_CHK_PKG_FLINK([blas_lflags],[daxpy],[-framework Accelerate])
-	;;
+        AC_MSG_CHECKING([for BLAS in Veclib])
+        AC_COIN_CHK_PKG_FLINK([blas_lflags],[daxpy],[-framework Accelerate])
+        ;;
     esac
     if test -z "$blas_lflags" ; then
       AC_MSG_CHECKING([for BLAS in -lblas])
@@ -509,19 +509,19 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
     AC_MSG_RESULT([nothing yet])
     case $build in
       *-sgi-*) 
-	AC_MSG_CHECKING([for LAPACK in -lcomplib.sgimath])
-	AC_COIN_CHK_PKG_FLINK([lapack_lflags],[dsyev],[-lcomplib.sgimath])
-	;;
+        AC_MSG_CHECKING([for LAPACK in -lcomplib.sgimath])
+        AC_COIN_CHK_PKG_FLINK([lapack_lflags],[dsyev],[-lcomplib.sgimath])
+        ;;
 
       *-*-solaris*)
-	# See comments in COIN_CHK_PKG_BLAS.
-	AC_MSG_CHECKING([for LAPACK in -lsunperf])
-	AC_COIN_CHK_PKG_FLINK([lapack_lflags],[dsyev],[-lsunperf])
-	;;
+        # See comments in COIN_CHK_PKG_BLAS.
+        AC_MSG_CHECKING([for LAPACK in -lsunperf])
+        AC_COIN_CHK_PKG_FLINK([lapack_lflags],[dsyev],[-lsunperf])
+        ;;
 
-	# On cygwin, do this check only if doscompile is disabled. The
-	# prebuilt library will want to link with cygwin, hence won't run
-	# standalone in DOS.
+        # On cygwin, do this check only if doscompile is disabled. The
+        # prebuilt library will want to link with cygwin, hence won't run
+        # standalone in DOS.
 
     esac
     if test -z "$lapack_lflags" ; then

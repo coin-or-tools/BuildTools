@@ -248,8 +248,8 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
     *lib* | *LIB* )
       AC_CONFIG_COMMANDS([libtoolpatch],
         [sed -e 's|AR_FLAGS |AR_FLAGS|g' libtool > libtool.tmp
-	 mv libtool.tmp libtool
-	 chmod 755 libtool])
+         mv libtool.tmp libtool
+         chmod 755 libtool])
       ;;
   esac
 
@@ -526,10 +526,10 @@ AC_DEFUN([AC_COIN_CHK_HERE],
 # Change the test to enable / disable debugging output
 
        if test 1 = 1 ; then
-	 AC_MSG_NOTICE([CHK_HERE adding $1 to myvar:])
-	 AC_MSG_NOTICE([m4_toupper(myvar)_PCFILES: "${m4_toupper(myvar)_PCFILES}"])
-	 AC_MSG_NOTICE([m4_toupper(myvar)_LFLAGS: "${m4_toupper(myvar)_LFLAGS}"])
-	 AC_MSG_NOTICE([m4_toupper(myvar)_CFLAGS: "${m4_toupper(myvar)_CFLAGS}"])
+         AC_MSG_NOTICE([CHK_HERE adding $1 to myvar:])
+         AC_MSG_NOTICE([m4_toupper(myvar)_PCFILES: "${m4_toupper(myvar)_PCFILES}"])
+         AC_MSG_NOTICE([m4_toupper(myvar)_LFLAGS: "${m4_toupper(myvar)_LFLAGS}"])
+         AC_MSG_NOTICE([m4_toupper(myvar)_CFLAGS: "${m4_toupper(myvar)_CFLAGS}"])
        fi
       ])
 
@@ -571,12 +571,12 @@ AC_DEFUN([AC_COIN_DEF_PRIM_ARGS],
       ['no' is equivalent to --without-m4_tolower($1).])
       m4_case($3$4$5,nonono,,
         nonoyes,
-	Any other argument is applied as for --with-m4_tolower($1)-data,
-	noyesno,
-	Any other argument is applied as for --with-m4_tolower($1)-cflags,
-	noyesyes,
-	Any other argument is applied as for --with-m4_tolower($1)-cflags,
-	Any other argument is applied as for --with-m4_tolower($1)-lflags))])
+        Any other argument is applied as for --with-m4_tolower($1)-data,
+        noyesno,
+        Any other argument is applied as for --with-m4_tolower($1)-cflags,
+        noyesyes,
+        Any other argument is applied as for --with-m4_tolower($1)-cflags,
+        Any other argument is applied as for --with-m4_tolower($1)-lflags))])
 
   m4_if($2,yes,
     [AC_ARG_WITH([m4_tolower($1)],
@@ -585,20 +585,20 @@ AC_DEFUN([AC_COIN_DEF_PRIM_ARGS],
   m4_if($3,yes,
     [AC_ARG_WITH([m4_tolower($1)-lflags],
        AS_HELP_STRING([--with-m4_tolower($1)-lflags],
-	 [Linker flags for $1 appropriate for your environment.
-	  (Most often, -l specs for libraries.)]))])
+         [Linker flags for $1 appropriate for your environment.
+          (Most often, -l specs for libraries.)]))])
 
   m4_if($4,yes,
     [AC_ARG_WITH([m4_tolower($1)-cflags],
        AS_HELP_STRING([--with-m4_tolower($1)-cflags],
          [Compiler flags for $1 appropriate for your environment.
-	  (Most often, -I specs for header file directories.)]))])
+          (Most often, -I specs for header file directories.)]))])
 
   m4_if($5,yes,
     [AC_ARG_WITH([m4_tolower($1)-data],
        AS_HELP_STRING([--with-m4_tolower($1)-data],
-	 [A data directory specification for $1 appropriate for your
-	  environment.]))])
+         [A data directory specification for $1 appropriate for your
+          environment.]))])
 ])   # COIN_DEF_PRIM_ARGS
 
 
@@ -667,20 +667,20 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
   if test -n "$withval" ; then
     case "$withval" in
       no )
-	m4_tolower(coin_has_$1)=skipping
-	;;
+        m4_tolower(coin_has_$1)=skipping
+        ;;
       yes )
-	m4_tolower(coin_has_$1)=requested
-	;;
+        m4_tolower(coin_has_$1)=requested
+        ;;
       build )
-	m4_tolower(coin_has_$1)=build
-	;;
+        m4_tolower(coin_has_$1)=build
+        ;;
       * )
-	m4_tolower(coin_has_$1)=yes
-	m4_if(m4_default($4,nodata),dataonly,
-	  [m4_tolower($1_data)=$withval],
-	  [m4_tolower($1_lflags)=$withval])
-	;;
+        m4_tolower(coin_has_$1)=yes
+        m4_if(m4_default($4,nodata),dataonly,
+          [m4_tolower($1_data)=$withval],
+          [m4_tolower($1_lflags)=$withval])
+        ;;
     esac
   fi
 
@@ -692,28 +692,28 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
     [if test "$m4_tolower(coin_has_$1)" != skipping ; then
        withval=$m4_tolower(with_$1_lflags)
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     AC_MSG_ERROR(["$withval" is not valid here; please specify linker flags appropriate for your environment.])
-	     ;;
-	   * )
-	     m4_tolower(coin_has_$1)=yes
-	     m4_tolower($1_lflags)=$withval
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             AC_MSG_ERROR(["$withval" is not valid here; please specify linker flags appropriate for your environment.])
+             ;;
+           * )
+             m4_tolower(coin_has_$1)=yes
+             m4_tolower($1_lflags)=$withval
+             ;;
+         esac
        fi
 
        withval=$m4_tolower(with_$1_cflags)
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     AC_MSG_ERROR(["$withval" is not valid here; please specify compiler flags appropriate for your environment.])
-	     ;;
-	   * )
-	     m4_tolower(coin_has_$1)=yes
-	     m4_tolower($1_cflags)="$withval"
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             AC_MSG_ERROR(["$withval" is not valid here; please specify compiler flags appropriate for your environment.])
+             ;;
+           * )
+             m4_tolower(coin_has_$1)=yes
+             m4_tolower($1_cflags)="$withval"
+             ;;
+         esac
        fi
      fi])
 
@@ -724,15 +724,15 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
     [if test "$m4_tolower(coin_has_$1)" != skipping ; then
        withval=$m4_tolower(with_$1_data)
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     AC_MSG_ERROR(["$withval" is not valid here; please give a data directory specification appropriate for your environment.])
-	     ;;
-	   * )
-	     m4_tolower(coin_has_$1)=yes
-	     m4_tolower($1_data)="$withval"
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             AC_MSG_ERROR(["$withval" is not valid here; please give a data directory specification appropriate for your environment.])
+             ;;
+           * )
+             m4_tolower(coin_has_$1)=yes
+             m4_tolower($1_data)="$withval"
+             ;;
+         esac
        fi
      fi])
 
@@ -749,14 +749,14 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
   if test "$m4_tolower(coin_has_$1)" = noInfo ; then
     case $dflt_action in
       no )
-	m4_tolower(coin_has_$1)=skipping
-	;;
+        m4_tolower(coin_has_$1)=skipping
+        ;;
       build )
-	m4_tolower(coin_has_$1)=build
-	;;
+        m4_tolower(coin_has_$1)=build
+        ;;
       * )
         m4_tolower(coin_has_$1)=requested
-	;;
+        ;;
     esac
   fi
 
@@ -768,21 +768,21 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
   case $m4_tolower(coin_has_$1) in
     requested | build )
       if test -n "$PKG_CONFIG" ; then
-	m4_ifnblank($2,
-	  [pcfile=$2],
-	  [if test $m4_tolower(coin_has_$1) = build ; then
-	     pcfile=m4_tolower(coin$1)
-	   else
-	     pcfile=m4_tolower($1)
-	   fi])
-	AC_COIN_CHK_MOD_EXISTS([$1],[$pcfile],
-	  [m4_tolower(coin_has_$1)=yes
-	   m4_tolower($1_data)=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --variable=datadir $pcfile 2>/dev/null`
-	   m4_tolower($1_pcfiles)="$pcfile"],
-	  [m4_tolower(coin_has_$1)=no])
+        m4_ifnblank($2,
+          [pcfile=$2],
+          [if test $m4_tolower(coin_has_$1) = build ; then
+             pcfile=m4_tolower(coin$1)
+           else
+             pcfile=m4_tolower($1)
+           fi])
+        AC_COIN_CHK_MOD_EXISTS([$1],[$pcfile],
+          [m4_tolower(coin_has_$1)=yes
+           m4_tolower($1_data)=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --variable=datadir $pcfile 2>/dev/null`
+           m4_tolower($1_pcfiles)="$pcfile"],
+          [m4_tolower(coin_has_$1)=no])
       else
-	m4_tolower(coin_has_$1)=yes
-	# AC_MSG_WARN([skipped check via pkgconf as no pkgconf available])
+        m4_tolower(coin_has_$1)=yes
+        # AC_MSG_WARN([skipped check via pkgconf as no pkgconf available])
       fi
       ;;
     skipping | yes )
@@ -874,7 +874,7 @@ AC_DEFUN([AC_COIN_CHK_PKG],
   if test x"$COIN_SKIP_PROJECTS" != x ; then
     for pkg in $COIN_SKIP_PROJECTS ; do
       if test "$m4_tolower(pkg)" = "$m4_tolower($1)" ; then
-	m4_tolower(coin_has_$1)=skipping
+        m4_tolower(coin_has_$1)=skipping
       fi
     done
   fi
@@ -903,7 +903,7 @@ AC_DEFUN([AC_COIN_CHK_PKG],
 # Create an automake conditional COIN_HAS_PRIM.
 
   AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
-  		 [test $m4_tolower(coin_has_$1) = yes])
+                   [test $m4_tolower(coin_has_$1) = yes])
 
 # If we've located the package, define preprocessor symbol COIN_HAS_PRIM and
 # augment the necessary variables for the client packages.
@@ -999,20 +999,20 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
   if test -n "$withval" ; then
     case "$withval" in
       no )
-	m4_tolower(coin_has_$1)=skipping
-	;;
+        m4_tolower(coin_has_$1)=skipping
+        ;;
       yes )
-	m4_tolower(coin_has_$1)=requested
-	;;
+        m4_tolower(coin_has_$1)=requested
+        ;;
       build )
-	m4_tolower(coin_has_$1)=build
-	;;
+        m4_tolower(coin_has_$1)=build
+        ;;
       * )
-	m4_tolower(coin_has_$1)=yes
-	m4_if(m4_default($8,nodata),dataonly,
-	  [m4_tolower($1_data)=$withval],
-	  [m4_tolower($1_lflags)=$withval])
-	;;
+        m4_tolower(coin_has_$1)=yes
+        m4_if(m4_default($8,nodata),dataonly,
+          [m4_tolower($1_data)=$withval],
+          [m4_tolower($1_lflags)=$withval])
+        ;;
     esac
   fi
 
@@ -1024,28 +1024,28 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
     [if test "$m4_tolower(coin_has_$1)" != skipping ; then
        withval=$m4_tolower(with_$1_lflags)
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     AC_MSG_ERROR(["$withval" is not valid here; please specify linker flags appropriate for your environment.])
-	     ;;
-	   * )
-	     m4_tolower(coin_has_$1)=yes
-	     m4_tolower($1_lflags)=$withval
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             AC_MSG_ERROR(["$withval" is not valid here; please specify linker flags appropriate for your environment.])
+             ;;
+           * )
+             m4_tolower(coin_has_$1)=yes
+             m4_tolower($1_lflags)=$withval
+             ;;
+         esac
        fi
 
        withval=$m4_tolower(with_$1_cflags)
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     AC_MSG_ERROR(["$withval" is not valid here; please specify compiler flags appropriate for your environment.])
-	     ;;
-	   * )
-	     m4_tolower(coin_has_$1)=yes
-	     m4_tolower($1_cflags)="$withval"
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             AC_MSG_ERROR(["$withval" is not valid here; please specify compiler flags appropriate for your environment.])
+             ;;
+           * )
+             m4_tolower(coin_has_$1)=yes
+             m4_tolower($1_cflags)="$withval"
+             ;;
+         esac
        fi
      fi])
 
@@ -1056,15 +1056,15 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
     [if test "$m4_tolower(coin_has_$1)" != skipping ; then
        withval=$m4_tolower(with_$1_data)
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     AC_MSG_ERROR(["$withval" is not valid here; please give a data directory specification appropriate for your environment.])
-	     ;;
-	   * )
-	     m4_tolower(coin_has_$1)=yes
-	     m4_tolower($1_data)="$withval"
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             AC_MSG_ERROR(["$withval" is not valid here; please give a data directory specification appropriate for your environment.])
+             ;;
+           * )
+             m4_tolower(coin_has_$1)=yes
+             m4_tolower($1_data)="$withval"
+             ;;
+         esac
        fi
      fi])
 
@@ -1081,14 +1081,14 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
   if test "$m4_tolower(coin_has_$1)" = noInfo ; then
     case $dflt_action in
       no )
-	m4_tolower(coin_has_$1)=skipping
-	;;
+        m4_tolower(coin_has_$1)=skipping
+        ;;
       build )
-	m4_tolower(coin_has_$1)=build
-	;;
+        m4_tolower(coin_has_$1)=build
+        ;;
       * )
         m4_tolower(coin_has_$1)=requested
-	;;
+        ;;
     esac
   fi
 
@@ -1099,24 +1099,24 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
     build | requested)
       m4_if(m4_default($8,nodata),dataonly,[],
         [m4_ifnblank([$2],
-	   [m4_tolower($1_lflags)=$2],
+           [m4_tolower($1_lflags)=$2],
            [if test "$m4_tolower(coin_has_$1)" = build ; then
-	      m4_tolower($1_lflags)="-L\$(libdir) -l[]m4_tolower(coin$1)"
-	    else
-	      m4_tolower($1_lflags)="-l[]m4_tolower($1)"
-	    fi])
+              m4_tolower($1_lflags)="-L\$(libdir) -l[]m4_tolower(coin$1)"
+            else
+              m4_tolower($1_lflags)="-l[]m4_tolower($1)"
+            fi])
          m4_ifnblank([$3],
-	   [m4_tolower($1_cflags)=$3],
+           [m4_tolower($1_cflags)=$3],
            [if test "$m4_tolower(coin_has_$1)" = build ; then
-	      m4_tolower($1_cflags)="-I\$(pkgincludedir)/ThirdParty"
-	    fi])])
+              m4_tolower($1_cflags)="-I\$(pkgincludedir)/ThirdParty"
+            fi])])
       m4_if(m4_default($8,nodata),nodata,[],
         [m4_tolower($1_data)=m4_default([$3],
            [if test "$m4_tolower(coin_has_$1)" = build ; then
-	      m4_tolower($1_data)="\$(pkgdatadir)"
-	    else
-	      m4_tolower($1_data)="/usr/local/share"
-	    fi])])
+              m4_tolower($1_data)="\$(pkgdatadir)"
+            else
+              m4_tolower($1_data)="/usr/local/share"
+            fi])])
       m4_tolower(coin_has_$1)=yes
       ;;
     skipping | yes )
@@ -1137,11 +1137,11 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
        LIBS="$m4_tolower($1_lflags) $6"
        AC_LINK_IFELSE(
         [AC_LANG_PROGRAM(
-	  [#ifdef __cplusplus
-	     extern "C"
-	   #endif
-	   void $5();],
-	  [$5()])],
+          [#ifdef __cplusplus
+             extern "C"
+           #endif
+           void $5();],
+          [$5()])],
        [],
        [m4_tolower(coin_has_$1)=no])
        LIBS=$ac_save_LIBS],
@@ -1226,7 +1226,7 @@ AC_DEFUN([AC_COIN_CHK_LIB],
   if test x"$COIN_SKIP_PROJECTS" != x ; then
     for pkg in $COIN_SKIP_PROJECTS ; do
       if test "$m4_tolower(pkg)" = "$m4_tolower($1)" ; then
-	m4_tolower(coin_has_$1)=skipping
+        m4_tolower(coin_has_$1)=skipping
       fi
     done
   fi
@@ -1255,7 +1255,7 @@ AC_DEFUN([AC_COIN_CHK_LIB],
 # Create an automake conditional COIN_HAS_PRIM.
 
   AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
-  		 [test $m4_tolower(coin_has_$1) = yes])
+                   [test $m4_tolower(coin_has_$1) = yes])
 
 # If we've located the package, define preprocessor symbol COIN_HAS_PRIM
 # and augment the necessary variables for the client packages.
@@ -1294,8 +1294,8 @@ AC_DEFUN([AC_COIN_CHK_LIBM],
   AC_SEARCH_LIBS([cos],[m],
     [if test "$ac_cv_search_cos" != 'none required' ; then
        m4_foreach_w([myvar],[$1],
-	 [m4_toupper(myvar)_LFLAGS="$ac_cv_search_cos $m4_toupper(myvar)_LFLAGS"
-	 ])
+         [m4_toupper(myvar)_LFLAGS="$ac_cv_search_cos $m4_toupper(myvar)_LFLAGS"
+         ])
      fi])
   LIBS="$coin_save_LIBS"
 ]) # AC_COIN_CHK_LIBM
@@ -1330,8 +1330,8 @@ AC_DEFUN([AC_COIN_CHK_ZLIB],
     fi
     if test x$coin_has_zlib = xyes ; then
       m4_foreach_w([myvar],[$1],
-	[m4_toupper(myvar)_LFLAGS="-lz $m4_toupper(myvar)_LFLAGS"
-	])
+        [m4_toupper(myvar)_LFLAGS="-lz $m4_toupper(myvar)_LFLAGS"
+        ])
       AC_DEFINE([COIN_HAS_ZLIB],[1],[Define to 1 if zlib is available])
     fi
   fi
@@ -1371,7 +1371,7 @@ AC_DEFUN([AC_COIN_CHK_BZLIB],
     if test $coin_has_bzlib = yes ; then
       m4_foreach_w([myvar],[$1],
         [m4_toupper(myvar)_LFLAGS="-lbz2 $m4_toupper(myvar)_LFLAGS"
-	])
+        ])
       AC_DEFINE([COIN_HAS_BZLIB],[1],[Define to 1 if bzlib is available])
     fi
   fi
@@ -1408,8 +1408,8 @@ AC_DEFUN([AC_COIN_CHK_GMP],
       [AC_CHECK_LIB([gmp],[__gmpz_init],[coin_has_gmp=yes])])
     if test $coin_has_gmp = yes ; then
       m4_foreach_w([myvar],[$1],
-	[m4_toupper(myvar)_LFLAGS="-lgmp $m4_toupper(myvar)_LFLAGS"
-	])
+        [m4_toupper(myvar)_LFLAGS="-lgmp $m4_toupper(myvar)_LFLAGS"
+        ])
       AC_DEFINE([COIN_HAS_GMP],[1],[Define to 1 if GMP is available])
     fi
   fi
@@ -1459,7 +1459,7 @@ AC_DEFUN([AC_COIN_CHK_GNU_READLINE],
     if test $coin_has_readline = yes ; then
       m4_foreach_w([myvar],[$1],
         [m4_toupper(myvar)_LFLAGS="-lreadline $m4_toupper(myvar)_LFLAGS"
-	])
+        ])
       AC_DEFINE([COIN_HAS_READLINE],[1],[Define to 1 if readline is available])
     fi
     LIBS="$coin_save_LIBS"
@@ -1478,10 +1478,10 @@ AC_DEFUN([AC_COIN_CHK_GNU_READLINE],
 # should be processed as external tag files. E.g., COIN_DOXYGEN([Clp Osi]).
 
 # This macro will define the following variables:
-#  coin_have_doxygen	Yes if doxygen is found, no otherwise
+#  coin_have_doxygen        Yes if doxygen is found, no otherwise
 #  coin_doxy_usedot     Defaults to `yes'; --with-dot will still check to see
-#			if dot is available
-#  coin_doxy_tagname	Name of doxygen tag file (placed in doxydoc directory)
+#                        if dot is available
+#  coin_doxy_tagname        Name of doxygen tag file (placed in doxydoc directory)
 #  coin_doxy_logname    Name of doxygen log file (placed in doxydoc directory)
 #  coin_doxy_tagfiles   List of doxygen tag files used to reference other
 #                       doxygen documentation
@@ -1511,8 +1511,8 @@ AC_CHECK_PROG([coin_have_latex],[latex],[yes],[no])
 
 AC_ARG_WITH([dot],
   AS_HELP_STRING([--with-dot],
-		 [use dot (from graphviz) when creating documentation with
-		  doxygen if available; --without-dot to disable]),
+                 [use dot (from graphviz) when creating documentation with
+                  doxygen if available; --without-dot to disable]),
   [],[withval=yes])
 if test x"$withval" = xno ; then
   coin_doxy_usedot=NO
