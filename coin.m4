@@ -101,36 +101,6 @@ AC_DEFUN([AC_COIN_ENABLE_MSVC],
     [enable_msvc=no])
 ])
 
-
-###########################################################################
-#                      COIN_DEPENDENCY_LINKING                            # 
-###########################################################################
-
-# Control whether all dependencies are linked into shared libraries. `Yes' is
-# the recommended best practice now-a-days. This can be overridden on the
-# configure command line.
-
-# In BuildTools/stable, dependency linking is disabled for cl and icl on
-# cygwin and mingw, enabled for everything else. That may need to be
-# reintroduced. --lh, 180228 --
-
-AC_DEFUN([AC_COIN_DEPENDENCY_LINKING],
-[
-  AC_ARG_ENABLE([dependency-linking],
-    [AC_HELP_STRING([--enable-dependency-linking],
-       [Link all library dependencies into shared libraries at
-        creation (default=yes)])],
-    [dependency_linking="$enableval"],
-    [dependency_linking=yes])
-
-# AC_SUBST([LT_LDFLAGS])
-# if test "$dependency_linking" = yes ; then
-#   LT_LDFLAGS="$LT_LDFLAGS -no-undefined"
-# fi
-
-  AM_CONDITIONAL(DEPENDENCY_LINKING, [test "$dependency_linking" = yes])
-])
-
 ###########################################################################
 #                        COIN_COMPFLAGS_DEFAULTS                          #
 ###########################################################################
@@ -295,10 +265,8 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
     AC_MSG_RESULT([no])
   fi
 
-# Check if dependency linking is enabled or disabled.
-
-  AC_COIN_DEPENDENCY_LINKING
-
+  #TODO we should be able to add this flag
+  #LT_LDFLAGS="$LT_LDFLAGS -no-undefined"
 ])
 
 ###########################################################################
