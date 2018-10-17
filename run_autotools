@@ -484,7 +484,17 @@ for dir in ${dirs[@]} ; do
       if test $needScripts = 1 ; then
         echo "  refreshing autotools scripts in this directory."
         for file in $autotoolsFiles ; do
-          cp BuildTools/$file .
+          if test -e BuildTools/$file ; then
+            cp BuildTools/$file .
+          elif test -e $AUTOTOOLS_DIR/share/libtool/build-aux/$file ; then
+            cp $AUTOTOOLS_DIR/share/libtool/build-aux/$file .
+          else
+            echo "  Do not know where to take $file from."
+            exit 1
+          fi
+          if test -e BuildTools/${file}.patch ; then
+            patch -p0 < BuildTools/${file}.patch
+          fi
         done
       fi
 

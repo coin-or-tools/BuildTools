@@ -1,0 +1,11 @@
+--- compile	2018-10-16 00:31:13.195718806 +0200
++++ compile	2018-10-18 00:08:04.848529514 +0200
+@@ -50,7 +50,7 @@
+       if test -z "$file_conv"; then
+ 	# lazily determine how to convert abs files
+ 	case `uname -s` in
+-	  MINGW*)
++	  MINGW* | MSYS* )
+ 	    file_conv=mingw
+ 	    ;;
+ 	  CYGWIN*)
