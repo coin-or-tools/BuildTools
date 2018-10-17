@@ -51,9 +51,9 @@
 
 # If any subdirectory queued for processing is found to contain an install-sh
 # script, it is treated as an independent unit (i.e., you can run `make
-# install' from this directory) and the set of auxilliary scripts is refreshed
-# from BuildTools.  You can force installation of install-sh and associated
-# scripts with the -i option. It's good to read the autoconf documentation for
+# install' from this directory) and the set of auxilliary scripts is refreshed.
+# You can suppress installation of install-sh and associated
+# scripts with the -ni option. It's good to read the autoconf documentation for
 # AC_CONFIG_AUX_DIR if this doesn't make sense to you.
 
 # The required autotools versions, along with a few other differences. Current
@@ -102,7 +102,7 @@ usage: run_autotools [-h] [-nr] [ directory directory ... ]
 
   -h  | --help           print help message and exit
   -r  | --recursion      do recursive search for configure.ac files
-  -i  | --independent    install scripts necessary for an independent unit
+  -ni | --dependent      do not install scripts necessary for an independent unit
 
   If no directories and -r are specified, the tree rooted at the current
   directory is searched recursively for directories with configure.ac
@@ -111,10 +111,10 @@ usage: run_autotools [-h] [-nr] [ directory directory ... ]
   are skipped.  If directories are specified on the command line, the
   search for configure.ac files is restricted to the specified directories.
 
-  The --independent option will force installation of install-sh and other
+  The --dependent option will suppress installation of install-sh and other
   scripts necessary for a unit that is installed independently. This will
-  be forced in *all* directories processed. Most often what is desired is
-  to install these scripts in the top-level directory of a unit, so -i
+  be suppressed in *all* directories processed. Most often what is desired is
+  to install these scripts in the top-level directory of a unit, so not using -ni
   disables -r. It's a good idea to explicitly specify the directories you want
   to process.
 
@@ -268,7 +268,7 @@ fi
 # Set up to process parameters. No parameters is the default.
 
 doRecurse=0
-forceScripts=0
+suppressScripts=0
 userSpecifiedDirs=0
 
 # Process the parameters. A parameter without an opening `-' is assumed to be
@@ -287,9 +287,8 @@ while [[ $# -gt 0 ]] ; do
     -nr | --no-recursion )
       doRecurse=0
       ;;
-    -i | --independent )
-      forceScripts=1
-      doRecurse=0
+    -ni | --dependent )
+      suppressScripts=1
       ;;
     -* ) echo "$0: unrecognised command line switch '"$1"'."
       printHelp=1
@@ -441,9 +440,9 @@ for dir in ${dirs[@]} ; do
 # it.  Otherwise, assume that runautotooldDir is BuildTools. Allow that the
 # user may have linked to a BuildTools.
 
-    needScripts=0
-    if test -f install-sh || test $forceScripts = 1 ; then
-      needScripts=1
+    needScripts=1
+    if test $suppressScripts = 1 ; then
+      needScripts=0
     fi
     if test -f Makefile.am || test $needScripts = 1 ; then
       if test -d BuildTools || test -L BuildTools ; then
