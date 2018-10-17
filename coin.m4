@@ -265,8 +265,9 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
     AC_MSG_RESULT([no])
   fi
 
-  #TODO we should be able to add this flag
-  #LT_LDFLAGS="$LT_LDFLAGS -no-undefined"
+  # shared libraries should have no undefined symbols
+  # for Windows DLLs, it is mandatory to add this
+  LT_LDFLAGS="$LT_LDFLAGS -no-undefined"
 ])
 
 ###########################################################################
