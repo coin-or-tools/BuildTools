@@ -215,10 +215,6 @@ AC_DEFUN([AC_COIN_INITIALIZE],
 
 AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 [
-# On Windows, shared C++ libraries do not work with the current libtool (it
-# handles only exports for C functions, not C++). On all other systems, build
-# only shared libraries.
-
 # (lh, 180302) Sadly, we can't use the obvious libtool macros
 # (AC_{ENABLE,DISABLE}_{SHARED,STATIC}, nor parameters to LT_INIT,
 # precisely because these macros record the default behaviour by defining
@@ -226,19 +222,15 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 # any shell conditional has no effect. Either we trust libtool or we need
 # something more inventive. The relevant libtool macros are in ltoptions.m4,
 # _LT_ENABLE_SHARED and _LT_ENABLE_STATIC.
-
+# That is, something like the following will not work:
 # case $host_os in
-#   cygwin* | mingw* | msys* )
-#     AC_DISABLE_SHARED
-#     ;;
-#   *)
-#     AC_DISABLE_STATIC
-#     ;;
+#   cygwin* | mingw* | msys* ) AC_DISABLE_SHARED  ;;
+#   *) AC_DISABLE_STATIC ;;
 # esac
 
 # Create libtool.
 
-  LT_INIT
+  LT_INIT([win32-dll])
 
 # Patch libtool to eliminate a trailing space after AR_FLAGS. This needs to be
 # run after config.status has created libtool. Apparently necessary on
