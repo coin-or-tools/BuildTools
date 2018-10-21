@@ -230,7 +230,7 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 
 # Create libtool.
 
-  LT_INIT([pic-only win32-dll])
+  LT_INIT([disable-static pic-only win32-dll])
 
 # Patch libtool to eliminate a trailing space after AR_FLAGS. This needs to be
 # run after config.status has created libtool. Apparently necessary on
