@@ -325,6 +325,115 @@ AC_DEFUN_ONCE([AC_COIN_PROG_CXX],
   fi
 ])
 
+###########################################################################
+#                   COIN_NAMEMANGLING                                     #
+###########################################################################
+
+# COIN_NAMEMANGLING (lib,func,lflags)
+# -------------------------------------------------------------------------
+# Determine C/C++ name mangling to allow linking with header-less libraries.
+#  lib ($1) a library we're attempting to link to
+#  func ($2) a function within that library
+#  lflags ($3) flags to link to library, defaults to -l$1 if not given
+#
+# Defines the C macros $1_FUNC and $1_FUNC_ (in uppercase) to be used for
+# declaring functions from library $1.
+
+# Ideally, the function name will contain an embedded underscore but the
+# macro doesn't require that because typical COIN-OR use cases (BLAS, LAPACK)
+# don't have any names with embedded underscores. The default is `no extra
+# underscore' (because this is tested first and will succeed if the name
+# has no embedded underscore).
+
+# The possibilities amount to
+# { lower / upper case } X (no) trailing underscore X (no) extra underscore
+# where the extra underscore is applied to name with an embedded underscore.
+
+
+# -------------------------------------------------------------------------
+
+AC_DEFUN([AC_COIN_NAMEMANGLING],
+[
+  AC_CACHE_CHECK(
+    [$1 name mangling scheme],
+    [m4_tolower(ac_cv_$1_namemangling)],
+    [ac_save_LIBS=$LIBS
+     a4_ifblank([$3], [LIBS="-l$1"], [LIBS="$3"])
+     for ac_case in "lower case" "upper case" ; do
+       for ac_trail in "underscore" "no underscore" ; do
+         for ac_extra in "no extra underscore" "extra underscore" ; do
+           m4_tolower(ac_cv_$1_namemangling)="${ac_case}, ${ac_trail}, ${ac_extra}"
+           # AC_MSG_NOTICE([Attempting link for m4_tolower(ac_cv_$1_namemangling)])
+           case $ac_case in
+             "lower case")
+               ac_name=m4_tolower($2)
+               ;;
+             "upper case")
+               ac_name=m4_toupper($2)
+               ;;
+           esac
+           if test "$ac_trail" = underscore ; then
+             ac_name=${ac_name}_
+           fi
+           # AC_MSG_CHECKING([$2 -> $ac_name])
+           AC_LINK_IFELSE(
+             [AC_LANG_PROGRAM(
+                [#ifdef __cplusplus
+                  extern "C"
+                 #endif
+                 void $ac_name();],
+                [$ac_name()])],
+             [ac_result=success],
+             [ac_result=failure])
+           # AC_MSG_RESULT([$result])
+           if test $ac_result = success ; then
+             break 3
+           fi
+         done
+       done
+     done
+     if test "$ac_result" = "failure" ; then
+       m4_tolower(ac_cv_$1_namemangling)=unknown
+     fi
+     LIBS=$ac_save_LIBS])
+
+  # setup the m4_toupper($1)_FUNC and m4_toupper($1)_FUNC_ macros
+  AH_TEMPLATE(m4_toupper($1_FUNC), [Define to a macro mangling the given C identifier (in lower and upper case).])
+  AH_TEMPLATE(m4_toupper($1_FUNC_), [As m4_toupper(_AC_$1_FUNC), but for C identifiers containing underscores.])
+  case "$ac_cv_f77_mangling" in
+   "lower case, no underscore, no extra underscore")
+      AC_DEFINE(m4_toupper($1_FUNC)[(name,NAME)],  [name])
+      AC_DEFINE(m4_toupper($1_FUNC_)[(name,NAME)], [name]) ;;
+   "lower case, no underscore, extra underscore")
+      AC_DEFINE(m4_toupper($1_FUNC)[(name,NAME)],  [name])
+      AC_DEFINE(m4_toupper($1_FUNC_)[(name,NAME)], [name [##] _]) ;;
+   "lower case, underscore, no extra underscore")
+      AC_DEFINE(m4_toupper($1_FUNC)[(name,NAME)],  [name [##] _])
+      AC_DEFINE(m4_toupper($1_FUNC_)[(name,NAME)], [name [##] _]) ;;
+   "lower case, underscore, extra underscore")
+      AC_DEFINE(m4_toupper($1_FUNC)[(name,NAME)],  [name [##] _])
+      AC_DEFINE(m4_toupper($1_FUNC_)[(name,NAME)], [name [##] __]) ;;
+   "upper case, no underscore, no extra underscore")
+      AC_DEFINE(m4_toupper($1_FUNC)[(name,NAME)],  [NAME])
+      AC_DEFINE(m4_toupper($1_FUNC_)[(name,NAME)], [NAME]) ;;
+   "upper case, no underscore, extra underscore")
+      AC_DEFINE(m4_toupper($1_FUNC)[(name,NAME)],  [NAME])
+      AC_DEFINE(m4_toupper($1_FUNC_)[(name,NAME)], [NAME [##] _]) ;;
+   "upper case, underscore, no extra underscore")
+      AC_DEFINE(m4_toupper($1_FUNC)[(name,NAME)],  [NAME [##] _])
+      AC_DEFINE(m4_toupper($1_FUNC_)[(name,NAME)], [NAME [##] _]) ;;
+   "upper case, underscore, extra underscore")
+      AC_DEFINE(m4_toupper($1_FUNC)[(name,NAME)],  [NAME [##] _])
+      AC_DEFINE(m4_toupper($1_FUNC_)[(name,NAME)], [NAME [##] __]) ;;
+   "unknown")
+      AC_MSG_WARN([Unable to determine correct name mangling scheme for $2 in $1]) ;;
+   *)
+      AC_MSG_WARN([unknown name-mangling scheme])
+      ;;
+  esac
+  # AC_MSG_NOTICE([Done COIN_NAMEMANGLING])
+])
+
 
 ###########################################################################
 #                           COIN_HAS_PKGCONFIG                            #
