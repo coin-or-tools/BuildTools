@@ -1923,8 +1923,9 @@ AC_DEFUN([AC_COIN_FINALIZE_FLAGS],
       # setup XYZ_EXPORT symbol for library users
       libexport_attribute=
       if test "$enable_shared" = yes ; then
+        # TODO better check for this? we essentially want to know whether we're building DLLs
         # or do we also need this for GCC on Windows?
-        case $CC in cl | */cl | icl | */icl )
+        case $CC in */compile\ cl | cl | */cl | */compile\ icl | icl | */icl )
           libexport_attribute="__declspec(dllimport)"
         esac
       fi
