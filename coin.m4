@@ -434,16 +434,16 @@ AC_DEFUN([AC_COIN_NAMEMANGLING],
                  #endif
                  void $ac_name();],
                 [$ac_name()])],
-             [ac_result=success],
-             [ac_result=failure])
+             [ac_success=yes],
+             [ac_success=no])
            # AC_MSG_RESULT([$result])
-           if test $ac_result = success ; then
+           if test $ac_success = yes ; then
              break 3
            fi
          done
        done
      done
-     if test "$ac_result" = "failure" ; then
+     if test "$ac_success" = "no" ; then
        m4_tolower(ac_cv_$1_namemangling)=unknown
      fi
      LIBS=$ac_save_LIBS])
@@ -511,10 +511,10 @@ AC_DEFUN([AC_COIN_TRY_LINK],
              void $ac_name();],
             [$ac_name()])],
           [$1_namemangling="${ac_case}, ${ac_trail}, ${ac_extra}"
-           ac_result=success],
-          [ac_result=failure])
-        AC_MSG_RESULT([$ac_result])
-        if test $ac_result = success ; then
+           ac_success=yes],
+          [ac_success=no])
+        AC_MSG_RESULT([$ac_success])
+        if test $ac_success = yes ; then
           break 3
         fi
       done
@@ -522,7 +522,7 @@ AC_DEFUN([AC_COIN_TRY_LINK],
   done
   LIBS=$ac_save_LIBS
 
-  if test $ac_result = success ; then
+  if test $ac_success = yes ; then
     m4_ifblank([$4],[:],[$4])
     m4_ifnblank([$5],[else $5])
   fi
