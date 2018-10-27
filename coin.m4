@@ -718,9 +718,9 @@ AC_DEFUN([AC_COIN_CHK_HERE],
        m4_toupper(myvar)_LFLAGS="$m4_toupper(myvar)_LFLAGS $m4_toupper($1)_LFLAGS"
        m4_toupper(myvar)_CFLAGS="$m4_toupper(myvar)_CFLAGS $m4_toupper($1)_CFLAGS"
 
-# Change the test to enable / disable debugging output
+# Define BUILDTOOLS_DEBUG to enable debugging output
 
-       if test 1 = 1 ; then
+       if test "$BUILDTOOLS_DEBUG" = 1 ; then
          AC_MSG_NOTICE([CHK_HERE adding $1 to myvar:])
          AC_MSG_NOTICE([m4_toupper(myvar)_PCFILES: "${m4_toupper(myvar)_PCFILES}"])
          AC_MSG_NOTICE([m4_toupper(myvar)_LFLAGS: "${m4_toupper(myvar)_LFLAGS}"])
@@ -992,9 +992,9 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
 # user said `don't use.' Yes means we have something, from the user or
 # from pkgconfig. Note that we haven't run a useability test!
 
-# Change the test to enable / disable debugging output
+# Define BUILDTOOLS_DEBUG to enable debugging output
 
-    if test 1 = 1 ; then
+    if test "$BUILDTOOLS_DEBUG" = 1 ; then
       AC_MSG_NOTICE([FIND_PRIM_PKG result for $1: "$m4_tolower(coin_has_$1)"])
       AC_MSG_NOTICE([Collected values for package '$1'])
       AC_MSG_NOTICE([m4_tolower($1_lflags) is "$m4_tolower($1_lflags)"])
@@ -1347,9 +1347,9 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 # the link check failed. Yes means that we passed the link check, or no link
 # check was performed. Skipping means the user said `don't use.'
 
-# Change the test to enable / disable debugging output
+# Define BUILDTOOLS_DEBUG to enable debugging output
 
-    if test 1 = 1 ; then
+    if test "$BUILDTOOLS_DEBUG" = 1 ; then
       AC_MSG_NOTICE([FIND_PRIM_LIB result for $1: "$m4_tolower(coin_has_$1)"])
       AC_MSG_NOTICE([Collected values for package '$1'])
       AC_MSG_NOTICE([m4_tolower($1_lflags) is "$m4_tolower($1_lflags)"])
@@ -1908,7 +1908,7 @@ AC_SUBST(EXAMPLE_CLEAN_FILES)
 AC_DEFUN([AC_COIN_FINALIZE_FLAGS],
 [
   m4_foreach_w([myvar],[$1],
-    [ if test 1 = 1 ; then
+    [ if test "$BUILDTOOLS_DEBUG" = 1 ; then
         AC_MSG_NOTICE([FINALIZE_FLAGS for myvar:])
       fi
       AC_SUBST(m4_toupper(myvar)_LFLAGS_NOPC,[$m4_toupper(myvar)_LFLAGS])
@@ -1920,9 +1920,9 @@ AC_DEFUN([AC_COIN_FINALIZE_FLAGS],
         m4_toupper(myvar)_LFLAGS="$temp_LFLAGS ${m4_toupper(myvar)_LFLAGS}"
       fi
 
-# Change the test to enable / disable debugging output
+# Define BUILDTOOLS_DEBUG to enable debugging output
 
-      if test 1 = 1 ; then
+      if test "$BUILDTOOLS_DEBUG" = 1 ; then
         AC_MSG_NOTICE(
           [m4_toupper(myvar)_LFLAGS_NOPC: "${m4_toupper(myvar)_LFLAGS_NOPC}"])
         AC_MSG_NOTICE(
