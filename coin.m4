@@ -1920,6 +1920,16 @@ AC_DEFUN([AC_COIN_FINALIZE_FLAGS],
         m4_toupper(myvar)_LFLAGS="$temp_LFLAGS ${m4_toupper(myvar)_LFLAGS}"
       fi
 
+      # setup XYZ_EXPORT symbol for library users
+      libexport_attribute=
+      if test "$enable_shared" = yes ; then
+        # or do we also need this for GCC on Windows?
+        case $CC in cl* | */cl* | icl* | */icl* )
+          libexport_attribute="__declspec(dllimport)"
+        esac
+      fi
+      AC_DEFINE_UNQUOTED(m4_toupper(myvar)_EXPORT, [$libexport_attribute], [Library Visibility Attribute])
+
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
       if test "$BUILDTOOLS_DEBUG" = 1 ; then
