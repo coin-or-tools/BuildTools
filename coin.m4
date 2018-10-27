@@ -1924,7 +1924,7 @@ AC_DEFUN([AC_COIN_FINALIZE_FLAGS],
       libexport_attribute=
       if test "$enable_shared" = yes ; then
         # or do we also need this for GCC on Windows?
-        case $CC in cl* | */cl* | icl* | */icl* )
+        case $CC in cl | */cl | icl | */icl )
           libexport_attribute="__declspec(dllimport)"
         esac
       fi
