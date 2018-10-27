@@ -326,6 +326,57 @@ AC_DEFUN_ONCE([AC_COIN_PROG_CXX],
 ])
 
 ###########################################################################
+#                   COIN_DEFINENAMEMANGLING                               #
+###########################################################################
+
+# COIN_DEFINENAMEMANGLING (name,namemangling)
+# -------------------------------------------------------------------------
+# Determine C/C++ name mangling to allow linking with header-less libraries.
+#  name ($1) an identifier to prefix C macro names
+#  namemangling ($2) the name mangling scheme as determined by COIN_NAMEMANGLING
+#                    or COIN_TRY_LINK
+#
+# Defines the C macros $1_FUNC and $1_FUNC_ (in uppercase) to be used for
+# declaring functions from library $1.
+
+# -------------------------------------------------------------------------
+
+AC_DEFUN([AC_COIN_DEFINENAMEMANGLING],
+[
+  AH_TEMPLATE($1_FUNC, [Define to a macro mangling the given C identifier (in lower and upper case).])
+  AH_TEMPLATE($1_FUNC_, [As $1_FUNC, but for C identifiers containing underscores.])
+  case "$2" in
+   "lower case, no underscore, no extra underscore")
+      AC_DEFINE($1_FUNC[(name,NAME)],  [name])
+      AC_DEFINE($1_FUNC_[(name,NAME)], [name]) ;;
+   "lower case, no underscore, extra underscore")
+      AC_DEFINE($1_FUNC[(name,NAME)],  [name])
+      AC_DEFINE($1_FUNC_[(name,NAME)], [name [##] _]) ;;
+   "lower case, underscore, no extra underscore")
+      AC_DEFINE($1_FUNC[(name,NAME)],  [name [##] _])
+      AC_DEFINE($1_FUNC_[(name,NAME)], [name [##] _]) ;;
+   "lower case, underscore, extra underscore")
+      AC_DEFINE($1_FUNC[(name,NAME)],  [name [##] _])
+      AC_DEFINE($1_FUNC_[(name,NAME)], [name [##] __]) ;;
+   "upper case, no underscore, no extra underscore")
+      AC_DEFINE($1_FUNC[(name,NAME)],  [NAME])
+      AC_DEFINE($1_FUNC_[(name,NAME)], [NAME]) ;;
+   "upper case, no underscore, extra underscore")
+      AC_DEFINE($1_FUNC[(name,NAME)],  [NAME])
+      AC_DEFINE($1_FUNC_[(name,NAME)], [NAME [##] _]) ;;
+   "upper case, underscore, no extra underscore")
+      AC_DEFINE($1_FUNC[(name,NAME)],  [NAME [##] _])
+      AC_DEFINE($1_FUNC_[(name,NAME)], [NAME [##] _]) ;;
+   "upper case, underscore, extra underscore")
+      AC_DEFINE($1_FUNC[(name,NAME)],  [NAME [##] _])
+      AC_DEFINE($1_FUNC_[(name,NAME)], [NAME [##] __]) ;;
+   *)
+      AC_MSG_WARN([Unsupported or unknown name-mangling scheme: $2])
+      ;;
+  esac
+])
+
+###########################################################################
 #                   COIN_NAMEMANGLING                                     #
 ###########################################################################
 
@@ -398,42 +449,84 @@ AC_DEFUN([AC_COIN_NAMEMANGLING],
      LIBS=$ac_save_LIBS])
 
   # setup the m4_toupper($1)_FUNC and m4_toupper($1)_FUNC_ macros
-  AH_TEMPLATE(m4_toupper($1_FUNC), [Define to a macro mangling the given C identifier (in lower and upper case).])
-  AH_TEMPLATE(m4_toupper($1_FUNC_), [As m4_toupper(_AC_$1_FUNC), but for C identifiers containing underscores.])
-  case "$ac_cv_f77_mangling" in
-   "lower case, no underscore, no extra underscore")
-      AC_DEFINE(m4_toupper($1_FUNC)[(name,NAME)],  [name])
-      AC_DEFINE(m4_toupper($1_FUNC_)[(name,NAME)], [name]) ;;
-   "lower case, no underscore, extra underscore")
-      AC_DEFINE(m4_toupper($1_FUNC)[(name,NAME)],  [name])
-      AC_DEFINE(m4_toupper($1_FUNC_)[(name,NAME)], [name [##] _]) ;;
-   "lower case, underscore, no extra underscore")
-      AC_DEFINE(m4_toupper($1_FUNC)[(name,NAME)],  [name [##] _])
-      AC_DEFINE(m4_toupper($1_FUNC_)[(name,NAME)], [name [##] _]) ;;
-   "lower case, underscore, extra underscore")
-      AC_DEFINE(m4_toupper($1_FUNC)[(name,NAME)],  [name [##] _])
-      AC_DEFINE(m4_toupper($1_FUNC_)[(name,NAME)], [name [##] __]) ;;
-   "upper case, no underscore, no extra underscore")
-      AC_DEFINE(m4_toupper($1_FUNC)[(name,NAME)],  [NAME])
-      AC_DEFINE(m4_toupper($1_FUNC_)[(name,NAME)], [NAME]) ;;
-   "upper case, no underscore, extra underscore")
-      AC_DEFINE(m4_toupper($1_FUNC)[(name,NAME)],  [NAME])
-      AC_DEFINE(m4_toupper($1_FUNC_)[(name,NAME)], [NAME [##] _]) ;;
-   "upper case, underscore, no extra underscore")
-      AC_DEFINE(m4_toupper($1_FUNC)[(name,NAME)],  [NAME [##] _])
-      AC_DEFINE(m4_toupper($1_FUNC_)[(name,NAME)], [NAME [##] _]) ;;
-   "upper case, underscore, extra underscore")
-      AC_DEFINE(m4_toupper($1_FUNC)[(name,NAME)],  [NAME [##] _])
-      AC_DEFINE(m4_toupper($1_FUNC_)[(name,NAME)], [NAME [##] __]) ;;
-   "unknown")
-      AC_MSG_WARN([Unable to determine correct name mangling scheme for $2 in $1]) ;;
-   *)
-      AC_MSG_WARN([unknown name-mangling scheme])
-      ;;
-  esac
+  AC_COIN_DEFINENAMEMANGLING([m4_toupper($1)],[$m4_tolower(ac_cv_$1_namemangling)])
+
   # AC_MSG_NOTICE([Done COIN_NAMEMANGLING])
 ])
 
+
+###########################################################################
+#                            COIN_TRY_LINK                                #
+###########################################################################
+
+# This is a helper macro for checking if a library can be linked based on
+# a function name only.
+#   COIN_TRY_LINK(func,lflags,pcfiles,action-if-success,action-if-failed)
+#  func ($1) the name of the function to try to link
+#  lflags ($2) linker flags to use
+#  pcfiles ($3) pc files to query for additional linker flags
+#  action-if-success ($4) commands to execute if any linking was successful
+#  action-if-failed ($5) commands to execute if no linking was successful
+# 
+# The macro tries different name mangling schemes and expands into
+# action-if-success for the first one that succeeds.
+# It sets variable func_namemangling according to the found name mangling
+# scheme, which can be used as input for COIN_DEFINENAMEMANGLING.
+
+AC_DEFUN([AC_COIN_TRY_LINK],
+[
+  # setup LIBS by adding $2 and those from $3
+  ac_save_LIBS="$LIBS"
+  m4_ifnblank([$2], [LIBS="$2 $LIBS"])
+  m4_ifnblank([$3],
+    [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
+     temp_LFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs $3`
+     LIBS="$temp_LFLAGS $LIBS"
+    ])
+
+  $1_namemangling=unknown
+
+  # TODO shouldn't we make use of ac_extra somewhere below?
+  for ac_extra in "no extra underscore" "extra underscore" ; do
+    for ac_case in "lower case" "upper case" ; do
+      for ac_trail in "underscore" "no underscore" ; do
+        #AC_MSG_NOTICE([Attempting link for ${ac_case}, ${ac_trail}, ${ac_extra}])
+        case $ac_case in
+          "lower case")
+            ac_name=m4_tolower($1)
+            ;;
+          "upper case")
+            ac_name=m4_toupper($1)
+            ;;
+        esac
+        if test "$ac_trail" = underscore ; then
+          ac_name=${ac_name}_
+        fi
+        AC_MSG_CHECKING([for function $ac_name in $LIBS])
+        AC_LINK_IFELSE(
+          [AC_LANG_PROGRAM(
+            [#ifdef __cplusplus
+             extern "C"
+             #endif
+             void $ac_name();],
+            [$ac_name()])],
+          [$1_namemangling="${ac_case}, ${ac_trail}, ${ac_extra}"
+           ac_result=success],
+          [ac_result=failure])
+        AC_MSG_RESULT([$ac_result])
+        if test $ac_result = success ; then
+          break 3
+        fi
+      done
+    done
+  done
+  LIBS=$ac_save_LIBS
+
+  if test $ac_result = success ; then
+    m4_ifblank([$4],[:],[$4])
+    m4_ifnblank([$5],[else $5])
+  fi
+])
 
 ###########################################################################
 #                           COIN_HAS_PKGCONFIG                            #
@@ -643,7 +736,7 @@ AC_DEFUN([AC_COIN_CHK_HERE],
 
 # COIN_DEF_PRIM_ARGS([prim],[base],[lflags],[cflags],[dflags],[build])
 
-# This is a utility macro to handle the standard arguments that COIN
+# This is a utility macro to handle the standard arguments that COIN-OR
 # configuration files supply for a component (package or library):
 #   --with-prim: use primitive (yes / no / special)
 #   --with-prim-lflags: linker flags for the primitive
@@ -1569,6 +1662,95 @@ AC_DEFUN([AC_COIN_CHK_GNU_READLINE],
 
   AM_CONDITIONAL([COIN_HAS_READLINE],[test x$coin_has_readline = xyes])
 ]) # AC_COIN_CHK_GNU_READLINE
+
+
+###########################################################################
+#                       COIN_CHK_LAPACK                                   #
+###########################################################################
+
+# COIN_CHK_LAPACK([client packages])
+
+# This macro checks for a LAPACK library and adds the information necessary to
+# use it to the _LFLAGS, _CFLAGS, and _PCFILES variables of the client packages
+# passed as a space-separated list in parameter $1. These correspond to
+# Libs.private, Cflags.private, and Requires.private, respectively, in a .pc
+# file.
+
+# The algorithm first invokes FIND_PRIM_PKG. The parameters --with-lapack,
+# --with-lapack-lflags, and --with-lapack-cflags are interpreted there. If
+# nothing is found, default locations are checked.
+# A link check is used to determine whether default locations work and to
+# determine the name mangling scheme of the Lapack library.
+
+AC_DEFUN([AC_COIN_CHK_LAPACK],
+[
+# Make sure the necessary variables exist for each client package.
+  m4_foreach_w([myvar],[$1],
+    [AC_SUBST(m4_toupper(myvar)_LIBS)
+     AC_SUBST(m4_toupper(myvar)_CFLAGS)
+     AC_SUBST(m4_toupper(myvar)_PCFILES)
+    ])
+
+# Set up command line arguments with DEF_PRIM_ARGS and give FIND_PRIM_PKG
+# a chance, just in case lapack.pc exists. The result (coin_has_lapack)
+# will be one of yes (either the user specified something or pkgconfig
+# found something), no (user specified nothing and pkgconfig found nothing)
+# or skipping (user said do not use). We'll also have variables lapack_lflags,
+# lapack_cflags, lapack_data, and lapack_pcfiles.
+
+  AC_COIN_DEF_PRIM_ARGS([lapack],yes,yes,yes,no)
+  AC_COIN_FIND_PRIM_PKG([lapack])
+
+# If FIND_PRIM_PKG found something, then we'll do a link check to figure
+# out whether it is working and what the name mangling scheme is.
+# This sets dsyev_namemangling
+  if test "$coin_has_lapack" = yes ; then
+    AC_COIN_TRY_LINK([dsyev],[$lapack_lflags],[$lapack_pcfiles],,
+      [AC_MSG_ERROR([Could not find dsyev in Lapack])])
+  fi
+
+# If FIND_PRIM_PKG didn't find anything, try a few guesses. First, try some
+# specialised checks based on the host system type. If none of them are
+# applicable, or the applicable one fails, try the generic -llapack.
+# TODO check for Lapack in Blas
+  if test "$coin_has_lapack" = no ; then
+    case $build in
+      *-sgi-*) 
+        AC_COIN_TRY_LINK([dsyev],[-lcomplib.sgimath],[],[
+          coin_has_lapack=yes
+          lapack_lflags=-lcomplib.sgimath])
+        ;;
+
+      *-*-solaris*)
+        # See comments in COIN_CHK_PKG_BLAS.
+        AC_COIN_TRY_LINK([dsyev],[-lsunperf],[],[
+          coin_has_lapack=yes
+          lapack_lflags=-lsunperf])
+        ;;
+    esac
+  fi
+  if test "$coin_has_lapack" = no ; then
+    AC_COIN_TRY_LINK([dsyev],[-llapack],[],[
+      coin_has_lapack=yes
+      lapack_lflags=-llapack])
+  fi
+
+# Time to set some variables. Create an automake conditional COIN_HAS_LAPACK.
+  AM_CONDITIONAL(m4_toupper(COIN_HAS_LAPACK),[test $coin_has_lapack = yes])
+
+# If we've located the package, define preprocessor symbol COIN_HAS_LAPACK
+# and COIN_LAPACK_FUNC[_] and augment the necessary variables for the client packages.
+  if test $coin_has_lapack = yes ; then
+    AC_DEFINE(m4_toupper(COIN_HAS_LAPACK),[1],
+      [Define to 1 if the LAPACK package is available])
+    AC_COIN_DEFINENAMEMANGLING([COIN_LAPACK], ${dsyev_namemangling})
+    m4_foreach_w([myvar],[$1],
+      [m4_toupper(myvar)_PCFILES="$lapack_pcfiles $m4_toupper(myvar)_PCFILES"
+       m4_toupper(myvar)_LFLAGS="$lapack_lflags $m4_toupper(myvar)_LFLAGS"
+       m4_toupper(myvar)_CFLAGS="$lapack_cflags $m4_toupper(myvar)_CFLAGS"
+      ])
+  fi
+]) # AC_COIN_CHK_LAPACK
 
 ###########################################################################
 #                           COIN_DOXYGEN                                  #

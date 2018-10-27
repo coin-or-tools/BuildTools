@@ -464,7 +464,7 @@ AC_DEFUN([AC_COIN_CHK_BLAS],
 # is also necessary. You can suppress the link check for a library spec given
 # on the command line or obtained via a .pc file by adding `nolinkcheck' as $2.
 
-AC_DEFUN([AC_COIN_CHK_LAPACK],
+AC_DEFUN([AC_COIN_CHK_LAPACK_OLD],
 [
   AC_REQUIRE([AC_COIN_PROG_F77])
 
