@@ -964,7 +964,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
     requested | build )
       if test -n "$PKG_CONFIG" ; then
         m4_ifnblank($2,
-          [pcfile=$2],
+          [pcfile="$2"],
           [if test $m4_tolower(coin_has_$1) = build ; then
              pcfile=m4_tolower(coin$1)
            else
@@ -972,7 +972,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
            fi])
         AC_COIN_CHK_MOD_EXISTS([$1],[$pcfile],
           [m4_tolower(coin_has_$1)=yes
-           m4_tolower($1_data)=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --variable=datadir $pcfile 2>/dev/null`
+           m4_tolower($1_data)=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --variable=datadir "$pcfile" 2>/dev/null`
            m4_tolower($1_pcfiles)="$pcfile"],
           [m4_tolower(coin_has_$1)=no])
       else
