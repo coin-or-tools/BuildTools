@@ -653,37 +653,6 @@ AC_DEFUN([AC_COIN_CHK_MOD_EXISTS],
 ])
 
 ###########################################################################
-#                          COIN_INIT_LIBVARS                              #
-###########################################################################
-
-# COIN_INIT_LIBVARS(lib,lflags,cflags,pcfiles,data)
-
-# This macro sets up the public variables for lib, PROJ_LFLAGS_PUB,
-# PROJ_CFLAGS_PUB, PROJ_PCFILES_PUB, and PROJ_DATA_PUB. These variables
-# correspond to Libs, Cflags, Requires, and datadir in the .pc.in file for
-# a project.  More generally, this macro is useful when a project builds
-# libraries that are used by other libraries during the project build. For
-# example, Osi builds OsiLib, which is used by OsiCommonTest and the various
-# OsiXxxLib interfaces to third-party solvers.
-
-# PROJ_PCFILES_PUB should be used rarely, if ever. We're exposing public
-# information from lower level libraries at the level of this library, which is
-# not usually necessary.
-
-# The datadir variable is a COIN extension in the .pc file. It defaults
-# to ${datarootdir}/PACKAGE_TARNAME in accordance with Gnu standards.
-
-AC_DEFUN([AC_COIN_INIT_LIBVARS],
-[
-  AC_SUBST(m4_toupper($1_LFLAGS_PUB),["$2"])
-  AC_SUBST(m4_toupper($1_CFLAGS_PUB),["$3"])
-  AC_SUBST(m4_toupper($1_PCFILES_PUB),["$4"])
-  AC_SUBST(m4_toupper($1_DATA_PUB),
-           [m4_default([$5],[\${datarootdir}/$PACKAGE_TARNAME])])
-])
-  
-
-###########################################################################
 #                          COIN_CHK_HERE                                  #
 ###########################################################################
 
