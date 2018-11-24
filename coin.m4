@@ -799,7 +799,10 @@ AC_DEFUN([AC_COIN_DEF_PRIM_ARGS],
 
 # If no .pc file names are specified, the macro will look for prim.pc if the
 # default is yes, coinprim.pc if the default is build.  If a .pc file name
-# ($2) is specified, it overrides the macro defaults. Note that for the
+# ($2) is specified, but is not "skip", it overrides the macro defaults.
+# If $2=skip, then checks for .pc files are skipped.
+
+# Note that for the
 # majority of COIN packages, you should not specify `build' as .pc files
 # for most COIN packages are simply the package name (e.g., clp.pc). For
 # ThirdParty packages, this works (e.g., coinglpk.pc).
@@ -930,7 +933,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
 
   case $m4_tolower(coin_has_$1) in
     requested | build )
-      if test -n "$PKG_CONFIG" ; then
+      if test -n "$PKG_CONFIG" -a "$2" != skip ; then
         m4_ifnblank($2,
           [pcfile="$2"],
           [if test $m4_tolower(coin_has_$1) = build ; then
@@ -944,7 +947,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
            m4_tolower($1_pcfiles)="$pcfile"],
           [m4_tolower(coin_has_$1)=no])
       else
-        m4_tolower(coin_has_$1)=yes
+        m4_tolower(coin_has_$1)=no
         # AC_MSG_WARN([skipped check via pkgconf as no pkgconf available])
       fi
       ;;
@@ -1659,15 +1662,15 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
      AC_SUBST(m4_toupper(myvar)_PCFILES)
     ])
 
-# Set up command line arguments with DEF_PRIM_ARGS and give FIND_PRIM_PKG
-# a chance, just in case lapack.pc exists. The result (coin_has_lapack)
-# will be one of yes (either the user specified something or pkgconfig
-# found something), no (user specified nothing and pkgconfig found nothing)
-# or skipping (user said do not use). We'll also have variables lapack_lflags,
-# lapack_cflags, lapack_data, and lapack_pcfiles.
-
+# Set up command line arguments with DEF_PRIM_ARGS.
   AC_COIN_DEF_PRIM_ARGS([lapack],yes,yes,yes,no)
-  AC_COIN_FIND_PRIM_PKG([lapack])
+
+# Give FIND_PRIM_PKG a chance to look for user-specified lapack flags,
+# but skip any checks via a .pc file. The result (coin_has_lapack) will
+# be one of yes (the user specified something), no (user specified nothing),
+# or skipping (user said do not use). We'll also have variables
+# lapack_lflags, lapack_cflags, lapack_data, and lapack_pcfiles.
+  AC_COIN_FIND_PRIM_PKG([lapack],[skip])
 
 # If FIND_PRIM_PKG found something, then we'll do a link check to figure
 # out whether it is working and what the name mangling scheme is.
@@ -1677,9 +1680,8 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
       [AC_MSG_ERROR([Could not find dsyev in Lapack])])
   fi
 
-# If FIND_PRIM_PKG didn't find anything, try a few guesses. First, try some
-# specialised checks based on the host system type. If none of them are
-# applicable, or the applicable one fails, try the generic -llapack.
+# If FIND_PRIM_PKG didn't find anything, try a few more guesses for
+# optimized blas/lapack libs (based on build system type).
   if test "$coin_has_lapack" = no ; then
     case $build in
       *-linux*)
@@ -1734,6 +1736,17 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
       ;;
     esac
   fi
+
+# If none of the above worked, check whether lapack.pc exists and links
+  if test "$coin_has_lapack" = no ; then
+    AC_COIN_CHK_MOD_EXISTS([lapack],[lapack.pc],
+      [AC_COIN_TRY_LINK([dsyev],[],[lapack.pc],
+        [coin_has_lapack=yes
+         lapack_pcfiles=lapack.pc],
+        [AC_MSG_ERROR([Could not find dsyev in Lapack from lapack.pc.])])])
+  fi
+
+# If none of the above worked, try the generic -llapack as last resort.
   if test "$coin_has_lapack" = no ; then
     AC_COIN_TRY_LINK([dsyev],[-llapack],[],[
       coin_has_lapack=yes
