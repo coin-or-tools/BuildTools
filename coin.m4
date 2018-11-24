@@ -1682,11 +1682,17 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
 # applicable, or the applicable one fails, try the generic -llapack.
   if test "$coin_has_lapack" = no ; then
     case $build in
+      *-linux*)
+         AC_COIN_TRY_LINK([dsyev],[-Wl,--start-group -lmkl_core -lmkl_intel_lp64 -lmkl_sequential --Wl,--end-group],[],[
+           coin_has_lapack=yes
+           lapack_lflags="-Wl,--start-group -lmkl_core -lmkl_intel_lp64 -lmkl_sequential --Wl,--end-group"])
+      ;;
+
       *-sgi-*) 
         AC_COIN_TRY_LINK([dsyev],[-lcomplib.sgimath],[],[
           coin_has_lapack=yes
           lapack_lflags=-lcomplib.sgimath])
-        ;;
+      ;;
 
       *-*-solaris*)
         # Ideally, we'd use -library=sunperf, but it's an imperfect world.
@@ -1699,9 +1705,9 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
         AC_COIN_TRY_LINK([dsyev],[-lsunperf],[],[
           coin_has_lapack=yes
           lapack_lflags=-lsunperf])
-        ;;
+      ;;
 
-      *-cygwin* | *-mingw*)
+      *-cygwin* | *-mingw* | *-msys*)
         case "$CC" in
           clang* ) ;;
           cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
@@ -1714,13 +1720,18 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
                  lapack_lflags="mkl_intel_c.lib mkl_sequential.lib mkl_core.lib"])])
           ;;
         esac
-        ;;
+      ;;
         
-       *-darwin*)
-         AC_COIN_TRY_LINK([dsyev],[-framework Accelerate],[],[
-           coin_has_lapack=yes
-           lapack_lflags="-framework Accelerate"])
-        ;;
+      *-darwin*)
+        AC_COIN_TRY_LINK([dsyev],[-Wl,--start-group -lmkl_core -lmkl_intel_lp64 -lmkl_sequential -Wl,--end-group],[],[
+          coin_has_lapack=yes
+          lapack_lflags="-Wl,--start-group -lmkl_core -lmkl_intel_lp64 -lmkl_sequential -Wl,--end-group"])
+        if test "$coin_has_lapack" = no ; then
+          AC_COIN_TRY_LINK([dsyev],[-framework Accelerate],[],[
+            coin_has_lapack=yes
+            lapack_lflags="-framework Accelerate"])
+        fi
+      ;;
     esac
   fi
   if test "$coin_has_lapack" = no ; then
