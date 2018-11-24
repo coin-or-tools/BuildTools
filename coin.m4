@@ -1456,6 +1456,8 @@ AC_DEFUN([AC_COIN_CHK_LIBM],
 [
   AC_REQUIRE([AC_PROG_CC])
 
+  m4_foreach_w([myvar],[$1],[AC_SUBST(m4_toupper(myvar)_LFLAGS)])
+
   coin_save_LIBS="$LIBS"
   LIBS=
   AC_SEARCH_LIBS([cos],[m],
@@ -1481,6 +1483,8 @@ AC_DEFUN([AC_COIN_CHK_LIBM],
 AC_DEFUN([AC_COIN_CHK_ZLIB],
 [
   AC_REQUIRE([AC_COIN_PROG_CC])
+
+  m4_foreach_w([myvar],[$1],[AC_SUBST(m4_toupper(myvar)_LFLAGS)])
 
   coin_has_zlib=no
 
@@ -1522,6 +1526,8 @@ AC_DEFUN([AC_COIN_CHK_BZLIB],
 [
   AC_REQUIRE([AC_PROG_CC])
 
+  m4_foreach_w([myvar],[$1],[AC_SUBST(m4_toupper(myvar)_LFLAGS)])
+
   coin_has_bzlib=no
 
   AC_ARG_ENABLE([bzlib],
@@ -1561,6 +1567,8 @@ AC_DEFUN([AC_COIN_CHK_BZLIB],
 AC_DEFUN([AC_COIN_CHK_GMP],
 [
   AC_REQUIRE([AC_PROG_CC])
+
+  m4_foreach_w([myvar],[$1],[AC_SUBST(m4_toupper(myvar)_LFLAGS)])
 
   coin_has_gmp=no
 
@@ -1602,6 +1610,8 @@ AC_DEFUN([AC_COIN_CHK_GMP],
 AC_DEFUN([AC_COIN_CHK_GNU_READLINE],
 [
   AC_REQUIRE([AC_PROG_CC])
+
+  m4_foreach_w([myvar],[$1],[AC_SUBST(m4_toupper(myvar)_LFLAGS)])
 
   coin_has_readline=no
 
@@ -1658,8 +1668,8 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
 [
 # Make sure the necessary variables exist for each client package.
   m4_foreach_w([myvar],[$1],
-    [AC_SUBST(m4_toupper(myvar)_LIBS)
-     AC_SUBST(m4_toupper(myvar)_CFLAGS)
+    [AC_SUBST(m4_toupper(myvar)_CFLAGS)
+     AC_SUBST(m4_toupper(myvar)_LFLAGS)
      AC_SUBST(m4_toupper(myvar)_PCFILES)
     ])
 
