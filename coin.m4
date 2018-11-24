@@ -1747,24 +1747,32 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
     esac
   fi
 
-# If none of the above worked, check whether lapack.pc exists and links
+# If none of the above worked, check whether lapack.pc blas.pc exists and links
+# We check for both to ensure that blas lib also appears on link line in case
+# someone wants to use Blas functions but tests only for Lapack.
   if test "$coin_has_lapack" = no ; then
-    AC_MSG_CHECKING([for lapack.pc])
-    AC_COIN_CHK_MOD_EXISTS([lapack],[lapack],
+    AC_MSG_CHECKING([for lapack.pc and blas.pc])
+    AC_COIN_CHK_MOD_EXISTS([lapack],[lapack blas],
       [AC_MSG_RESULT([yes])
        AC_COIN_TRY_LINK([dsyev],[],[lapack],
         [coin_has_lapack=yes
-         lapack_pcfiles=lapack],
-        [AC_MSG_ERROR([Could not find dsyev in Lapack from lapack.pc.])])],
+         lapack_pcfiles="lapack blas"],
+        [AC_MSG_ERROR([Could not find dsyev in Lapack from lapack.pc blas.pc.])])],
       [AC_MSG_RESULT([no])])
   fi
 
-# If none of the above worked, try the generic -llapack as last resort.
+# TODO do we need another check with lapack.pc only?
+
+# If none of the above worked, try the generic -llapack -lblas as last resort.
+# We check for both to ensure that blas lib also appears on link line in case
+# someone wants to use Blas functions but tests only for Lapack.
   if test "$coin_has_lapack" = no ; then
-    AC_COIN_TRY_LINK([dsyev],[-llapack],[],[
+    AC_COIN_TRY_LINK([dsyev],[-llapack -lblas],[],[
       coin_has_lapack=yes
-      lapack_lflags=-llapack])
+      lapack_lflags="-llapack -lblas"])
   fi
+
+# TODO do we need another check with -llapack only?
 
 # Time to set some variables. Create an automake conditional COIN_HAS_LAPACK.
   AM_CONDITIONAL(m4_toupper(COIN_HAS_LAPACK),[test $coin_has_lapack = yes])
