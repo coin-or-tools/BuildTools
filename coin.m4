@@ -1739,11 +1739,14 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
 
 # If none of the above worked, check whether lapack.pc exists and links
   if test "$coin_has_lapack" = no ; then
-    AC_COIN_CHK_MOD_EXISTS([lapack],[lapack.pc],
-      [AC_COIN_TRY_LINK([dsyev],[],[lapack.pc],
+    AC_MSG_CHECKING([for lapack.pc])
+    AC_COIN_CHK_MOD_EXISTS([lapack],[lapack],
+      [AC_MSG_RESULT([yes])
+       AC_COIN_TRY_LINK([dsyev],[],[lapack],
         [coin_has_lapack=yes
-         lapack_pcfiles=lapack.pc],
-        [AC_MSG_ERROR([Could not find dsyev in Lapack from lapack.pc.])])])
+         lapack_pcfiles=lapack],
+        [AC_MSG_ERROR([Could not find dsyev in Lapack from lapack.pc.])])],
+      [AC_MSG_RESULT([no])])
   fi
 
 # If none of the above worked, try the generic -llapack as last resort.
