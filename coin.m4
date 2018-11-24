@@ -1680,7 +1680,6 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
 # If FIND_PRIM_PKG didn't find anything, try a few guesses. First, try some
 # specialised checks based on the host system type. If none of them are
 # applicable, or the applicable one fails, try the generic -llapack.
-# TODO check for Lapack in Blas
   if test "$coin_has_lapack" = no ; then
     case $build in
       *-sgi-*) 
@@ -1690,10 +1689,37 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
         ;;
 
       *-*-solaris*)
-        # See comments in COIN_CHK_PKG_BLAS.
+        # Ideally, we'd use -library=sunperf, but it's an imperfect world.
+        # Studio cc doesn't recognise -library, it wants -xlic_lib. Studio 12
+        # CC doesn't recognise -xlic_lib. Libtool doesn't like -xlic_lib
+        # anyway. Sun claims that CC and cc will understand -library in Studio
+        # 13. The main extra function of -xlic_lib and -library is to arrange
+        # for the Fortran run-time libraries to be linked for C++ and C. We
+        # can arrange that explicitly.
         AC_COIN_TRY_LINK([dsyev],[-lsunperf],[],[
           coin_has_lapack=yes
           lapack_lflags=-lsunperf])
+        ;;
+
+      *-cygwin* | *-mingw*)
+        case "$CC" in
+          clang* ) ;;
+          cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+            # check first for 64-bit MKL, then for 32-bit MKL
+            AC_COIN_TRY_LINK([dsyev],[mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib],[],[
+              coin_has_lapack=yes
+              lapack_lflags="mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib"],
+                [AC_COIN_TRY_LINK([dsyev],[mkl_intel_c.lib mkl_sequential.lib mkl_core.lib],[],[
+                 coin_has_lapack=yes
+                 lapack_lflags="mkl_intel_c.lib mkl_sequential.lib mkl_core.lib"])])
+          ;;
+        esac
+        ;;
+        
+       *-darwin*)
+         AC_COIN_TRY_LINK([dsyev],[-framework Accelerate],[],[
+           coin_has_lapack=yes
+           lapack_lflags="-framework Accelerate"])
         ;;
     esac
   fi
