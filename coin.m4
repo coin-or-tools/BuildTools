@@ -485,8 +485,9 @@ AC_DEFUN([AC_COIN_TRY_LINK],
 
   $1_namemangling=unknown
 
-  # TODO shouldn't we make use of ac_extra somewhere below?
-  for ac_extra in "no extra underscore" "extra underscore" ; do
+  # FIXME we had "extra underscore" as additional option for ac_extra
+  #   but since there is no use for ac_extra below, was there any use for it?
+  for ac_extra in "no extra underscore" ; do
     for ac_case in "lower case" "upper case" ; do
       for ac_trail in "underscore" "no underscore" ; do
         #AC_MSG_NOTICE([Attempting link for ${ac_case}, ${ac_trail}, ${ac_extra}])
