@@ -17,9 +17,6 @@ MSVisualStudio/v9alt/coin.vsprops -text
 /commit_new_release -text
 /commit_new_stable -text
 /compile.patch -text
-compile_f2c/INSTALL -text
-compile_f2c/README -text
-compile_f2c/compile_f2c -text
 /get.dependencies.sh -text
 /install_autotools.sh -text
 /prepare_new_release -text
