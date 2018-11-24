@@ -1712,8 +1712,7 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
 
       *-cygwin* | *-mingw* | *-msys*)
         case "$CC" in
-          clang* ) ;;
-          cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+          */compile\ cl | cl | */cl | */compile\ icl | icl | */icl )
             # check first for 64-bit MKL, then for 32-bit MKL
             AC_COIN_TRY_LINK([dsyev],[mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib],[],[
               coin_has_lapack=yes
