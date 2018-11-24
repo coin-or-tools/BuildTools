@@ -164,12 +164,6 @@ AC_DEFUN([AC_COIN_INITIALIZE],
 
   AM_CONDITIONAL(ALWAYS_FALSE, false)
 
-# Where should everything be installed by default?  The COIN default is to
-# install directly into subdirectories of the directory where configure is
-# run. The default would be to install under /usr/local.
-
-  AC_PREFIX_DEFAULT([`pwd`])
-
 # Change the default compiler flags. This needs to run before
 # AC_CANONICAL_BUILD.
 
