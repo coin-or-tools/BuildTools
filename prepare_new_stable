@@ -523,7 +523,7 @@ if test -n "$srcDepFile" ; then
       if test $ext_isNormalURL = yes &&
          test $ext_proj != BuildTools && test $srcBTURL != none ; then
         ext_url_notail=`echo $ext_url | sed -e 's,/[^/]*$,,'`
-	extBTURL=`svn propget svn:externals $ext_url_notail`
+	extBTURL=`svn propget svn:externals $ext_url_notail || :`
 	extBTURL=`echo $extBTURL | \
 	  sed -n -e 's/^BuildTools *https:\([^ ]*\) *$/https:\1/p'`
 	if test -n "$extBTURL" ; then
