@@ -1,6 +1,4 @@
-
- CoinHelp tries to help users and project managers to find information about COIN-OR.
-
+CoinHelp tries to help users and project managers to find information about COIN-OR.
 
 # Information For Users
 
@@ -26,8 +24,15 @@ For the the options for building under Windows, see [this page](./user-windows) 
 
 ## Detailed Information For Users
 
-
-
+* [[user-download]]
+* [[user-directories]]
+* [[user-windows]]
+* [[user-configure]]
+* [[user-compile]]
+* [[user-doxygen]]
+* [[user-examples]]
+* [[user-troubleshooting]]
+* [current-issues](./current-issues)
 
 ## Build and Compilation Problems
 
@@ -54,8 +59,3 @@ Similar, if you found a fix for a new problem, you are encouraged to share it [t
 # Information for Project Managers
 
 Information for project managers can be found [on this page](./pm-main).
-
------------
-
-''Note that these project webpages are based on Wiki, which allows webusers to modify the content to correct typos, add information, or share their experience and tips with other users.  You are welcome to contribute to these project webpages.  To edit these pages or submit a ticket you must first [register and login](http://www.coin-or.org/usingTrac.html).
-(Your browser must be configured to accept cookies.)''
