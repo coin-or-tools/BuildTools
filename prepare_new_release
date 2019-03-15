@@ -783,15 +783,6 @@ if test -n "$stableExternals" ; then
   echo ''
 fi
 
-# If we had a Dependencies file to begin with, it contained references to
-# stable branches, and perhaps releases. This is the set of dependencies that
-# we want to commit in Dependencies, so reload $srcDepFile.bak into
-# Dependencies, now that we have svn:externals set to releases.
-
-if test -n "$srcDepFile" ; then
-  cp $srcDepFile.bak Dependencies
-fi
-
 if test -r Dependencies ; then
   echo 'Also, please confirm the externals are correct:'
   svn propget svn:externals
