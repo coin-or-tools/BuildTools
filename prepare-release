@@ -19,20 +19,47 @@ fi
 topProjName=`git remote get-url origin`
 topProjName=${topProjName##*/}
 topProjName=${topProjName/.git/}
-echo "Project: $topProjName"
+echo "Project        : $topProjName"
 
-# TODO figure this out automatically
-if [[ "$1" =~ ^releases/([0-9][0-9]*)\.([0-9][0-9]*)\.([0-9][0-9]*)$ ]] ; then
+branchName=`git rev-parse --abbrev-ref HEAD`
+echo "Branch         : $branchName"
+
+if [[ "$branchName" != stable/* ]] ; then
+  echo "ERROR: Expected branchname to start with 'stable/"
+  exit 1
+fi
+
+
+# get tags from remote
+git fetch -t
+
+# get last release from current stable branch
+lastRelease=`git tag --list "${branchName/stable/releases}*" | sort -V | tail -1`
+echo "Last Release   : $lastRelease"
+
+# figure out new release number
+if [ -z "$lastRelease" ] ; then
+  # no last release, then take stable version and add .0
+  if [[ "$branchName" =~ ^stable/([0-9][0-9]*)\.([0-9][0-9]*) ]] ; then
+    majVer=${BASH_REMATCH[1]}
+    minVer=${BASH_REMATCH[2]}
+    relVer=0
+  else
+    echo "ERROR: Branchname does not match stable/xx.yy"
+    exit 1
+  fi
+elif [[ "$lastRelease" =~ ^releases/([0-9][0-9]*)\.([0-9][0-9]*)\.([0-9][0-9]*)$ ]] ; then
   majVer=${BASH_REMATCH[1]}
   minVer=${BASH_REMATCH[2]}
   relVer=${BASH_REMATCH[3]}
+  (( relVer += 1 ))
 else
-  echo "Expect release name of the format releases/xx.yy.zz as first argument; exiting."
+  echo "ERROR: Last release name does not match releases/xx.yy.zz format"
   exit 1
 fi
 newVer=${majVer}.${minVer}.${relVer}
 
-echo "Release version: $newVer"
+echo "New release    : releases/$newVer"
 
 isNormal=yes
 if test $isNormal = yes ; then
