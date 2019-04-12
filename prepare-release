@@ -49,6 +49,11 @@ while [ $# -ge 1 ] ; do
   shift
 done
 
+if ! git diff --exit-code --quiet HEAD ; then
+  echo "EXIT: There are uncommitted changes. I'm too afraid to proceed."
+  exit 1
+fi
+
 # figure out name of project from repo URL, remove possible .git suffix
 topProjName=`git remote get-url origin`
 topProjName=${topProjName##*/}
