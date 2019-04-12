@@ -15,6 +15,40 @@ else
   exit 1
 fi
 
+# process parameters
+releaseStyle="reset"
+while [ $# -ge 1 ] ; do
+  case "$1" in
+    -h | --help | --usage )
+      echo "Usage: $0 { -h | --help | --usage | -t }"
+      echo
+      echo "Options:"
+      echo "  -h, --help, --usage   Print this help and exit"
+      echo "  -t                    Make sure release tag is visible on current branch"
+      echo
+      echo "More details about -t:"
+      echo "  If -t is specified, the script will commit the release version number"
+      echo "  change (xx.yy -> xx.yy.zz) to the current branch, tag this commit, and"
+      echo "  then adds another commit that reverts the tagged commit."
+      echo "  If -t is not specified, the script will also commit the release version"
+      echo "  number change to the current branch, tag this commit, but then removes"
+      echo "  the tagged commit from the current branch by resetting it."
+      echo "  Using -t has the advantage that the tag will be visible in the log of the"
+      echo "  stable branch. Not using -t has the advantage that the temporary change in"
+      echo "  the version number will not be part of the stable branch".
+      exit 0
+    ;;
+    -t | --ted )
+      releaseStyle="revert"
+      ;;
+    *)
+      echo "Unknown argument. Run with -h to see usage."
+      exit 1
+    ;;
+  esac
+  shift
+done
+
 # figure out name of project from repo URL, remove possible .git suffix
 topProjName=`git remote get-url origin`
 topProjName=${topProjName##*/}
@@ -132,21 +166,36 @@ if [ $topProjName != BuildTools ] ; then
 fi
 
 echo ''
-echo '===> Committing changes and creating tag ...'
+echo '===> Applying changes to local git clone ...'
 echo ''
 
-git checkout -b release-$newVer
+echo "Committing verion number update"
 git commit -a -m "version number updates for release $newVer"
+echo
+echo "Tagging release: releases/$newVer"
 git tag releases/$newVer
-git checkout releases/$newVer
-git branch -d release-$newVer
+echo
+
+if [ "$releaseStyle" = "reset" ] ;
+then
+  echo "Resetting to original commit"
+  git reset --hard HEAD~1
+else
+  echo "Reverting version number update"
+  git revert --no-edit HEAD
+fi
 
 echo ''
-echo 'After reviewing the output above, you can push the new release by ...'
+echo '===> Done ...'
+echo ''
+echo 'After reviewing the output above, you can push the new release via'
 echo ''
 echo "   git push -u origin releases/$newVer"
 echo ''
-echo 'Alternatively, you can forget the locally committed release by'
+echo 'Alternatively, you can forget the locally committed release via'
 echo ''
 echo "   git tag -d releases/$newVer"
-echo "   git checkout stable/$newVer"
+if [ "$releaseStyle" = "revert" ] ;
+then
+  echo "   git reset --hard HEAD~2"
+fi
