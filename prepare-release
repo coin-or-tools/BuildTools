@@ -124,6 +124,8 @@ if [ $topProjName != BuildTools ] ; then
   
   [ -e BuildTools ] && mv BuildTools BuildTools.bak
   
+  # TODO checkout BuildTools according to info in Dependencies, if present, instead of using $cmdDir
+
   $cmdDir/run_autotools
   
   [ -e BuildTools.bak ] && mv BuildTools.bak BuildTools
