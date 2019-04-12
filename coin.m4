@@ -97,7 +97,7 @@ AC_DEFUN([AC_COIN_PROJECTVERSION],
  ])
  
 # Capture libtool library version, if given.
- m4_ifvaln([$2],[coin_libversion=$2],[])
+ m4_ifval([$2],[coin_libversion=$2],[])
 ])
 
 ###########################################################################
