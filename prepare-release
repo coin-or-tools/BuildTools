@@ -158,15 +158,41 @@ fi
 
 if [ $topProjName != BuildTools ] ; then
   echo ''
-  echo '===> Running BuildTools/run_autotools ...'
+  echo '===> Getting BuildTools and running run_autotools ...'
   echo ''
-  
-  [ -e BuildTools ] && mv BuildTools BuildTools.bak
-  
-  # TODO checkout BuildTools according to info in Dependencies, if present, instead of using $cmdDir
 
-  $cmdDir/run_autotools
-  
+  [ -e BuildTools ] && mv BuildTools BuildTools.bak
+
+  buildtoolsDir=$cmdDir
+  # read BuildTools dependency from Dependencies file and convert stable to latest release
+  if buildtoolsDep=`grep ^BuildTools Dependencies` ; then
+    buildtoolsDep=${buildtoolsDep:11}
+    if [[ "$buildtoolsDep" =~ (releases/[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*) ]] ; then
+      buildtoolsVer=${BASH_REMATCH[1]}
+    elif [[ "$buildtoolsDep" =~ stable/([0-9][0-9]*\.[0-9][0-9]*) ]] ; then
+      buildtoolsVer=`git ls-remote --tags --sort v:refname https://github.com/coin-or-tools/BuildTools releases/${BASH_REMATCH[1]}.* | tail -1`
+      buildtoolsVer=${buildtoolsVer##*refs/tags/}
+    else
+      echo "ERROR: Cannot release with BuildTools dependency set to $buildtoolsDep in Dependencies"
+      exit 1
+    fi
+    if [ -z "$buildtoolsVer" ]; then
+      echo "ERROR: Cannot determine latest BuildTools release from dependency $buildtoolsDep"
+      exit 1
+    fi
+    echo "BuildTools Version: $buildtoolsVer"
+
+    buildtoolsDir=BuildTools-${buildtoolsVer/\//-}
+    git clone -b $buildtoolsVer https://github.com/coin-or-tools/BuildTools $buildtoolsDir
+  fi
+
+  echo "Running $buildtoolsDir/run_autotools"
+  $buildtoolsDir/run_autotools
+
+  if [ "$buildtoolsDir" != "$cmdDir" ]; then
+    echo rm -rf $buildtoolsDir
+  fi
+
   [ -e BuildTools.bak ] && mv BuildTools.bak BuildTools
 fi
 
