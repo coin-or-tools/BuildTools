@@ -59,10 +59,21 @@
 # The required autotools versions, along with a few other differences. Current
 # (trunk) versions first, older (stable) versions next.
 
-case "${COIN_ENV:-trunk}" in
-  "trunk" )
+case "${COIN_ENV:-git}" in
+  "git" )
+    repoDir='.git'
     ver_autoconf='2.69'
-    ver_automake='1.15.1'
+    ver_automake='1.16.1'
+    ver_libtool='2.4.6'
+    ltfile=$AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
+    autotoolsFiles="config.guess config.sub depcomp install-sh"
+    autotoolsFiles="$autotoolsFiles ltmain.sh missing compile"
+    autotoolsFiles="$autotoolsFiles get.dependencies.sh"
+    ;;
+  "trunk" )
+    repoDir='.svn'
+    ver_autoconf='2.69'
+    ver_automake='1.16.1'
     ver_libtool='2.4.6'
     ltfile=$AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
     autotoolsFiles="config.guess config.sub depcomp install-sh"
@@ -70,6 +81,7 @@ case "${COIN_ENV:-trunk}" in
     autotoolsFiles="$autotoolsFiles get.dependencies.sh"
     ;;
   "stable" )
+    repoDir='.svn'
     ver_autoconf='2.59'
     ver_automake='1.9.6'
     ver_libtool='1.5.22'
@@ -98,11 +110,17 @@ cleanupOnErrorExit ()
 
 printHelp () {
   cat <<EOF
-usage: run_autotools [-h] [-nr] [ directory directory ... ]
+usage: run_autotools [-h] [-[n]r] [-ni] [ directory directory ... ]
 
   -h  | --help           print help message and exit
   -r  | --recursion      do recursive search for configure.ac files
-  -ni | --dependent      do not install scripts necessary for an independent unit
+  -nr | --no-recursion   do not do recursive search for configure.ac files
+  -ni | --dependent      do not install scripts necessary for an independent
+  			 unit
+  -d  | --dryrun         exit immediately after determining the list of
+                         directories to be processed
+
+  Default is no recursion, install scripts for an independent unit.
 
   If no directories and -r are specified, the tree rooted at the current
   directory is searched recursively for directories with configure.ac
@@ -110,13 +128,19 @@ usage: run_autotools [-h] [-nr] [ directory directory ... ]
   is run in those directories. Directories listed in COIN_SKIP_PROJECTS
   are skipped.  If directories are specified on the command line, the
   search for configure.ac files is restricted to the specified directories.
+  In each directory where a configure.ac file is found, this script will
+  refresh a set of autotools scripts (listed below) necessary for a unit that
+  will be installed independently.
 
-  The --dependent option will suppress installation of install-sh and other
-  scripts necessary for a unit that is installed independently. This will
-  be suppressed in *all* directories processed. Most often what is desired is
-  to install these scripts in the top-level directory of a unit, so not using -ni
-  disables -r. It's a good idea to explicitly specify the directories you want
-  to process.
+  The -ni (--dependent) option will suppress refresh of the autotools scripts
+  (but will not delete existing scripts). This will be suppressed in *all*
+  directories processed.
+
+  The most common scenario for run_autotools is to process a project with a
+  configure.ac file in the top-level directory of the project and no nested
+  configure.ac files. Hence the default of no recursion and install autotools
+  scripts.  The -r option is useful if you have multiple COIN projects in
+  sibling directories and want to do a batch run of autotools on all of them.
 
   The environment variable AUTOTOOLS_DIR can be used to point to an alternate
   installation of the autotools (current location $AUTOTOOLS_DIR)
@@ -125,6 +149,8 @@ usage: run_autotools [-h] [-nr] [ directory directory ... ]
     autoconf: $ver_autoconf
     automake: $ver_automake
     libtool:  $ver_libtool
+
+  Autotools scripts: ${autotoolsFiles}
 EOF
 }
 
@@ -162,11 +188,11 @@ checkAutotoolVersion () {
 # that I'll want to expand the test when git comes into the picture.
 
 # Subroutine to decide if a directory is a project. The test is presence
-# of a .svn directory. There's no protection against specifying an interior
-# directory.
+# of a $repoDir (.git or .svn are the known types). There's no protection
+# against specifying an interior directory.
 
 isAProject () {
-  if [[ -d $1/.svn ]] ; then
+  if [[ -d $1/${repoDir} ]] ; then
     return 0
   else
     return 1
@@ -174,11 +200,11 @@ isAProject () {
 }
 
 # Subroutine to find the project directories under a given directory. The test
-# is presence of a .svn directory.
+# is presence of a $repoDir directory.
 
 findProjects () {
-  local dirs=$( find $1 -type d -name .svn -print -prune )
-  echo $dirs | sed -e 's,/.svn,,'g
+  local dirs=$( find $1 -type d -name ${repoDir} -print -prune )
+  echo $dirs | sed -e "s,/${repoDir},,"g
 }
 
 
@@ -270,6 +296,7 @@ fi
 doRecurse=0
 suppressScripts=0
 userSpecifiedDirs=0
+dryRun=0
 
 # Process the parameters. A parameter without an opening `-' is assumed to be
 # a spec for a directory to be processed. We really shouldn't see -h here, but
@@ -289,6 +316,9 @@ while [[ $# -gt 0 ]] ; do
       ;;
     -ni | --dependent )
       suppressScripts=1
+      ;;
+    -d | --dryrun )
+      dryRun=1
       ;;
     -* ) echo "$0: unrecognised command line switch '"$1"'."
       printHelp=1
@@ -424,6 +454,10 @@ trap 'exit_status=$?
 # And now the main event. Process each directory.
 
 echo "Running autotools in ${dirs[*]}"
+
+if [[ $dryRun -eq 1 ]] ; then
+  exit
+fi
 
 # m4Files="$AUTOTOOLS_DIR/share/aclocal/libtool.m4"
 buildtoolsLinks=
