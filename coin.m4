@@ -660,7 +660,8 @@ AC_DEFUN([AC_COIN_CHK_MOD_EXISTS],
 # the various OsiXxxLib solvers, which depend on OsiLib. We can't consult
 # osi.pc (it's not installed yet) but the relevant variables are ready at
 # hand. The name of prim is often different from the name of the .pc file
-# ($3), hence the separate parameter.
+# ($3), hence the separate parameter. If $3 is not given, it defaults to
+# tolower($1).
 
 # This macro should be called after FINALIZE_FLAGS is invoked for the
 # client packages, for two reasons: First, COIN packages tend to use
@@ -683,7 +684,7 @@ AC_DEFUN([AC_COIN_CHK_HERE],
 # Add the .pc file and augment LFLAGS and CFLAGS.
 
     m4_foreach_w([myvar],[$2],
-      [m4_toupper(myvar)_PCFILES="$m4_toupper(myvar)_PCFILES $3"
+      [m4_toupper(myvar)_PCFILES="$m4_toupper(myvar)_PCFILES m4_default($3,m4_tolower($1))"
        m4_toupper(myvar)_LFLAGS="$m4_toupper(myvar)_LFLAGS $m4_toupper($1)_LFLAGS"
        m4_toupper(myvar)_CFLAGS="$m4_toupper(myvar)_CFLAGS $m4_toupper($1)_CFLAGS"
 
