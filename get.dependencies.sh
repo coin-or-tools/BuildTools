@@ -27,9 +27,12 @@ function help {
     echo "    options: --xxx=yyy (will be passed through to configure)"
     echo "             --monolithic do 'old style' monolithic build"
     echo "             --parallel-jobs=n build in parallel with maximum 'n' jobs"
-    echo "             --build-dir=\dir\to\build\in do a VPATH build (default: $PWD/build)"
+    echo "             --build-dir=\dir\to\build\in do a VPATH build"
+    echo "                   (default: $PWD/build)"
     echo "             --test run unit test of main project before install"
     echo "             --test-all run unit tests of all projects before install"
+    echo "             --install-before-test=\"proj proj ...\" pre-install projects"
+    echo "                   before running unit test"
     echo "             --verbosity=i set verbosity level (1-4)"
     echo "             --reconfigure re-run configure"
     echo
@@ -71,14 +74,28 @@ function get_cached_options {
 }
 
 function invoke_make {
+    if [ "$2" = "test" ] ; then
+      if $MAKE -n test >& /dev/null ; then
+        :
+      else
+        echo '    No unit test!'
+        return
+      fi
+    fi
+    set +e
     if [ $1 = 1 ]; then
-        $MAKE -j $jobs $2 >& /dev/null
+        $MAKE -j $jobs $2 >& /dev/null ; makestat=$?
     elif [ $1 = 2 ]; then
-        $MAKE -j $jobs $2 > /dev/null
+        $MAKE -j $jobs $2 > /dev/null ; makestat=$?
     elif [ $1 = 3 ]; then
-        $MAKE -j $jobs $2
+        $MAKE -j $jobs $2 ; makestat=$?
     else
-        $MAKE -j $jobs V=1 $2
+        $MAKE -j $jobs V=1 $2 ; makestat=$?
+    fi
+    set -e
+    if [ $makestat -ne 0 ] ; then
+      echo "ERROR: $MAKE $2 failed. Running again to show error."
+      $MAKE -j $jobs V=1 $2
     fi
 }
 
@@ -164,6 +181,14 @@ function parse_args {
                             exit 3
                         fi
                         ;;
+		    --install-before-test)
+                        if [ "x$option_arg" != x ]; then
+                            force_preinstall=$option_arg
+                        else
+                            echo "No projects specified for --install-before-test"
+                            exit 3
+                        fi
+                        ;;
                     DESTDIR)
                         echo "DESTDIR installation not supported"
                         exit 3
@@ -201,6 +226,7 @@ function parse_args {
                 ;;
             --test-all)
                 run_all_tests=true
+		run_test=true
                 ;;
             --no-third-party)
                 get_third_party=false
@@ -259,13 +285,17 @@ function fetch {
             git_url=`echo $url | tr '\t' ' ' | tr -s ' '| cut -d ' ' -f 1`
             branch=`echo $url | tr '\t' ' ' | tr -s ' '| cut -d ' ' -f 2`
             dir=`echo $git_url | cut -d '/' -f 5`
-            proj=`echo $git_url | cut -d "/" -f 5`
+	    if expr "$dir" : '^.*\.git$' >/dev/null 2>&1 ; then
+	      dir=`expr "$dir" : '^\(.*\)\.git$'`
+	    fi
+            proj=$dir
             if get_project $proj; then
-                print_action "Clone $git_url branch $branch"
                 if [ ! -e $dir ]; then
+		    print_action "Clone $git_url branch $branch"
                     git clone --branch=$branch $git_url
                 else
                     cd $dir
+		    print_action "Update $git_url branch $branch"
                     git pull origin $branch
                     cd -
                 fi
@@ -282,6 +312,16 @@ function fetch {
                 else
                     subdirs+="$dir "
                 fi
+	        if expr "$proj" : '^ThirdParty-.*$' >/dev/null 2>&1 ; then
+		    if [ $get_third_party = "true" ] ; then
+			tp_proj=`expr "$proj" : '^ThirdParty-\(.*\)$'`
+			cd $proj
+			if [ -x get.$tp_proj ] ; then
+			    ./get.$tp_proj
+			fi
+			cd -
+		    fi
+		fi
             else
                 echo "Skipping $proj..."
             fi
@@ -488,20 +528,36 @@ function build {
             else
                 invoke_make 1 ""
             fi
+	    preinstalled=0
+	    if expr " $force_preinstall " : '^.* '$proj_dir' .*$' >/dev/null 2>&1 ; then
+                print_action "Pre-installing $proj_dir"
+		if [ $verbosity -ge 3 ]; then
+		    invoke_make $(($verbosity-1)) install
+		else
+		    invoke_make 1 install
+		fi
+		preinstalled=1
+	    fi
             if [ $run_all_tests = "true" ]; then
                 print_action "Running $proj_dir unit test"
-                invoke_make "false" test
-            fi
-            if [ $1 = $build_dir ]; then
-                print_action "Pre-installing $proj_dir"
-            else
-                print_action "Installing $proj_dir"
-            fi
-            if [ $verbosity -ge 3 ]; then
-                invoke_make $(($verbosity-1)) install
-            else
-                invoke_make 1 install
-            fi
+		if [ $verbosity -ge 3 ]; then
+		    invoke_make $(($verbosity-1)) test 
+		else
+		    invoke_make 1 test
+		fi
+	    fi
+	    if [ $preinstalled = 0 ] ; then
+		if [ $1 = $build_dir ]; then
+		    print_action "Pre-installing $proj_dir"
+		else
+		    print_action "Installing $proj_dir"
+		fi
+		if [ $verbosity -ge 3 ]; then
+		    invoke_make $(($verbosity-1)) install
+		else
+		    invoke_make 1 install
+		fi
+	    fi
             cd $root_dir
         done
         mkdir -p $build_dir/$main_proj
@@ -531,20 +587,36 @@ function build {
         else
             invoke_make 1 ""
         fi
+	preinstalled=0
+	if expr " $force_preinstall " : '^.* '$main_proj' .*$' >/dev/null 2>&1 ; then
+	    print_action "Pre-installing $main_proj"
+	    if [ $verbosity -ge 3 ]; then
+		invoke_make $(($verbosity-1)) install
+	    else
+		invoke_make 1 install
+	    fi
+	    preinstalled=1
+	fi
         if [ $run_test = "true" ]; then
             print_action "Running $main_proj unit test"
-            invoke_make "false" test
+	    if [ $verbosity -ge 2 ]; then
+		invoke_make $(($verbosity-1)) test 
+	    else
+		invoke_make 1 test
+	    fi
         fi
-        if [ $1 = $build_dir ]; then
-            print_action "Pre-installing $main_proj"
-        else
-            print_action "Installing $main_proj"
-        fi
-        if [ $verbosity -ge 2 ]; then
-            invoke_make 3 install
-        else
-            invoke_make 1 install
-        fi
+	if [ $preinstalled = 0 ] ; then
+	    if [ $1 = $build_dir ]; then
+		print_action "Pre-installing $main_proj"
+	    else
+		print_action "Installing $main_proj"
+	    fi
+	    if [ $verbosity -ge 2 ]; then
+		invoke_make 3 install
+	    else
+		invoke_make 1 install
+	    fi
+	fi
         cd $root_dir
     else
         if [ build_dir != $PWD ]; then
@@ -652,6 +724,7 @@ fetch=false
 build=false
 install=false
 uninstall=false
+force_preinstall=
 run_test=false
 run_all_tests=false
 declare -A configure_options
