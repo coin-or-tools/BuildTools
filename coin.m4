@@ -101,15 +101,33 @@ AC_DEFUN([AC_COIN_ENABLE_MSVC],
     [enable_msvc=no])
 ])
 
+
+###########################################################################
+#                          COIN_ENABLE_DEBUG                              # 
+###########################################################################
+
+# This macro is invoked by any PROG_compiler macro to establish the
+# --enable-debug option.
+
+AC_DEFUN([AC_COIN_ENABLE_DEBUG],
+[
+  AC_ARG_ENABLE([debug],
+    [AC_HELP_STRING([--enable-debug],
+       [Build with debugging symbols.])],
+    [enable_debug=$enableval],
+    [enable_debug=no])
+])
+
 ###########################################################################
 #                        COIN_COMPFLAGS_DEFAULTS                          #
 ###########################################################################
 
 AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
 [
-# We want --enable-msvc setup and checked
+# We want --enable-msvc setup and checked. Also --enable-debug
 
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
+  AC_REQUIRE([AC_COIN_ENABLE_DEBUG])
 
 # This macro should run before the compiler checks (doesn't seem to be
 # sufficient for CFLAGS)
@@ -133,8 +151,13 @@ AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
   else
     : ${FFLAGS:=""}
     : ${FCFLAGS:=""}
-    : ${CFLAGS:="-DNDEBUG"}
-    : ${CXXFLAGS:="-DNDEBUG"}
+    if test "$enable_debug" = yes ; then
+      : ${CFLAGS:="-g"}
+      : ${CXXFLAGS:="-g"}
+    else
+      : ${CFLAGS:="-DNDEBUG"}
+      : ${CXXFLAGS:="-DNDEBUG"}
+    fi
   fi
 ])
 
