@@ -421,7 +421,7 @@ AC_DEFUN([AC_COIN_NAMEMANGLING],
     [$1 name mangling scheme],
     [m4_tolower(ac_cv_$1_namemangling)],
     [ac_save_LIBS=$LIBS
-     a4_ifblank([$3], [LIBS="-l$1"], [LIBS="$3"])
+     m4_ifblank([$3], [LIBS="-l$1"], [LIBS="$3"])
      for ac_case in "lower case" "upper case" ; do
        for ac_trail in "underscore" "no underscore" ; do
          for ac_extra in "no extra underscore" "extra underscore" ; do
