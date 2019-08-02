@@ -27,6 +27,19 @@ AC_DEFUN([AC_COIN_CHECK_VPATH],
   AC_MSG_RESULT($coin_vpath_config)
 ]) # AC_COIN_CHECK_VPATH
 
+###########################################################################
+#                            COIN_VPATH_LINK                              #
+###########################################################################
+
+# This macro ensures that the given files are available in a VPATH
+# configuration, using the same name and relative path as in the source
+# tree. It expects a white-space separated list of files.
+# This macro is a small wrapper around AC_CONFIG_LINKS.
+
+AC_DEFUN([AC_COIN_VPATH_LINK],
+[
+  m4_foreach_w(linkvar,[$1],[AC_CONFIG_LINKS(linkvar:linkvar)])
+])
 
 ###########################################################################
 #                          COIN_PROJECTVERSION                            #
@@ -431,7 +444,7 @@ AC_DEFUN([AC_COIN_NAMEMANGLING],
     [$1 name mangling scheme],
     [m4_tolower(ac_cv_$1_namemangling)],
     [ac_save_LIBS=$LIBS
-     a4_ifblank([$3], [LIBS="-l$1"], [LIBS="$3"])
+     m4_ifblank([$3], [LIBS="-l$1"], [LIBS="$3"])
      for ac_case in "lower case" "upper case" ; do
        for ac_trail in "underscore" "no underscore" ; do
          for ac_extra in "no extra underscore" "extra underscore" ; do
