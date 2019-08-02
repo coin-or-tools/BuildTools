@@ -27,6 +27,19 @@ AC_DEFUN([AC_COIN_CHECK_VPATH],
   AC_MSG_RESULT($coin_vpath_config)
 ]) # AC_COIN_CHECK_VPATH
 
+###########################################################################
+#                            COIN_VPATH_LINK                              #
+###########################################################################
+
+# This macro ensures that the given files are available in a VPATH
+# configuration, using the same name and relative path as in the source
+# tree. It expects a white-space separated list of files.
+# This macro is a small wrapper around AC_CONFIG_LINKS.
+
+AC_DEFUN([AC_COIN_VPATH_LINK],
+[
+  m4_foreach_w(linkvar,[$1],[AC_CONFIG_LINKS(linkvar:linkvar)])
+])
 
 ###########################################################################
 #                          COIN_PROJECTVERSION                            #
