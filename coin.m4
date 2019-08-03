@@ -491,10 +491,11 @@ AC_DEFUN([AC_COIN_TRY_LINK],
   ac_save_LIBS="$LIBS"
   m4_ifnblank([$2], [LIBS="$2 $LIBS"])
   m4_ifnblank([$3],
-    [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
-     temp_LFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs $3`
-     LIBS="$temp_LFLAGS $LIBS"
-    ])
+    [if test -n "$3" ; then
+      AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
+      temp_LFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs $3`
+      LIBS="$temp_LFLAGS $LIBS"
+    fi])
 
   $1_namemangling=unknown
 
