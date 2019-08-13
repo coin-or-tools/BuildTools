@@ -338,6 +338,75 @@ AC_DEFUN_ONCE([AC_COIN_PROG_CXX],
 ])
 
 ###########################################################################
+#                             COIN_CXXLIBS                                #
+###########################################################################
+
+# Determine the C++ runtime libraries required for linking a C++ library
+# with a Fortran or C compiler.  The result is available in CXXLIBS.
+
+AC_DEFUN([AC_COIN_CXXLIBS],
+[AC_REQUIRE([AC_COIN_PROG_CXX])dnl
+AC_LANG_PUSH(C++)
+AC_ARG_VAR(CXXLIBS,[Libraries necessary for linking C++ code with non-C++ compiler])
+if test -z "$CXXLIBS"; then
+  if test "$GXX" = "yes"; then
+    case "$CXX" in
+      icpc* | */icpc*)
+        CXXLIBS="-lstdc++"
+        ;;
+      *)
+        # clang uses libc++ as the default standard C++ library, not libstdc++
+        # this test is supposed to recognize whether the compiler is clang
+        #
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <ciso646>]], [[
+#ifndef _LIBCPP_VERSION
+       choke me
+#endif
+          ]])],
+          [CXXLIBS="-lc++"],
+          [CXXLIBS="-lstdc++ -lm"])  dnl The -lm works around an issue with libtool removing -lm from the dependency_libs in an .la file (look for postdeps= in libtool)
+        ;;
+    esac
+  else
+    case $build in
+     *-mingw* | *-cygwin* | *-msys* )
+      case "$CXX" in
+      clang* ) ;;
+      cl* | */cl* | CL* | */CL*)
+        CXXLIBS=nothing;;
+      esac;;
+     *-linux-*)
+      case "$CXX" in
+      icpc* | */icpc*)
+        CXXLIBS="-lstdc++"
+             ;;
+      pgCC* | */pgCC*)
+        CXXLIBS="-lstd -lC -lc"
+             ;;
+      esac;;
+    *-ibm-*)
+      CXXLIBS="-lC -lc"
+      ;;
+    *-hp-*)
+      CXXLIBS="-L/opt/aCC/lib -l++ -lstd_v2 -lCsup_v2 -lm -lcl -lc"
+      ;;
+    *-*-solaris*)
+      CXXLIBS="-lCstd -lCrun"
+    esac
+  fi
+fi
+if test -z "$CXXLIBS"; then
+  AC_MSG_WARN([Could not automatically determine CXXLIBS (C++ link libraries; necessary if main program is in Fortran or C).])
+else
+  AC_MSG_NOTICE([Assuming that CXXLIBS is \"$CXXLIBS\".])
+fi
+if test x"$CXXLIBS" = xnothing; then
+  CXXLIBS=
+fi
+AC_LANG_POP(C++)
+]) # AC_COIN_CXXLIBS
+
+###########################################################################
 #                   COIN_DEFINENAMEMANGLING                               #
 ###########################################################################
 
