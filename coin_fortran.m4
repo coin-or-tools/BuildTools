@@ -68,6 +68,7 @@ AC_DEFUN_ONCE([AC_COIN_PROG_F77],
     F77=unavailable
     AC_MSG_NOTICE([No Fortran compiler available.])
   fi
+  AM_CONDITIONAL([COIN_HAS_F77], test "$F77" != "unavailable")
   # AC_MSG_NOTICE([Leaving COIN_PROG_F77])
 ])
 
