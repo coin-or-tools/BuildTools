@@ -1777,12 +1777,17 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
 
 # If FIND_PRIM_PKG didn't find anything, try a few more guesses for
 # optimized blas/lapack libs (based on build system type).
+dnl To use static MKL libs on Linux/Darwin, one would need to enclose the libs into
+dnl -Wl,--start-group ... -Wl,--end-group. Unfortunately, libtool does not write these
+dnl flags into the dependency_libs of the .la file, so linking an executable fails.
+dnl See also https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=159760&repeatmerged=yes
+dnl So for now the checks below will only work for shared MKL libs on Linux/Darwin.
   if test "$coin_has_lapack" = no ; then
     case $build in
       *-linux*)
-         AC_COIN_TRY_LINK([dsyev],[-Wl,--start-group -lmkl_core -lmkl_intel_lp64 -lmkl_sequential --Wl,--end-group],[],[
+         AC_COIN_TRY_LINK([dsyev],[-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],[
            coin_has_lapack=yes
-           lapack_lflags="-Wl,--start-group -lmkl_core -lmkl_intel_lp64 -lmkl_sequential --Wl,--end-group"])
+           lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"])
       ;;
 
       *-sgi-*) 
@@ -1819,9 +1824,9 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
       ;;
         
       *-darwin*)
-        AC_COIN_TRY_LINK([dsyev],[-Wl,--start-group -lmkl_core -lmkl_intel_lp64 -lmkl_sequential -Wl,--end-group],[],[
+        AC_COIN_TRY_LINK([dsyev],[-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],[
           coin_has_lapack=yes
-          lapack_lflags="-Wl,--start-group -lmkl_core -lmkl_intel_lp64 -lmkl_sequential -Wl,--end-group"])
+          lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"])
         if test "$coin_has_lapack" = no ; then
           AC_COIN_TRY_LINK([dsyev],[-framework Accelerate],[],[
             coin_has_lapack=yes
