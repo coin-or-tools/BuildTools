@@ -767,7 +767,7 @@ AC_DEFUN([AC_COIN_CHK_HERE],
 # Add the .pc file and augment LFLAGS and CFLAGS.
 
     m4_foreach_w([myvar],[$2],
-      [m4_toupper(myvar)_PCFILES="$m4_toupper(myvar)_PCFILES m4_default($3,m4_tolower($1))"
+      [if test -n "$m4_toupper(myvar)_PCFILES" ; then m4_toupper(myvar)_PCFILES="$m4_toupper(myvar)_PCFILES m4_default($3,m4_tolower($1))" ; fi
        m4_toupper(myvar)_LFLAGS="$m4_toupper(myvar)_LFLAGS $m4_toupper($1)_LFLAGS"
        m4_toupper(myvar)_CFLAGS="$m4_toupper(myvar)_CFLAGS $m4_toupper($1)_CFLAGS"
 
@@ -1163,7 +1163,7 @@ AC_DEFUN([AC_COIN_CHK_PKG],
     AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],
       [Define to 1 if $1 is available.])
     m4_foreach_w([myvar],[$2],
-      [m4_toupper(myvar)_PCFILES="$m4_tolower($1_pcfiles) $m4_toupper(myvar)_PCFILES"
+      [if test -n "$m4_tolower($1_pcfiles)" ; then m4_toupper(myvar)_PCFILES="$m4_tolower($1_pcfiles) $m4_toupper(myvar)_PCFILES" ; fi
        m4_toupper(myvar)_LFLAGS="$m4_tolower($1_lflags) $m4_toupper(myvar)_LFLAGS"
        m4_toupper(myvar)_CFLAGS="$m4_tolower($1_cflags) $m4_toupper(myvar)_CFLAGS"
       ])
@@ -1873,7 +1873,7 @@ dnl So for now the checks below will only work for shared MKL libs on Linux/Darw
       [Define to 1 if the LAPACK package is available])
     AC_COIN_DEFINENAMEMANGLING([COIN_LAPACK], ${dsyev_namemangling})
     m4_foreach_w([myvar],[$1],
-      [m4_toupper(myvar)_PCFILES="$lapack_pcfiles $m4_toupper(myvar)_PCFILES"
+      [if test -n "$lapack_pcfiles" ; then m4_toupper(myvar)_PCFILES="$lapack_pcfiles $m4_toupper(myvar)_PCFILES" ; fi
        m4_toupper(myvar)_LFLAGS="$lapack_lflags $m4_toupper(myvar)_LFLAGS"
        m4_toupper(myvar)_CFLAGS="$lapack_cflags $m4_toupper(myvar)_CFLAGS"
       ])
