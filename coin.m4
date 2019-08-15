@@ -216,6 +216,27 @@ AC_DEFUN([AC_COIN_INITIALIZE],
 # Disable automatic rebuild of configure/Makefile. Use run_autotools.
 
   AM_MAINTAINER_MODE
+
+# Figure out the path where libraries are installed.
+# Unless the user specifies --prefix, prefix is set to NONE until the
+# end of configuration, at which point it will be set to $ac_default_prefix.
+# Unless the user specifies --exec-prefix, exec-prefix is set to NONE until
+# the end of configuration, at which point it's set to '${prefix}'.
+# Sheesh.  So do the expansion, then back it out.
+  save_prefix=$prefix
+  save_exec_prefix=$exec_prefix
+  if test "x$prefix" = xNONE ; then
+    prefix=$ac_default_prefix
+  fi
+  if test "x$exec_prefix" = xNONE ; then
+    exec_prefix=$prefix
+  fi
+  expanded_libdir=$libdir
+  while expr "$expanded_libdir" : '.*$.*' >/dev/null 2>&1 ; do
+    eval expanded_libdir=$expanded_libdir
+  done
+  prefix=$save_prefix
+  exec_prefix=$save_exec_prefix
 ])
 
 ###########################################################################
@@ -272,6 +293,10 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
   # shared libraries should have no undefined symbols
   # for Windows DLLs, it is mandatory to add this
   LT_LDFLAGS="$LT_LDFLAGS -no-undefined"
+
+  # set RPATH_FLAGS to the compiler link flags required to hardcode location
+  # of the shared objects
+  AC_COIN_RPATH_FLAGS([$expanded_libdir])
 ])
 
 ###########################################################################
@@ -405,6 +430,56 @@ if test x"$CXXLIBS" = xnothing; then
 fi
 AC_LANG_POP(C++)
 ]) # AC_COIN_CXXLIBS
+
+###########################################################################
+#                            COIN_RPATH_FLAGS                             #
+###########################################################################
+
+# This macro, in case shared objects are used, defines a variable
+# RPATH_FLAGS that can be used by the linker to hardwire the library
+# search path for the given directories.  This is useful for example
+# Makefiles
+
+AC_DEFUN([AC_COIN_RPATH_FLAGS],
+[RPATH_FLAGS=
+
+if test $enable_shared = yes; then
+  case $build in
+    *-linux-*)
+      if test "$GXX" = "yes"; then
+        RPATH_FLAGS=
+        for dir in $1; do
+          RPATH_FLAGS="$RPATH_FLAGS -Wl,--rpath -Wl,$dir"
+        done
+      fi ;;
+    *-darwin*)
+        RPATH_FLAGS=nothing ;;
+    *-ibm-*)
+      case "$CXX" in
+      xlC* | */xlC* | mpxlC* | */mpxlC*)
+        RPATH_FLAGS=nothing ;;
+      esac ;;
+    *-hp-*)
+        RPATH_FLAGS=nothing ;;
+    *-mingw* | *-msys* )
+        RPATH_FLAGS=nothing ;;
+    *-*-solaris*)
+        RPATH_FLAGS=
+        for dir in $1; do
+          RPATH_FLAGS="$RPATH_FLAGS -R$dir"
+        done
+  esac
+
+  if test "$RPATH_FLAGS" = ""; then
+    AC_MSG_WARN([Could not automatically determine how to tell the linker about automatic inclusion of the path for shared libraries.  The test examples might not work if you link against shared objects.  You will need to set the LD_LIBRARY_PATH, DYLP_LIBRARY_PATH, or LIBDIR variable manually.])
+  fi
+  if test "$RPATH_FLAGS" = "nothing"; then
+    RPATH_FLAGS=
+  fi
+fi
+
+AC_SUBST(RPATH_FLAGS)
+]) # AC_COIN_RPATH_FLAGS
 
 ###########################################################################
 #                   COIN_DEFINENAMEMANGLING                               #
@@ -665,13 +740,8 @@ AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
 
 # Assemble a PKG_CONFIG search path that will include the installation
 # directory for .pc files for COIN packages.  Coin .pc files are installed in
-# ${libdir}/pkgconfig. But autoconf sets $libdir to '${exec_prefix}/lib', and
-# $exec_prefix to '${prefix}'.  COIN_INITIALIZE will set ac_default_prefix
-# correctly. Unless the user specifies --prefix, prefix is set to
-# NONE until the end of configuration, at which point it will be set to
-# $ac_default_prefix. Unless the user specifies --exec-prefix, exec-prefix
-# is set to NONE until the end of configuration, at which point it's set to
-# '${prefix}'. Sheesh.  So do the expansion, then back it out. Of course,
+# ${libdir}/pkgconfig and COIN_INITIALIZE takes care of setting up
+# $expanded_libdir based on $libdir. Of course,
 # this whole house of cards balances on the shaky assumption that the user is
 # sane and has installed all packages in the same place and does not change
 # that place when make executes. If not, well, it's their responsibility to
@@ -680,20 +750,6 @@ AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
   COIN_PKG_CONFIG_PATH="${PKG_CONFIG_PATH}"
   AC_SUBST(COIN_PKG_CONFIG_PATH)
 
-  save_prefix=$prefix
-  save_exec_prefix=$exec_prefix
-  if test "x$prefix" = xNONE ; then
-    prefix=$ac_default_prefix
-  fi
-  if test "x$exec_prefix" = xNONE ; then
-    exec_prefix=$prefix
-  fi
-  expanded_libdir=$libdir
-  while expr "$expanded_libdir" : '.*$.*' >/dev/null 2>&1 ; do
-    eval expanded_libdir=$expanded_libdir
-  done
-  prefix=$save_prefix
-  exec_prefix=$save_exec_prefix
   COIN_PKG_CONFIG_PATH="${expanded_libdir}/pkgconfig:${COIN_PKG_CONFIG_PATH}"
   AC_MSG_NOTICE([$PKG_CONFIG path is "$COIN_PKG_CONFIG_PATH"])
 
