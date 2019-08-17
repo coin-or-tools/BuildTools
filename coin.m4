@@ -109,7 +109,7 @@ AC_DEFUN([AC_COIN_ENABLE_MSVC],
 [
   AC_ARG_ENABLE([msvc],
     [AC_HELP_STRING([--enable-msvc],
-       [Allow only Intel/Microsoft compilers on MinGW/MSys/Cygwin.])],
+       [Look for and allow only Intel/Microsoft compilers on MinGW/MSys/Cygwin.])],
     [enable_msvc=$enableval],
     [enable_msvc=no])
 ])
