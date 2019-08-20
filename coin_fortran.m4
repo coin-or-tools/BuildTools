@@ -178,7 +178,6 @@ AC_DEFUN([AC_COIN_F77_WRAPPERS],
      done
      if test "$ac_result" = "failure" ; then
        ac_cv_f77_mangling=unknown
-       AC_MSG_WARN([Unable to determine correct Fortran name mangling scheme])
      fi
      LIBS=$ac_save_LIBS])
 
@@ -189,6 +188,8 @@ AC_DEFUN([AC_COIN_F77_WRAPPERS],
     AC_LANG_PUSH([Fortran 77])
     _AC_FC_WRAPPERS
     AC_LANG_POP([Fortran 77])
+  else
+    AC_MSG_WARN([Unable to determine correct Fortran name mangling scheme])
   fi
   # AC_MSG_NOTICE([Done COIN_F77_WRAPPERS])
 ])
