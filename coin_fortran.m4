@@ -16,10 +16,10 @@
 # the value of the variable F77 and invoke the appropriate follow-on macro, as
 #
 #   AC_COIN_PROG_F77
-#   if test "$F77" != "unavailable" ; then
+#   if test -n "$F77" ; then
 #     AC_COIN_F77_SETUP
 #   else
-#     AC_COIN_F77_WRAPPERS
+#     AC_COIN_F77_WRAPPERS(some-fortran-lib,some-function-in-that-lib)
 #   fi
 #
 # If all you want to do is link to Fortran libraries from C/C++ code
@@ -30,7 +30,7 @@
 # to abort if a working compiler can't be found, try
 #
 #   AC_COIN_PROG_F77
-#   if test "$F77" != "unavailable" ; then
+#   if test -n "$F77" ; then
 #     AC_COIN_F77_SETUP
 #   else
 #     AC_MSG_ERROR([cannot find a working Fortran compiler!])
@@ -52,23 +52,28 @@ AC_DEFUN_ONCE([AC_COIN_PROG_F77],
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 
 # If enable-msvc, then test only for Intel (on Windows) Fortran compiler
+# Allow user to set F77 to "unavailable", but then continue with F77 unset
+# and skip check for compilers
 
-  if test $enable_msvc = yes ; then
-    comps="ifort"
+  if test "$F77" = unavailable ; then
+    unset F77
   else
-    # TODO old buildtools was doing some $build specific logic here, do we still
-    # need this?
-    comps="gfortran ifort g95 fort77 f77 f95 f90 g77 pgf90 pgf77 ifc frt af77 xlf_r fl32"
+    if test $enable_msvc = yes ; then
+      comps="ifort"
+    else
+      # TODO old buildtools was doing some $build specific logic here, do we still
+      # need this?
+      comps="gfortran ifort g95 fort77 f77 f95 f90 g77 pgf90 pgf77 ifc frt af77 xlf_r fl32"
+    fi
+    AC_PROG_F77([$comps])
   fi
-  AC_PROG_F77([$comps])
 
 # Allow for the possibility that there is no Fortran compiler on the system.
 
-  if test "${F77:-unavailable}" = unavailable ; then
-    F77=unavailable
+  if test -z "${F77}" ; then
     AC_MSG_NOTICE([No Fortran compiler available.])
   fi
-  AM_CONDITIONAL([COIN_HAS_F77], test "$F77" != "unavailable")
+  AM_CONDITIONAL([COIN_HAS_F77], test -n "$F77")
   # AC_MSG_NOTICE([Leaving COIN_PROG_F77])
 ])
 
