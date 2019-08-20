@@ -268,11 +268,19 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 # Patch libtool to eliminate a trailing space after AR_FLAGS. This needs to be
 # run after config.status has created libtool. Apparently necessary on
 # Windows when lib.exe is the archive tool.
+# Patch libtool's func_extract_an_archive in case of $AR=lib. The current
+# libtool implementation assumes that it can do $AR x to extract an archive.
+# We replace this two-liner in func_extract_an_archive by replacing the first
+# line by something clunky that works with lib and making sure that the following
+# line is ignored (by finishing with ": \"). We completely disregard running the
+# command through func_show_eval and do not stop if it fails.
 
   case "$AR" in
     *lib* | *LIB* )
       AC_CONFIG_COMMANDS([libtoolpatch],
-        [sed -e 's|AR_FLAGS |AR_FLAGS|g' libtool > libtool.tmp
+        [sed -e 's|AR_FLAGS |AR_FLAGS|g' \
+             -e '/$AR x/s/.*/( cd $f_ex_an_ar_dir ; for f in `$AR -nologo -list "$f_ex_an_ar_oldlib" | tr "\\r" " "` ; do lib -nologo -extract:$f "$f_ex_an_ar_oldlib"; done ); : \\/g' \
+         libtool > libtool.tmp
          mv libtool.tmp libtool
          chmod 755 libtool])
       ;;
