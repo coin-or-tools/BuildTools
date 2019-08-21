@@ -410,11 +410,9 @@ if test -z "$CXXLIBS"; then
   else
     case $build in
      *-mingw* | *-cygwin* | *-msys* )
-      case "$CXX" in
-      clang* ) ;;
-      cl* | */cl* | CL* | */CL*)
-        CXXLIBS=nothing;;
-      esac;;
+       if test "$enable_msvc" = yes ; then
+         CXXLIBS=nothing
+       fi;;
      *-linux-*)
       case "$CXX" in
       icpc* | */icpc*)
