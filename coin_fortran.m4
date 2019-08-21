@@ -40,9 +40,9 @@
 #                   COIN_PROG_F77                                         #
 ###########################################################################
 
-# COIN_PROG_F77 will find a Fortran compiler, or set F77 to unavailable. Alone,
-# this is not sufficient to actually build Fortran code. For that, use
-# COIN_F77_SETUP.
+# COIN_PROG_F77 will find a Fortran compiler, or ensures that F77 is unset.
+# Alone, this is not sufficient to actually build Fortran code.
+# For that, use COIN_F77_SETUP.
 
 # Unlike C/C++, automake doesn't mess with AC_PROG_F77.
 
@@ -51,13 +51,16 @@ AC_DEFUN_ONCE([AC_COIN_PROG_F77],
   # AC_MSG_NOTICE([In COIN_PROG_F77])
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 
-# If enable-msvc, then test only for Intel (on Windows) Fortran compiler
-# Allow user to set F77 to "unavailable", but then continue with F77 unset
-# and skip check for compilers
+  AC_ARG_ENABLE([f77],
+    [AC_HELP_STRING([--disable-f77],[disable checking for F77 compiler])],
+    [enable_f77=$enableval],
+    [enable_f77=yes])
 
-  if test "$F77" = unavailable ; then
+  if test "$enable_f77" = no ; then
+    # make sure F77 is not set
     unset F77
   else
+    # if enable-msvc, then test only for Intel (on Windows) Fortran compiler
     if test $enable_msvc = yes ; then
       comps="ifort"
     else
