@@ -265,21 +265,28 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 
   LT_INIT([disable-static pic-only win32-dll])
 
-# Patch libtool to eliminate a trailing space after AR_FLAGS. This needs to be
-# run after config.status has created libtool. Apparently necessary on
-# Windows when lib.exe is the archive tool.
-# Patch libtool's func_extract_an_archive in case of $AR=lib. The current
-# libtool implementation assumes that it can do $AR x to extract an archive.
-# We replace this two-liner in func_extract_an_archive by replacing the first
-# line by something clunky that works with lib and making sure that the following
-# line is ignored (by finishing with ": \"). We completely disregard running the
-# command through func_show_eval and do not stop if it fails.
+# Patch libtool to circumvent some issues when using MSVC and MS lib.
+# This needs to be run after config.status has created libtool.
+# 1. Eliminate a trailing space after AR_FLAGS. Apparently necessary on
+#    Windows when AR=lib.exe.
+# 2. Patch libtool's func_extract_an_archive in case of $AR=lib. The current
+#    libtool implementation assumes that it can do $AR x to extract an archive.
+#    We replace this two-liner in func_extract_an_archive by replacing the first
+#    line by something clunky that works with lib and making sure that the following
+#    line is ignored (by finishing with ": \"). We completely disregard running the
+#    command through func_show_eval and do not stop if it fails.
+# 3. Relax check which libraries can be used when linking a DLL.
+#    libtool's func_mode_link() would reject linking a .lib file when building a DLL,
+#    even though this .lib file may just be the one that eventually loads a depending DLL,
+#    e.g., mkl_core_dll.lib. Setting deplibs_check_method=pass_all will still print a
+#    warning, but the .lib is still passed to the linker.
 
   case "$AR" in
     *lib* | *LIB* )
       AC_CONFIG_COMMANDS([libtoolpatch],
         [sed -e 's|AR_FLAGS |AR_FLAGS|g' \
              -e '/$AR x/s/.*/( cd $f_ex_an_ar_dir ; for f in `$AR -nologo -list "$f_ex_an_ar_oldlib" | tr "\\r" " "` ; do lib -nologo -extract:$f "$f_ex_an_ar_oldlib"; done ); : \\/g' \
+             -e '/^deplibs_check_method/s/.*/deplibs_check_method="pass_all"/g' \
          libtool > libtool.tmp
          mv libtool.tmp libtool
          chmod 755 libtool])
