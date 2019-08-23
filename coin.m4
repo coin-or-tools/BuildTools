@@ -366,11 +366,11 @@ AC_DEFUN_ONCE([AC_COIN_PROG_CXX],
 # otherwise, test a long list of C++ compilers that comes into our mind
 
   if test $enable_msvc = yes ; then
-    comps="cl icl"
+    comps="icl cl"
   else
     # TODO old buildtools was doing some $build specific logic here, do we
     # still need this?
-    comps="g++ clang++ c++ pgCC icpc gpp cxx cc++ cl icl FCC KCC RCC xlC_r aCC CC"
+    comps="g++ clang++ c++ pgCC icpc gpp cxx cc++ icl cl FCC KCC RCC xlC_r aCC CC"
   fi
   AC_PROG_CXX([$comps])
 
