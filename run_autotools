@@ -6,8 +6,6 @@
 # This file is distributed under the Eclipse Public License.
 # It is part of the BuildTools project in COIN-OR (www.coin-or.org)
 #
-## $Id$
-#
 # Author: Andreas Waechter     IBM      2006-04-14
 # Modified: Lou Hafer          SFU      2010-06-11
 #      Mods to allow variations from standard package structure. Decision to
@@ -68,7 +66,6 @@ case "${COIN_ENV:-git}" in
     ltfile=$AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
     autotoolsFiles="config.guess config.sub depcomp install-sh"
     autotoolsFiles="$autotoolsFiles ltmain.sh missing compile"
-    autotoolsFiles="$autotoolsFiles"
     ;;
   "git" )
     repoDir='.git'
@@ -78,7 +75,6 @@ case "${COIN_ENV:-git}" in
     ltfile=$AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
     autotoolsFiles="config.guess config.sub depcomp install-sh"
     autotoolsFiles="$autotoolsFiles ltmain.sh missing compile"
-    autotoolsFiles="$autotoolsFiles"
     ;;
   "trunk" )
     repoDir='.svn'
@@ -88,7 +84,6 @@ case "${COIN_ENV:-git}" in
     ltfile=$AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
     autotoolsFiles="config.guess config.sub depcomp install-sh"
     autotoolsFiles="$autotoolsFiles ltmain.sh missing compile"
-    autotoolsFiles="$autotoolsFiles"
     ;;
   "stable" )
     repoDir='.svn'
@@ -536,6 +531,8 @@ for dir in ${dirs[@]} ; do
         for file in $autotoolsFiles ; do
           if test -e BuildTools/$file ; then
             cp BuildTools/$file .
+          elif test -e $AUTOTOOLS_DIR/share/automake-${ver_automake:0:4}/$file ; then
+            cp $AUTOTOOLS_DIR/share/automake-${ver_automake:0:4}/$file .
           elif test -e $AUTOTOOLS_DIR/share/libtool/build-aux/$file ; then
             cp $AUTOTOOLS_DIR/share/libtool/build-aux/$file .
           else
