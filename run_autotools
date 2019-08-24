@@ -559,6 +559,8 @@ for dir in ${dirs[@]} ; do
     fi
     echo "  running aclocal in $dir"
     aclocal $m4Dirs
+    echo "  apply libtool.m4 patch to support ICL"
+    patch -p1 < BuildTools/libtool-icl.patch
     if grep AC_CONFIG_HEADER configure.ac >/dev/null 2>&1; then
       echo "  running autoheader in $dir"
       autoheader || exit 1
