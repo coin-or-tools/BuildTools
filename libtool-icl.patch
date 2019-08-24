@@ -1,4 +1,5 @@
 From http://git.savannah.gnu.org/cgit/libtool.git/patch/?id=99bd0948e20ca796c0d38dee606965b86ce0832a
+Then added ifort case to get the libname_spec correct when (also) using Intel Fortran
 --- a/aclocal.m4
 +++ b/aclocal.m4
 @@ -2587,8 +2587,8 @@ m4_if([$1], [],[
@@ -7,8 +8,8 @@ From http://git.savannah.gnu.org/cgit/libtool.git/patch/?id=99bd0948e20ca796c0d3
  
 -  *,cl*)
 -    # Native MSVC
-+  *,cl* | *,icl*)
-+    # Native MSVC or ICC
++  *,cl* | *,icl* | *,ifort*)
++    # Native MSVC or ICC or IFORT
      libname_spec='$name'
      soname_spec='$libname`echo $release | $SED -e 's/[[.]]/-/g'`$versuffix$shared_ext'
      library_names_spec='$libname.dll.lib'
