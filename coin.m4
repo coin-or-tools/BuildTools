@@ -500,7 +500,7 @@ AC_DEFUN([AC_COIN_RPATH_FLAGS],
 if test $enable_shared = yes; then
   case $build in
     *-linux-*)
-      if test "$GXX" = "yes"; then
+      if test "$GCC" = "yes"; then
         RPATH_FLAGS=
         for dir in $1; do
           RPATH_FLAGS="$RPATH_FLAGS -Wl,--rpath -Wl,$dir"
@@ -509,8 +509,8 @@ if test $enable_shared = yes; then
     *-darwin*)
         RPATH_FLAGS=nothing ;;
     *-ibm-*)
-      case "$CXX" in
-      xlC* | */xlC* | mpxlC* | */mpxlC*)
+      case "$CC" in
+      xlc* | */xlc* | mpxlc* | */mpxlc*)
         RPATH_FLAGS=nothing ;;
       esac ;;
     *-hp-*)
