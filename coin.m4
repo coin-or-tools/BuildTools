@@ -280,6 +280,7 @@ AC_DEFUN([AC_COIN_INITIALIZE],
 
 # Set up libtool parameters
 # (https://www.gnu.org/software/libtool/manual/html_node/LT_005fINIT.html)
+# Pass no-win32-dll to omit passing win32-dll to LT_INIT
 
 AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 [
@@ -298,7 +299,7 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 
 # Create libtool.
 
-  LT_INIT([disable-static pic-only win32-dll])
+  LT_INIT([disable-static pic-only m4_bmatch($1,no-win32-dll,,win32-dll)])
 
 # Patch libtool to circumvent some issues when using MSVC and MS lib.
 # This needs to be run after config.status has created libtool.
@@ -315,8 +316,8 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 #    even though this .lib file may just be the one that eventually loads a depending DLL,
 #    e.g., mkl_core_dll.lib. Setting deplibs_check_method=pass_all will still print a
 #    warning, but the .lib is still passed to the linker.
-# 4. Ensure always_export_symbols=no. Even though pass win32-dll, libtool
-#    forces always_export_symbols=yes for --tag=CXX if using MS compiler.
+# 4. Ensure always_export_symbols=no if win32-dll. Even when we pass win32-dll,
+#    libtool forces always_export_symbols=yes for --tag=CXX if using MS compiler.
 #    This leads to a nm call that collects ALL C-functions from a library
 #    and explicitly dll-exporting them, leading to warnings about duplicates
 #    regarding those that are properly marked for dll-export in the source.
@@ -327,7 +328,7 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
         [sed -e 's|AR_FLAGS |AR_FLAGS|g' \
              -e '/$AR x/s/.*/( cd $f_ex_an_ar_dir ; for f in `$AR -nologo -list "$f_ex_an_ar_oldlib" | tr "\\r" " "` ; do lib -nologo -extract:$f "$f_ex_an_ar_oldlib"; done ); : \\/g' \
              -e '/^deplibs_check_method/s/.*/deplibs_check_method="pass_all"/g' \
-             -e 's|always_export_symbols=yes|always_export_symbols=no|g' \
+             m4_bmatch($1,no-win32-dll,,[-e 's|always_export_symbols=yes|always_export_symbols=no|g']) \
          libtool > libtool.tmp
          mv libtool.tmp libtool
          chmod 755 libtool])
