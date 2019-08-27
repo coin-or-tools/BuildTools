@@ -73,8 +73,8 @@ AC_DEFUN_ONCE([AC_COIN_PROG_F77],
 
 # Allow for the possibility that there is no Fortran compiler on the system.
 
-  if test -z "${F77}" ; then
-    AC_MSG_NOTICE([No Fortran compiler available.])
+  if test -z "$F77" ; then
+    AC_MSG_NOTICE([No Fortran 77 compiler available.])
   fi
   AM_CONDITIONAL([COIN_HAS_F77], test -n "$F77")
   # AC_MSG_NOTICE([Leaving COIN_PROG_F77])
@@ -85,12 +85,32 @@ AC_DEFUN_ONCE([AC_COIN_PROG_F77],
 #                   COIN_PROG_FC                                          #
 ###########################################################################
 
+# Set up the Fortran compiler, required to compile .f90 files.
+# We use the same compiler as F77, unless the user has set FC explicitly
+# or we didn't check for F77.
+
 AC_DEFUN_ONCE([AC_COIN_PROG_FC],
 [
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 
-  # TODO
-  AC_MSG_ERROR(["AC_COIN_PROG_FC not implemented yet"])
+  if test -z "$FC" && test -n "F77" ; then
+    comps="$F77"
+  elif test $enable_msvc = yes ; then
+    # if enable-msvc, then test only for Intel (on Windows) Fortran compiler
+    comps="ifort"
+  else
+    comps="gfortran ifort g95 f95 f90 pgf90 ifc frt xlf_r fl32"
+  fi
+
+  # check whether compile script should be used to wrap around Fortran compiler
+  if test -n "$FC" ; then
+    AC_PROG_FC_C_O
+    if test $ac_cv_prog_fc_c_o = no ; then
+      FC="$am_aux_dir/compile $FC"
+    fi
+  fi
+
+  AC_PROG_FC([$comps])
 ])
 
 
@@ -110,8 +130,9 @@ AC_DEFUN([AC_COIN_F77_SETUP],
 
 # F77_WRAPPERS will trigger the necessary F77 setup macros (F77_MAIN,
 # F77_LIBRARY_LDFLAGS, etc.)
-
   AC_F77_WRAPPERS
+
+  # check whether compile script should be used to wrap around Fortran 77 compiler
   AC_PROG_F77_C_O
   if test $ac_cv_prog_f77_c_o = no ; then
     F77="$am_aux_dir/compile $F77"
