@@ -150,26 +150,38 @@ AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
   AC_BEFORE([$0],[AC_PROG_F77])
   AC_BEFORE([$0],[AC_PROG_FC])
 
-# change default compiler flags (TODO bring back --enable-debug)
-# - disable debugging (remove -g, set -DNDEBUG)
+# change default compiler flags
+# - debugging enabled: enable debug symbols (-g/-Zi)
+# - debugging disabled: disable debug code (-DNDEBUG); enable (more) optimization (-O2)
 # - enable exceptions for (i)cl
 
-  if test "$enable_msvc" = yes ; then
-    : ${FFLAGS:=""}
-    : ${FCFLAGS:=""}
-    : ${CFLAGS:="-DNDEBUG -nologo"}
-    : ${CXXFLAGS:="-DNDEBUG -EHsc -nologo"}
-    : ${AR:="lib"}
-    : ${AR_FLAGS:="-nologo -out:"}
-  else
-    : ${FFLAGS:=""}
-    : ${FCFLAGS:=""}
-    if test "$enable_debug" = yes ; then
+  if test "$enable_debug" = yes ; then
+    if test "$enable_msvc" = yes ; then
+      : ${FFLAGS:="-nologo -Zi"}
+      : ${FCFLAGS:="-nologo -Zi"}
+      : ${CFLAGS:="-nologo -Zi"}
+      : ${CXXFLAGS:="-nologo -EHsc -Zi"}
+      : ${AR:="lib"}
+      : ${AR_FLAGS:="-nologo -out:"}
+    else
+      : ${FFLAGS:="-g"}
+      : ${FCFLAGS:="-g"}
       : ${CFLAGS:="-g"}
       : ${CXXFLAGS:="-g"}
+    fi
+  else
+    if test "$enable_msvc" = yes ; then
+      : ${FFLAGS:="-nologo -O2"}
+      : ${FCFLAGS:="-nologo -O2"}
+      : ${CFLAGS:="-nologo -DNDEBUG -O2"}
+      : ${CXXFLAGS:="-nologo -EHsc -DNDEBUG -O2"}
+      : ${AR:="lib"}
+      : ${AR_FLAGS:="-nologo -out:"}
     else
-      : ${CFLAGS:="-DNDEBUG"}
-      : ${CXXFLAGS:="-DNDEBUG"}
+      : ${FFLAGS:="-O2"}
+      : ${FCFLAGS:="-O2"}
+      : ${CFLAGS:="-O2 -DNDEBUG"}
+      : ${CXXFLAGS:="-O2 -DNDEBUG"}
     fi
   fi
 ])
