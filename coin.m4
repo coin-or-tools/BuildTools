@@ -1917,22 +1917,18 @@ dnl So for now the checks below will only work for shared MKL libs on Linux/Darw
       ;;
 
       *-cygwin* | *-mingw* | *-msys*)
-        case "$CC" in
-          */compile\ cl | cl | */cl | */compile\ icl | icl | */icl )
-            # check for 64-bit sequential MKL
-            if test "$enable_shared" = yes ; then
-              AC_COIN_TRY_LINK([dsyev],[mkl_intel_lp64_dll.lib mkl_sequential_dll.lib mkl_core_dll.lib],[],[
-                coin_has_lapack=yes
-                lapack_lflags="mkl_intel_lp64_dll.lib mkl_sequential_dll.lib mkl_core_dll.lib"])
-            else
-              AC_COIN_TRY_LINK([dsyev],[mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib],[],[
-                coin_has_lapack=yes
-                lapack_lflags="mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib"])
-            fi
-          ;;
-        esac
+        # check for 64-bit sequential MKL
+        if test "$enable_shared" = yes ; then
+          AC_COIN_TRY_LINK([dsyev],[mkl_intel_lp64_dll.lib mkl_sequential_dll.lib mkl_core_dll.lib],[],
+            [coin_has_lapack=yes
+             lapack_lflags="mkl_intel_lp64_dll.lib mkl_sequential_dll.lib mkl_core_dll.lib"])
+        else
+          AC_COIN_TRY_LINK([dsyev],[mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib],[],
+            [coin_has_lapack=yes
+             lapack_lflags="mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib"])
+        fi
       ;;
-        
+
       *-darwin*)
         AC_COIN_TRY_LINK([dsyev],[-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],[
           coin_has_lapack=yes
