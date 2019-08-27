@@ -2164,13 +2164,13 @@ AC_DEFUN([AC_COIN_FINALIZE_FLAGS],
       # setup XYZ_EXPORT symbol for library users
       libexport_attribute=
       if test "$enable_shared" = yes ; then
-        # TODO better check for this? we essentially want to know whether we're building DLLs
-        # or do we also need this for GCC on Windows?
-        case $CC in */compile\ cl | cl | */cl | */compile\ icl | icl | */icl )
-          libexport_attribute="__declspec(dllimport)"
-          if test "$enable_static" = yes ; then
-            AC_MSG_ERROR([Cannot do DLL and static LIB builds simultaneously. Do not add --enable-static without --disable-shared.])
-          fi
+        case $build_os in
+          cygwin* | mingw* | msys* | cegcc* )
+            libexport_attribute="__declspec(dllimport)"
+            if test "$enable_static" = yes ; then
+              AC_MSG_ERROR([Cannot do DLL and static LIB builds simultaneously. Do not add --enable-static without --disable-shared.])
+            fi
+          ;;
         esac
       fi
       AC_DEFINE_UNQUOTED(m4_toupper(myvar)_EXPORT, [$libexport_attribute], [Library Visibility Attribute])
