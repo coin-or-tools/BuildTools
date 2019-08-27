@@ -350,10 +350,6 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
   # shared libraries should have no undefined symbols
   # for Windows DLLs, it is mandatory to add this
   LT_LDFLAGS="$LT_LDFLAGS -no-undefined"
-
-  # set RPATH_FLAGS to the compiler link flags required to hardcode location
-  # of the shared objects
-  AC_COIN_RPATH_FLAGS([$expanded_libdir])
 ])
 
 ###########################################################################
