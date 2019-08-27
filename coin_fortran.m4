@@ -102,6 +102,8 @@ AC_DEFUN_ONCE([AC_COIN_PROG_FC],
     comps="gfortran ifort g95 f95 f90 pgf90 ifc frt xlf_r fl32"
   fi
 
+  AC_PROG_FC([$comps])
+
   # check whether compile script should be used to wrap around Fortran compiler
   if test -n "$FC" ; then
     AC_PROG_FC_C_O
@@ -109,8 +111,6 @@ AC_DEFUN_ONCE([AC_COIN_PROG_FC],
       FC="$am_aux_dir/compile $FC"
     fi
   fi
-
-  AC_PROG_FC([$comps])
 ])
 
 
