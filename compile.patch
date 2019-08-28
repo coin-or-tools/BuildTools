@@ -62,3 +62,13 @@
  }
  
  eat=
+@@ -256,7 +272,8 @@
+     exit $?
+     ;;
+   cl | *[/\\]cl | cl.exe | *[/\\]cl.exe | \
+-  icl | *[/\\]icl | icl.exe | *[/\\]icl.exe )
++  icl | *[/\\]icl | icl.exe | *[/\\]icl.exe | \
++  ifort | *[/\\]ifort | ifort.exe | *[/\\]ifort.exe )
+     func_cl_wrapper "$@"      # Doesn't return...
+     ;;
+ esac
