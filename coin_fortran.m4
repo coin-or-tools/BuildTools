@@ -93,9 +93,7 @@ AC_DEFUN_ONCE([AC_COIN_PROG_FC],
 [
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 
-  if test -z "$FC" && test -n "F77" ; then
-    comps="$F77"
-  elif test $enable_msvc = yes ; then
+  if test $enable_msvc = yes ; then
     # if enable-msvc, then test only for Intel (on Windows) Fortran compiler
     comps="ifort"
   else
