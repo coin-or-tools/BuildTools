@@ -107,6 +107,8 @@ AC_DEFUN_ONCE([AC_COIN_PROG_FC],
     AC_PROG_FC_C_O
     if test $ac_cv_prog_fc_c_o = no ; then
       FC="$am_aux_dir/compile $FC"
+    else
+      case "$FC" in *ifort ) FC="$am_aux_dir/compile $FC" ;; esac
     fi
   fi
 ])
@@ -134,6 +136,8 @@ AC_DEFUN([AC_COIN_F77_SETUP],
   AC_PROG_F77_C_O
   if test $ac_cv_prog_f77_c_o = no ; then
     F77="$am_aux_dir/compile $F77"
+  else
+    case "$F77" in *ifort ) F77="$am_aux_dir/compile $F77" ;; esac
   fi
   # AC_MSG_NOTICE([Leaving COIN_F77_SETUP])
 ])
