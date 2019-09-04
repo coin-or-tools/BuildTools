@@ -72,33 +72,18 @@ AC_DEFUN([AC_COIN_PROJECTVERSION],
      fi
     ])
 
-m4_ifvaln([$1],
-  [AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION),["$PACKAGE_VERSION"],[Version number of project])
+  m4_ifvaln([$1],
+    [AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION),["$PACKAGE_VERSION"],[Version number of project])
+     test -z "$coin_majorver"   && coin_majorver=9999
+     test -z "$coin_minorver"   && coin_minorver=9999
+     test -z "$coin_releasever" && coin_releasever=9999
+     AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MAJOR),[$coin_majorver],[Major version number of project.])
+     AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MINOR),[$coin_minorver],[Minor version number of project.])
+     AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_RELEASE),[$coin_releasever],[Release version number of project.])
 
-  test -z "$coin_majorver"   && coin_majorver=9999
-  test -z "$coin_minorver"   && coin_minorver=9999
-  test -z "$coin_releasever" && coin_releasever=9999
-  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MAJOR),[$coin_majorver],[Major version number of project.])
-  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MINOR),[$coin_minorver],[Minor version number of project.])
-  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_RELEASE),[$coin_releasever],[Release version number of project.])
-
-  # Create a variable set to the upper case version of the project name
-  COIN_PRJCT=m4_toupper($1)
-
-  # Set the project's SVN revision number. The complicated sed expression
-  # (made worse by quadrigraphs) ensures that things like 4123:4168MS end up
-  # as a single number.
-  AC_CHECK_PROG([have_svnversion],[svnversion],[yes],[no])
-  if test "x$have_svnversion" = xyes; then
-    AC_SUBST(m4_toupper($1_SVN_REV))
-    svn_rev_tmp=`LANG=en_EN svnversion $srcdir 2>/dev/null`
-    if test "x$svn_rev_tmp" != xexported -a "x$svn_rev_tmp" != x -a "x$svn_rev_tmp" != "xUnversioned directory"; then
-      m4_toupper($1_SVN_REV)=`echo $svn_rev_tmp | sed -n -e 's/^@<:@0-9@:>@*://' -e 's/\(@<:@0-9@:>@\)@<:@^0-9@:>@*$/\1/p'`
-      AC_DEFINE_UNQUOTED(m4_toupper($1_SVN_REV),
-        $m4_toupper($1_SVN_REV),[SVN revision number of project])
-    fi
-  fi
-])
+     # Create a variable set to the upper case version of the project name
+     COIN_PRJCT=m4_toupper($1)
+    ])
 ])
 
 
