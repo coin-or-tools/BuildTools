@@ -49,41 +49,36 @@ AC_DEFUN([AC_COIN_VPATH_LINK],
 # versioning numbers of the project.
 #   COIN_PROJECTVERSION([project],[libtool_version_string])
 #
-# If libtool_version_string is given, then sets coin_versioninfo, which will
-# be picked up by AC_COIN_PROG_LIBTOOL to set libtools -version-info flag.
-# If libtool_version_string is not given, but $PACKAGE_VERSION has the form
-# major.minor.release, then sets coin_versionnumber, which will be picked up
-# by AC_COIN_PROG_LIBTOOL to set libtools -version-number flag, if
-# coin_versioninfo is not set.
+# If libtool_version_string is given, then defines AC_COIN_LIBTOOL_VERSIONINFO,
+# which will be picked up by AC_COIN_PROG_LIBTOOL to set libtools -version-info flag.
+#
+# Further, breaks up AC_PACKAGE_VERSION into AC_PACKAGE_VERSION_MAJOR,
+# AC_PACKAGE_VERSION_MINOR, AC_PACKAGE_VERSION_RELEASE, assuming it has
+# the form major.minor.release.
 
 AC_DEFUN([AC_COIN_PROJECTVERSION],
 [
-  # Parse package version, assuming major.minor.release. PACKAGE_VERSION is set
-  # by AC_INIT. Force components to 9999 if they're empty; this deals with
-  # things like `trunk' and other nonstandard forms.
-  [coin_majorver=`echo $PACKAGE_VERSION | sed -n -e 's/^\([0-9]*\).*/\1/gp'`]
-  [coin_minorver=`echo $PACKAGE_VERSION | sed -n -e 's/^[0-9]*\.\([0-9]*\).*/\1/gp'`]
-  [coin_releasever=`echo $PACKAGE_VERSION | sed -n -e 's/^[0-9]*\.[0-9]*\.\([0-9]*\).*/\1/gp'`]
+  # break up package version number in major.minor.release
+  # AC_PACKAGE_VERSION is defined by AC_INIT
+  m4_define(AC_PACKAGE_VERSION_MAJOR, m4_bregexp(AC_PACKAGE_VERSION, [^\([0-9]*\).*], [\1]))
+  m4_define(AC_PACKAGE_VERSION_MINOR, m4_bregexp(AC_PACKAGE_VERSION, [^[0-9]*\.\([0-9]*\).*], [\1]))
+  m4_define(AC_PACKAGE_VERSION_RELEASE, m4_bregexp(AC_PACKAGE_VERSION, [^[0-9]*\.[0-9]*\.\([0-9]*\).*], [\1]))
 
-  # Capture the libtool library version, if available.
-  m4_ifvaln([$2],[coin_versioninfo=$2],
-    [if test -n "$coin_majorver" && test -n "$coin_minorver" && test -n "$coin_releasever" ; then
-       coin_versionnumber=$coin_majorver:$coin_minorver:$coin_releasever
-     fi
-    ])
-
+  # ac-define AC_PACKAGE_VERSION macros, use 9999 for missing values
   m4_ifvaln([$1],
-    [AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION),["$PACKAGE_VERSION"],[Version number of project])
-     test -z "$coin_majorver"   && coin_majorver=9999
-     test -z "$coin_minorver"   && coin_minorver=9999
-     test -z "$coin_releasever" && coin_releasever=9999
-     AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MAJOR),[$coin_majorver],[Major version number of project.])
-     AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MINOR),[$coin_minorver],[Minor version number of project.])
-     AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_RELEASE),[$coin_releasever],[Release version number of project.])
-
-     # Create a variable set to the upper case version of the project name
-     COIN_PRJCT=m4_toupper($1)
+    [AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION),"AC_PACKAGE_VERSION",[Version number of project])
+     AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MAJOR),
+       m4_ifnblank(AC_PACKAGE_VERSION_MAJOR,AC_PACKAGE_VERSION_MAJOR,9999),
+       [Major version number of project.])
+     AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MINOR),
+       m4_ifnblank(AC_PACKAGE_VERSION_MINOR,AC_PACKAGE_VERSION_MINOR,9999),
+       [Minor version number of project.])
+     AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_RELEASE),
+       m4_ifnblank(AC_PACKAGE_VERSION_RELEASE,AC_PACKAGE_VERSION_RELEASE,9999),
+       [Release version number of project.])
     ])
+
+  m4_define(AC_COIN_LIBTOOL_VERSIONINFO,$2)
 ])
 
 
@@ -354,24 +349,20 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
       ;;
   esac
 
-# Set up LT_LDFLAGS. Add the library version string to LT_LDFLAGS, if one
-# is supplied.
-
+  # Set up LT_LDFLAGS.
   AC_SUBST([LT_LDFLAGS])
-  AC_MSG_CHECKING([if the library version info is set])
-  if test x"$coin_versioninfo" != x ; then
-    LT_LDFLAGS="$LT_LDFLAGS -version-info $coin_versioninfo"
-    AC_MSG_RESULT([$coin_versioninfo])
-  else
-    AC_MSG_RESULT([no])
-    AC_MSG_CHECKING([if the library version number is set])
-    if test x"$coin_versionnumber" != x ; then
-      LT_LDFLAGS="$LT_LDFLAGS -version-number $coin_versionnumber"
-      AC_MSG_RESULT([$coin_versionnumber])
-    else
-      AC_MSG_RESULT([no])
-    fi
-  fi
+
+  # Use the libtool library info, if defined, otherwise use the project version info,
+  # if a full major.minor.release number was available
+  m4_ifnblank(AC_COIN_LIBTOOL_VERSIONINFO,
+    LT_LDFLAGS="$LT_LDFLAGS -version-info AC_COIN_LIBTOOL_VERSIONINFO"
+    AC_MSG_NOTICE(libtool version info: -version-info AC_COIN_LIBTOOL_VERSIONINFO),
+    m4_ifnblank(AC_PACKAGE_VERSION_MAJOR,
+     m4_ifnblank(AC_PACKAGE_VERSION_MINOR,
+      m4_ifnblank(AC_PACKAGE_VERSION_RELEASE,
+       LT_LDFLAGS="$LT_LDFLAGS -version-number AC_PACKAGE_VERSION_MAJOR:AC_PACKAGE_VERSION_MINOR:AC_PACKAGE_VERSION_RELEASE"
+       AC_MSG_NOTICE(libtool version info: -version-number AC_PACKAGE_VERSION_MAJOR:AC_PACKAGE_VERSION_MINOR:AC_PACKAGE_VERSION_RELEASE)
+    ))))
 
   # shared libraries should have no undefined symbols
   # for Windows DLLs, it is mandatory to add this
