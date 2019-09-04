@@ -93,27 +93,11 @@ AC_DEFUN([AC_COIN_ENABLE_MSVC],
 [
   AC_ARG_ENABLE([msvc],
     [AC_HELP_STRING([--enable-msvc],
-       [Look for and allow only Intel/Microsoft compilers on MinGW/MSys/Cygwin.])],
+       [look for and allow only Intel/Microsoft compilers on MinGW/MSys/Cygwin])],
     [enable_msvc=$enableval],
     [enable_msvc=no])
 ])
 
-
-###########################################################################
-#                          COIN_ENABLE_DEBUG                              # 
-###########################################################################
-
-# This macro is invoked by any PROG_compiler macro to establish the
-# --enable-debug option.
-
-AC_DEFUN([AC_COIN_ENABLE_DEBUG],
-[
-  AC_ARG_ENABLE([debug],
-    [AC_HELP_STRING([--enable-debug],
-       [Build with debugging symbols.])],
-    [enable_debug=$enableval],
-    [enable_debug=no])
-])
 
 ###########################################################################
 #                        COIN_COMPFLAGS_DEFAULTS                          #
@@ -121,10 +105,13 @@ AC_DEFUN([AC_COIN_ENABLE_DEBUG],
 
 AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
 [
-# We want --enable-msvc setup and checked. Also --enable-debug
-
+  # We want --enable-msvc setup and checked
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
-  AC_REQUIRE([AC_COIN_ENABLE_DEBUG])
+
+  AC_ARG_ENABLE([debug],
+    [AC_HELP_STRING([--enable-debug],[build debugging symbols and turn off compiler optimization])],
+    [enable_debug=$enableval],
+    [enable_debug=no])
 
 # This macro should run before the compiler checks (doesn't seem to be
 # sufficient for CFLAGS)
