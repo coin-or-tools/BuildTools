@@ -48,38 +48,46 @@ AC_DEFUN([AC_COIN_VPATH_LINK],
 # This macro is used by COIN_INITIALIZE and sets up variables related to
 # versioning numbers of the project.
 #   COIN_PROJECTVERSION([project],[libtool_version_string])
+#
+# If libtool_version_string is given, then sets coin_versioninfo, which will
+# be picked up by AC_COIN_PROG_LIBTOOL to set libtools -version-info flag.
+# If libtool_version_string is not given, but $PACKAGE_VERSION has the form
+# major.minor.release, then sets coin_versionnumber, which will be picked up
+# by AC_COIN_PROG_LIBTOOL to set libtools -version-number flag, if
+# coin_versioninfo is not set.
 
 AC_DEFUN([AC_COIN_PROJECTVERSION],
 [
-  m4_ifvaln([$1],
-    [AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION),
-       ["$PACKAGE_VERSION"],[Version number of project])
-
-# Parse package version, assuming major.minor.release. PACKAGE_VERSION is set
-# by AC_INIT. Force components to 9999 if they're empty; this deals with
-# things like `trunk' and other nonstandard forms.
-  
+  # Parse package version, assuming major.minor.release. PACKAGE_VERSION is set
+  # by AC_INIT. Force components to 9999 if they're empty; this deals with
+  # things like `trunk' and other nonstandard forms.
   [coin_majorver=`echo $PACKAGE_VERSION | sed -n -e 's/^\([0-9]*\).*/\1/gp'`]
   [coin_minorver=`echo $PACKAGE_VERSION | sed -n -e 's/^[0-9]*\.\([0-9]*\).*/\1/gp'`]
   [coin_releasever=`echo $PACKAGE_VERSION | sed -n -e 's/^[0-9]*\.[0-9]*\.\([0-9]*\).*/\1/gp'`]
+
+  # Capture the libtool library version, if available.
+  m4_ifvaln([$2],[coin_versioninfo=$2],
+    [if test -n "$coin_majorver" && test -n "$coin_minorver" && test -n "$coin_releasever" ; then
+       coin_versionnumber=$coin_majorver:$coin_minorver:$coin_releasever
+     fi
+    ])
+
+m4_ifvaln([$1],
+  [AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION),["$PACKAGE_VERSION"],[Version number of project])
+
   test -z "$coin_majorver"   && coin_majorver=9999
   test -z "$coin_minorver"   && coin_minorver=9999
   test -z "$coin_releasever" && coin_releasever=9999
-  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MAJOR),
-    [$coin_majorver],[Major version number of project.])
-  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MINOR),
-    [$coin_minorver],[Minor version number of project.])
-  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_RELEASE),
-    [$coin_releasever],[Release version number of project.])
+  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MAJOR),[$coin_majorver],[Major version number of project.])
+  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MINOR),[$coin_minorver],[Minor version number of project.])
+  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_RELEASE),[$coin_releasever],[Release version number of project.])
 
-# Create a variable set to the upper case version of the project name
-
+  # Create a variable set to the upper case version of the project name
   COIN_PRJCT=m4_toupper($1)
 
-# Set the project's SVN revision number. The complicated sed expression
-# (made worse by quadrigraphs) ensures that things like 4123:4168MS end up
-# as a single number.
-
+  # Set the project's SVN revision number. The complicated sed expression
+  # (made worse by quadrigraphs) ensures that things like 4123:4168MS end up
+  # as a single number.
   AC_CHECK_PROG([have_svnversion],[svnversion],[yes],[no])
   if test "x$have_svnversion" = xyes; then
     AC_SUBST(m4_toupper($1_SVN_REV))
@@ -90,11 +98,7 @@ AC_DEFUN([AC_COIN_PROJECTVERSION],
         $m4_toupper($1_SVN_REV),[SVN revision number of project])
     fi
   fi
- ])
- 
-# Capture the libtool library version, if given.
-
-  m4_ifvaln([$2],[coin_libversion=$2],[])
+])
 ])
 
 
@@ -184,6 +188,36 @@ AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
       : ${CXXFLAGS:="-O2 -DNDEBUG"}
     fi
   fi
+])
+
+###########################################################################
+#                            COIN_DEBUGLEVEL                              #
+###########################################################################
+
+# This macro makes the switches --with-prjct-verbosity and
+# --with-prjct-checklevel available, which define the preprocessor macros
+# COIN_PRJCT_VERBOSITY and COIN_PRJCT_CHECKLEVEL to the specified value
+# (default is 0).
+
+AC_DEFUN([AC_COIN_DEBUGLEVEL],
+[
+  AC_ARG_WITH(m4_tolower($1)-verbosity,
+    AC_HELP_STRING([--with-m4_tolower($1)-verbosity],[specify the debug verbosity level for project $1]),
+    [if test "$withval" = yes; then withval=1 ; fi
+     m4_tolower(coin_$1_verbosity)=$withval],
+    [m4_tolower(coin_$1_verbosity)=0])
+  AC_DEFINE_UNQUOTED(m4_toupper(COIN_$1_VERBOSITY),
+                     m4_tolower($coin_$1_verbosity),
+                     [Define to the debug verbosity level (0 is no output)])
+
+  AC_ARG_WITH(m4_tolower($1)-checklevel,
+    AC_HELP_STRING([--with-m4_tolower($1)-checklevel],[specify the sanity check level for project $1]),
+    [if test "$withval" = yes; then withval=1 ; fi
+     m4_tolower(coin_$1_checklevel)=$withval],
+    [m4_tolower(coin_$1_checklevel)=0])
+  AC_DEFINE_UNQUOTED(m4_toupper(COIN_$1_CHECKLEVEL),
+                     m4_tolower($coin_$1_checklevel),
+                     [Define to the debug sanity check level (0 is no test)])
 ])
 
 ###########################################################################
@@ -339,12 +373,19 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 # is supplied.
 
   AC_SUBST([LT_LDFLAGS])
-  AC_MSG_CHECKING([if the library version is set])
-  if test x"$coin_libversion" != x ; then
-    LT_LDFLAGS="$LT_LDFLAGS -version-info $coin_libversion"
-    AC_MSG_RESULT([$coin_libversion])
+  AC_MSG_CHECKING([if the library version info is set])
+  if test x"$coin_versioninfo" != x ; then
+    LT_LDFLAGS="$LT_LDFLAGS -version-info $coin_versioninfo"
+    AC_MSG_RESULT([$coin_versioninfo])
   else
     AC_MSG_RESULT([no])
+    AC_MSG_CHECKING([if the library version number is set])
+    if test x"$coin_versionnumber" != x ; then
+      LT_LDFLAGS="$LT_LDFLAGS -version-number $coin_versionnumber"
+      AC_MSG_RESULT([$coin_versionnumber])
+    else
+      AC_MSG_RESULT([no])
+    fi
   fi
 
   # shared libraries should have no undefined symbols
