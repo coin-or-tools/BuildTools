@@ -1,9 +1,8 @@
-# Copyright (C) 2013-2016
+# Copyright (C) 2013-2019 COIN-OR
 # All Rights Reserved.
 # This file is distributed under the Eclipse Public License.
 #
 # This file defines the common autoconf macros for COIN-OR
-#
 
 # Check requirements
 AC_PREREQ(2.69)
@@ -25,7 +24,8 @@ AC_DEFUN([AC_COIN_CHECK_VPATH],
     coin_vpath_config=no
   fi
   AC_MSG_RESULT($coin_vpath_config)
-]) # AC_COIN_CHECK_VPATH
+])
+
 
 ###########################################################################
 #                            COIN_VPATH_LINK                              #
@@ -40,6 +40,7 @@ AC_DEFUN([AC_COIN_VPATH_LINK],
 [
   m4_foreach_w(linkvar,[$1],[AC_CONFIG_LINKS(linkvar:linkvar)])
 ])
+
 
 ###########################################################################
 #                          COIN_PROJECTVERSION                            #
@@ -157,6 +158,7 @@ AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
   fi
 ])
 
+
 ###########################################################################
 #                            COIN_DEBUGLEVEL                              #
 ###########################################################################
@@ -186,6 +188,7 @@ AC_DEFUN([AC_COIN_DEBUGLEVEL],
                      m4_tolower($coin_$1_checklevel),
                      [Define to the debug sanity check level (0 is no test)])
 ])
+
 
 ###########################################################################
 #                            COIN_INITIALIZE                               #
@@ -275,29 +278,17 @@ AC_DEFUN([AC_COIN_INITIALIZE],
   exec_prefix=$save_exec_prefix
 ])
 
+
 ###########################################################################
 #                           COIN_PROG_LIBTOOL                             #
 ###########################################################################
 
-# Set up libtool parameters
+# Set up libtool parameters and create libtool
 # (https://www.gnu.org/software/libtool/manual/html_node/LT_005fINIT.html)
 # Pass no-win32-dll to omit passing win32-dll to LT_INIT
 
 AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 [
-# (lh, 180302) Sadly, we can't use the obvious libtool macros
-# (AC_{ENABLE,DISABLE}_{SHARED,STATIC}, nor parameters to LT_INIT,
-# precisely because these macros record the default behaviour by defining
-# a macro, _LT_ENABLE_{SHARED,STATIC}_DEFAULT. No shell code involved, hence
-# any shell conditional has no effect. Either we trust libtool or we need
-# something more inventive. The relevant libtool macros are in ltoptions.m4,
-# _LT_ENABLE_SHARED and _LT_ENABLE_STATIC.
-# That is, something like the following will not work:
-# case $host_os in
-#   cygwin* | mingw* | msys* ) AC_DISABLE_SHARED  ;;
-#   *) AC_DISABLE_STATIC ;;
-# esac
-
 # Create libtool.
 
   LT_INIT([disable-static pic-only m4_bmatch($1,no-win32-dll,,win32-dll)])
@@ -355,6 +346,7 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
   # for Windows DLLs, it is mandatory to add this
   LT_LDFLAGS="$LT_LDFLAGS -no-undefined"
 ])
+
 
 ###########################################################################
 #                    COIN_PROG_CC   COIN_PROG_CXX                         #
@@ -486,6 +478,7 @@ fi
 AC_LANG_POP(C++)
 ]) # AC_COIN_CXXLIBS
 
+
 ###########################################################################
 #                            COIN_RPATH_FLAGS                             #
 ###########################################################################
@@ -535,6 +528,7 @@ fi
 
 AC_SUBST(RPATH_FLAGS)
 ]) # AC_COIN_RPATH_FLAGS
+
 
 ###########################################################################
 #                   COIN_DEFINENAMEMANGLING                               #
@@ -587,6 +581,7 @@ AC_DEFUN([AC_COIN_DEFINENAMEMANGLING],
   esac
 ])
 
+
 ###########################################################################
 #                   COIN_NAMEMANGLING                                     #
 ###########################################################################
@@ -610,8 +605,6 @@ AC_DEFUN([AC_COIN_DEFINENAMEMANGLING],
 # The possibilities amount to
 # { lower / upper case } X (no) trailing underscore X (no) extra underscore
 # where the extra underscore is applied to name with an embedded underscore.
-
-
 # -------------------------------------------------------------------------
 
 AC_DEFUN([AC_COIN_NAMEMANGLING],
@@ -741,6 +734,7 @@ AC_DEFUN([AC_COIN_TRY_LINK],
   fi
 ])
 
+
 ###########################################################################
 #                           COIN_HAS_PKGCONFIG                            #
 ###########################################################################
@@ -841,6 +835,7 @@ AC_DEFUN([AC_COIN_CHK_MOD_EXISTS],
   fi
 ])
 
+
 ###########################################################################
 #                          COIN_CHK_HERE                                  #
 ###########################################################################
@@ -893,6 +888,7 @@ AC_DEFUN([AC_COIN_CHK_HERE],
       ])
 
 ])   # COIN_CHK_HERE
+
 
 ###########################################################################
 #                      COIN_DEF_PRIM_ARGS                                 #
@@ -1171,6 +1167,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
     fi
 
 ])  # COIN_FIND_PRIM_PKG
+
 
 ###########################################################################
 #                          COIN_CHK_PKG                                   #
@@ -1527,6 +1524,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 
 ])  # COIN_FIND_PRIM_LIB
 
+
 ###########################################################################
 #                          COIN_CHK_LIB                                   #
 ###########################################################################
@@ -1664,6 +1662,7 @@ AC_DEFUN([AC_COIN_CHK_LIBM],
   LIBS="$coin_save_LIBS"
 ]) # AC_COIN_CHK_LIBM
 
+
 ###########################################################################
 #                           COIN_CHK_ZLIB                               #
 ###########################################################################
@@ -1749,7 +1748,7 @@ AC_DEFUN([AC_COIN_CHK_BZLIB],
 
 
 ###########################################################################
-#                              COIN_CHK_GMP                             #
+#                              COIN_CHK_GMP                               #
 ###########################################################################
 
 # COIN_CHK_GMP([client1 client2 ...])
@@ -1990,6 +1989,7 @@ dnl So for now the checks below will only work for shared MKL libs on Linux/Darw
   fi
 ]) # AC_COIN_CHK_LAPACK
 
+
 ###########################################################################
 #                           COIN_DOXYGEN                                  #
 ###########################################################################
@@ -2128,6 +2128,7 @@ AC_SUBST(EXAMPLE_CLEAN_FILES)
 
 ]) # AC_COIN_EXAMPLE_FILES
 
+
 ###########################################################################
 #                           COIN_FINALIZE_FLAGS                           #
 ###########################################################################
@@ -2186,6 +2187,7 @@ AC_DEFUN([AC_COIN_FINALIZE_FLAGS],
     ])
 ])
 
+
 ###########################################################################
 #                              COIN_FINALIZE                              #
 ###########################################################################
@@ -2201,8 +2203,6 @@ AC_DEFUN([AC_COIN_FINALIZE],
 [
   AC_OUTPUT
 
-  AC_MSG_NOTICE([In case of trouble, first consult the troubleshooting page at https://projects.coin-or.org/BuildTools/wiki/user-troubleshooting])
+  #AC_MSG_NOTICE([In case of trouble, first consult the troubleshooting page at https://projects.coin-or.org/BuildTools/wiki/user-troubleshooting])
   AC_MSG_NOTICE([Configuration of $PACKAGE_NAME successful])
-
-]) #AC_COIN_FINALIZE
-
+])
