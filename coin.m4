@@ -313,10 +313,18 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 #    This leads to a nm call that collects ALL C-functions from a library
 #    and explicitly dll-exporting them, leading to warnings about duplicates
 #    regarding those that are properly marked for dll-export in the source.
+#
+# Patch libtool also to circumbent some issues when using MinGW (Msys+GCC).
+# 1. Relax check which libraries can be used when linking a DLL.
+#    libtool's func_mode_link() would reject linking MinGW system libraries,
+#    e.g., -lmingw32, when building a DLL, because it does not find this
+#    library in the installation path, and then falls back to build only
+#    static libraries. Setting deplibs_check_method=pass_all will avoid
+#    this faulty check.
 
   case "$AR" in
     *lib* | *LIB* )
-      AC_CONFIG_COMMANDS([libtoolpatch],
+      AC_CONFIG_COMMANDS([libtoolclpatch],
         [sed -e 's|AR_FLAGS |AR_FLAGS|g' \
              -e '/$AR x/s/.*/( cd $f_ex_an_ar_dir ; for f in `$AR -nologo -list "$f_ex_an_ar_oldlib" | tr "\\r" " "` ; do lib -nologo -extract:$f "$f_ex_an_ar_oldlib"; done ); : \\/g' \
              -e '/^deplibs_check_method/s/.*/deplibs_check_method="pass_all"/g' \
@@ -324,6 +332,16 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
          libtool > libtool.tmp
          mv libtool.tmp libtool
          chmod 755 libtool])
+      ;;
+    * )
+      case $build in
+        *-mingw* )
+          AC_CONFIG_COMMANDS([libtoolmingwpatch],
+            [sed -e '/^deplibs_check_method/s/.*/deplibs_check_method="pass_all"/g' libtool > libtool.tmp
+             mv libtool.tmp libtool
+             chmod 755 libtool])
+        ;;
+      esac
       ;;
   esac
 
