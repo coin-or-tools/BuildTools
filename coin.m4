@@ -132,7 +132,7 @@ AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
       : ${FFLAGS:="-nologo -Z7 -MDd"}
       : ${FCFLAGS:="-nologo -Z7 -MDd"}
       : ${CFLAGS:="-nologo -Z7 -MDd"}
-      : ${CXXFLAGS:="-nologo -EHsc -Z7 -MDd"}
+      : ${CXXFLAGS:="-nologo -EHs -Z7 -MDd"}
       : ${AR:="lib"}
       : ${AR_FLAGS:="-nologo -out:"}
     else
@@ -146,7 +146,7 @@ AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
       : ${FFLAGS:="-nologo -O2 -MD"}
       : ${FCFLAGS:="-nologo -O2 -MD"}
       : ${CFLAGS:="-nologo -DNDEBUG -O2 -MD"}
-      : ${CXXFLAGS:="-nologo -EHsc -DNDEBUG -O2 -MD"}
+      : ${CXXFLAGS:="-nologo -EHs -DNDEBUG -O2 -MD"}
       : ${AR:="lib"}
       : ${AR_FLAGS:="-nologo -out:"}
     else
