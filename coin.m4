@@ -381,22 +381,28 @@ AC_DEFUN_ONCE([AC_COIN_PROG_CC],
 [
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 
-# Setting up libtool with LT_INIT will AC_REQUIRE AC_PROG_CC, but we want
-# to invoke it from this macro first so that we can supply a parameter.
-
+  # Setting up libtool with LT_INIT will AC_REQUIRE AC_PROG_CC, but we want
+  # to invoke it from this macro first so that we can supply a parameter.
   AC_BEFORE([$0],[LT_INIT])
 
-# If enable-msvc, then test only for MS and Intel (on Windows) C compiler
-# otherwise, test a long list of C compilers that comes into our mind
-
+  # If enable-msvc, then test for Intel (on Windows) and MS C compiler
+  # explicitly and add compile-wrapper before AC_PROG_CC, because
+  # the compile-wrapper work around issues when having the wrong link.exe
+  # in the PATH first, which would upset tests in AC_PROG_CC.
+  # Further, if CC unset and not set by user, then stop with error.
   if test $enable_msvc = yes ; then
-    comps="icl cl"
-  else
-    # TODO old buildtools was doing some $build specific logic here, do we
-    # still need this?
-    comps="gcc clang cc icc icl cl cc xlc xlc_r pgcc"  
+    AC_CHECK_PROGS(CC, [icl cl])
+    if test -n "$CC" ; then
+      CC="$am_aux_dir/compile $CC"
+    else
+      AC_MSG_ERROR([Neither MS nor Intel C compiler found in PATH and CC is unset.])
+    fi
   fi
-  AC_PROG_CC([$comps])
+
+  # look for some C compiler and check whether it works
+  # if user has set CC or we found icl/cl above, this shouldn't overwrite CC
+  # other than CXX of F77, this macro also takes care of adding the compile-wrapper
+  AC_PROG_CC([gcc clang cc icc icl cl cc xlc xlc_r pgcc])
 ])
 
 # Note that automake redefines AC_PROG_CXX to invoke _AM_DEPENDENCIES
@@ -408,21 +414,25 @@ AC_DEFUN_ONCE([AC_COIN_PROG_CXX],
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
   AC_REQUIRE([AC_COIN_PROG_CC])
 
-# If enable-msvc, then test only for MS and Intel (on Windows) C++ compiler
-# otherwise, test a long list of C++ compilers that comes into our mind
-
+  # If enable-msvc, then test for Intel (on Windows) and MS C++ compiler
+  # explicitly and add compile-wrapper before AC_PROG_CXX, because
+  # the compile-wrapper work around issues when having the wrong link.exe
+  # in the PATH first, which would upset tests in AC_PROG_CXX.
+  # Further, if CXX unset and not set by user, then stop with error.
   if test $enable_msvc = yes ; then
-    comps="icl cl"
-  else
-    # TODO old buildtools was doing some $build specific logic here, do we
-    # still need this?
-    comps="g++ clang++ c++ pgCC icpc gpp cxx cc++ icl cl FCC KCC RCC xlC_r aCC CC"
+    AC_CHECK_PROGS(CXX, [icl cl])
+    if test -n "$CXX" ; then
+      CXX="$am_aux_dir/compile $CXX"
+    else
+      AC_MSG_ERROR([Neither MS nor Intel C++ compiler found in PATH and CXX is unset.])
+    fi
   fi
-  AC_PROG_CXX([$comps])
 
-# If the compiler does not support -c -o, then wrap the compile script around
-# it.
+  # look for some C++ compiler and check whether it works
+  # if user has set CXX or we found icl/cl above, this shouldn't overwrite CXX
+  AC_PROG_CXX([g++ clang++ c++ pgCC icpc gpp cxx cc++ icl cl FCC KCC RCC xlC_r aCC CC])
 
+  # If the compiler does not support -c -o, then wrap the compile script around it.
   AC_PROG_CXX_C_O
   if test $ac_cv_prog_cxx_c_o = no ; then
     CXX="$am_aux_dir/compile $CXX"

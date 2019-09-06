@@ -63,19 +63,25 @@ AC_DEFUN_ONCE([AC_COIN_PROG_F77],
     # make sure F77 is not set
     unset F77
   else
-    # if enable-msvc, then test only for Intel (on Windows) Fortran compiler
+    # If enable-msvc, then test for Intel Fortran compiler for Windows
+    # explicitly and add compile-wrapper before AC_PROG_F77, because
+    # the compile-wrapper work around issues when having the wrong link.exe
+    # in the PATH first, which could upset tests in AC_PROG_F77.
     if test $enable_msvc = yes ; then
-      comps="ifort"
-    else
-      # TODO old buildtools was doing some $build specific logic here, do we still
-      # need this?
-      comps="gfortran ifort g95 fort77 f77 f95 f90 g77 pgf90 pgf77 ifc frt af77 xlf_r fl32"
+      AC_CHECK_PROGS(F77, [ifort])
+      if test -n "$F77" ; then
+        F77="$am_aux_dir/compile $F77"
+      fi
     fi
-    AC_PROG_F77([$comps])
+
+    # if not msvc-enabled, then look for some Fortran compiler and check whether it works
+    # if F77 is set, then this only checks whether it works
+    if test $enable_msvc = no || test -n "$F77" ; then
+      AC_PROG_F77([gfortran ifort g95 fort77 f77 f95 f90 g77 pgf90 pgf77 ifc frt af77 xlf_r fl32])
+    fi
   fi
 
-# Allow for the possibility that there is no Fortran compiler on the system.
-
+  # Allow for the possibility that there is no Fortran compiler on the system.
   if test -z "$F77" ; then
     AC_MSG_NOTICE([No Fortran 77 compiler available.])
   fi
@@ -96,22 +102,28 @@ AC_DEFUN_ONCE([AC_COIN_PROG_FC],
 [
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 
+  # If enable-msvc, then test for Intel Fortran compiler for Windows
+  # explicitly and add compile-wrapper before AC_PROG_FC, because
+  # the compile-wrapper work around issues when having the wrong link.exe
+  # in the PATH first, which could upset tests in AC_PROG_FC.
   if test $enable_msvc = yes ; then
-    # if enable-msvc, then test only for Intel (on Windows) Fortran compiler
-    comps="ifort"
-  else
-    comps="gfortran ifort g95 f95 f90 pgf90 ifc frt xlf_r fl32"
+    AC_CHECK_PROGS(FC, [ifort])
+    if test -n "$FC" ; then
+      FC="$am_aux_dir/compile $FC"
+    fi
   fi
 
-  AC_PROG_FC([$comps])
+  # if not msvc-enabled, then look for some Fortran compiler and check whether it works
+  # if FC is set, then this only checks whether it works
+  if test $enable_msvc = no || test -n "$FC" ; then
+    AC_PROG_FC([gfortran ifort g95 f95 f90 pgf90 ifc frt xlf_r fl32])
+  fi
 
   # check whether compile script should be used to wrap around Fortran compiler
   if test -n "$FC" ; then
     AC_PROG_FC_C_O
     if test $ac_cv_prog_fc_c_o = no ; then
       FC="$am_aux_dir/compile $FC"
-    else
-      case "$FC" in *ifort ) FC="$am_aux_dir/compile $FC" ;; esac
     fi
   fi
 ])
