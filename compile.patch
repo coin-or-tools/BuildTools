@@ -15,11 +15,11 @@
    linker_opts=
 +  outfile=
 +  implib=
-+  linking=0
++  linking=1
    for arg
    do
      if test -n "$eat"; then
-@@ -147,11 +150,14 @@
+@@ -147,11 +150,13 @@
  	      func_file_conv "$2"
  	      set x "$@" -Fo"$file"
  	      shift
@@ -30,11 +30,10 @@
  	      set x "$@" -Fe"$file"
  	      shift
 +	      outfile="$file"
-+	      linking=1
  	      ;;
  	  esac
  	  ;;
-@@ -193,6 +199,7 @@
+@@ -193,6 +198,7 @@
  	  for flag in $arg; do
  	    IFS="$save_ifs"
  	    linker_opts="$linker_opts $flag"
@@ -42,7 +41,19 @@
  	  done
  	  IFS="$save_ifs"
  	  ;;
-@@ -225,8 +232,28 @@
+@@ -214,6 +220,11 @@
+ 	  set x "$@" "$file"
+ 	  shift
+ 	  ;;
++	-c)
++	  linking=0
++	  set x "$@" "$1"
++	  shift
++	  ;;
+ 	*)
+ 	  set x "$@" "$1"
+ 	  shift
+@@ -225,8 +236,28 @@
    if test -n "$linker_opts"; then
      linker_opts="-link$linker_opts"
    fi
@@ -73,7 +84,7 @@
  }
  
  eat=
-@@ -256,7 +283,8 @@
+@@ -256,7 +287,8 @@
      exit $?
      ;;
    cl | *[/\\]cl | cl.exe | *[/\\]cl.exe | \
