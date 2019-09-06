@@ -2169,9 +2169,6 @@ AC_SUBST(EXAMPLE_CLEAN_FILES)
 # are augmented to contain flags obtained by invoking PKG_CONFIG on packages
 # listed in PRIM_PCFILES and are appropriate for use in Makefile.am files.
 
-# TODO this could be moved into COIN_FINALIZE, if we were able to remember
-#   for which variables we need to run pkg-config
-
 AC_DEFUN([AC_COIN_FINALIZE_FLAGS],
 [
   m4_foreach_w([myvar],[$1],
