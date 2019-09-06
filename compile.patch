@@ -9,16 +9,17 @@
  	    file_conv=mingw
  	    ;;
  	  CYGWIN*)
-@@ -133,6 +133,8 @@
+@@ -133,6 +133,9 @@
    lib_path=
    shared=:
    linker_opts=
 +  outfile=
 +  implib=
++  linking=0
    for arg
    do
      if test -n "$eat"; then
-@@ -147,11 +149,13 @@
+@@ -147,11 +150,14 @@
  	      func_file_conv "$2"
  	      set x "$@" -Fo"$file"
  	      shift
@@ -29,10 +30,11 @@
  	      set x "$@" -Fe"$file"
  	      shift
 +	      outfile="$file"
++	      linking=1
  	      ;;
  	  esac
  	  ;;
-@@ -193,6 +197,7 @@
+@@ -193,6 +199,7 @@
  	  for flag in $arg; do
  	    IFS="$save_ifs"
  	    linker_opts="$linker_opts $flag"
@@ -40,7 +42,7 @@
  	  done
  	  IFS="$save_ifs"
  	  ;;
-@@ -225,8 +230,19 @@
+@@ -225,8 +232,28 @@
    if test -n "$linker_opts"; then
      linker_opts="-link$linker_opts"
    fi
@@ -48,6 +50,15 @@
 -  exit 1
 +  # remove old $implib, so we can distinguish between generated and not-generated implib below
 +  if test -n "$implib" && test -f "$implib" ; then rm "$implib" ; fi
++
++  # add path to MSVC link in front on PATH if we seem to link (check isn't so accurate, but some false-positives shouldn't matter)
++  # compiler will call the link it finds in the PATH, and we don't want it to use MSYS' /bin/link
++  # we assume that MSVC link is in same directory as cl and that cl is found in PATH
++  if test "$linking" = 1 && comppath=`which cl 2>/dev/null` ; then
++    comppath=`dirname "$comppath"`
++    #echo "Adding $comppath to front of PATH"
++    PATH="$comppath:$PATH"
++  fi
 +
 +  #echo "compile: $@ $linker_opts"
 +  "$@" $linker_opts || exit $?
@@ -62,7 +73,7 @@
  }
  
  eat=
-@@ -256,7 +272,8 @@
+@@ -256,7 +283,8 @@
      exit $?
      ;;
    cl | *[/\\]cl | cl.exe | *[/\\]cl.exe | \
