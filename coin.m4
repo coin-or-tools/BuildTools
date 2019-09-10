@@ -1428,16 +1428,14 @@ if test "$enable_maintainer_mode" = yes; then
   BUILDTOOLSDIR=
   if test -r $srcdir/BuildTools/coin.m4; then
     BUILDTOOLSDIR=$srcdir/BuildTools
+  elif test -r $srcdir/../BuildTools/coin.m4; then
+    BUILDTOOLSDIR=$srcdir/../BuildTools
+  elif test -r $srcdir/../../BuildTools/coin.m4; then
+    BUILDTOOLSDIR=$srcdir/../../BuildTools
+  elif test -r $srcdir/../../../BuildTools/coin.m4; then
+    BUILDTOOLSDIR=$srcdir/../../../BuildTools
   else
-    if test -r $srcdir/../BuildTools/coin.m4; then
-      BUILDTOOLSDIR=$srcdir/../BuildTools
-    else
-      if test -r $srcdir/../../BuildTools/coin.m4; then
-        BUILDTOOLSDIR=$srcdir/../../BuildTools
-      else
-        AC_MSG_ERROR(Cannot find the BuildTools directory, better disable maintainer mode.)
-      fi
-    fi
+    AC_MSG_ERROR(Cannot find the BuildTools directory, better disable maintainer mode.)
   fi
   AC_SUBST(BUILDTOOLSDIR)
   
@@ -2524,7 +2522,11 @@ AC_DEFUN([AC_COIN_DATA_PATH],
 AC_ARG_VAR(m4_toupper(COIN_DATA_$1_PATH),[Set to absolute path to Data/$1 subdirectory])
 
 if test x"$m4_toupper(COIN_DATA_$1_PATH)" = x; then
-  m4_toupper(COIN_DATA_$1_PATH)=`cd $srcdir/../Data/$1; pwd`
+  if test -d $srcdir/../Data/$1 ; then
+    m4_toupper(COIN_DATA_$1_PATH)=`cd $srcdir/../Data/$1; pwd`
+  else
+    m4_toupper(COIN_DATA_$1_PATH)=`cd $srcdir/../../Data/$1; pwd`
+  fi
 fi
 
 # Under Cygwin, use Windows path.  Add separator
@@ -3088,6 +3090,17 @@ if test x$coin_projectdir = xyes ; then
       fi
       if test -d ../../$i/pkgconfig ; then
         COIN_PKG_CONFIG_PATH_UNINSTALLED="`cd ../../$i/pkgconfig; pwd`:${COIN_PKG_CONFIG_PATH_UNINSTALLED}"
+      fi
+    done
+  fi
+
+  if test -f ../../../coin_subdirs.txt ; then
+    for i in `cat ../../../coin_subdirs.txt` ; do
+      if test -d ../../../$i ; then
+        COIN_PKG_CONFIG_PATH_UNINSTALLED="`cd ../../../$i; pwd`:${COIN_PKG_CONFIG_PATH_UNINSTALLED}"
+      fi
+      if test -d ../../../$i/pkgconfig ; then
+        COIN_PKG_CONFIG_PATH_UNINSTALLED="`cd ../../../$i/pkgconfig; pwd`:${COIN_PKG_CONFIG_PATH_UNINSTALLED}"
       fi
     done
   fi
