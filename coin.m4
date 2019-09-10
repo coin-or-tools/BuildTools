@@ -129,8 +129,8 @@ AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
 
   if test "$enable_debug" = yes ; then
     if test "$enable_msvc" = yes ; then
-      : ${FFLAGS:="-nologo -Z7 -MDd"}
-      : ${FCFLAGS:="-nologo -Z7 -MDd"}
+      : ${FFLAGS:="-nologo -fpp -Z7 -MDd"}
+      : ${FCFLAGS:="-nologo -fpp -Z7 -MDd"}
       : ${CFLAGS:="-nologo -Z7 -MDd"}
       : ${CXXFLAGS:="-nologo -EHs -Z7 -MDd"}
       : ${AR:="lib"}
@@ -143,8 +143,8 @@ AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
     fi
   else
     if test "$enable_msvc" = yes ; then
-      : ${FFLAGS:="-nologo -O2 -MD"}
-      : ${FCFLAGS:="-nologo -O2 -MD"}
+      : ${FFLAGS:="-nologo -fpp -O2 -MD"}
+      : ${FCFLAGS:="-nologo -fpp -O2 -MD"}
       : ${CFLAGS:="-nologo -DNDEBUG -O2 -MD"}
       : ${CXXFLAGS:="-nologo -EHs -DNDEBUG -O2 -MD"}
       : ${AR:="lib"}
