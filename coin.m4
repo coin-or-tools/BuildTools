@@ -94,6 +94,8 @@ AC_DEFUN([AC_COIN_PROJECTVERSION],
 
 AC_DEFUN([AC_COIN_ENABLE_MSVC],
 [
+  AC_CANONICAL_BUILD
+
   AC_ARG_ENABLE([msvc],
     [AC_HELP_STRING([--enable-msvc],
        [look for and allow only Intel/Microsoft compilers on MinGW/MSys/Cygwin])],
