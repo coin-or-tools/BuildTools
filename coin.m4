@@ -89,6 +89,8 @@ AC_DEFUN([AC_COIN_PROJECTVERSION],
 
 # This macro is invoked by any PROG_compiler macro to establish the
 # --enable-msvc option.
+# If unset and Windows, look for some known C compilers and set
+# enable_msvc if (i)cl is picked up (or has been set via CC by user)
 
 AC_DEFUN([AC_COIN_ENABLE_MSVC],
 [
@@ -96,7 +98,13 @@ AC_DEFUN([AC_COIN_ENABLE_MSVC],
     [AC_HELP_STRING([--enable-msvc],
        [look for and allow only Intel/Microsoft compilers on MinGW/MSys/Cygwin])],
     [enable_msvc=$enableval],
-    [enable_msvc=no])
+    [enable_msvc=no
+     case $build in
+       *-mingw* | *-cygwin* | *-msys* )
+         AC_CHECK_PROGS(CC, [gcc clang icl cl])
+         case "$CC" in *cl ) enable_msvc=yes ;; esac
+       ;;
+     esac])
 ])
 
 
