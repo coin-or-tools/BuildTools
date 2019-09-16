@@ -1460,7 +1460,7 @@ if test x$prefix = xNONE; then
 else
   full_prefix=$prefix
 fi
-full_prefix=`cd $full_prefix ; pwd`
+
 AC_SUBST(abs_lib_dir)
 abs_lib_dir=$full_prefix/lib
 AC_SUBST(abs_include_dir)
