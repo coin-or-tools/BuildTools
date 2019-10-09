@@ -1827,7 +1827,10 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
   AC_SUBST(ac_cxx_preproc_warn_flag)
 
   AC_MSG_NOTICE([Build is "$build".])
-  mydos2unix='| dos2unix'
+  AC_CHECK_PROG([dos2unix], [dos2unix], [dos2unix])
+  if test "$dos2unix" = dos2unix ; then
+    mydos2unix="| dos2unix"
+  fi
   case $build in
     *-mingw*)
       CYGPATH_W=echo
