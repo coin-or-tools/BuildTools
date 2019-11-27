@@ -5,6 +5,7 @@
 PREFIX=$HOME/local2
 
 acver=2.69
+aaver=2019.01.06
 amver=1.16.1
 ltver=2.4.6
 
@@ -15,11 +16,18 @@ set -e
 export PATH=$PREFIX/bin:$PATH
 
 # cleanup from previous (maybe failed) build
-rm -rf autoconf-$acver* automake-$amver* libtool-$ltver*
+rm -rf autoconf-$acver* autoconf-archive-$aaver* automake-$amver* libtool-$ltver*
 
 wget http://ftp.gnu.org/gnu/autoconf/autoconf-$acver.tar.gz
 tar xvzf autoconf-$acver.tar.gz
 cd autoconf-$acver
+./configure --prefix=$PREFIX
+make install
+cd ..
+
+wget http://ftp.gnu.org/gnu/autoconf-archive/autoconf-archive-$aaver.tar.xz
+tar xvJf autoconf-archive-$aaver.tar.xz
+cd autoconf-archive-$aaver
 ./configure --prefix=$PREFIX
 make install
 cd ..
@@ -38,4 +46,4 @@ cd libtool-$ltver
 make install
 cd ..
 
-rm -rf autoconf-$acver* automake-$amver* libtool-$ltver*
+rm -rf autoconf-$acver*  autoconf-archive-$aaver* automake-$amver* libtool-$ltver*

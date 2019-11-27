@@ -103,13 +103,12 @@ uninstall-doxygen-docs:
 	fi
 	rmdir $(DESTDIR)$(pkgdocdir) || true
 
-install-doc: $(DocFiles)
+install-doc:
 	$(mkdir_p) "$(DESTDIR)$(pkgdocdir)"
 	for file in $(DocFiles); do \
 	  if test -f "$$file"; then dir=; else dir="$(srcdir)/"; fi; \
 	  if test -f "$$dir$$file"; then \
-	    $(INSTALL_DATA) "$$dir$$file" \
-	        "$(DESTDIR)$(pkgdocdir)/$$file"; \
+	    $(INSTALL_DATA) "$$dir$$file" "$(DESTDIR)$(pkgdocdir)/$$file"; \
 	  fi; \
 	done
 

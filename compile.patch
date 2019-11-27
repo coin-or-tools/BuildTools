@@ -1,5 +1,5 @@
---- compile	2018-10-16 00:31:13.195718806 +0200
-+++ compile	2018-10-18 00:08:04.848529514 +0200
+--- compile
++++ compile
 @@ -50,7 +50,7 @@
        if test -z "$file_conv"; then
  	# lazily determine how to convert abs files
@@ -9,3 +9,88 @@
  	    file_conv=mingw
  	    ;;
  	  CYGWIN*)
+@@ -133,6 +133,9 @@
+   lib_path=
+   shared=:
+   linker_opts=
++  outfile=
++  implib=
++  linking=1
+   for arg
+   do
+     if test -n "$eat"; then
+@@ -147,11 +150,13 @@
+ 	      func_file_conv "$2"
+ 	      set x "$@" -Fo"$file"
+ 	      shift
++	      outfile="$file"
+ 	      ;;
+ 	    *)
+ 	      func_file_conv "$2"
+ 	      set x "$@" -Fe"$file"
+ 	      shift
++	      outfile="$file"
+ 	      ;;
+ 	  esac
+ 	  ;;
+@@ -193,6 +198,7 @@
+ 	  for flag in $arg; do
+ 	    IFS="$save_ifs"
+ 	    linker_opts="$linker_opts $flag"
++	    case "$flag" in -IMPLIB:*) implib=${flag#-IMPLIB:} ;; esac
+ 	  done
+ 	  IFS="$save_ifs"
+ 	  ;;
+@@ -214,6 +220,11 @@
+ 	  set x "$@" "$file"
+ 	  shift
+ 	  ;;
++	-c)
++	  linking=0
++	  set x "$@" "$1"
++	  shift
++	  ;;
+ 	*)
+ 	  set x "$@" "$1"
+ 	  shift
+@@ -225,8 +236,28 @@
+   if test -n "$linker_opts"; then
+     linker_opts="-link$linker_opts"
+   fi
+-  exec "$@" $linker_opts
+-  exit 1
++  # remove old $implib, so we can distinguish between generated and not-generated implib below
++  if test -n "$implib" && test -f "$implib" ; then rm "$implib" ; fi
++
++  # add path to MSVC link in front on PATH if we seem to link (check isn't so accurate, but some false-positives shouldn't matter)
++  # compiler will call the link it finds in the PATH, and we don't want it to use MSYS' /bin/link
++  # we assume that MSVC link is in same directory as cl and that cl is found in PATH
++  if test "$linking" = 1 && comppath=`which cl 2>/dev/null` ; then
++    comppath=`dirname "$comppath"`
++    #echo "Adding $comppath to front of PATH"
++    PATH="$comppath:$PATH"
++  fi
++
++  #echo "compile: $@ $linker_opts"
++  "$@" $linker_opts || exit $?
++
++  # if -implib got lost or ignored, then the lib should be named ${outfile/.dll/.lib} and we rename that file
++  if test -n "$implib" && test ! -f "$implib" ; then
++    echo "compile: mv ${outfile/.dll/.lib} $implib"
++    mv "${outfile/.dll/.lib}" "$implib"
++  fi
++
++  exit 0
+ }
+ 
+ eat=
+@@ -256,7 +287,8 @@
+     exit $?
+     ;;
+   cl | *[/\\]cl | cl.exe | *[/\\]cl.exe | \
+-  icl | *[/\\]icl | icl.exe | *[/\\]icl.exe )
++  icl | *[/\\]icl | icl.exe | *[/\\]icl.exe | \
++  ifort | *[/\\]ifort | ifort.exe | *[/\\]ifort.exe )
+     func_cl_wrapper "$@"      # Doesn't return...
+     ;;
+ esac

@@ -1,4 +1,7 @@
-
+# Copyright (C) 2017-2019 COIN-OR
+# All Rights Reserved.
+# This file is distributed under the Eclipse Public License.
+#
 ###########################################################################
 #                  Fortran Utility Macros                                 #
 ###########################################################################
@@ -16,10 +19,10 @@
 # the value of the variable F77 and invoke the appropriate follow-on macro, as
 #
 #   AC_COIN_PROG_F77
-#   if test "$F77" != "unavailable" ; then
+#   if test -n "$F77" ; then
 #     AC_COIN_F77_SETUP
 #   else
-#     AC_COIN_F77_WRAPPERS
+#     AC_COIN_F77_WRAPPERS(some-fortran-lib,some-function-in-that-lib)
 #   fi
 #
 # If all you want to do is link to Fortran libraries from C/C++ code
@@ -30,7 +33,7 @@
 # to abort if a working compiler can't be found, try
 #
 #   AC_COIN_PROG_F77
-#   if test "$F77" != "unavailable" ; then
+#   if test -n "$F77" ; then
 #     AC_COIN_F77_SETUP
 #   else
 #     AC_MSG_ERROR([cannot find a working Fortran compiler!])
@@ -40,9 +43,9 @@
 #                   COIN_PROG_F77                                         #
 ###########################################################################
 
-# COIN_PROG_F77 will find a Fortran compiler, or set F77 to unavailable. Alone,
-# this is not sufficient to actually build Fortran code. For that, use
-# COIN_F77_SETUP.
+# COIN_PROG_F77 will find a Fortran compiler, or ensures that F77 is unset.
+# Alone, this is not sufficient to actually build Fortran code.
+# For that, use COIN_F77_SETUP.
 
 # Unlike C/C++, automake doesn't mess with AC_PROG_F77.
 
@@ -51,23 +54,38 @@ AC_DEFUN_ONCE([AC_COIN_PROG_F77],
   # AC_MSG_NOTICE([In COIN_PROG_F77])
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 
-# If enable-msvc, then test only for Intel (on Windows) Fortran compiler
+  AC_ARG_ENABLE([f77],
+    [AC_HELP_STRING([--disable-f77],[disable checking for F77 compiler])],
+    [enable_f77=$enableval],
+    [enable_f77=yes])
 
-  if test $enable_msvc = yes ; then
-    comps="ifort"
+  if test "$enable_f77" = no ; then
+    # make sure F77 is not set
+    unset F77
   else
-    # TODO old buildtools was doing some $build specific logic here, do we still
-    # need this?
-    comps="gfortran ifort g95 fort77 f77 f95 f90 g77 pgf90 pgf77 ifc frt af77 xlf_r fl32"
-  fi
-  AC_PROG_F77([$comps])
+    # If enable-msvc, then test for Intel Fortran compiler for Windows
+    # explicitly and add compile-wrapper before AC_PROG_F77, because
+    # the compile-wrapper work around issues when having the wrong link.exe
+    # in the PATH first, which could upset tests in AC_PROG_F77.
+    if test $enable_msvc = yes ; then
+      AC_CHECK_PROGS(F77, [ifort])
+      if test -n "$F77" ; then
+        F77="$am_aux_dir/compile $F77"
+      fi
+    fi
 
-# Allow for the possibility that there is no Fortran compiler on the system.
-
-  if test "${F77:-unavailable}" = unavailable ; then
-    F77=unavailable
-    AC_MSG_NOTICE([No Fortran compiler available.])
+    # if not msvc-enabled, then look for some Fortran compiler and check whether it works
+    # if F77 is set, then this only checks whether it works
+    if test $enable_msvc = no || test -n "$F77" ; then
+      AC_PROG_F77([gfortran ifort g95 fort77 f77 f95 f90 g77 pgf90 pgf77 ifc frt af77 xlf_r fl32])
+    fi
   fi
+
+  # Allow for the possibility that there is no Fortran compiler on the system.
+  if test -z "$F77" ; then
+    AC_MSG_NOTICE([No Fortran 77 compiler available.])
+  fi
+  AM_CONDITIONAL([COIN_HAS_F77], test -n "$F77")
   # AC_MSG_NOTICE([Leaving COIN_PROG_F77])
 ])
 
@@ -76,12 +94,38 @@ AC_DEFUN_ONCE([AC_COIN_PROG_F77],
 #                   COIN_PROG_FC                                          #
 ###########################################################################
 
+# Set up the Fortran compiler, required to compile .f90 files.
+# We use the same compiler as F77, unless the user has set FC explicitly
+# or we didn't check for F77.
+
 AC_DEFUN_ONCE([AC_COIN_PROG_FC],
 [
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 
-  # TODO
-  AC_MSG_ERROR(["AC_COIN_PROG_FC not implemented yet"])
+  # If enable-msvc, then test for Intel Fortran compiler for Windows
+  # explicitly and add compile-wrapper before AC_PROG_FC, because
+  # the compile-wrapper work around issues when having the wrong link.exe
+  # in the PATH first, which could upset tests in AC_PROG_FC.
+  if test $enable_msvc = yes ; then
+    AC_CHECK_PROGS(FC, [ifort])
+    if test -n "$FC" ; then
+      FC="$am_aux_dir/compile $FC"
+    fi
+  fi
+
+  # if not msvc-enabled, then look for some Fortran compiler and check whether it works
+  # if FC is set, then this only checks whether it works
+  if test $enable_msvc = no || test -n "$FC" ; then
+    AC_PROG_FC([gfortran ifort g95 f95 f90 pgf90 ifc frt xlf_r fl32])
+  fi
+
+  # check whether compile script should be used to wrap around Fortran compiler
+  if test -n "$FC" ; then
+    AC_PROG_FC_C_O
+    if test $ac_cv_prog_fc_c_o = no ; then
+      FC="$am_aux_dir/compile $FC"
+    fi
+  fi
 ])
 
 
@@ -101,11 +145,14 @@ AC_DEFUN([AC_COIN_F77_SETUP],
 
 # F77_WRAPPERS will trigger the necessary F77 setup macros (F77_MAIN,
 # F77_LIBRARY_LDFLAGS, etc.)
-
   AC_F77_WRAPPERS
+
+  # check whether compile script should be used to wrap around Fortran 77 compiler
   AC_PROG_F77_C_O
   if test $ac_cv_prog_f77_c_o = no ; then
     F77="$am_aux_dir/compile $F77"
+  else
+    case "$F77" in *ifort ) F77="$am_aux_dir/compile $F77" ;; esac
   fi
   # AC_MSG_NOTICE([Leaving COIN_F77_SETUP])
 ])
@@ -177,7 +224,6 @@ AC_DEFUN([AC_COIN_F77_WRAPPERS],
      done
      if test "$ac_result" = "failure" ; then
        ac_cv_f77_mangling=unknown
-       AC_MSG_WARN([Unable to determine correct Fortran name mangling scheme])
      fi
      LIBS=$ac_save_LIBS])
 
@@ -188,6 +234,8 @@ AC_DEFUN([AC_COIN_F77_WRAPPERS],
     AC_LANG_PUSH([Fortran 77])
     _AC_FC_WRAPPERS
     AC_LANG_POP([Fortran 77])
+  else
+    AC_MSG_WARN([Unable to determine correct Fortran name mangling scheme])
   fi
   # AC_MSG_NOTICE([Done COIN_F77_WRAPPERS])
 ])
@@ -277,7 +325,7 @@ AC_DEFUN([AC_COIN_TRY_FLINK],
     $3
   fi
   # AC_MSG_NOTICE([Done COIN_TRY_FLINK])
-]) # AC_COIN_TRY_FLINK
+])
 
 
 ###########################################################################
@@ -305,253 +353,3 @@ AC_DEFUN([AC_COIN_CHK_PKG_FLINK],
      AC_MSG_RESULT([no])])
   LIBS="$coin_save_LIBS"
 ])
-
-###########################################################################
-#                         COIN_CHK_BLAS                                   #
-###########################################################################
-
-# COIN_CHK_BLAS([client packages],[nolinkcheck])
-
-# This macro checks for a BLAS library and adds the information necessary to
-# use it to the _LFLAGS, _CFLAGS, and _PCFILES variables of the client packages
-# passed as a space-separated list in parameter $1. These correspond to
-# Libs.private, Cflags.private, and Requires.private, respectively, in a .pc
-# file.
-
-# The algorithm first invokes FIND_PRIM_PKG. The parameters --with-blas,
-# --with-blas-lflags, and --with-blas-cflags are interpreted there. If nothing
-# is found, default locations are checked.
-
-# When checking default locations, the macro uses a link check because it's
-# really the only way to decide if a guess is correct. But a link check is
-# always a good idea just in case FLIBS (Fortran intrinsic & runtime libraries)
-# is also necessary. You can suppress the link check for a library spec given
-# on the command line or obtained via a .pc file by adding `nolinkcheck' as $2.
-
-AC_DEFUN([AC_COIN_CHK_BLAS],
-[
-  AC_REQUIRE([AC_COIN_PROG_F77])
-
-  AC_MSG_CHECKING([for package BLAS])
-
-# Make sure the necessary variables exist for each client package.
-
-  m4_foreach_w([myvar],[$1],
-    [AC_SUBST(m4_toupper(myvar)_LFLAGS)
-     AC_SUBST(m4_toupper(myvar)_CFLAGS)
-     AC_SUBST(m4_toupper(myvar)_PCFILES)
-    ])
-
-# Set up command line arguments with DEF_PRIM_ARGS and give FIND_PRIM_PKG
-# a chance, just in case blas.pc exists. The result (coin_has_blas) will
-# be one of yes (either the user specified something or pkgconfig found
-# something), no (user specified nothing and pkgconfig found nothing) or
-# skipping (user said do not use). We'll also have variables blas_lflags,
-# blas_cflags, blas_data, and blas_pcfiles.
-
-  AC_COIN_DEF_PRIM_ARGS([blas],yes,yes,yes,no)
-  AC_COIN_FIND_PRIM_PKG([blas])
-
-# If FIND_PRIM_PKG found something and the user wants a link check, do it. For
-# a successful link check, update blas_libs just in case FLIBS was added.
-
-  if test "$coin_has_blas" = yes ; then
-    m4_if([$2],[nolinkcheck],[:],
-      [use_blas=
-       AC_COIN_CHK_PKG_FLINK([use_blas],[daxpy],[$blas_lflags])
-       if test -n "$use_blas" ; then
-         blas_lflags=$use_blas
-       else
-         AC_MSG_WARN([BLAS failed to link with "$blas_lflags"])
-       fi])
-
-# If FIND_PRIM_PKG didn't find anything, try a few guesses.  Try some
-# specialised checks based on the host system type first.  If none of them
-# are applicable, or the applicable one fails, try the generic -lblas.
-
-  elif test "$coin_has_blas" = no ; then
-    AC_MSG_RESULT([nothing yet])
-    case $build in
-      *-sgi-*) 
-        AC_MSG_CHECKING([for BLAS in -lcomplib.sgimath])
-        AC_COIN_CHK_PKG_FLINK([blas_lflags],[daxpy],[-lcomplib.sgimath])
-        ;;
-
-      *-*-solaris*)
-        # Ideally, we'd use -library=sunperf, but it's an imperfect world.
-        # Studio cc doesn't recognise -library, it wants -xlic_lib. Studio 12
-        # CC doesn't recognise -xlic_lib. Libtool doesn't like -xlic_lib
-        # anyway. Sun claims that CC and cc will understand -library in Studio
-        # 13. The main extra function of -xlic_lib and -library is to arrange
-        # for the Fortran run-time libraries to be linked for C++ and C. We
-        # can arrange that explicitly.
-        AC_MSG_CHECKING([for BLAS in -lsunperf])
-        AC_COIN_CHK_PKG_FLINK([blas_lflags],[daxpy],[-lsunperf])
-        ;;
-        
-      *-cygwin* | *-mingw*)
-        case "$CC" in
-          clang* ) ;;
-          cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
-            AC_MSG_CHECKING([for BLAS in MKL (32bit)])
-            AC_COIN_CHK_PKG_FLINK([blas_lflags],[daxpy],
-              [mkl_intel_c.lib mkl_sequential.lib mkl_core.lib])
-            if test -z "$blas_lflags" ; then
-              AC_MSG_CHECKING([for BLAS in MKL (64bit)])
-              AC_COIN_CHK_PKG_FLINK([blas_lflags],[daxpy],
-                [mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib])
-            fi
-            ;;
-        esac
-        ;;
-        
-       *-darwin*)
-        AC_MSG_CHECKING([for BLAS in Veclib])
-        AC_COIN_CHK_PKG_FLINK([blas_lflags],[daxpy],[-framework Accelerate])
-        ;;
-    esac
-    if test -z "$blas_lflags" ; then
-      AC_MSG_CHECKING([for BLAS in -lblas])
-      AC_COIN_CHK_PKG_FLINK([blas_lflags],[daxpy],[-lblas])
-    fi
-    if test -n "$blas_lflags" ; then
-      coin_has_blas=yes
-    fi
-  fi
-
-# Done. Time to set some variables. Create an automake conditional
-# COIN_HAS_BLAS.
-
-  AM_CONDITIONAL(m4_toupper(COIN_HAS_BLAS),[test $coin_has_blas = yes])
-
-# If we've located the package, define preprocessor symbol COIN_HAS_BLAS
-# and augment the necessary variables for the client packages.
-
-  if test $coin_has_blas = yes ; then
-    AC_DEFINE(m4_toupper(COIN_HAS_BLAS),[1],
-      [Define to 1 if BLAS is available.])
-    m4_foreach_w([myvar],[$1],
-      [m4_toupper(myvar)_PCFILES="$blas_pcfiles $m4_toupper(myvar)_PCFILES"
-       m4_toupper(myvar)_LFLAGS="$blas_lflags $m4_toupper(myvar)_LFLAGS"
-       m4_toupper(myvar)_CFLAGS="$blas_cflags $m4_toupper(myvar)_CFLAGS"
-      ])
-  else
-    AC_MSG_RESULT([$coin_has_blas])
-  fi
-
-]) # AC_COIN_CHK_BLAS
-
-
-###########################################################################
-#                       COIN_CHK_LAPACK                                   #
-###########################################################################
-
-# COIN_CHK_LAPACK([client packages],[nolinkcheck])
-
-# This macro checks for a LAPACK library and adds the information necessary to
-# use it to the _LFLAGS, _CFLAGS, and _PCFILES variables of the client packages
-# passed as a space-separated list in parameter $1. These correspond to
-# Libs.private, Cflags.private, and Requires.private, respectively, in a .pc
-# file.
-
-# The algorithm first invokes FIND_PRIM_PKG. The parameters --with-lapack,
-# --with-lapack-lflags, and --with-lapack-cflags are interpreted there. If
-# nothing is found, default locations are checked.
-
-# When checking default locations, the macro uses a link check because it's
-# really the only way to decide if a guess is correct. But a link check is
-# always a good idea just in case FLIBS (Fortran intrinsic & runtime libraries)
-# is also necessary. You can suppress the link check for a library spec given
-# on the command line or obtained via a .pc file by adding `nolinkcheck' as $2.
-
-AC_DEFUN([AC_COIN_CHK_LAPACK_OLD],
-[
-  AC_REQUIRE([AC_COIN_PROG_F77])
-
-  AC_MSG_CHECKING([for package LAPACK])
-
-# Make sure the necessary variables exist for each client package.
-
-  m4_foreach_w([myvar],[$1],
-    [AC_SUBST(m4_toupper(myvar)_LIBS)
-     AC_SUBST(m4_toupper(myvar)_CFLAGS)
-     AC_SUBST(m4_toupper(myvar)_PCFILES)
-    ])
-
-# Set up command line arguments with DEF_PRIM_ARGS and give FIND_PRIM_PKG
-# a chance, just in case lapack.pc exists. The result (coin_has_lapack)
-# will be one of yes (either the user specified something or pkgconfig
-# found something), no (user specified nothing and pkgconfig found nothing)
-# or skipping (user said do not use). We'll also have variables lapack_lflags,
-# lapack_cflags, lapack_data, and lapack_pcfiles.
-
-  AC_COIN_DEF_PRIM_ARGS([lapack],yes,yes,yes,no)
-  AC_COIN_FIND_PRIM_PKG([lapack])
-
-# If FIND_PRIM_PKG found something and the user wants a link check, do it. For
-# a successful link check, update lapack_lflags just in case FLIBS was added.
-
-  if test "$coin_has_lapack" = yes ; then
-    m4_if([$2],[nolinkcheck],[:],
-      [use_lapack=
-       AC_COIN_CHK_PKG_FLINK([use_lapack],[daxpy],[$lapack_lflags])
-       if test -n "$use_lapack" ; then
-         lapack_lflags=$use_lapack
-       else
-         AC_MSG_WARN([LAPACK failed to link with "$lapack_lflags"])
-       fi])
-
-# If FIND_PRIM_PKG didn't find anything, try a few guesses. First, try some
-# specialised checks based on the host system type. If none of them are
-# applicable, or the applicable one fails, try the generic -llapack.
-
-  elif test "$coin_has_lapack" = no ; then
-    AC_MSG_RESULT([nothing yet])
-    case $build in
-      *-sgi-*) 
-        AC_MSG_CHECKING([for LAPACK in -lcomplib.sgimath])
-        AC_COIN_CHK_PKG_FLINK([lapack_lflags],[dsyev],[-lcomplib.sgimath])
-        ;;
-
-      *-*-solaris*)
-        # See comments in COIN_CHK_PKG_BLAS.
-        AC_MSG_CHECKING([for LAPACK in -lsunperf])
-        AC_COIN_CHK_PKG_FLINK([lapack_lflags],[dsyev],[-lsunperf])
-        ;;
-
-        # On cygwin, do this check only if doscompile is disabled. The
-        # prebuilt library will want to link with cygwin, hence won't run
-        # standalone in DOS.
-
-    esac
-    if test -z "$lapack_lflags" ; then
-      AC_MSG_CHECKING([for LAPACK in -llapack])
-      AC_COIN_CHK_PKG_FLINK([lapack_lflags],[dsyev],[-llapack])
-    fi
-    if test -n "$lapack_lflags" ; then
-      coin_has_lapack=yes
-    fi
-  fi
-
-# Done. Time to set some variables. Create an automake conditional
-# COIN_HAS_LAPACK.
-
-  AM_CONDITIONAL(m4_toupper(COIN_HAS_LAPACK),[test $coin_has_lapack = yes])
-
-# If we've located the package, define preprocessor symbol COIN_HAS_LAPACK
-# and augment the necessary variables for the client packages.
-
-  if test $coin_has_lapack = yes ; then
-    AC_DEFINE(m4_toupper(COIN_HAS_LAPACK),[1],
-      [Define to 1 if the LAPACK package is available])
-    m4_foreach_w([myvar],[$1],
-      [m4_toupper(myvar)_PCFILES="$lapack_pcfiles $m4_toupper(myvar)_PCFILES"
-       m4_toupper(myvar)_LFLAGS="$lapack_lflags $m4_toupper(myvar)_LFLAGS"
-       m4_toupper(myvar)_CFLAGS="$lapack_cflags $m4_toupper(myvar)_CFLAGS"
-      ])
-  else
-    AC_MSG_RESULT([$coin_has_lapack])
-  fi
-
-]) # AC_COIN_CHK_LAPACK
-

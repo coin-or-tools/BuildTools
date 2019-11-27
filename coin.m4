@@ -1,9 +1,8 @@
-# Copyright (C) 2013-2016
+# Copyright (C) 2013-2019 COIN-OR
 # All Rights Reserved.
 # This file is distributed under the Eclipse Public License.
 #
 # This file defines the common autoconf macros for COIN-OR
-#
 
 # Check requirements
 AC_PREREQ(2.69)
@@ -25,7 +24,8 @@ AC_DEFUN([AC_COIN_CHECK_VPATH],
     coin_vpath_config=no
   fi
   AC_MSG_RESULT($coin_vpath_config)
-]) # AC_COIN_CHECK_VPATH
+])
+
 
 ###########################################################################
 #                            COIN_VPATH_LINK                              #
@@ -41,6 +41,7 @@ AC_DEFUN([AC_COIN_VPATH_LINK],
   m4_foreach_w(linkvar,[$1],[AC_CONFIG_LINKS(linkvar:linkvar)])
 ])
 
+
 ###########################################################################
 #                          COIN_PROJECTVERSION                            #
 ###########################################################################
@@ -48,53 +49,37 @@ AC_DEFUN([AC_COIN_VPATH_LINK],
 # This macro is used by COIN_INITIALIZE and sets up variables related to
 # versioning numbers of the project.
 #   COIN_PROJECTVERSION([project],[libtool_version_string])
+#
+# If libtool_version_string is given, then defines AC_COIN_LIBTOOL_VERSIONINFO,
+# which will be picked up by AC_COIN_PROG_LIBTOOL to set libtools -version-info flag.
+#
+# Further, breaks up AC_PACKAGE_VERSION into AC_PACKAGE_VERSION_MAJOR,
+# AC_PACKAGE_VERSION_MINOR, AC_PACKAGE_VERSION_RELEASE, assuming it has
+# the form major.minor.release.
 
 AC_DEFUN([AC_COIN_PROJECTVERSION],
 [
+  # break up package version number in major.minor.release
+  # AC_PACKAGE_VERSION is defined by AC_INIT
+  m4_define(AC_PACKAGE_VERSION_MAJOR, m4_bregexp(AC_PACKAGE_VERSION, [^\([0-9]*\).*], [\1]))
+  m4_define(AC_PACKAGE_VERSION_MINOR, m4_bregexp(AC_PACKAGE_VERSION, [^[0-9]*\.\([0-9]*\).*], [\1]))
+  m4_define(AC_PACKAGE_VERSION_RELEASE, m4_bregexp(AC_PACKAGE_VERSION, [^[0-9]*\.[0-9]*\.\([0-9]*\).*], [\1]))
+
+  # ac-define AC_PACKAGE_VERSION macros, use 9999 for missing values
   m4_ifvaln([$1],
-    [AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION),
-       ["$PACKAGE_VERSION"],[Version number of project])
+    [AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION),"AC_PACKAGE_VERSION",[Version number of project])
+     AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MAJOR),
+       m4_ifnblank(AC_PACKAGE_VERSION_MAJOR,AC_PACKAGE_VERSION_MAJOR,9999),
+       [Major version number of project.])
+     AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MINOR),
+       m4_ifnblank(AC_PACKAGE_VERSION_MINOR,AC_PACKAGE_VERSION_MINOR,9999),
+       [Minor version number of project.])
+     AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_RELEASE),
+       m4_ifnblank(AC_PACKAGE_VERSION_RELEASE,AC_PACKAGE_VERSION_RELEASE,9999),
+       [Release version number of project.])
+    ])
 
-# Parse package version, assuming major.minor.release. PACKAGE_VERSION is set
-# by AC_INIT. Force components to 9999 if they're empty; this deals with
-# things like `trunk' and other nonstandard forms.
-  
-  [coin_majorver=`echo $PACKAGE_VERSION | sed -n -e 's/^\([0-9]*\).*/\1/gp'`]
-  [coin_minorver=`echo $PACKAGE_VERSION | sed -n -e 's/^[0-9]*\.\([0-9]*\).*/\1/gp'`]
-  [coin_releasever=`echo $PACKAGE_VERSION | sed -n -e 's/^[0-9]*\.[0-9]*\.\([0-9]*\).*/\1/gp'`]
-  test -z "$coin_majorver"   && coin_majorver=9999
-  test -z "$coin_minorver"   && coin_minorver=9999
-  test -z "$coin_releasever" && coin_releasever=9999
-  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MAJOR),
-    [$coin_majorver],[Major version number of project.])
-  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MINOR),
-    [$coin_minorver],[Minor version number of project.])
-  AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_RELEASE),
-    [$coin_releasever],[Release version number of project.])
-
-# Create a variable set to the upper case version of the project name
-
-  COIN_PRJCT=m4_toupper($1)
-
-# Set the project's SVN revision number. The complicated sed expression
-# (made worse by quadrigraphs) ensures that things like 4123:4168MS end up
-# as a single number.
-
-  AC_CHECK_PROG([have_svnversion],[svnversion],[yes],[no])
-  if test "x$have_svnversion" = xyes; then
-    AC_SUBST(m4_toupper($1_SVN_REV))
-    svn_rev_tmp=`LANG=en_EN svnversion $srcdir 2>/dev/null`
-    if test "x$svn_rev_tmp" != xexported -a "x$svn_rev_tmp" != x -a "x$svn_rev_tmp" != "xUnversioned directory"; then
-      m4_toupper($1_SVN_REV)=`echo $svn_rev_tmp | sed -n -e 's/^@<:@0-9@:>@*://' -e 's/\(@<:@0-9@:>@\)@<:@^0-9@:>@*$/\1/p'`
-      AC_DEFINE_UNQUOTED(m4_toupper($1_SVN_REV),
-        $m4_toupper($1_SVN_REV),[SVN revision number of project])
-    fi
-  fi
- ])
- 
-# Capture the libtool library version, if given.
-
-  m4_ifvaln([$2],[coin_libversion=$2],[])
+  m4_define(AC_COIN_LIBTOOL_VERSIONINFO,$2)
 ])
 
 
@@ -104,32 +89,26 @@ AC_DEFUN([AC_COIN_PROJECTVERSION],
 
 # This macro is invoked by any PROG_compiler macro to establish the
 # --enable-msvc option.
+# If unset and Windows, look for some known C compilers and set
+# enable_msvc if (i)cl is picked up (or has been set via CC by user)
 
 AC_DEFUN([AC_COIN_ENABLE_MSVC],
 [
+  AC_CANONICAL_BUILD
+
   AC_ARG_ENABLE([msvc],
     [AC_HELP_STRING([--enable-msvc],
-       [Allow only Intel/Microsoft compilers on MinGW/MSys/Cygwin.])],
+       [look for and allow only Intel/Microsoft compilers on MinGW/MSys/Cygwin])],
     [enable_msvc=$enableval],
-    [enable_msvc=no])
+    [enable_msvc=no
+     case $build in
+       *-mingw* | *-cygwin* | *-msys* )
+         AC_CHECK_PROGS(CC, [gcc clang icl cl])
+         case "$CC" in *cl ) enable_msvc=yes ;; esac
+       ;;
+     esac])
 ])
 
-
-###########################################################################
-#                          COIN_ENABLE_DEBUG                              # 
-###########################################################################
-
-# This macro is invoked by any PROG_compiler macro to establish the
-# --enable-debug option.
-
-AC_DEFUN([AC_COIN_ENABLE_DEBUG],
-[
-  AC_ARG_ENABLE([debug],
-    [AC_HELP_STRING([--enable-debug],
-       [Build with debugging symbols.])],
-    [enable_debug=$enableval],
-    [enable_debug=no])
-])
 
 ###########################################################################
 #                        COIN_COMPFLAGS_DEFAULTS                          #
@@ -137,10 +116,15 @@ AC_DEFUN([AC_COIN_ENABLE_DEBUG],
 
 AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
 [
-# We want --enable-msvc setup and checked. Also --enable-debug
+# We want --enable-msvc setup and checked.
 
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
-  AC_REQUIRE([AC_COIN_ENABLE_DEBUG])
+
+  AC_ARG_ENABLE([debug],
+    [AC_HELP_STRING([--enable-debug],
+       [build debugging symbols and turn off compiler optimization])],
+    [enable_debug=$enableval],
+    [enable_debug=no])
 
 # This macro should run before the compiler checks (doesn't seem to be
 # sufficient for CFLAGS)
@@ -150,29 +134,74 @@ AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
   AC_BEFORE([$0],[AC_PROG_F77])
   AC_BEFORE([$0],[AC_PROG_FC])
 
-# change default compiler flags (TODO bring back --enable-debug)
-# - disable debugging (remove -g, set -DNDEBUG)
+# change default compiler flags
+# - debugging enabled: enable debug symbols (-g/-Z7)
+# - debugging disabled: disable debug code (-DNDEBUG); enable (more)
+#   optimization (-O2)
 # - enable exceptions for (i)cl
 
-  if test "$enable_msvc" = yes ; then
-    : ${FFLAGS:=""}
-    : ${FCFLAGS:=""}
-    : ${CFLAGS:="-DNDEBUG -nologo"}
-    : ${CXXFLAGS:="-DNDEBUG -EHsc -nologo"}
-    : ${AR:="lib"}
-    : ${AR_FLAGS:="-nologo -out:"}
-  else
-    : ${FFLAGS:=""}
-    : ${FCFLAGS:=""}
-    if test "$enable_debug" = yes ; then
+  if test "$enable_debug" = yes ; then
+    if test "$enable_msvc" = yes ; then
+      : ${FFLAGS:="-nologo -fpp -Z7 -MDd"}
+      : ${FCFLAGS:="-nologo -fpp -Z7 -MDd"}
+      : ${CFLAGS:="-nologo -Z7 -MDd"}
+      : ${CXXFLAGS:="-nologo -EHs -Z7 -MDd"}
+      : ${AR:="lib"}
+      : ${AR_FLAGS:="-nologo -out:"}
+    else
+      : ${FFLAGS:="-g"}
+      : ${FCFLAGS:="-g"}
       : ${CFLAGS:="-g"}
       : ${CXXFLAGS:="-g"}
+    fi
+  else
+    if test "$enable_msvc" = yes ; then
+      : ${FFLAGS:="-nologo -fpp -O2 -MD"}
+      : ${FCFLAGS:="-nologo -fpp -O2 -MD"}
+      : ${CFLAGS:="-nologo -DNDEBUG -O2 -MD"}
+      : ${CXXFLAGS:="-nologo -EHs -DNDEBUG -O2 -MD"}
+      : ${AR:="lib"}
+      : ${AR_FLAGS:="-nologo -out:"}
     else
-      : ${CFLAGS:="-DNDEBUG"}
-      : ${CXXFLAGS:="-DNDEBUG"}
+      : ${FFLAGS:="-O2"}
+      : ${FCFLAGS:="-O2"}
+      : ${CFLAGS:="-O2 -DNDEBUG"}
+      : ${CXXFLAGS:="-O2 -DNDEBUG"}
     fi
   fi
 ])
+
+
+###########################################################################
+#                            COIN_DEBUGLEVEL                              #
+###########################################################################
+
+# This macro makes the switches --with-prjct-verbosity and
+# --with-prjct-checklevel available, which define the preprocessor macros
+# COIN_PRJCT_VERBOSITY and COIN_PRJCT_CHECKLEVEL to the specified value
+# (default is 0).
+
+AC_DEFUN([AC_COIN_DEBUGLEVEL],
+[
+  AC_ARG_WITH(m4_tolower($1)-verbosity,
+    AC_HELP_STRING([--with-m4_tolower($1)-verbosity],[specify the debug verbosity level for project $1]),
+    [if test "$withval" = yes; then withval=1 ; fi
+     m4_tolower(coin_$1_verbosity)=$withval],
+    [m4_tolower(coin_$1_verbosity)=0])
+  AC_DEFINE_UNQUOTED(m4_toupper(COIN_$1_VERBOSITY),
+                     m4_tolower($coin_$1_verbosity),
+                     [Define to the debug verbosity level (0 is no output)])
+
+  AC_ARG_WITH(m4_tolower($1)-checklevel,
+    AC_HELP_STRING([--with-m4_tolower($1)-checklevel],[specify the sanity check level for project $1]),
+    [if test "$withval" = yes; then withval=1 ; fi
+     m4_tolower(coin_$1_checklevel)=$withval],
+    [m4_tolower(coin_$1_checklevel)=0])
+  AC_DEFINE_UNQUOTED(m4_toupper(COIN_$1_CHECKLEVEL),
+                     m4_tolower($coin_$1_checklevel),
+                     [Define to the debug sanity check level (0 is no test)])
+])
+
 
 ###########################################################################
 #                            COIN_INITIALIZE                               #
@@ -239,63 +268,116 @@ AC_DEFUN([AC_COIN_INITIALIZE],
 # Disable automatic rebuild of configure/Makefile. Use run_autotools.
 
   AM_MAINTAINER_MODE
+
+# Figure out the path where libraries are installed.
+# Unless the user specifies --prefix, prefix is set to NONE until the
+# end of configuration, at which point it will be set to $ac_default_prefix.
+# Unless the user specifies --exec-prefix, exec-prefix is set to NONE until
+# the end of configuration, at which point it's set to '${prefix}'.
+# Sheesh.  So do the expansion, then back it out.
+  save_prefix=$prefix
+  save_exec_prefix=$exec_prefix
+  if test "x$prefix" = xNONE ; then
+    prefix=$ac_default_prefix
+  fi
+  if test "x$exec_prefix" = xNONE ; then
+    exec_prefix=$prefix
+  fi
+  expanded_libdir=$libdir
+  while expr "$expanded_libdir" : '.*$.*' >/dev/null 2>&1 ; do
+    eval expanded_libdir=$expanded_libdir
+  done
+  prefix=$save_prefix
+  exec_prefix=$save_exec_prefix
 ])
+
 
 ###########################################################################
 #                           COIN_PROG_LIBTOOL                             #
 ###########################################################################
 
-# Set up libtool parameters
+# Set up libtool parameters and create libtool
 # (https://www.gnu.org/software/libtool/manual/html_node/LT_005fINIT.html)
+# Pass no-win32-dll to omit passing win32-dll to LT_INIT
 
 AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 [
-# (lh, 180302) Sadly, we can't use the obvious libtool macros
-# (AC_{ENABLE,DISABLE}_{SHARED,STATIC}, nor parameters to LT_INIT,
-# precisely because these macros record the default behaviour by defining
-# a macro, _LT_ENABLE_{SHARED,STATIC}_DEFAULT. No shell code involved, hence
-# any shell conditional has no effect. Either we trust libtool or we need
-# something more inventive. The relevant libtool macros are in ltoptions.m4,
-# _LT_ENABLE_SHARED and _LT_ENABLE_STATIC.
-# That is, something like the following will not work:
-# case $host_os in
-#   cygwin* | mingw* | msys* ) AC_DISABLE_SHARED  ;;
-#   *) AC_DISABLE_STATIC ;;
-# esac
-
 # Create libtool.
 
-  LT_INIT([disable-static pic-only win32-dll])
+  LT_INIT([disable-static pic-only m4_bmatch($1,no-win32-dll,,win32-dll)])
 
-# Patch libtool to eliminate a trailing space after AR_FLAGS. This needs to be
-# run after config.status has created libtool. Apparently necessary on
-# Windows when lib.exe is the archive tool.
+# Patch libtool to circumvent some issues when using MSVC and MS lib.
+# This needs to be run after config.status has created libtool.
+# 1. Eliminate a trailing space after AR_FLAGS. Apparently necessary on
+#    Windows when AR=lib.exe.
+# 2. Patch libtool's func_extract_an_archive in case of $AR=lib. The current
+#    libtool implementation assumes that it can do $AR x to extract an archive.
+#    We replace this two-liner in func_extract_an_archive by replacing the first
+#    line by something clunky that works with lib and making sure that the following
+#    line is ignored (by finishing with ": \"). We completely disregard running the
+#    command through func_show_eval and do not stop if it fails.
+# 3. Relax check which libraries can be used when linking a DLL.
+#    libtool's func_mode_link() would reject linking a .lib file when building a DLL,
+#    even though this .lib file may just be the one that eventually loads a depending DLL,
+#    e.g., mkl_core_dll.lib. Setting deplibs_check_method=pass_all will still print a
+#    warning, but the .lib is still passed to the linker.
+# 4. Ensure always_export_symbols=no if win32-dll. Even when we pass win32-dll,
+#    libtool forces always_export_symbols=yes for --tag=CXX if using MS compiler.
+#    This leads to a nm call that collects ALL C-functions from a library
+#    and explicitly dll-exporting them, leading to warnings about duplicates
+#    regarding those that are properly marked for dll-export in the source.
+#
+# Patch libtool also to circumbent some issues when using MinGW (Msys+GCC).
+# 1. Relax check which libraries can be used when linking a DLL.
+#    libtool's func_mode_link() would reject linking MinGW system libraries,
+#    e.g., -lmingw32, when building a DLL, because it does not find this
+#    library in the installation path, and then falls back to build only
+#    static libraries. Setting deplibs_check_method=pass_all will avoid
+#    this faulty check.
 
   case "$AR" in
     *lib* | *LIB* )
-      AC_CONFIG_COMMANDS([libtoolpatch],
-        [sed -e 's|AR_FLAGS |AR_FLAGS|g' libtool > libtool.tmp
+      AC_CONFIG_COMMANDS([libtoolclpatch],
+        [sed -e 's|AR_FLAGS |AR_FLAGS|g' \
+             -e '/$AR x/s/.*/( cd $f_ex_an_ar_dir ; for f in `$AR -nologo -list "$f_ex_an_ar_oldlib" | tr "\\r" " "` ; do lib -nologo -extract:$f "$f_ex_an_ar_oldlib"; done ); : \\/g' \
+             -e '/^deplibs_check_method/s/.*/deplibs_check_method="pass_all"/g' \
+             m4_bmatch($1,no-win32-dll,,[-e 's|always_export_symbols=yes|always_export_symbols=no|g']) \
+         libtool > libtool.tmp
          mv libtool.tmp libtool
          chmod 755 libtool])
       ;;
+    * )
+      case $build in
+        *-mingw* )
+          AC_CONFIG_COMMANDS([libtoolmingwpatch],
+            [sed -e '/^deplibs_check_method/s/.*/deplibs_check_method="pass_all"/g' libtool > libtool.tmp
+             mv libtool.tmp libtool
+             chmod 755 libtool])
+        ;;
+      esac
+      ;;
   esac
 
-# Set up LT_LDFLAGS. Add the library version string to LT_LDFLAGS, if one
-# is supplied.
-
+  # Set up LT_LDFLAGS.
   AC_SUBST([LT_LDFLAGS])
-  AC_MSG_CHECKING([if the library version is set])
-  if test x"$coin_libversion" != x ; then
-    LT_LDFLAGS="$LT_LDFLAGS -version-info $coin_libversion"
-    AC_MSG_RESULT([$coin_libversion])
-  else
-    AC_MSG_RESULT([no])
-  fi
+
+  # Use the libtool library info, if defined, otherwise use the project version info,
+  # if a full major.minor.release number was available
+  m4_ifnblank(AC_COIN_LIBTOOL_VERSIONINFO,
+    LT_LDFLAGS="$LT_LDFLAGS -version-info AC_COIN_LIBTOOL_VERSIONINFO"
+    AC_MSG_NOTICE(libtool version info: -version-info AC_COIN_LIBTOOL_VERSIONINFO),
+    m4_ifnblank(AC_PACKAGE_VERSION_MAJOR,
+     m4_ifnblank(AC_PACKAGE_VERSION_MINOR,
+      m4_ifnblank(AC_PACKAGE_VERSION_RELEASE,
+       LT_LDFLAGS="$LT_LDFLAGS -version-number AC_PACKAGE_VERSION_MAJOR:AC_PACKAGE_VERSION_MINOR:AC_PACKAGE_VERSION_RELEASE"
+       AC_MSG_NOTICE(libtool version info: -version-number AC_PACKAGE_VERSION_MAJOR:AC_PACKAGE_VERSION_MINOR:AC_PACKAGE_VERSION_RELEASE)
+    ))))
 
   # shared libraries should have no undefined symbols
   # for Windows DLLs, it is mandatory to add this
   LT_LDFLAGS="$LT_LDFLAGS -no-undefined"
 ])
+
 
 ###########################################################################
 #                    COIN_PROG_CC   COIN_PROG_CXX                         #
@@ -312,22 +394,28 @@ AC_DEFUN_ONCE([AC_COIN_PROG_CC],
 [
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 
-# Setting up libtool with LT_INIT will AC_REQUIRE AC_PROG_CC, but we want
-# to invoke it from this macro first so that we can supply a parameter.
-
+  # Setting up libtool with LT_INIT will AC_REQUIRE AC_PROG_CC, but we want
+  # to invoke it from this macro first so that we can supply a parameter.
   AC_BEFORE([$0],[LT_INIT])
 
-# If enable-msvc, then test only for MS and Intel (on Windows) C compiler
-# otherwise, test a long list of C compilers that comes into our mind
-
+  # If enable-msvc, then test for Intel (on Windows) and MS C compiler
+  # explicitly and add compile-wrapper before AC_PROG_CC, because
+  # the compile-wrapper work around issues when having the wrong link.exe
+  # in the PATH first, which would upset tests in AC_PROG_CC.
+  # Further, if CC unset and not set by user, then stop with error.
   if test $enable_msvc = yes ; then
-    comps="icl cl"
-  else
-    # TODO old buildtools was doing some $build specific logic here, do we
-    # still need this?
-    comps="gcc clang cc icc icl cl cc xlc xlc_r pgcc"  
+    AC_CHECK_PROGS(CC, [icl cl])
+    if test -n "$CC" ; then
+      CC="$am_aux_dir/compile $CC"
+    else
+      AC_MSG_ERROR([Neither MS nor Intel C compiler found in PATH and CC is unset.])
+    fi
   fi
-  AC_PROG_CC([$comps])
+
+  # look for some C compiler and check whether it works
+  # if user has set CC or we found icl/cl above, this shouldn't overwrite CC
+  # other than CXX of F77, this macro also takes care of adding the compile-wrapper
+  AC_PROG_CC([gcc clang cc icc icl cl cc xlc xlc_r pgcc])
 ])
 
 # Note that automake redefines AC_PROG_CXX to invoke _AM_DEPENDENCIES
@@ -339,26 +427,149 @@ AC_DEFUN_ONCE([AC_COIN_PROG_CXX],
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
   AC_REQUIRE([AC_COIN_PROG_CC])
 
-# If enable-msvc, then test only for MS and Intel (on Windows) C++ compiler
-# otherwise, test a long list of C++ compilers that comes into our mind
-
+  # If enable-msvc, then test for Intel (on Windows) and MS C++ compiler
+  # explicitly and add compile-wrapper before AC_PROG_CXX, because
+  # the compile-wrapper work around issues when having the wrong link.exe
+  # in the PATH first, which would upset tests in AC_PROG_CXX.
+  # Further, if CXX unset and not set by user, then stop with error.
   if test $enable_msvc = yes ; then
-    comps="cl icl"
-  else
-    # TODO old buildtools was doing some $build specific logic here, do we
-    # still need this?
-    comps="g++ clang++ c++ pgCC icpc gpp cxx cc++ cl icl FCC KCC RCC xlC_r aCC CC"
+    AC_CHECK_PROGS(CXX, [icl cl])
+    if test -n "$CXX" ; then
+      CXX="$am_aux_dir/compile $CXX"
+    else
+      AC_MSG_ERROR([Neither MS nor Intel C++ compiler found in PATH and CXX is unset.])
+    fi
   fi
-  AC_PROG_CXX([$comps])
 
-# If the compiler does not support -c -o, then wrap the compile script around
-# it.
+  # look for some C++ compiler and check whether it works
+  # if user has set CXX or we found icl/cl above, this shouldn't overwrite CXX
+  AC_PROG_CXX([g++ clang++ c++ pgCC icpc gpp cxx cc++ icl cl FCC KCC RCC xlC_r aCC CC])
 
+  # If the compiler does not support -c -o, then wrap the compile script around it.
   AC_PROG_CXX_C_O
   if test $ac_cv_prog_cxx_c_o = no ; then
     CXX="$am_aux_dir/compile $CXX"
   fi
 ])
+
+###########################################################################
+#                             COIN_CXXLIBS                                #
+###########################################################################
+
+# Determine the C++ runtime libraries required for linking a C++ library
+# with a Fortran or C compiler.  The result is available in CXXLIBS.
+
+AC_DEFUN([AC_COIN_CXXLIBS],
+[AC_REQUIRE([AC_COIN_PROG_CXX])dnl
+AC_LANG_PUSH(C++)
+AC_ARG_VAR(CXXLIBS,[Libraries necessary for linking C++ code with non-C++ compiler])
+if test -z "$CXXLIBS"; then
+  if test "$GXX" = "yes"; then
+    case "$CXX" in
+      icpc* | */icpc*)
+        CXXLIBS="-lstdc++"
+        ;;
+      *)
+        # clang uses libc++ as the default standard C++ library, not libstdc++
+        # this test is supposed to recognize whether the compiler is clang
+        #
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <ciso646>]], [[
+#ifndef _LIBCPP_VERSION
+       choke me
+#endif
+          ]])],
+          [CXXLIBS="-lc++"],
+          [CXXLIBS="-lstdc++ -lm"])  dnl The -lm works around an issue with libtool removing -lm from the dependency_libs in an .la file (look for postdeps= in libtool)
+        ;;
+    esac
+  else
+    case $build in
+     *-mingw* | *-cygwin* | *-msys* )
+       if test "$enable_msvc" = yes ; then
+         CXXLIBS=nothing
+       fi;;
+     *-linux-*)
+      case "$CXX" in
+      icpc* | */icpc*)
+        CXXLIBS="-lstdc++"
+             ;;
+      pgCC* | */pgCC*)
+        CXXLIBS="-lstd -lC -lc"
+             ;;
+      esac;;
+    *-ibm-*)
+      CXXLIBS="-lC -lc"
+      ;;
+    *-hp-*)
+      CXXLIBS="-L/opt/aCC/lib -l++ -lstd_v2 -lCsup_v2 -lm -lcl -lc"
+      ;;
+    *-*-solaris*)
+      CXXLIBS="-lCstd -lCrun"
+    esac
+  fi
+fi
+if test -z "$CXXLIBS"; then
+  AC_MSG_WARN([Could not automatically determine CXXLIBS (C++ link libraries; necessary if main program is in Fortran or C).])
+else
+  AC_MSG_NOTICE([Assuming that CXXLIBS is \"$CXXLIBS\".])
+fi
+if test x"$CXXLIBS" = xnothing; then
+  CXXLIBS=
+fi
+AC_LANG_POP(C++)
+]) # AC_COIN_CXXLIBS
+
+
+###########################################################################
+#                            COIN_RPATH_FLAGS                             #
+###########################################################################
+
+# This macro, in case shared objects are used, defines a variable
+# RPATH_FLAGS that can be used by the linker to hardwire the library
+# search path for the given directories.  This is useful for example
+# Makefiles
+
+AC_DEFUN([AC_COIN_RPATH_FLAGS],
+[RPATH_FLAGS=
+
+if test $enable_shared = yes; then
+  case $build in
+    *-linux-*)
+      if test "$GCC" = "yes"; then
+        RPATH_FLAGS=
+        for dir in $1; do
+          RPATH_FLAGS="$RPATH_FLAGS -Wl,--rpath -Wl,$dir"
+        done
+      fi ;;
+    *-darwin*)
+        RPATH_FLAGS=nothing ;;
+    *-ibm-*)
+      case "$CC" in
+      xlc* | */xlc* | mpxlc* | */mpxlc*)
+        RPATH_FLAGS=nothing ;;
+      esac ;;
+    *-hp-*)
+        RPATH_FLAGS=nothing ;;
+    *-mingw* | *-msys* )
+        RPATH_FLAGS=nothing ;;
+    *-*-solaris*)
+        RPATH_FLAGS=
+        for dir in $1; do
+          RPATH_FLAGS="$RPATH_FLAGS -R$dir"
+        done
+  esac
+
+  if test "$RPATH_FLAGS" = ""; then
+    AC_MSG_WARN([Could not automatically determine how to tell the linker about automatic inclusion of the path for shared libraries.  The test examples might not work if you link against shared objects.  You will need to set the LD_LIBRARY_PATH, DYLP_LIBRARY_PATH, or LIBDIR variable manually.])
+  fi
+  if test "$RPATH_FLAGS" = "nothing"; then
+    RPATH_FLAGS=
+  fi
+fi
+
+AC_SUBST(RPATH_FLAGS)
+]) # AC_COIN_RPATH_FLAGS
+
 
 ###########################################################################
 #                   COIN_DEFINENAMEMANGLING                               #
@@ -411,6 +622,7 @@ AC_DEFUN([AC_COIN_DEFINENAMEMANGLING],
   esac
 ])
 
+
 ###########################################################################
 #                   COIN_NAMEMANGLING                                     #
 ###########################################################################
@@ -434,8 +646,6 @@ AC_DEFUN([AC_COIN_DEFINENAMEMANGLING],
 # The possibilities amount to
 # { lower / upper case } X (no) trailing underscore X (no) extra underscore
 # where the extra underscore is applied to name with an embedded underscore.
-
-
 # -------------------------------------------------------------------------
 
 AC_DEFUN([AC_COIN_NAMEMANGLING],
@@ -514,10 +724,11 @@ AC_DEFUN([AC_COIN_TRY_LINK],
   ac_save_LIBS="$LIBS"
   m4_ifnblank([$2], [LIBS="$2 $LIBS"])
   m4_ifnblank([$3],
-    [AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
-     temp_LFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs $3`
-     LIBS="$temp_LFLAGS $LIBS"
-    ])
+    [if test -n "$3" ; then
+      AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
+      temp_LFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs $3`
+      LIBS="$temp_LFLAGS $LIBS"
+    fi])
 
   $1_namemangling=unknown
 
@@ -563,6 +774,7 @@ AC_DEFUN([AC_COIN_TRY_LINK],
     m4_ifnblank([$5],[else $5])
   fi
 ])
+
 
 ###########################################################################
 #                           COIN_HAS_PKGCONFIG                            #
@@ -618,13 +830,8 @@ AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
 
 # Assemble a PKG_CONFIG search path that will include the installation
 # directory for .pc files for COIN packages.  Coin .pc files are installed in
-# ${libdir}/pkgconfig. But autoconf sets $libdir to '${exec_prefix}/lib', and
-# $exec_prefix to '${prefix}'.  COIN_INITIALIZE will set ac_default_prefix
-# correctly. Unless the user specifies --prefix, prefix is set to
-# NONE until the end of configuration, at which point it will be set to
-# $ac_default_prefix. Unless the user specifies --exec-prefix, exec-prefix
-# is set to NONE until the end of configuration, at which point it's set to
-# '${prefix}'. Sheesh.  So do the expansion, then back it out. Of course,
+# ${libdir}/pkgconfig and COIN_INITIALIZE takes care of setting up
+# $expanded_libdir based on $libdir. Of course,
 # this whole house of cards balances on the shaky assumption that the user is
 # sane and has installed all packages in the same place and does not change
 # that place when make executes. If not, well, it's their responsibility to
@@ -633,20 +840,6 @@ AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
   COIN_PKG_CONFIG_PATH="${PKG_CONFIG_PATH}"
   AC_SUBST(COIN_PKG_CONFIG_PATH)
 
-  save_prefix=$prefix
-  save_exec_prefix=$exec_prefix
-  if test "x$prefix" = xNONE ; then
-    prefix=$ac_default_prefix
-  fi
-  if test "x$exec_prefix" = xNONE ; then
-    exec_prefix=$prefix
-  fi
-  expanded_libdir=$libdir
-  while expr "$expanded_libdir" : '.*$.*' >/dev/null 2>&1 ; do
-    eval expanded_libdir=$expanded_libdir
-  done
-  prefix=$save_prefix
-  exec_prefix=$save_exec_prefix
   COIN_PKG_CONFIG_PATH="${expanded_libdir}/pkgconfig:${COIN_PKG_CONFIG_PATH}"
   AC_MSG_NOTICE([$PKG_CONFIG path is "$COIN_PKG_CONFIG_PATH"])
 
@@ -682,6 +875,7 @@ AC_DEFUN([AC_COIN_CHK_MOD_EXISTS],
     AC_MSG_ERROR("Cannot check for existence of module $1 without pkgconf")
   fi
 ])
+
 
 ###########################################################################
 #                          COIN_CHK_HERE                                  #
@@ -720,7 +914,7 @@ AC_DEFUN([AC_COIN_CHK_HERE],
 # Add the .pc file and augment LFLAGS and CFLAGS.
 
     m4_foreach_w([myvar],[$2],
-      [m4_toupper(myvar)_PCFILES="$m4_toupper(myvar)_PCFILES m4_default($3,m4_tolower($1))"
+      [if test -n "$m4_toupper(myvar)_PCFILES" ; then m4_toupper(myvar)_PCFILES="$m4_toupper(myvar)_PCFILES m4_default($3,m4_tolower($1))" ; fi
        m4_toupper(myvar)_LFLAGS="$m4_toupper(myvar)_LFLAGS $m4_toupper($1)_LFLAGS"
        m4_toupper(myvar)_CFLAGS="$m4_toupper(myvar)_CFLAGS $m4_toupper($1)_CFLAGS"
 
@@ -735,6 +929,7 @@ AC_DEFUN([AC_COIN_CHK_HERE],
       ])
 
 ])   # COIN_CHK_HERE
+
 
 ###########################################################################
 #                      COIN_DEF_PRIM_ARGS                                 #
@@ -1014,6 +1209,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
 
 ])  # COIN_FIND_PRIM_PKG
 
+
 ###########################################################################
 #                          COIN_CHK_PKG                                   #
 ###########################################################################
@@ -1116,7 +1312,7 @@ AC_DEFUN([AC_COIN_CHK_PKG],
     AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],
       [Define to 1 if $1 is available.])
     m4_foreach_w([myvar],[$2],
-      [m4_toupper(myvar)_PCFILES="$m4_tolower($1_pcfiles) $m4_toupper(myvar)_PCFILES"
+      [if test -n "$m4_tolower($1_pcfiles)" ; then m4_toupper(myvar)_PCFILES="$m4_tolower($1_pcfiles) $m4_toupper(myvar)_PCFILES" ; fi
        m4_toupper(myvar)_LFLAGS="$m4_tolower($1_lflags) $m4_toupper(myvar)_LFLAGS"
        m4_toupper(myvar)_CFLAGS="$m4_tolower($1_cflags) $m4_toupper(myvar)_CFLAGS"
       ])
@@ -1369,6 +1565,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 
 ])  # COIN_FIND_PRIM_LIB
 
+
 ###########################################################################
 #                          COIN_CHK_LIB                                   #
 ###########################################################################
@@ -1506,6 +1703,7 @@ AC_DEFUN([AC_COIN_CHK_LIBM],
   LIBS="$coin_save_LIBS"
 ]) # AC_COIN_CHK_LIBM
 
+
 ###########################################################################
 #                           COIN_CHK_ZLIB                               #
 ###########################################################################
@@ -1591,7 +1789,7 @@ AC_DEFUN([AC_COIN_CHK_BZLIB],
 
 
 ###########################################################################
-#                              COIN_CHK_GMP                             #
+#                              COIN_CHK_GMP                               #
 ###########################################################################
 
 # COIN_CHK_GMP([client1 client2 ...])
@@ -1730,12 +1928,17 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
 
 # If FIND_PRIM_PKG didn't find anything, try a few more guesses for
 # optimized blas/lapack libs (based on build system type).
+dnl To use static MKL libs on Linux/Darwin, one would need to enclose the libs into
+dnl -Wl,--start-group ... -Wl,--end-group. Unfortunately, libtool does not write these
+dnl flags into the dependency_libs of the .la file, so linking an executable fails.
+dnl See also https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=159760&repeatmerged=yes
+dnl So for now the checks below will only work for shared MKL libs on Linux/Darwin.
   if test "$coin_has_lapack" = no ; then
     case $build in
       *-linux*)
-         AC_COIN_TRY_LINK([dsyev],[-Wl,--start-group -lmkl_core -lmkl_intel_lp64 -lmkl_sequential --Wl,--end-group],[],[
+         AC_COIN_TRY_LINK([dsyev],[-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],[
            coin_has_lapack=yes
-           lapack_lflags="-Wl,--start-group -lmkl_core -lmkl_intel_lp64 -lmkl_sequential --Wl,--end-group"])
+           lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"])
       ;;
 
       *-sgi-*) 
@@ -1758,23 +1961,22 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
       ;;
 
       *-cygwin* | *-mingw* | *-msys*)
-        case "$CC" in
-          */compile\ cl | cl | */cl | */compile\ icl | icl | */icl )
-            # check first for 64-bit MKL, then for 32-bit MKL
-            AC_COIN_TRY_LINK([dsyev],[mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib],[],[
-              coin_has_lapack=yes
-              lapack_lflags="mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib"],
-                [AC_COIN_TRY_LINK([dsyev],[mkl_intel_c.lib mkl_sequential.lib mkl_core.lib],[],[
-                 coin_has_lapack=yes
-                 lapack_lflags="mkl_intel_c.lib mkl_sequential.lib mkl_core.lib"])])
-          ;;
-        esac
+        # check for 64-bit sequential MKL
+        if test "$enable_shared" = yes ; then
+          AC_COIN_TRY_LINK([dsyev],[mkl_intel_lp64_dll.lib mkl_sequential_dll.lib mkl_core_dll.lib],[],
+            [coin_has_lapack=yes
+             lapack_lflags="mkl_intel_lp64_dll.lib mkl_sequential_dll.lib mkl_core_dll.lib"])
+        else
+          AC_COIN_TRY_LINK([dsyev],[mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib],[],
+            [coin_has_lapack=yes
+             lapack_lflags="mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib"])
+        fi
       ;;
-        
+
       *-darwin*)
-        AC_COIN_TRY_LINK([dsyev],[-Wl,--start-group -lmkl_core -lmkl_intel_lp64 -lmkl_sequential -Wl,--end-group],[],[
+        AC_COIN_TRY_LINK([dsyev],[-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],[
           coin_has_lapack=yes
-          lapack_lflags="-Wl,--start-group -lmkl_core -lmkl_intel_lp64 -lmkl_sequential -Wl,--end-group"])
+          lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"])
         if test "$coin_has_lapack" = no ; then
           AC_COIN_TRY_LINK([dsyev],[-framework Accelerate],[],[
             coin_has_lapack=yes
@@ -1821,12 +2023,13 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
       [Define to 1 if the LAPACK package is available])
     AC_COIN_DEFINENAMEMANGLING([COIN_LAPACK], ${dsyev_namemangling})
     m4_foreach_w([myvar],[$1],
-      [m4_toupper(myvar)_PCFILES="$lapack_pcfiles $m4_toupper(myvar)_PCFILES"
+      [if test -n "$lapack_pcfiles" ; then m4_toupper(myvar)_PCFILES="$lapack_pcfiles $m4_toupper(myvar)_PCFILES" ; fi
        m4_toupper(myvar)_LFLAGS="$lapack_lflags $m4_toupper(myvar)_LFLAGS"
        m4_toupper(myvar)_CFLAGS="$lapack_cflags $m4_toupper(myvar)_CFLAGS"
       ])
   fi
 ]) # AC_COIN_CHK_LAPACK
+
 
 ###########################################################################
 #                           COIN_DOXYGEN                                  #
@@ -1966,6 +2169,7 @@ AC_SUBST(EXAMPLE_CLEAN_FILES)
 
 ]) # AC_COIN_EXAMPLE_FILES
 
+
 ###########################################################################
 #                           COIN_FINALIZE_FLAGS                           #
 ###########################################################################
@@ -1977,9 +2181,6 @@ AC_SUBST(EXAMPLE_CLEAN_FILES)
 # use in .pc files together with PRIM_PCFILES. PRIM_LFLAGS and PRIM_CFLAGS
 # are augmented to contain flags obtained by invoking PKG_CONFIG on packages
 # listed in PRIM_PCFILES and are appropriate for use in Makefile.am files.
-
-# TODO this could be moved into COIN_FINALIZE, if we were able to remember
-#   for which variables we need to run pkg-config
 
 AC_DEFUN([AC_COIN_FINALIZE_FLAGS],
 [
@@ -1999,13 +2200,13 @@ AC_DEFUN([AC_COIN_FINALIZE_FLAGS],
       # setup XYZ_EXPORT symbol for library users
       libexport_attribute=
       if test "$enable_shared" = yes ; then
-        # TODO better check for this? we essentially want to know whether we're building DLLs
-        # or do we also need this for GCC on Windows?
-        case $CC in */compile\ cl | cl | */cl | */compile\ icl | icl | */icl )
-          libexport_attribute="__declspec(dllimport)"
-          if test "$enable_static" = yes ; then
-            AC_MSG_ERROR([Cannot do DLL and static LIB builds simultaneously. Do not add --enable-static without --disable-shared.])
-          fi
+        case $build_os in
+          cygwin* | mingw* | msys* | cegcc* )
+            libexport_attribute="__declspec(dllimport)"
+            if test "$enable_static" = yes ; then
+              AC_MSG_ERROR([Cannot do DLL and static LIB builds simultaneously. Do not add --enable-static without --disable-shared.])
+            fi
+          ;;
         esac
       fi
       AC_DEFINE_UNQUOTED(m4_toupper(myvar)_EXPORT, [$libexport_attribute], [Library Visibility Attribute])
@@ -2024,6 +2225,7 @@ AC_DEFUN([AC_COIN_FINALIZE_FLAGS],
     ])
 ])
 
+
 ###########################################################################
 #                              COIN_FINALIZE                              #
 ###########################################################################
@@ -2039,8 +2241,6 @@ AC_DEFUN([AC_COIN_FINALIZE],
 [
   AC_OUTPUT
 
-  AC_MSG_NOTICE([In case of trouble, first consult the troubleshooting page at https://projects.coin-or.org/BuildTools/wiki/user-troubleshooting])
+  #AC_MSG_NOTICE([In case of trouble, first consult the troubleshooting page at https://projects.coin-or.org/BuildTools/wiki/user-troubleshooting])
   AC_MSG_NOTICE([Configuration of $PACKAGE_NAME successful])
-
-]) #AC_COIN_FINALIZE
-
+])
