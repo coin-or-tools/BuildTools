@@ -472,7 +472,6 @@ if [[ $dryRun -eq 1 ]] ; then
   exit
 fi
 
-# m4Files="$AUTOTOOLS_DIR/share/aclocal/libtool.m4"
 buildtoolsLinks=
 
 for dir in ${dirs[@]} ; do
@@ -557,8 +556,14 @@ for dir in ${dirs[@]} ; do
     fi
     echo "  running aclocal in $dir"
     aclocal $m4Dirs
-    echo "  apply libtool.m4 patch to support ICL"
-    patch -p1 < BuildTools/libtool-icl.patch
+
+# Not all projects make use of libtool, so check before we try to apply the
+# libtool patch.
+
+    if grep -q -F '[_LT_COPYING]' aclocal.m4 ; then
+      echo "  apply libtool.m4 patch to support ICL"
+      patch -p1 < BuildTools/libtool-icl.patch
+    fi
     if grep AC_CONFIG_HEADER configure.ac >/dev/null 2>&1; then
       echo "  running autoheader in $dir"
       autoheader || exit 1
