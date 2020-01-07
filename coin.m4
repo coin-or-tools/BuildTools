@@ -1496,14 +1496,14 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
     build | requested)
       m4_if(m4_default($8,nodata),dataonly,[],
         [m4_ifnblank([$2],
-           [m4_tolower($1_lflags)=$2],
+           [m4_tolower($1_lflags)="$2"],
            [if test "$m4_tolower(coin_has_$1)" = build ; then
               m4_tolower($1_lflags)="-L\$(libdir) -l[]m4_tolower(coin$1)"
             else
               m4_tolower($1_lflags)="-l[]m4_tolower($1)"
             fi])
          m4_ifnblank([$3],
-           [m4_tolower($1_cflags)=$3],
+           [m4_tolower($1_cflags)="$3"],
            [if test "$m4_tolower(coin_has_$1)" = build ; then
               m4_tolower($1_cflags)="-I\$(pkgincludedir)/ThirdParty"
             fi])])
@@ -1574,7 +1574,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 # Determine whether we can use primary library prim ($1) and assemble
 # information on the required linker flags (prim_lflags), compiler flags
 # (prim_cflags), and data directories (prim_data). A link check will be
-# performed in COIN_FIND_PRIMN_LIB if [func] is specified, using link flags
+# performed in COIN_FIND_PRIM_LIB if [func] is specified, using link flags
 # formed by concatenating the values of [lflgs] and [other libraries].
 
 # The configure command line options offered to the user are controlled
