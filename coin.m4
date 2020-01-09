@@ -89,8 +89,8 @@ AC_DEFUN([AC_COIN_PROJECTVERSION],
 
 # This macro is invoked by any PROG_compiler macro to establish the
 # --enable-msvc option.
-# If unset and Windows, look for some known C compilers and set
-# enable_msvc if (i)cl is picked up (or has been set via CC by user)
+# If unset but we have a Windows environment, look for some known C compilers
+# and set enable_msvc if (i)cl is picked up (or has been set via CC by user)
 
 AC_DEFUN([AC_COIN_ENABLE_MSVC],
 [
@@ -324,7 +324,7 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 #    and explicitly dll-exporting them, leading to warnings about duplicates
 #    regarding those that are properly marked for dll-export in the source.
 #
-# Patch libtool also to circumbent some issues when using MinGW (Msys+GCC).
+# Patch libtool also to circumvent some issues when using MinGW (Msys+GCC).
 # 1. Relax check which libraries can be used when linking a DLL.
 #    libtool's func_mode_link() would reject linking MinGW system libraries,
 #    e.g., -lmingw32, when building a DLL, because it does not find this
@@ -396,22 +396,29 @@ AC_DEFUN_ONCE([AC_COIN_PROG_CC],
   AC_BEFORE([$0],[LT_INIT])
 
   # If enable-msvc, then test for Intel (on Windows) and MS C compiler
-  # explicitly and add compile-wrapper before AC_PROG_CC, because
-  # the compile-wrapper work around issues when having the wrong link.exe
-  # in the PATH first, which would upset tests in AC_PROG_CC.
-  # Further, if CC unset and not set by user, then stop with error.
+  # explicitly and add the compile wrapper before AC_PROG_CC. The compile
+  # wrapper works around issues related to finding MS link.exe. (Unix link.exe
+  # occurs first in PATH, which causes compile and link checks to fail.) For
+  # the same reason, set LD to use the compile wrapper. If CC remains unset
+  # (neither icl or cl was found, and CC was not set by the user), stop with
+  # an error.
+
   if test $enable_msvc = yes ; then
     AC_CHECK_PROGS(CC, [icl cl])
     if test -n "$CC" ; then
       CC="$am_aux_dir/compile $CC"
+      ac_cv_prog_CC="$CC"
+      LD="$CC"
     else
       AC_MSG_ERROR([Neither MS nor Intel C compiler found in PATH and CC is unset.])
     fi
   fi
 
-  # look for some C compiler and check whether it works
-  # if user has set CC or we found icl/cl above, this shouldn't overwrite CC
-  # other than CXX of F77, this macro also takes care of adding the compile-wrapper
+  # Look for some C compiler and check that it works. If the user has set CC
+  # or we found icl/cl above, this shouldn't overwrite CC. Unlike the macros
+  # that establish C++ or Fortran compilers, PROG_CC also takes care of adding
+  # the compile wrapper if needed.
+
   AC_PROG_CC([gcc clang cc icc icl cl cc xlc xlc_r pgcc])
 ])
 
@@ -424,25 +431,32 @@ AC_DEFUN_ONCE([AC_COIN_PROG_CXX],
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
   AC_REQUIRE([AC_COIN_PROG_CC])
 
-  # If enable-msvc, then test for Intel (on Windows) and MS C++ compiler
-  # explicitly and add compile-wrapper before AC_PROG_CXX, because
-  # the compile-wrapper work around issues when having the wrong link.exe
-  # in the PATH first, which would upset tests in AC_PROG_CXX.
-  # Further, if CXX unset and not set by user, then stop with error.
+  # If enable-msvc, then test for Intel (on Windows) and MS C compiler
+  # explicitly and add the compile wrapper before AC_PROG_CXX. The compile
+  # wrapper works around issues related to finding MS link.exe. (Unix link.exe
+  # occurs first in PATH, which causes compile and link checks to fail.) For
+  # the same reason, set LD to use the compile wrapper. If CC remains unset
+  # (neither icl or cl was found, and CC was not set by the user), stop with
+  # an error.
+
   if test $enable_msvc = yes ; then
     AC_CHECK_PROGS(CXX, [icl cl])
     if test -n "$CXX" ; then
       CXX="$am_aux_dir/compile $CXX"
+      ac_cv_prog_CXX="$CXX"
+      LD="$CXX"
     else
       AC_MSG_ERROR([Neither MS nor Intel C++ compiler found in PATH and CXX is unset.])
     fi
   fi
 
-  # look for some C++ compiler and check whether it works
-  # if user has set CXX or we found icl/cl above, this shouldn't overwrite CXX
+  # Look for some C++ compiler and check that it works. If the user has set
+  # CXX or we found icl/cl above, this shouldn't overwrite CXX.
+
   AC_PROG_CXX([g++ clang++ c++ pgCC icpc gpp cxx cc++ icl cl FCC KCC RCC xlC_r aCC CC])
 
-  # If the compiler does not support -c -o, then wrap the compile script around it.
+  # If the compiler does not support -c -o, wrap it with the compile script.
+
   AC_PROG_CXX_C_O
   if test $ac_cv_prog_cxx_c_o = no ; then
     CXX="$am_aux_dir/compile $CXX"

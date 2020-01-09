@@ -115,12 +115,15 @@ cleanupOnErrorExit ()
 
 printHelp () {
   cat <<EOF
-usage: run_autotools [-h] [-[n]r] [-ni] [ directory directory ... ]
+usage: run_autotools [-h] [-[n]r] [-ni] [-f] [ directory directory ... ]
 
   -h  | --help           print help message and exit
   -r  | --recursion      do recursive search for configure.ac files
   -nr | --no-recursion   do not do recursive search for configure.ac files
-  -ni | --dependent      do not install scripts necessary for an independent unit
+  -ni | --dependent      do not install scripts necessary for an independent
+  			 unit
+  -f  | --foreign        process foreign configuration files (configure.ac
+                         does not contain COIN configuration macros).
   -d  | --dryrun         exit immediately after determining the list of
                          directories to be processed
 
@@ -145,6 +148,11 @@ usage: run_autotools [-h] [-[n]r] [-ni] [ directory directory ... ]
   configure.ac files. Hence the default of no recursion and install autotools
   scripts.  The -r option is useful if you have multiple COIN projects in
   sibling directories and want to do a batch run of autotools on all of them.
+
+  The -f (--foreign) option causes run_autotools to process any configure.ac,
+  even if it contains no COIN macros. Occasionally useful for adapting
+  ThirdParty native configuration for COIN. Be sure you know what you're
+  doing.
 
   The environment variable AUTOTOOLS_DIR can be used to point to an alternate
   installation of the autotools (current location $AUTOTOOLS_DIR)
@@ -332,6 +340,9 @@ while [[ $# -gt 0 ]] ; do
     -d | --dryrun )
       dryRun=1
       ;;
+    -f | --foreign )
+      doForeign=1
+      ;;
     -* ) echo "$0: unrecognised command line switch '"$1"'."
       printHelp=1
       ;;
@@ -446,7 +457,8 @@ echo "candDirs (${#candDirs[@]}): ${candDirs[*]}"
 
 for dir in ${candDirs[@]} ; do
   if [[ -r $dir/configure.ac ]] ; then
-    if grep AC_COIN_ $dir/configure.ac &>/dev/null ; then
+    if grep AC_COIN_ $dir/configure.ac &>/dev/null || \
+       test $doForeign -eq 1 ; then
       dirs+=($dir)
     else
       echo "  Skipping foreign configure.ac in '$dir'."
