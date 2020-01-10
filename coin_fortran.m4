@@ -64,18 +64,21 @@ AC_DEFUN_ONCE([AC_COIN_PROG_F77],
     unset F77
   else
     # If enable-msvc, then test for Intel Fortran compiler for Windows
-    # explicitly and add compile-wrapper before AC_PROG_F77, because
-    # the compile-wrapper work around issues when having the wrong link.exe
-    # in the PATH first, which could upset tests in AC_PROG_F77.
+    # explicitly and add the compile wrapper before AC_PROG_F77. The compile
+    # wrapper works around issues related to finding MS link.exe. (Unix
+    # link.exe occurs first in PATH, which causes compile and link checks to
+    # fail.) For the same reason, set LD to use the compile wrapper.
     if test $enable_msvc = yes ; then
       AC_CHECK_PROGS(F77, [ifort])
       if test -n "$F77" ; then
         F77="$am_aux_dir/compile $F77"
+	ac_cv_prog_F77="$F77"
+        LD="$F77"
       fi
     fi
 
-    # if not msvc-enabled, then look for some Fortran compiler and check whether it works
-    # if F77 is set, then this only checks whether it works
+    # If not msvc-enabled, then look for some Fortran compiler and check
+    # whether it works. If F77 is set, this simply checks whether it works.
     if test $enable_msvc = no || test -n "$F77" ; then
       AC_PROG_F77([gfortran ifort g95 fort77 f77 f95 f90 g77 pgf90 pgf77 ifc frt af77 xlf_r fl32])
     fi
