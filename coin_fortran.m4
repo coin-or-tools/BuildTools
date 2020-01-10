@@ -72,7 +72,7 @@ AC_DEFUN_ONCE([AC_COIN_PROG_F77],
       AC_CHECK_PROGS(F77, [ifort])
       if test -n "$F77" ; then
         F77="$am_aux_dir/compile $F77"
-	ac_cv_prog_F77="$F77"
+        ac_cv_prog_F77="$F77"
         LD="$F77"
       fi
     fi
