@@ -584,11 +584,12 @@ for dir in ${dirs[@]} ; do
     echo "  running autoconf in $dir"
     autoconf || exit 1
 
-    # copy headers from headers/
+# Copy headers from headers/ (carefully avoiding a descent into BuildTools)
+
     for f in BuildTools/headers/* ; do
       h=`basename $f`
       echo "Update $f, if existing"
-      find -name $h -exec cp $f {} \;
+      find . -name BuildTools -prune -o -name $h -exec cp $f {} \;
     done
 
     cd $startDir
