@@ -284,6 +284,9 @@ AC_DEFUN([AC_COIN_INITIALIZE],
   while expr "$expanded_libdir" : '.*$.*' >/dev/null 2>&1 ; do
     eval expanded_libdir=$expanded_libdir
   done
+
+  AM_CONDITIONAL(LIBDIR_IS_DEFAULT, test "$expanded_libdir" = "$prefix/lib")
+
   prefix=$save_prefix
   exec_prefix=$save_exec_prefix
 ])
