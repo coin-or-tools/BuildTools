@@ -132,6 +132,12 @@ AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
   AC_BEFORE([$0],[AC_PROG_F77])
   AC_BEFORE([$0],[AC_PROG_FC])
 
+# Allow user to augment defaults
+  AC_ARG_VAR(ADD_FFLAGS,  [Additional Fortran 77 compiler options (if not overwriting FFLAGS)])
+  AC_ARG_VAR(ADD_FCFLAGS, [Additional Fortran compiler options (if not overwriting FCFLAGS)])
+  AC_ARG_VAR(ADD_CFLAGS,  [Additional C compiler options (if not overwriting CFLAGS)])
+  AC_ARG_VAR(ADD_CXXFLAGS,[Additional C++ compiler options (if not overwriting CXXFLAGS)])
+
 # change default compiler flags
 # - debugging enabled: enable debug symbols (-g/-Z7)
 # - debugging disabled: disable debug code (-DNDEBUG); enable (more) optimization (-O2)
@@ -139,31 +145,31 @@ AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
 
   if test "$enable_debug" = yes ; then
     if test "$enable_msvc" = yes ; then
-      : ${FFLAGS:="-nologo -fpp -Z7 -MDd"}
-      : ${FCFLAGS:="-nologo -fpp -Z7 -MDd"}
-      : ${CFLAGS:="-nologo -Z7 -MDd"}
-      : ${CXXFLAGS:="-nologo -EHs -Z7 -MDd"}
+      : ${FFLAGS:="-nologo -fpp -Z7 -MDd $ADD_FFLAGS"}
+      : ${FCFLAGS:="-nologo -fpp -Z7 -MDd $ADD_FCFLAGS"}
+      : ${CFLAGS:="-nologo -Z7 -MDd $ADD_CFLAGS"}
+      : ${CXXFLAGS:="-nologo -EHs -Z7 -MDd $ADD_CXXFLAGS"}
       : ${AR:="lib"}
       : ${AR_FLAGS:="-nologo -out:"}
     else
-      : ${FFLAGS:="-g"}
-      : ${FCFLAGS:="-g"}
-      : ${CFLAGS:="-g"}
-      : ${CXXFLAGS:="-g"}
+      : ${FFLAGS:="-g $ADD_FFLAGS"}
+      : ${FCFLAGS:="-g $ADD_FCFLAGS"}
+      : ${CFLAGS:="-g $ADD_CFLAGS"}
+      : ${CXXFLAGS:="-g $ADD_CXXFLAGS"}
     fi
   else
     if test "$enable_msvc" = yes ; then
-      : ${FFLAGS:="-nologo -fpp -O2 -MD"}
-      : ${FCFLAGS:="-nologo -fpp -O2 -MD"}
-      : ${CFLAGS:="-nologo -DNDEBUG -O2 -MD"}
-      : ${CXXFLAGS:="-nologo -EHs -DNDEBUG -O2 -MD"}
+      : ${FFLAGS:="-nologo -fpp -O2 -MD $ADD_FFLAGS"}
+      : ${FCFLAGS:="-nologo -fpp -O2 -MD $ADD_FCFLAGS"}
+      : ${CFLAGS:="-nologo -DNDEBUG -O2 -MD $ADD_CFLAGS"}
+      : ${CXXFLAGS:="-nologo -EHs -DNDEBUG -O2 -MD $ADD_CXXFLAGS"}
       : ${AR:="lib"}
       : ${AR_FLAGS:="-nologo -out:"}
     else
-      : ${FFLAGS:="-O2"}
-      : ${FCFLAGS:="-O2"}
-      : ${CFLAGS:="-O2 -DNDEBUG"}
-      : ${CXXFLAGS:="-O2 -DNDEBUG"}
+      : ${FFLAGS:="-O2 $ADD_FFLAGS"}
+      : ${FCFLAGS:="-O2 $ADD_FCFLAGS"}
+      : ${CFLAGS:="-O2 -DNDEBUG $ADD_CFLAGS"}
+      : ${CXXFLAGS:="-O2 -DNDEBUG $ADD_CXXFLAGS"}
     fi
   fi
 ])
