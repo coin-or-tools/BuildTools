@@ -132,12 +132,6 @@ AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
   AC_BEFORE([$0],[AC_PROG_F77])
   AC_BEFORE([$0],[AC_PROG_FC])
 
-# Allow user to augment defaults
-  AC_ARG_VAR(ADD_FFLAGS,  [Additional Fortran 77 compiler options (if not overwriting FFLAGS)])
-  AC_ARG_VAR(ADD_FCFLAGS, [Additional Fortran compiler options (if not overwriting FCFLAGS)])
-  AC_ARG_VAR(ADD_CFLAGS,  [Additional C compiler options (if not overwriting CFLAGS)])
-  AC_ARG_VAR(ADD_CXXFLAGS,[Additional C++ compiler options (if not overwriting CXXFLAGS)])
-
 # change default compiler flags
 # - debugging enabled: enable debug symbols (-g/-Z7)
 # - debugging disabled: disable debug code (-DNDEBUG); enable (more) optimization (-O2)
@@ -435,6 +429,9 @@ AC_DEFUN_ONCE([AC_COIN_PROG_CC],
   # the compile wrapper if needed.
 
   AC_PROG_CC([gcc clang cc icc icl cl cc xlc xlc_r pgcc])
+
+  # Declare precious variable for additional compiler flags
+  AC_ARG_VAR(ADD_CFLAGS,[Additional C compiler options (if not overwriting CFLAGS)])
 ])
 
 # Note that automake redefines AC_PROG_CXX to invoke _AM_DEPENDENCIES
@@ -476,6 +473,9 @@ AC_DEFUN_ONCE([AC_COIN_PROG_CXX],
   if test $ac_cv_prog_cxx_c_o = no ; then
     CXX="$am_aux_dir/compile $CXX"
   fi
+
+  # Declare precious variable for additional compiler flags
+  AC_ARG_VAR(ADD_CXXFLAGS,[Additional C++ compiler options (if not overwriting CXXFLAGS)])
 ])
 
 ###########################################################################

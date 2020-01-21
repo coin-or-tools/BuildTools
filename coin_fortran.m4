@@ -89,6 +89,10 @@ AC_DEFUN_ONCE([AC_COIN_PROG_F77],
     AC_MSG_NOTICE([No Fortran 77 compiler available.])
   fi
   AM_CONDITIONAL([COIN_HAS_F77], test -n "$F77")
+
+  # Declare precious variable for additional compiler flags
+  AC_ARG_VAR(ADD_FFLAGS,[Additional Fortran 77 compiler options (if not overwriting FFLAGS)])
+
   # AC_MSG_NOTICE([Leaving COIN_PROG_F77])
 ])
 
@@ -129,6 +133,9 @@ AC_DEFUN_ONCE([AC_COIN_PROG_FC],
       FC="$am_aux_dir/compile $FC"
     fi
   fi
+
+  # Declare precious variable for additional compiler flags
+  AC_ARG_VAR(ADD_FCFLAGS,[Additional Fortran compiler options (if not overwriting FCFLAGS)])
 ])
 
 
