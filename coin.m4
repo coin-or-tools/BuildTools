@@ -290,11 +290,17 @@ AC_DEFUN([AC_COIN_INITIALIZE],
   while expr "$expanded_libdir" : '.*$.*' >/dev/null 2>&1 ; do
     eval expanded_libdir=$expanded_libdir
   done
-
-  AM_CONDITIONAL(LIBDIR_IS_DEFAULT, test "$expanded_libdir" = "$prefix/lib")
-
   prefix=$save_prefix
   exec_prefix=$save_exec_prefix
+
+# add a configure flag to indicate whether .pc files should be made relocatable
+# off by default, as it creates libtool warnings
+  AC_ARG_ENABLE([relocatable],
+    [AC_HELP_STRING([--enable-relocatable],
+       [whether prefix in installed .pc files should be setup relative to pcfiledir])],
+    [coin_enable_relocatable=$enableval],
+    [coin_enable_relocatable=no])
+  AM_CONDITIONAL([COIN_RELOCATABLE], [test $coin_enable_relocatable = yes])
 ])
 
 
