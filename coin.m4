@@ -364,8 +364,8 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
       ;;
   esac
 
-  # Set up LT_LDFLAGS.
-  AC_SUBST([LT_LDFLAGS])
+  # Set up LT_LDFLAGS, user can initialize and we augment below
+  AC_ARG_VAR(LT_LDFLAGS,[Flags passed to libtool when building libraries or executables that are installed])
 
   # Use the libtool library info, if defined, otherwise use the project version info,
   # if a full major.minor.release number was available
