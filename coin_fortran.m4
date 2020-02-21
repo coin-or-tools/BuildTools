@@ -162,7 +162,11 @@ AC_DEFUN([AC_COIN_F77_SETUP],
   if test $ac_cv_prog_f77_c_o = no ; then
     F77="$am_aux_dir/compile $F77"
   else
-    case "$F77" in *ifort ) F77="$am_aux_dir/compile $F77" ;; esac
+    case "$F77" in *ifort )
+      case $build in
+        *-mingw* | *-cygwin* | *-msys* ) F77="$am_aux_dir/compile $F77" ;; esac
+      ;;
+    esac
   fi
   # AC_MSG_NOTICE([Leaving COIN_F77_SETUP])
 ])
