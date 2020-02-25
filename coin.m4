@@ -1088,7 +1088,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
 # --with-prim is always present. If the client specified dataonly, its value
 # is assigned to prim_data.
 
-  withval=$m4_tolower(with_$1)
+  withval="$m4_tolower(with_$1)"
   if test -n "$withval" ; then
     case "$withval" in
       no )
@@ -1103,8 +1103,8 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
       * )
         m4_tolower(coin_has_$1)=yes
         m4_if(m4_default($4,nodata),dataonly,
-          [m4_tolower($1_data)=$withval],
-          [m4_tolower($1_lflags)=$withval])
+          [m4_tolower($1_data)="$withval"],
+          [m4_tolower($1_lflags)="$withval"])
         ;;
     esac
   fi
@@ -1115,7 +1115,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
 
   m4_if(m4_default($4,nodata),dataonly,[],
     [if test "$m4_tolower(coin_has_$1)" != skipping ; then
-       withval=$m4_tolower(with_$1_lflags)
+       withval="$m4_tolower(with_$1_lflags)"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -1123,12 +1123,12 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
              ;;
            * )
              m4_tolower(coin_has_$1)=yes
-             m4_tolower($1_lflags)=$withval
+             m4_tolower($1_lflags)="$withval"
              ;;
          esac
        fi
 
-       withval=$m4_tolower(with_$1_cflags)
+       withval="$m4_tolower(with_$1_cflags)"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -1147,7 +1147,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
 
   m4_if(m4_default($4,nodata),nodata,[],
     [if test "$m4_tolower(coin_has_$1)" != skipping ; then
-       withval=$m4_tolower(with_$1_data)
+       withval="$m4_tolower(with_$1_data)"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -1224,14 +1224,14 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
-    if test "$BUILDTOOLS_DEBUG" = 1 ; then
-      AC_MSG_NOTICE([FIND_PRIM_PKG result for $1: "$m4_tolower(coin_has_$1)"])
-      AC_MSG_NOTICE([Collected values for package '$1'])
-      AC_MSG_NOTICE([m4_tolower($1_lflags) is "$m4_tolower($1_lflags)"])
-      AC_MSG_NOTICE([m4_tolower($1_cflags) is "$m4_tolower($1_cflags)"])
-      AC_MSG_NOTICE([m4_tolower($1_data) is "$m4_tolower($1_data)"])
-      AC_MSG_NOTICE([m4_tolower($1_pcfiles) is "$m4_tolower($1_pcfiles)"])
-    fi
+  if test "$BUILDTOOLS_DEBUG" = 1 ; then
+    AC_MSG_NOTICE([FIND_PRIM_PKG result for $1: "$m4_tolower(coin_has_$1)"])
+    AC_MSG_NOTICE([Collected values for package '$1'])
+    AC_MSG_NOTICE([m4_tolower($1_lflags) is "$m4_tolower($1_lflags)"])
+    AC_MSG_NOTICE([m4_tolower($1_cflags) is "$m4_tolower($1_cflags)"])
+    AC_MSG_NOTICE([m4_tolower($1_data) is "$m4_tolower($1_data)"])
+    AC_MSG_NOTICE([m4_tolower($1_pcfiles) is "$m4_tolower($1_pcfiles)"])
+  fi
 
 ])  # COIN_FIND_PRIM_PKG
 
@@ -1935,7 +1935,7 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
     ])
 
 # Set up command line arguments with DEF_PRIM_ARGS.
-  AC_COIN_DEF_PRIM_ARGS([lapack],yes,yes,yes,no)
+  AC_COIN_DEF_PRIM_ARGS([lapack],yes,yes,no,no)
 
 # Give FIND_PRIM_PKG a chance to look for user-specified lapack flags,
 # but skip any checks via a .pc file. The result (coin_has_lapack) will
