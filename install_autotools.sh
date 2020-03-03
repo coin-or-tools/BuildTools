@@ -13,7 +13,7 @@ ltver=2.4.6
 set -e
 
 # so that we can configure automake with the new (then installed) autoconf
-export PATH=$PREFIX/bin:$PATH
+export PATH=$PREFIX/bin:"$PATH"
 
 # cleanup from previous (maybe failed) build
 rm -rf autoconf-$acver* autoconf-archive-$aaver* automake-$amver* libtool-$ltver*
