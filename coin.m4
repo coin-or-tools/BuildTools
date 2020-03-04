@@ -332,6 +332,10 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 #    This leads to a nm call that collects ALL C-functions from a library
 #    and explicitly dll-exporting them, leading to warnings about duplicates
 #    regarding those that are properly marked for dll-export in the source.
+# 5. Do not add mkl_*.lib to old_deplibs, which can result in trying to unpack and repack
+#    the MKL libraries (which are pretty big). Instead, treat them like other -l<...> libs.
+# 6. Add MKL libraries to dependency_libs in .la file, which I guess should be
+#    the case due to point 5.
 #
 # Patch libtool also to circumvent some issues when using MinGW (Msys+GCC).
 # 1. Relax check which libraries can be used when linking a DLL.
@@ -348,6 +352,8 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
              -e '/$AR x/s/.*/( cd $f_ex_an_ar_dir ; for f in `$AR -nologo -list "$f_ex_an_ar_oldlib" | tr "\\r" " "` ; do lib -nologo -extract:$f "$f_ex_an_ar_oldlib"; done ); : \\/g' \
              -e '/^deplibs_check_method/s/.*/deplibs_check_method="pass_all"/g' \
              m4_bmatch($1,no-win32-dll,,[-e 's|always_export_symbols=yes|always_export_symbols=no|g']) \
+             -e '/func_append old_deplibs/s/\(.*\)/case $arg in *mkl_*.lib) ;; *) \1 ;; esac/g' \
+             -e '/static library .deplib is not portable/a case $deplib in *mkl_*.lib) newdependency_libs="$deplib $newdependency_libs" ;; esac' \
          libtool > libtool.tmp
          mv libtool.tmp libtool
          chmod 755 libtool])
