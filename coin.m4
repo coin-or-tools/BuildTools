@@ -255,12 +255,14 @@ AC_DEFUN([AC_COIN_INITIALIZE],
   AM_SILENT_RULES([yes])
 
 # Initialize automake
+# - do not be as strict as for GNU projects
 # - don't AC_DEFINE PACKAGE or VERSION (but there're still defined as shell
 #   variables in configure, and as make variables).
 # - disable dist target
+# - place objects from sources in subdirs into corresponding subdirs
 # - enable all automake warnings
 
-  AM_INIT_AUTOMAKE([no-define no-dist -Wall])
+  AM_INIT_AUTOMAKE([foreign no-define no-dist subdir-objects -Wall])
 
 # Disable automatic rebuild of configure/Makefile. Use run_autotools.
 
