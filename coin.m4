@@ -312,6 +312,8 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 [
 # Create libtool.
 
+  AM_PROG_AR
+
   LT_INIT([disable-static pic-only m4_bmatch($1,no-win32-dll,,win32-dll)])
 
 # Patch libtool to circumvent some issues when using MSVC and MS lib.

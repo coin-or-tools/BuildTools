@@ -65,7 +65,7 @@ case "${COIN_ENV:-git}" in
     ver_libtool='2.4.6'
     ltfile=$AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
     autotoolsFiles="config.guess config.sub depcomp install-sh"
-    autotoolsFiles="$autotoolsFiles ltmain.sh missing compile"
+    autotoolsFiles="$autotoolsFiles ltmain.sh missing compile ar-lib"
     ;;
   "git" )
     repoDir='.git'
@@ -74,7 +74,7 @@ case "${COIN_ENV:-git}" in
     ver_libtool='2.4.6'
     ltfile=$AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
     autotoolsFiles="config.guess config.sub depcomp install-sh"
-    autotoolsFiles="$autotoolsFiles ltmain.sh missing compile"
+    autotoolsFiles="$autotoolsFiles ltmain.sh missing compile ar-lib"
     ;;
   "trunk" )
     repoDir='.svn'
@@ -83,7 +83,7 @@ case "${COIN_ENV:-git}" in
     ver_libtool='2.4.6'
     ltfile=$AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
     autotoolsFiles="config.guess config.sub depcomp install-sh"
-    autotoolsFiles="$autotoolsFiles ltmain.sh missing compile"
+    autotoolsFiles="$autotoolsFiles ltmain.sh missing compile ar-lib"
     ;;
   "stable" )
     repoDir='.svn'
@@ -120,8 +120,7 @@ usage: run_autotools [-h] [-[n]r] [-ni] [-f] [ directory directory ... ]
   -h  | --help           print help message and exit
   -r  | --recursion      do recursive search for configure.ac files
   -nr | --no-recursion   do not do recursive search for configure.ac files
-  -ni | --dependent      do not install scripts necessary for an independent
-  			 unit
+  -ni | --dependent      do not install scripts necessary for an independent unit
   -f  | --foreign        process foreign configuration files (configure.ac
                          does not contain COIN configuration macros).
   -d  | --dryrun         exit immediately after determining the list of
