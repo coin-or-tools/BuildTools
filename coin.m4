@@ -310,7 +310,7 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
   AM_PROG_AR
 
 # Create libtool.
-  LT_INIT([disable-static pic-only m4_bmatch($1,no-win32-dll,,win32-dll)])
+  LT_INIT(disable-static pic-only m4_bmatch($1,no-win32-dll,,win32-dll))
 
 # Patch libtool to circumvent some issues when using MSVC and MS lib.
 # This needs to be run after config.status has created libtool.
