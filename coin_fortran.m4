@@ -74,6 +74,7 @@ AC_DEFUN_ONCE([AC_COIN_PROG_F77],
         F77="$am_aux_dir/compile $F77"
         ac_cv_prog_F77="$F77"
         LD="$F77"
+        : ${AR:=lib}
       fi
     fi
 
