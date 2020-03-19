@@ -587,7 +587,7 @@ for dir in ${dirs[@]} ; do
 
     for f in BuildTools/headers/* ; do
       h=`basename $f`
-      echo "Update $f, if existing"
+      echo "  update $f, if existing"
       find . -name BuildTools -prune -o -name $h -exec cp $f {} \;
     done
 
