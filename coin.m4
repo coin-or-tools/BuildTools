@@ -2034,7 +2034,7 @@ dnl So for now the checks below will only work for shared MKL libs on Linux/Darw
        AC_COIN_TRY_LINK([dsyev],[],[lapack],
         [coin_has_lapack=yes
          lapack_pcfiles="lapack blas"],
-        [AC_MSG_ERROR([Could not find dsyev in Lapack from lapack.pc blas.pc.])])],
+        [AC_MSG_WARN([lapack.pc and blas.pc present, but could not find dsyev when trying to link with it.])])],
       [AC_MSG_RESULT([no])])
   fi
 
