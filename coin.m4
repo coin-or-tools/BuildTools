@@ -717,7 +717,7 @@ AC_DEFUN([AC_COIN_NAMEMANGLING],
      LIBS=$ac_save_LIBS])
 
   # setup the m4_toupper($1)_FUNC and m4_toupper($1)_FUNC_ macros
-  AC_COIN_DEFINENAMEMANGLING([m4_toupper($1)],[$m4_tolower(ac_cv_$1_namemangling)])
+  AC_COIN_DEFINENAMEMANGLING(m4_toupper(AC_PACKAGE_NAME)_[]m4_toupper($1),[$m4_tolower(ac_cv_$1_namemangling)])
 
   # AC_MSG_NOTICE([Done COIN_NAMEMANGLING])
 ])
@@ -1333,7 +1333,7 @@ AC_DEFUN([AC_COIN_CHK_PKG],
 # augment the necessary variables for the client packages.
 
   if test $m4_tolower(coin_has_$1) = yes ; then
-    AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],
+    AC_DEFINE(m4_toupper(AC_PACKAGE_NAME)_HAS_[]m4_toupper($1),[1],
       [Define to 1 if $1 is available.])
     m4_foreach_w([myvar],[$2],
       [if test -n "$m4_tolower($1_pcfiles)" ; then m4_toupper(myvar)_PCFILES="$m4_tolower($1_pcfiles) $m4_toupper(myvar)_PCFILES" ; fi
@@ -1686,7 +1686,7 @@ AC_DEFUN([AC_COIN_CHK_LIB],
 # and augment the necessary variables for the client packages.
 
   if test $m4_tolower(coin_has_$1) = yes ; then
-    AC_DEFINE(m4_toupper(COIN_HAS_$1),[1],
+    AC_DEFINE(m4_toupper(AC_PACKAGE_NAME)_HAS_[]m4_toupper($1),[1],
       [Define to 1 if the $1 package is available])
     m4_foreach_w([myvar],[$2],
       [m4_toupper(myvar)_LFLAGS="$m4_tolower($1_lflags) $m4_toupper(myvar)_LFLAGS"
@@ -1762,7 +1762,7 @@ AC_DEFUN([AC_COIN_CHK_ZLIB],
       m4_foreach_w([myvar],[$1],
         [m4_toupper(myvar)_LFLAGS="-lz $m4_toupper(myvar)_LFLAGS"
         ])
-      AC_DEFINE([COIN_HAS_ZLIB],[1],[Define to 1 if zlib is available])
+      AC_DEFINE(m4_toupper(AC_PACKAGE_NAME)_HAS_ZLIB,[1],[Define to 1 if zlib is available])
     fi
   fi
 
@@ -1804,7 +1804,7 @@ AC_DEFUN([AC_COIN_CHK_BZLIB],
       m4_foreach_w([myvar],[$1],
         [m4_toupper(myvar)_LFLAGS="-lbz2 $m4_toupper(myvar)_LFLAGS"
         ])
-      AC_DEFINE([COIN_HAS_BZLIB],[1],[Define to 1 if bzlib is available])
+      AC_DEFINE(m4_toupper(AC_PACKAGE_NAME)_HAS_BZLIB,[1],[Define to 1 if bzlib is available])
     fi
   fi
 
@@ -1844,11 +1844,11 @@ AC_DEFUN([AC_COIN_CHK_GMP],
       m4_foreach_w([myvar],[$1],
         [m4_toupper(myvar)_LFLAGS="-lgmp $m4_toupper(myvar)_LFLAGS"
         ])
-      AC_DEFINE([COIN_HAS_GMP],[1],[Define to 1 if GMP is available])
+      AC_DEFINE(m4_toupper(AC_PACKAGE_NAME)_HAS_GMP,[1],[Define to 1 if GMP is available])
     fi
   fi
 
-  AM_CONDITIONAL([COIN_HAS_GMP],[test x$coin_has_gmp = xyes])
+  AM_CONDITIONAL(COIN_HAS_GMP,[test x$coin_has_gmp = xyes])
 ]) # AC_COIN_CHK_GMP
 
 
@@ -1896,12 +1896,12 @@ AC_DEFUN([AC_COIN_CHK_GNU_READLINE],
       m4_foreach_w([myvar],[$1],
         [m4_toupper(myvar)_LFLAGS="$LIBS $m4_toupper(myvar)_LFLAGS"
         ])
-      AC_DEFINE([COIN_HAS_READLINE],[1],[Define to 1 if readline is available])
+      AC_DEFINE(m4_toupper(AC_PACKAGE_NAME)_HAS_READLINE,[1],[Define to 1 if readline is available])
     fi
     LIBS="$coin_save_LIBS"
   fi
 
-  AM_CONDITIONAL([COIN_HAS_READLINE],[test x$coin_has_readline = xyes])
+  AM_CONDITIONAL(COIN_HAS_READLINE,[test x$coin_has_readline = xyes])
 ]) # AC_COIN_CHK_GNU_READLINE
 
 
@@ -2051,14 +2051,14 @@ dnl So for now the checks below will only work for shared MKL libs on Linux/Darw
 # TODO do we need another check with -llapack only?
 
 # Time to set some variables. Create an automake conditional COIN_HAS_LAPACK.
-  AM_CONDITIONAL(m4_toupper(COIN_HAS_LAPACK),[test $coin_has_lapack = yes])
+  AM_CONDITIONAL(COIN_HAS_LAPACK,[test $coin_has_lapack = yes])
 
 # If we've located the package, define preprocessor symbol COIN_HAS_LAPACK
 # and COIN_LAPACK_FUNC[_] and augment the necessary variables for the client packages.
   if test $coin_has_lapack = yes ; then
-    AC_DEFINE(m4_toupper(COIN_HAS_LAPACK),[1],
+    AC_DEFINE(m4_toupper(AC_PACKAGE_NAME)_HAS_LAPACK,[1],
       [Define to 1 if the LAPACK package is available])
-    AC_COIN_DEFINENAMEMANGLING([COIN_LAPACK], ${dsyev_namemangling})
+    AC_COIN_DEFINENAMEMANGLING(m4_toupper(AC_PACKAGE_NAME)_LAPACK, ${dsyev_namemangling})
     m4_foreach_w([myvar],[$1],
       [if test -n "$lapack_pcfiles" ; then m4_toupper(myvar)_PCFILES="$lapack_pcfiles $m4_toupper(myvar)_PCFILES" ; fi
        m4_toupper(myvar)_LFLAGS="$lapack_lflags $m4_toupper(myvar)_LFLAGS"

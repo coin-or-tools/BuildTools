@@ -131,8 +131,7 @@ AC_DEFUN([AC_COIN_CHECK_ISFINITE],
   if test -z "$COIN_C_FINITE"; then
     AC_MSG_WARN(Cannot find C-function for checking Inf.)
   else
-    AC_DEFINE_UNQUOTED(COIN_C_FINITE,[$COIN_C_FINITE],
-		       [Define to be the name of C-function for Inf check])
+    AC_DEFINE_UNQUOTED(m4_toupper(AC_PACKAGE_NAME)_C_FINITE,[$COIN_C_FINITE],[Define to be the name of C-function for Inf check])
   fi
 ])
 
@@ -159,7 +158,7 @@ AC_DEFUN([AC_COIN_CHECK_ISNAN],
     for fname in isnan _isnan isnand ; do
       AC_CHECK_DECL([$fname],[COIN_C_ISNAN=$fname],,AC_COIN_MATH_HDRS)
       if test -z "$COIN_C_ISNAN"; then
-	break
+        break
       fi
     done
   fi
@@ -167,8 +166,7 @@ AC_DEFUN([AC_COIN_CHECK_ISNAN],
   if test -z "$COIN_C_ISNAN"; then
     AC_MSG_WARN(Cannot find C-function for checking NaN.)
   else
-    AC_DEFINE_UNQUOTED(COIN_C_ISNAN,[$COIN_C_ISNAN],
-		       [Define to be the name of C-function for NaN check])
+    AC_DEFINE_UNQUOTED(m4_toupper(AC_PACKAGE_NAME)_C_ISNAN,[$COIN_C_ISNAN],[Define to be the name of C-function for NaN check])
   fi
 ])
 
