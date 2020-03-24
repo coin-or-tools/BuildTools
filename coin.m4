@@ -48,7 +48,7 @@ AC_DEFUN([AC_COIN_VPATH_LINK],
 
 # This macro is used by COIN_INITIALIZE and sets up variables related to
 # versioning numbers of the project.
-#   COIN_PROJECTVERSION([project],[libtool_version_string])
+#   COIN_PROJECTVERSION([libtool_version_string])
 #
 # If libtool_version_string is given, then defines AC_COIN_LIBTOOL_VERSIONINFO,
 # which will be picked up by AC_COIN_PROG_LIBTOOL to set libtools -version-info flag.
@@ -66,20 +66,20 @@ AC_DEFUN([AC_COIN_PROJECTVERSION],
   m4_define(AC_PACKAGE_VERSION_RELEASE, m4_bregexp(AC_PACKAGE_VERSION, [^[0-9]*\.[0-9]*\.\([0-9]*\).*], [\1]))
 
   # ac-define AC_PACKAGE_VERSION macros, use 9999 for missing values
-  m4_ifvaln([$1],
-    [AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION),"AC_PACKAGE_VERSION",[Version number of project])
-     AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MAJOR),
-       m4_ifnblank(AC_PACKAGE_VERSION_MAJOR,AC_PACKAGE_VERSION_MAJOR,9999),
-       [Major version number of project.])
-     AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_MINOR),
-       m4_ifnblank(AC_PACKAGE_VERSION_MINOR,AC_PACKAGE_VERSION_MINOR,9999),
-       [Minor version number of project.])
-     AC_DEFINE_UNQUOTED(m4_toupper($1_VERSION_RELEASE),
-       m4_ifnblank(AC_PACKAGE_VERSION_RELEASE,AC_PACKAGE_VERSION_RELEASE,9999),
-       [Release version number of project.])
-    ])
+  AC_DEFINE_UNQUOTED(m4_toupper(AC_PACKAGE_NAME)_VERSION,
+    "AC_PACKAGE_VERSION",
+    [Version number of project])
+  AC_DEFINE_UNQUOTED(m4_toupper(AC_PACKAGE_NAME)_VERSION_MAJOR,
+    m4_ifnblank(AC_PACKAGE_VERSION_MAJOR,AC_PACKAGE_VERSION_MAJOR,9999),
+    [Major version number of project.])
+  AC_DEFINE_UNQUOTED(m4_toupper(AC_PACKAGE_NAME)_VERSION_MINOR,
+    m4_ifnblank(AC_PACKAGE_VERSION_MINOR,AC_PACKAGE_VERSION_MINOR,9999),
+    [Minor version number of project.])
+  AC_DEFINE_UNQUOTED(m4_toupper(AC_PACKAGE_NAME)_VERSION_RELEASE,
+    m4_ifnblank(AC_PACKAGE_VERSION_RELEASE,AC_PACKAGE_VERSION_RELEASE,9999),
+    [Release version number of project.])
 
-  m4_define(AC_COIN_LIBTOOL_VERSIONINFO,$2)
+  m4_define(AC_COIN_LIBTOOL_VERSIONINFO,$1)
 ])
 
 
@@ -200,13 +200,12 @@ AC_DEFUN([AC_COIN_DEBUGLEVEL],
 #                            COIN_INITIALIZE                               #
 ###########################################################################
 
-# AC_COIN_INITIALIZE(name,version)
+# AC_COIN_INITIALIZE(version)
 
 # This macro does everything that is required in the early part of the
 # configure script, such as defining a few variables.
-#   name: project name
-#   version (optional): the libtool library version (important for releases,
-#     less so for stable or trunk).
+#   version (optional): the libtool library version
+#                       project version number is used if not available
 
 AC_DEFUN([AC_COIN_INITIALIZE],
 [
@@ -216,7 +215,7 @@ AC_DEFUN([AC_COIN_INITIALIZE],
 
 # Set the project's version numbers
 
-  AC_COIN_PROJECTVERSION($1, $2)
+  AC_COIN_PROJECTVERSION($1)
 
 # A useful makefile conditional that is always false
 
