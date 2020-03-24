@@ -176,22 +176,22 @@ AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
 
 AC_DEFUN([AC_COIN_DEBUGLEVEL],
 [
-  AC_ARG_WITH(m4_tolower($1)-verbosity,
-    AC_HELP_STRING([--with-m4_tolower($1)-verbosity],[specify the debug verbosity level for project $1]),
+  AC_ARG_WITH(m4_tolower(AC_PACKAGE_NAME)-verbosity,
+    AC_HELP_STRING([--with-m4_tolower(AC_PACKAGE_NAME)-verbosity],[specify the debug verbosity level]),
     [if test "$withval" = yes; then withval=1 ; fi
-     m4_tolower(coin_$1_verbosity)=$withval],
-    [m4_tolower(coin_$1_verbosity)=0])
-  AC_DEFINE_UNQUOTED(m4_toupper(COIN_$1_VERBOSITY),
-                     m4_tolower($coin_$1_verbosity),
+     coin_verbosity=$withval],
+    [coin_verbosity=0])
+  AC_DEFINE_UNQUOTED(m4_toupper(AC_PACKAGE_NAME)_VERBOSITY,
+                     $coin_verbosity,
                      [Define to the debug verbosity level (0 is no output)])
 
-  AC_ARG_WITH(m4_tolower($1)-checklevel,
-    AC_HELP_STRING([--with-m4_tolower($1)-checklevel],[specify the sanity check level for project $1]),
+  AC_ARG_WITH(m4_tolower(AC_PACKAGE_NAME)-checklevel,
+    AC_HELP_STRING([--with-m4_tolower(AC_PACKAGE_NAME)-checklevel],[specify the sanity check level]),
     [if test "$withval" = yes; then withval=1 ; fi
-     m4_tolower(coin_$1_checklevel)=$withval],
-    [m4_tolower(coin_$1_checklevel)=0])
-  AC_DEFINE_UNQUOTED(m4_toupper(COIN_$1_CHECKLEVEL),
-                     m4_tolower($coin_$1_checklevel),
+     coin_checklevel=$withval],
+    [coin_checklevel=0])
+  AC_DEFINE_UNQUOTED(m4_toupper(AC_PACKAGE_NAME)_CHECKLEVEL,
+                     $coin_checklevel,
                      [Define to the debug sanity check level (0 is no test)])
 ])
 
