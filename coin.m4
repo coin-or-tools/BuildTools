@@ -1635,7 +1635,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 
 AC_DEFUN([AC_COIN_CHK_LIB],
 [
-  AC_MSG_CHECKING([for package $1])
+  AC_MSG_CHECKING(m4_ifnblank($6,[for package $1 with function $6],[for package $1]))
 
 # Make sure the necessary variables exist for each client package.
 
