@@ -1419,7 +1419,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 # --with-prim is always present. If the client specified dataonly, its value
 # is assigned to prim_data.
 
-  withval=$m4_tolower(with_$1)
+  withval="$m4_tolower(with_$1)"
   if test -n "$withval" ; then
     case "$withval" in
       no )
@@ -1434,8 +1434,8 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
       * )
         m4_tolower(coin_has_$1)=yes
         m4_if(m4_default($8,nodata),dataonly,
-          [m4_tolower($1_data)=$withval],
-          [m4_tolower($1_lflags)=$withval])
+          [m4_tolower($1_data)="$withval"],
+          [m4_tolower($1_lflags)="$withval"])
         ;;
     esac
   fi
@@ -1446,7 +1446,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 
   m4_if(m4_default($8,nodata),dataonly,[],
     [if test "$m4_tolower(coin_has_$1)" != skipping ; then
-       withval=$m4_tolower(with_$1_lflags)
+       withval="$m4_tolower(with_$1_lflags)"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -1454,12 +1454,12 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
              ;;
            * )
              m4_tolower(coin_has_$1)=yes
-             m4_tolower($1_lflags)=$withval
+             m4_tolower($1_lflags)="$withval"
              ;;
          esac
        fi
 
-       withval=$m4_tolower(with_$1_cflags)
+       withval="$m4_tolower(with_$1_cflags)"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -1478,7 +1478,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 
   m4_if(m4_default($8,nodata),nodata,[],
     [if test "$m4_tolower(coin_has_$1)" != skipping ; then
-       withval=$m4_tolower(with_$1_data)
+       withval="$m4_tolower(with_$1_data)"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
