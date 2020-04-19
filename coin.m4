@@ -1559,15 +1559,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
     m4_ifnblank([$5],
       [ac_save_LIBS=$LIBS
        LIBS="$m4_tolower($1_lflags) $6"
-       AC_LINK_IFELSE(
-        [AC_LANG_PROGRAM(
-          [#ifdef __cplusplus
-             extern "C"
-           #endif
-           void $5();],
-          [$5()])],
-       [],
-       [m4_tolower(coin_has_$1)=no])
+       AC_TRY_LINK_FUNC([$5],[],m4_tolower(coin_has_$1)=no)
        LIBS=$ac_save_LIBS],
       [:])
   fi
