@@ -676,7 +676,8 @@ AC_DEFUN([AC_COIN_NAMEMANGLING],
   AC_CACHE_CHECK(
     [$1 name mangling scheme],
     [m4_tolower(ac_cv_$1_namemangling)],
-    [ac_save_LIBS=$LIBS
+    [AC_LANG_PUSH(C)
+     ac_save_LIBS=$LIBS
      m4_ifblank([$3], [LIBS="-l$1"], [LIBS="$3"])
      for ac_case in "lower case" "upper case" ; do
        for ac_trail in "underscore" "no underscore" ; do
@@ -695,15 +696,7 @@ AC_DEFUN([AC_COIN_NAMEMANGLING],
              ac_name=${ac_name}_
            fi
            # AC_MSG_CHECKING([$2 -> $ac_name])
-           AC_LINK_IFELSE(
-             [AC_LANG_PROGRAM(
-                [#ifdef __cplusplus
-                  extern "C"
-                 #endif
-                 void $ac_name();],
-                [$ac_name()])],
-             [ac_success=yes],
-             [ac_success=no])
+           AC_TRY_LINK_FUNC([$ac_name],[ac_success=yes],[ac_success=no])
            # AC_MSG_RESULT([$result])
            if test $ac_success = yes ; then
              break 3
@@ -714,7 +707,8 @@ AC_DEFUN([AC_COIN_NAMEMANGLING],
      if test "$ac_success" = "no" ; then
        m4_tolower(ac_cv_$1_namemangling)=unknown
      fi
-     LIBS=$ac_save_LIBS])
+     LIBS=$ac_save_LIBS
+     AC_LANG_POP(C)])
 
   # setup the m4_toupper($1)_FUNC and m4_toupper($1)_FUNC_ macros
   AC_COIN_DEFINENAMEMANGLING(m4_toupper(AC_PACKAGE_NAME)_[]m4_toupper($1),[$m4_tolower(ac_cv_$1_namemangling)])
@@ -773,13 +767,7 @@ AC_DEFUN([AC_COIN_TRY_LINK],
           ac_name=${ac_name}_
         fi
         AC_MSG_CHECKING([for function $ac_name in $LIBS])
-        AC_LINK_IFELSE(
-          [AC_LANG_PROGRAM(
-            [#ifdef __cplusplus
-             extern "C"
-             #endif
-             void $ac_name();],
-            [$ac_name()])],
+        AC_TRY_LINK_FUNC([$ac_name],
           [$1_namemangling="${ac_case}, ${ac_trail}, ${ac_extra}"
            ac_success=yes],
           [ac_success=no])
