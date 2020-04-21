@@ -368,6 +368,9 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
   # shared libraries should have no undefined symbols
   # for Windows DLLs, it is mandatory to add this
   LT_LDFLAGS="$LT_LDFLAGS -no-undefined"
+
+  # add automake conditional on whether we build shared or static, useful for .pc files
+  AM_CONDITIONAL([COIN_STATIC_BUILD],[test "$enable_shared" = no])
 ])
 
 
