@@ -210,29 +210,23 @@ AC_DEFUN([AC_COIN_DEBUGLEVEL],
 AC_DEFUN([AC_COIN_INITIALIZE],
 [
 # Enforce the required autoconf version
-
   AC_PREREQ(2.69)
 
 # Set the project's version numbers
-
   AC_COIN_PROJECTVERSION($1)
 
 # A useful makefile conditional that is always false
-
   AM_CONDITIONAL(ALWAYS_FALSE, false)
 
 # Change the default compiler flags. This needs to run before
 # AC_CANONICAL_BUILD.
-
   AC_REQUIRE([AC_COIN_COMPFLAGS_DEFAULTS])
 
 # Get the build and host types
-
   AC_CANONICAL_BUILD
   AC_CANONICAL_HOST
 
 # libtool has some magic for host_os and build_os being mingw, but doesn't know about msys
-
   if test $host_os = msys ; then
     host_os=mingw
     host=`echo $host | sed -e 's/msys/mingw/'`
@@ -246,7 +240,6 @@ AC_DEFUN([AC_COIN_INITIALIZE],
 # Make silent build rules the default (https://www.gnu.org/software/automake/
 # manual/html_node/Automake-Silent-Rules.html). Run before AM_INIT_AUTOMAKE,
 # which will AC_REQUIRE it anyway.
-
   AM_SILENT_RULES([yes])
 
 # Initialize automake
@@ -256,11 +249,9 @@ AC_DEFUN([AC_COIN_INITIALIZE],
 # - disable dist target
 # - place objects from sources in subdirs into corresponding subdirs
 # - enable all automake warnings
-
   AM_INIT_AUTOMAKE([foreign no-define no-dist subdir-objects -Wall])
 
 # Disable automatic rebuild of configure/Makefile. Use run_autotools.
-
   AM_MAINTAINER_MODE
 
 # Figure out the path where libraries are installed.
@@ -905,7 +896,7 @@ AC_DEFUN([AC_COIN_CHK_MOD_EXISTS],
 # tolower($1).
 
 # This macro should be called after FINALIZE_FLAGS is invoked for the
-# client packages, for two reasons: First, COIN packages tend to use
+# client packages, for two reasons: First, COIN-OR packages tend to use
 # .pc files, so we're probably adding a package to _PCFILES that isn't yet
 # installed. Also, FINALIZE_FLAGS will have accessed the .pc files already
 # in _PCFILES and expanded them into _LIBS and _CFLAGS, saving the original
@@ -2231,13 +2222,10 @@ AC_DEFUN([AC_COIN_FINALIZE_FLAGS],
       # add -DXYZ_BUILD to XYZ_CFLAGS
       m4_toupper(myvar)_CFLAGS="${m4_toupper(myvar)_CFLAGS} -D[]m4_toupper(myvar)_BUILD"
 
-# Define BUILDTOOLS_DEBUG to enable debugging output
-
+      # Define BUILDTOOLS_DEBUG to enable debugging output
       if test "$BUILDTOOLS_DEBUG" = 1 ; then
-        AC_MSG_NOTICE(
-          [m4_toupper(myvar)_LFLAGS_NOPC: "${m4_toupper(myvar)_LFLAGS_NOPC}"])
-        AC_MSG_NOTICE(
-          [m4_toupper(myvar)_CFLAGS_NOPC: "${m4_toupper(myvar)_CFLAGS_NOPC}"])
+        AC_MSG_NOTICE([m4_toupper(myvar)_LFLAGS_NOPC: "${m4_toupper(myvar)_LFLAGS_NOPC}"])
+        AC_MSG_NOTICE([m4_toupper(myvar)_CFLAGS_NOPC: "${m4_toupper(myvar)_CFLAGS_NOPC}"])
         AC_MSG_NOTICE([adding "${m4_toupper(myvar)_PCFILES}"])
         AC_MSG_NOTICE([m4_toupper(myvar)_LFLAGS: "${m4_toupper(myvar)_LFLAGS}"])
         AC_MSG_NOTICE([m4_toupper(myvar)_CFLAGS: "${m4_toupper(myvar)_CFLAGS}"])
