@@ -41,7 +41,18 @@
  	  done
  	  IFS="$save_ifs"
  	  ;;
-@@ -214,6 +220,11 @@
+@@ -200,6 +206,10 @@
+ 	  eat=1
+ 	  linker_opts="$linker_opts $2"
+ 	  ;;
++	-std=*)
++	  set x "$@" -std:"${1#-std=}"
++	  shift
++	  ;;
+ 	-*)
+ 	  set x "$@" "$1"
+ 	  shift
+@@ -214,6 +224,11 @@
  	  set x "$@" "$file"
  	  shift
  	  ;;
@@ -53,7 +64,7 @@
  	*)
  	  set x "$@" "$1"
  	  shift
-@@ -225,8 +236,28 @@
+@@ -225,8 +240,28 @@
    if test -n "$linker_opts"; then
      linker_opts="-link$linker_opts"
    fi
@@ -84,7 +95,7 @@
  }
  
  eat=
-@@ -256,7 +287,8 @@
+@@ -256,7 +291,8 @@
      exit $?
      ;;
    cl | *[/\\]cl | cl.exe | *[/\\]cl.exe | \
