@@ -6,7 +6,7 @@ PREFIX=$HOME/local2
 
 acver=2.69
 aaver=2019.01.06
-amver=1.16.1
+amver=1.16.2
 ltver=2.4.6
 
 # exit immediately if something fails

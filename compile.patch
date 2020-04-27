@@ -1,15 +1,6 @@
 --- compile
 +++ compile
-@@ -50,7 +50,7 @@
-       if test -z "$file_conv"; then
- 	# lazily determine how to convert abs files
- 	case `uname -s` in
--	  MINGW*)
-+	  MINGW* | MSYS* )
- 	    file_conv=mingw
- 	    ;;
- 	  CYGWIN*)
-@@ -133,6 +133,9 @@
+@@ -133,6 +133,9 @@ func_cl_wrapper ()
    lib_path=
    shared=:
    linker_opts=
@@ -19,7 +10,7 @@
    for arg
    do
      if test -n "$eat"; then
-@@ -147,11 +150,13 @@
+@@ -147,11 +150,13 @@ func_cl_wrapper ()
  	      func_file_conv "$2"
  	      set x "$@" -Fo"$file"
  	      shift
@@ -33,7 +24,7 @@
  	      ;;
  	  esac
  	  ;;
-@@ -193,6 +198,7 @@
+@@ -193,6 +198,7 @@ func_cl_wrapper ()
  	  for flag in $arg; do
  	    IFS="$save_ifs"
  	    linker_opts="$linker_opts $flag"
@@ -41,7 +32,7 @@
  	  done
  	  IFS="$save_ifs"
  	  ;;
-@@ -200,6 +206,10 @@
+@@ -200,6 +206,10 @@ func_cl_wrapper ()
  	  eat=1
  	  linker_opts="$linker_opts $2"
  	  ;;
@@ -52,7 +43,7 @@
  	-*)
  	  set x "$@" "$1"
  	  shift
-@@ -214,6 +224,11 @@
+@@ -214,6 +224,11 @@ func_cl_wrapper ()
  	  set x "$@" "$file"
  	  shift
  	  ;;
@@ -64,7 +55,7 @@
  	*)
  	  set x "$@" "$1"
  	  shift
-@@ -225,8 +240,28 @@
+@@ -225,8 +240,28 @@ func_cl_wrapper ()
    if test -n "$linker_opts"; then
      linker_opts="-link$linker_opts"
    fi
@@ -95,7 +86,7 @@
  }
  
  eat=
-@@ -256,7 +291,8 @@
+@@ -256,7 +291,8 @@ EOF
      exit $?
      ;;
    cl | *[/\\]cl | cl.exe | *[/\\]cl.exe | \
