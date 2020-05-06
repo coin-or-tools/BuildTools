@@ -111,9 +111,6 @@ if test $isNormal = yes ; then
 fi
 
 # Find configure.ac files for the package and project and update the version.
-# We have no externals at this point, so there will be
-# two files for a normal project, one for a ThirdParty or Data project, and
-# none for BuildTools.
 
 echo ''
 echo "===> Checking for configure.ac files ..."
@@ -124,15 +121,14 @@ if test -n "$confac_files" ; then
 # Take the attitude that [] around parameters in AC_INIT is optional,
 # it's the commas that count. This does make for a surpassing ugly regular
 # expression.  A comma in the version string will cause a spectacular failure.
-# In AC_COIN_PROJECTDIR_INIT, take the attitude that there is one parameter
-# with the PMs choosen project name which is preserved and we only add a
-# libtool version number afterwards.
+# In AC_COIN_PROJECTDIR_INIT, take the attitude that we only add a
+# libtool version number as argument.
 
   echo ''
   echo "===> Updating version numbers in configure.ac files ..."
   for i in $confac_files; do
     sed -i -e "s|AC_INIT\(.*\),\(\[*\)[^],]*\(\]*\),\(.*\)|AC_INIT\1,\2$newVer\3,\4|" $i
-    sed -i -e "s|AC_COIN_PROJECTDIR_INIT(\(.*\))|AC_COIN_PROJECTDIR_INIT\(\1,$newLTCurrent:$newLTRevision:$newLTAge\)|" $i
+    sed -i -e "s|AC_COIN_PROJECTDIR_INIT|AC_COIN_PROJECTDIR_INIT\($newLTCurrent:$newLTRevision:$newLTAge\)|" $i
     git diff $i
   done
 else
@@ -157,41 +153,15 @@ if test -n "$configFileLoc" ; then
 fi
 
 if [ $topProjName != BuildTools ] ; then
+  buildtoolsDir=$cmdDir
+
   echo ''
-  echo '===> Getting BuildTools and running run_autotools ...'
+  echo '===> Running $buildtoolsDir/run_autotools ...'
   echo ''
 
   [ -e BuildTools ] && mv BuildTools BuildTools.bak
 
-  buildtoolsDir=$cmdDir
-  # read BuildTools dependency from Dependencies file and convert stable to latest release
-  if buildtoolsDep=`grep ^BuildTools Dependencies` ; then
-    buildtoolsDep=${buildtoolsDep:11}
-    if [[ "$buildtoolsDep" =~ (releases/[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*) ]] ; then
-      buildtoolsVer=${BASH_REMATCH[1]}
-    elif [[ "$buildtoolsDep" =~ stable/([0-9][0-9]*\.[0-9][0-9]*) ]] ; then
-      buildtoolsVer=`git ls-remote --tags --sort v:refname https://github.com/coin-or-tools/BuildTools releases/${BASH_REMATCH[1]}.* | tail -1`
-      buildtoolsVer=${buildtoolsVer##*refs/tags/}
-    else
-      echo "ERROR: Cannot release with BuildTools dependency set to $buildtoolsDep in Dependencies"
-      exit 1
-    fi
-    if [ -z "$buildtoolsVer" ]; then
-      echo "ERROR: Cannot determine latest BuildTools release from dependency $buildtoolsDep"
-      exit 1
-    fi
-    echo "BuildTools Version: $buildtoolsVer"
-
-    buildtoolsDir=BuildTools-${buildtoolsVer/\//-}
-    git clone -b $buildtoolsVer https://github.com/coin-or-tools/BuildTools $buildtoolsDir
-  fi
-
-  echo "Running $buildtoolsDir/run_autotools"
   $buildtoolsDir/run_autotools
-
-  if [ "$buildtoolsDir" != "$cmdDir" ]; then
-    echo rm -rf $buildtoolsDir
-  fi
 
   [ -e BuildTools.bak ] && mv BuildTools.bak BuildTools
 fi
