@@ -608,6 +608,35 @@ calcLibtoolAge ()
   echo $cltc_cnt
 }
 
+# very similar to calcLibtoolCurrent, but look only on stable branches with given major version number
+calcLibtoolAgeGit ()
+{ cltc_majVer=$1
+  cltc_minVer=$2
+
+  # Get a list of all standard stable branches with this major version (stable/$majVer.)
+
+  cltc_rawls=`git branch -r | grep origin/stable/${cltc_majVer}\. | sed -e 's#^ *origin/stable/##' | sort -V`
+  # echo "Initial list of stable branches: $cltc_rawls"
+
+  # Count stable branches to standard version numbers before and
+  # including the one given
+
+  cltc_verPat='[0-9][0-9.]*'
+
+  cltc_cnt=0
+  for cltc_ver in $cltc_rawls ; do
+    if  expr "$cltc_ver" : "$cltc_verPat" >/dev/null 2>&1 ; then
+      (( cltc_cnt += 1 ))
+      # echo "included $cltc_ver into count -> $cltc_cnt"
+    fi
+    if [ "$cltc_ver" = "${cltc_majVer}.${cltc_minVer}" ] ; then
+      break
+    fi
+  done
+
+  echo $cltc_cnt
+}
+
 # Count the total number of stable branches for the project up to the
 # specified major.minor version number (libtool current).  Returns 0 if
 # handed a trunk url, or if the url is BuildTools itself.
@@ -694,6 +723,34 @@ calcLibtoolCurrent ()
   echo $cltc_cnt
 }
 
+
+calcLibtoolCurrentGit ()
+{ cltc_majVer=$1
+  cltc_minVer=$2
+
+  # Get a list of all standard stable branches (stable/)
+
+  cltc_rawls=`git branch -r | grep origin/stable/ | sed -e 's#^ *origin/stable/##' | sort -V`
+  # echo "Initial list of stable branches: $cltc_rawls"
+
+  # Count stable branches to standard version numbers before and
+  # including the one given
+
+  cltc_verPat='[0-9][0-9.]*'
+
+  cltc_cnt=0
+  for cltc_ver in $cltc_rawls ; do
+    if  expr "$cltc_ver" : "$cltc_verPat" >/dev/null 2>&1 ; then
+      (( cltc_cnt += 1 ))
+      # echo "included $cltc_ver into count -> $cltc_cnt"
+    fi
+    if [ "$cltc_ver" = "${cltc_majVer}.${cltc_minVer}" ] ; then
+      break
+    fi
+  done
+
+  echo $cltc_cnt
+}
 
 # Function to compare the versions in a pair of URLs for equality. The criteria
 # is that the major and minor versions match. In theory, the release should

@@ -1,0 +1,232 @@
+#!/bin/bash
+
+#set -x -v
+set -e
+
+if expr "$0" : '.*/.*' >/dev/null 2>&1 ; then
+  cmdDir=`dirname $0`
+else
+  cmdDir='.'
+fi
+if test -r $cmdDir/coin-functions ; then
+  . $cmdDir/coin-functions
+else
+  echo "Cannot find utility functions file coin-functions; exiting."
+  exit 1
+fi
+
+# process parameters
+releaseStyle="reset"
+while [ $# -ge 1 ] ; do
+  case "$1" in
+    -h | --help | --usage )
+      echo "Usage: $0 { -h | --help | --usage | -t }"
+      echo
+      echo "Options:"
+      echo "  -h, --help, --usage   Print this help and exit"
+      echo "  -t                    Make sure release tag is visible on current branch"
+      echo
+      echo "More details about -t:"
+      echo "  If -t is specified, the script will commit the release version number"
+      echo "  change (xx.yy -> xx.yy.zz) to the current branch, tag this commit, and"
+      echo "  then adds another commit that reverts the tagged commit."
+      echo "  If -t is not specified, the script will also commit the release version"
+      echo "  number change to the current branch, tag this commit, but then removes"
+      echo "  the tagged commit from the current branch by resetting it."
+      echo "  Using -t has the advantage that the tag will be visible in the log of the"
+      echo "  stable branch. Not using -t has the advantage that the temporary change in"
+      echo "  the version number will not be part of the stable branch".
+      exit 0
+    ;;
+    -t | --ted )
+      releaseStyle="revert"
+      ;;
+    *)
+      echo "Unknown argument. Run with -h to see usage."
+      exit 1
+    ;;
+  esac
+  shift
+done
+
+if ! git diff --exit-code --quiet HEAD ; then
+  echo "EXIT: There are uncommitted changes. I'm too afraid to proceed."
+  exit 1
+fi
+
+# figure out name of project from repo URL, remove possible .git suffix
+topProjName=`git remote get-url origin`
+topProjName=${topProjName##*/}
+topProjName=${topProjName/.git/}
+echo "Project        : $topProjName"
+
+branchName=`git rev-parse --abbrev-ref HEAD`
+echo "Branch         : $branchName"
+
+if [[ "$branchName" != stable/* ]] ; then
+  echo "ERROR: Expected branchname to start with 'stable/"
+  exit 1
+fi
+
+
+# get tags from remote
+git fetch -t
+
+# get last release from current stable branch
+lastRelease=`git tag --list "${branchName/stable/releases}*" | sort -V | tail -1`
+echo "Last Release   : $lastRelease"
+
+# figure out new release number
+if [ -z "$lastRelease" ] ; then
+  # no last release, then take stable version and add .0
+  if [[ "$branchName" =~ ^stable/([0-9][0-9]*)\.([0-9][0-9]*) ]] ; then
+    majVer=${BASH_REMATCH[1]}
+    minVer=${BASH_REMATCH[2]}
+    relVer=0
+  else
+    echo "ERROR: Branchname does not match stable/xx.yy"
+    exit 1
+  fi
+elif [[ "$lastRelease" =~ ^releases/([0-9][0-9]*)\.([0-9][0-9]*)\.([0-9][0-9]*)$ ]] ; then
+  majVer=${BASH_REMATCH[1]}
+  minVer=${BASH_REMATCH[2]}
+  relVer=${BASH_REMATCH[3]}
+  (( relVer += 1 ))
+else
+  echo "ERROR: Last release name does not match releases/xx.yy.zz format"
+  exit 1
+fi
+newVer=${majVer}.${minVer}.${relVer}
+
+echo "New release    : releases/$newVer"
+
+isNormal=yes
+if test $isNormal = yes ; then
+  newLTCurrent=`calcLibtoolCurrentGit $majVer $minVer`
+  newLTRevision=$relVer
+  newLTAge=`calcLibtoolAgeGit $majVer $minVer`
+  (( newLTAge -= 1 ))
+  newLTVer=${newLTCurrent}:${newLTRevision}:${newLTAge}
+  echo "Libtool version: $newLTVer"
+fi
+
+# Find configure.ac files for the package and project and update the version.
+# We have no externals at this point, so there will be
+# two files for a normal project, one for a ThirdParty or Data project, and
+# none for BuildTools.
+
+echo ''
+echo "===> Checking for configure.ac files ..."
+confac_files=`find . -name 'configure.ac' -print`
+
+if test -n "$confac_files" ; then
+
+# Take the attitude that [] around parameters in AC_INIT is optional,
+# it's the commas that count. This does make for a surpassing ugly regular
+# expression.  A comma in the version string will cause a spectacular failure.
+# In AC_COIN_PROJECTDIR_INIT, take the attitude that there is one parameter
+# with the PMs choosen project name which is preserved and we only add a
+# libtool version number afterwards.
+
+  echo ''
+  echo "===> Updating version numbers in configure.ac files ..."
+  for i in $confac_files; do
+    sed -i -e "s|AC_INIT\(.*\),\(\[*\)[^],]*\(\]*\),\(.*\)|AC_INIT\1,\2$newVer\3,\4|" $i
+    sed -i -e "s|AC_COIN_PROJECTDIR_INIT(\(.*\))|AC_COIN_PROJECTDIR_INIT\(\1,$newLTCurrent:$newLTRevision:$newLTAge\)|" $i
+    git diff $i
+  done
+else
+  echo "    ... none to process."
+fi
+
+# Find config_proj_default.h. If there's a definition for PROJ_VERSION, adjust it and
+# add config_proj_default.h.bak to the list of files to be restored.
+
+configFileLoc=`find . -name 'config_*_default.h' -print`
+if test -n "$configFileLoc" ; then
+  versionSym=${topProjName^^}_VERSION
+  echo ''
+  echo "===> Updating $versionSym in $configFileLoc (if present)"
+  echo ''
+  sed -i -e "s/# *define $versionSym .*\$/#define $versionSym \"$newVer\"/" \
+    -e "s/# *define ${versionSym}_MAJOR .*\$/#define ${versionSym}_MAJOR $majVer/" \
+    -e "s/# *define ${versionSym}_MINOR .*\$/#define ${versionSym}_MINOR $minVer/" \
+    -e "s/# *define ${versionSym}_RELEASE .*\$/#define ${versionSym}_RELEASE $relVer/" \
+    $configFileLoc
+  git diff $configFileLoc
+fi
+
+if [ $topProjName != BuildTools ] ; then
+  echo ''
+  echo '===> Getting BuildTools and running run_autotools ...'
+  echo ''
+
+  [ -e BuildTools ] && mv BuildTools BuildTools.bak
+
+  buildtoolsDir=$cmdDir
+  # read BuildTools dependency from Dependencies file and convert stable to latest release
+  if buildtoolsDep=`grep ^BuildTools Dependencies` ; then
+    buildtoolsDep=${buildtoolsDep:11}
+    if [[ "$buildtoolsDep" =~ (releases/[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*) ]] ; then
+      buildtoolsVer=${BASH_REMATCH[1]}
+    elif [[ "$buildtoolsDep" =~ stable/([0-9][0-9]*\.[0-9][0-9]*) ]] ; then
+      buildtoolsVer=`git ls-remote --tags --sort v:refname https://github.com/coin-or-tools/BuildTools releases/${BASH_REMATCH[1]}.* | tail -1`
+      buildtoolsVer=${buildtoolsVer##*refs/tags/}
+    else
+      echo "ERROR: Cannot release with BuildTools dependency set to $buildtoolsDep in Dependencies"
+      exit 1
+    fi
+    if [ -z "$buildtoolsVer" ]; then
+      echo "ERROR: Cannot determine latest BuildTools release from dependency $buildtoolsDep"
+      exit 1
+    fi
+    echo "BuildTools Version: $buildtoolsVer"
+
+    buildtoolsDir=BuildTools-${buildtoolsVer/\//-}
+    git clone -b $buildtoolsVer https://github.com/coin-or-tools/BuildTools $buildtoolsDir
+  fi
+
+  echo "Running $buildtoolsDir/run_autotools"
+  $buildtoolsDir/run_autotools
+
+  if [ "$buildtoolsDir" != "$cmdDir" ]; then
+    echo rm -rf $buildtoolsDir
+  fi
+
+  [ -e BuildTools.bak ] && mv BuildTools.bak BuildTools
+fi
+
+echo ''
+echo '===> Applying changes to local git clone ...'
+echo ''
+
+echo "Committing verion number update"
+git commit -a -m "version number updates for release $newVer"
+echo
+echo "Tagging release: releases/$newVer"
+git tag releases/$newVer
+echo
+
+if [ "$releaseStyle" = "reset" ] ;
+then
+  echo "Resetting to original commit"
+  git reset --hard HEAD~1
+else
+  echo "Reverting version number update"
+  git revert --no-edit HEAD
+fi
+
+echo ''
+echo '===> Done ...'
+echo ''
+echo 'After reviewing the output above, you can push the new release via'
+echo ''
+echo "   git push -u origin releases/$newVer"
+echo ''
+echo 'Alternatively, you can forget the locally committed release via'
+echo ''
+echo "   git tag -d releases/$newVer"
+if [ "$releaseStyle" = "revert" ] ;
+then
+  echo "   git reset --hard HEAD~2"
+fi
