@@ -20,22 +20,49 @@ releaseStyle="reset"
 while [ $# -ge 1 ] ; do
   case "$1" in
     -h | --help | --usage )
-      echo "Usage: $0 { -h | --help | --usage | -t }"
-      echo
-      echo "Options:"
-      echo "  -h, --help, --usage   Print this help and exit"
-      echo "  -t                    Make sure release tag is visible on current branch"
-      echo
-      echo "More details about -t:"
-      echo "  If -t is specified, the script will commit the release version number"
-      echo "  change (xx.yy -> xx.yy.zz) to the current branch, tag this commit, and"
-      echo "  then adds another commit that reverts the tagged commit."
-      echo "  If -t is not specified, the script will also commit the release version"
-      echo "  number change to the current branch, tag this commit, but then removes"
-      echo "  the tagged commit from the current branch by resetting it."
-      echo "  Using -t has the advantage that the tag will be visible in the log of the"
-      echo "  stable branch. Not using -t has the advantage that the temporary change in"
-      echo "  the version number will not be part of the stable branch".
+      cat <<EOF
+Usage: $0 { -h | --help | --usage | -t }
+
+Options:
+  -h, --help, --usage   Print this help and exit
+  -t                    Make sure release tag is visible on current branch
+
+More details about -t:
+  If -t is specified, the script will commit the release version number
+  change (xx.yy -> xx.yy.zz) to the current branch, tag this commit, and
+  then adds another commit that reverts the tagged commit.
+  If -t is not specified, the script will also commit the release version
+  number change to the current branch, tag this commit, but then removes
+  the tagged commit from the current branch by resetting it.
+  Using -t has the advantage that the tag will be visible in the log of the
+  stable branch. Not using -t has the advantage that the temporary change in
+  the version number will not be part of the stable branch.
+
+COIN-OR standard practice is to generate releases by taking a snapshot
+of the stable branch of the project. This script can be used to prepare
+a new release based on the currently checked out stable branch.
+Thus, this script is supposed to be run from a directory that contains the
+clone of a COIN-OR project and that has a branch named stable/X.Y checkout out.
+
+This script will do the following:
+
+  - Automatically determine the next release number (X.Y.0 if this is the
+    first release for stable/X.Y, otherwise one greater than any existing
+    release)
+  - Update configure.ac to specify the release version number in the AC_INIT
+    macro and the corresponding libtool version number in the
+    AC_COIN_PROJECTDIR_INIT macro.
+  - Execute run_autotools to update configure, Makefile.in, etc., to reflect
+    the most recent release of BuildTools and change in version number.
+
+If there is any error during these tasks the script will stop and you should
+examine the output.
+If the script completes without error, examine the output, too.
+
+This script does not make any changes to the remote repository, but prints
+out the commands that should be issued to push the release tag or
+to remove the release tag in the local clone.
+EOF
       exit 0
     ;;
     -t | --ted )

@@ -20,11 +20,33 @@ bumpMajor=0
 while [ $# -ge 1 ] ; do
   case "$1" in
     -h | --help | --usage )
-      echo "Usage: $0 { -h | --help | --usage }"
-      echo
-      echo "Options:"
-      echo "  -h, --help, --usage   Print this help and exit"
-      echo "  -m                    Bump the major version number."
+      cat <<EOF
+Usage: $0 { -h | --help | --usage }
+
+Options:
+  -h, --help, --usage   Print this help and exit
+  -m                    Bump the major version number.
+
+This script is supposed to be run from a directory that contains the
+clone of a COIN-OR project and will create a new stable branch from the
+head of the currently checked out branch.
+
+This script will do the following:
+
+  - Set the new stable version number as the next minor version number in
+    the current major version number. Use the -m flag to bump the major
+    version number.
+
+  - Run run_autotools to rebuild configure and make files.
+
+If there is any error during these tasks the script will stop and you should
+examine the output.
+If the script completes without error, examine the output, too.
+
+This script does not make any changes to the remote repository, but prints
+out the commands that should be issued to push the new stable branch or
+to remove the new stable branch in the local clone.
+EOF
       exit 0
     ;;
     -m* | --m*) bumpMajor=1 ;;
