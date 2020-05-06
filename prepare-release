@@ -127,7 +127,7 @@ if test -n "$confac_files" ; then
   echo ''
   echo "===> Updating version numbers in configure.ac files ..."
   for i in $confac_files; do
-    sed -i -e "s|AC_INIT\(.*\),\(\[*\)[^],]*\(\]*\),\(.*\)|AC_INIT\1,\2$newVer\3,\4|" $i
+    sed -i -e "s|AC_INIT\([^,]*\),[^,]*,\(.*\)|AC_INIT\1,[$newVer],\2|" $i
     sed -i -e "s|AC_COIN_PROJECTDIR_INIT|AC_COIN_PROJECTDIR_INIT\($newLTCurrent:$newLTRevision:$newLTAge\)|" $i
     git diff $i
   done
