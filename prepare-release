@@ -50,8 +50,8 @@ This script will do the following:
     first release for stable/X.Y, otherwise one greater than any existing
     release)
   - Update configure.ac to specify the release version number in the AC_INIT
-    macro and the corresponding libtool version number in the
-    AC_COIN_PROJECTDIR_INIT macro.
+    macro and the corresponding libtool version number in the AC_COIN_INITIALIZE
+    macro.
   - Execute run_autotools to update configure, Makefile.in, etc., to reflect
     the most recent release of BuildTools and change in version number.
 
@@ -148,14 +148,14 @@ if test -n "$confac_files" ; then
 # Take the attitude that [] around parameters in AC_INIT is optional,
 # it's the commas that count. This does make for a surpassing ugly regular
 # expression.  A comma in the version string will cause a spectacular failure.
-# In AC_COIN_PROJECTDIR_INIT, take the attitude that we only add a
+# In AC_COIN_INITIALIZE, take the attitude that we only add a
 # libtool version number as argument.
 
   echo ''
   echo "===> Updating version numbers in configure.ac files ..."
   for i in $confac_files; do
     sed -i -e "s|AC_INIT\([^,]*\),[^,]*,\(.*\)|AC_INIT\1,[$newVer],\2|" $i
-    sed -i -e "s|AC_COIN_PROJECTDIR_INIT|AC_COIN_PROJECTDIR_INIT\($newLTCurrent:$newLTRevision:$newLTAge\)|" $i
+    sed -i -e "s|AC_COIN_INITIALIZE|AC_COIN_INITIALIZE\($newLTCurrent:$newLTRevision:$newLTAge\)|" $i
     git diff $i
   done
 else
