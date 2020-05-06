@@ -129,9 +129,9 @@ echo "New release    : releases/$newVer"
 
 isNormal=yes
 if test $isNormal = yes ; then
-  newLTCurrent=`calcLibtoolCurrentGit $majVer $minVer`
+  newLTCurrent=`calcLibtoolCurrent $majVer $minVer`
   newLTRevision=$relVer
-  newLTAge=`calcLibtoolAgeGit $majVer $minVer`
+  newLTAge=`calcLibtoolAge $majVer $minVer`
   (( newLTAge -= 1 ))
   newLTVer=${newLTCurrent}:${newLTRevision}:${newLTAge}
   echo "Libtool version: $newLTVer"

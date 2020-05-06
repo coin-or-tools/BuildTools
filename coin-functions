@@ -10,10 +10,10 @@
 # Count the total number of stable branches for the project for the specified
 # major version number, up to the specified minor version number (libtool age).
 # Returns 0 if handed a master url.
-# usage: calcLibtoolAgeGit <major> <minor>
+# usage: calcLibtoolAge <major> <minor>
 
 # very similar to calcLibtoolCurrent, but look only on stable branches with given major version number
-calcLibtoolAgeGit ()
+calcLibtoolAge ()
 { cltc_majVer=$1
   cltc_minVer=$2
 
@@ -44,9 +44,9 @@ calcLibtoolAgeGit ()
 # Count the total number of stable branches for the project up to the
 # specified major.minor version number (libtool current).  Returns 0 if
 # handed a master url, or if the url is BuildTools itself.
-# usage: calcLibtoolCurrent <svnURL> <major> <minor>
+# usage: calcLibtoolCurrent <major> <minor>
 
-calcLibtoolCurrentGit ()
+calcLibtoolCurrent ()
 { cltc_majVer=$1
   cltc_minVer=$2
 
