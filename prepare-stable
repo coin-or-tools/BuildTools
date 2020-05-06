@@ -8,12 +8,6 @@ if expr "$0" : '.*/.*' >/dev/null 2>&1 ; then
 else
   cmdDir='.'
 fi
-if test -r $cmdDir/coin-functions ; then
-  . $cmdDir/coin-functions
-else
-  echo "Cannot find utility functions file coin-functions; exiting."
-  exit 1
-fi
 
 # process parameters
 bumpMajor=0
@@ -141,15 +135,13 @@ if test -n "$configFileLoc" ; then
 fi
 
 if [ $topProjName != BuildTools ] ; then
-  buildtoolsDir=$cmdDir
-
   echo ''
-  echo '===> Running $buildtoolsDir/run_autotools ...'
+  echo '===> Running $cmdDir/run_autotools ...'
   echo ''
 
   [ -e BuildTools ] && mv BuildTools BuildTools.bak
 
-  $buildtoolsDir/run_autotools
+  $cmdDir/run_autotools
 
   [ -e BuildTools.bak ] && mv BuildTools.bak BuildTools
 fi
