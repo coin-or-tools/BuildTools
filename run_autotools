@@ -57,6 +57,19 @@
 # The required autotools versions, along with a few other differences. Current
 # (trunk) versions first, older (stable) versions next.
 
+# Find out the location for autotools executables, macros, etc.
+# This can be overidden if the user sets COIN_AUTOTOOLS_DIR in the environment.
+# If this directory is not already in the PATH, add it.
+
+if test -z "$COIN_AUTOTOOLS_DIR" ; then
+  # assume that autotools directory is given by location of autoconf
+  COIN_AUTOTOOLS_DIR=`dirname $(which autoconf)`/..
+elif ! expr ":${PATH}:" : '.*:'"${COIN_AUTOTOOLS_DIR}"'/bin:.*' &>/dev/null ; then
+  # prefix PATH with COIN_AUTOTOOLS_DIR/bin
+  PATH="${COIN_AUTOTOOLS_DIR}/bin:$PATH"
+fi
+echo "Using COIN_AUTOTOOLS_DIR=$COIN_AUTOTOOLS_DIR"
+
 case "${COIN_ENV:-git}" in
   "mixed" )
     repoDir='.git .svn'
@@ -225,18 +238,6 @@ findProjects () {
   done
   echo $dirs
 }
-
-
-# Set up a default location for autotools executables, macros, etc. This
-# can be overidden if the user sets COIN_AUTOTOOLS_DIR in the environment. If this
-# directory is not already in the PATH, add it.
-
-if [[ -z "$COIN_AUTOTOOLS_DIR" ]] ; then
-  COIN_AUTOTOOLS_DIR=/usr
-fi
-if ! expr ":${PATH}:" : '.*:'"${COIN_AUTOTOOLS_DIR}"'/bin:.*' &>/dev/null ; then
-  export PATH=$COIN_AUTOTOOLS_DIR/bin:$PATH
-fi
 
 # See if the user just wants help, before we get into the thick if it.
 
