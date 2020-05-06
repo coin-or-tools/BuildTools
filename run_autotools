@@ -94,12 +94,12 @@ runautotoolDir=`echo $runautotoolDir | sed -e 's,/\./,/,g' -e 's,//,/,g'`
 
 # Find out the location for autotools executables, macros, etc.
 # This can be overidden if the user sets AUTOTOOLS_DIR in the environment.
-# If this directory is not already in the PATH, add it.
+# If AUTOTOOLS_DIR is set, make sure that is at the beginning of PATH.
 
 if test -z "$AUTOTOOLS_DIR" ; then
   # assume that autotools directory is given by location of autoconf
   AUTOTOOLS_DIR=`dirname $(which autoconf)`/..
-elif ! expr ":${PATH}:" : '.*:'"${AUTOTOOLS_DIR}"'/bin:.*' &>/dev/null ; then
+else
   # prefix PATH with AUTOTOOLS_DIR/bin
   PATH="${AUTOTOOLS_DIR}/bin:$PATH"
 fi
