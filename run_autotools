@@ -59,12 +59,12 @@
 
 # Find out the location for autotools executables, macros, etc.
 # This can be overidden if the user sets COIN_AUTOTOOLS_DIR in the environment.
-# If this directory is not already in the PATH, add it.
+# If COIN_AUTOTOOLS_DIR is set, make sure that is at the beginning of PATH.
 
 if test -z "$COIN_AUTOTOOLS_DIR" ; then
   # assume that autotools directory is given by location of autoconf
   COIN_AUTOTOOLS_DIR=`dirname $(which autoconf)`/..
-elif ! expr ":${PATH}:" : '.*:'"${COIN_AUTOTOOLS_DIR}"'/bin:.*' &>/dev/null ; then
+else
   # prefix PATH with COIN_AUTOTOOLS_DIR/bin
   PATH="${COIN_AUTOTOOLS_DIR}/bin:$PATH"
 fi
