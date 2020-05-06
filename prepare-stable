@@ -16,7 +16,7 @@ else
 fi
 
 # process parameters
-releaseStyle="reset"
+bumpMajor=0
 while [ $# -ge 1 ] ; do
   case "$1" in
     -h | --help | --usage )
@@ -24,8 +24,10 @@ while [ $# -ge 1 ] ; do
       echo
       echo "Options:"
       echo "  -h, --help, --usage   Print this help and exit"
+      echo "  -m                    Bump the major version number."
       exit 0
     ;;
+    -m* | --m*) bumpMajor=1 ;;
     *)
       echo "Unknown argument. Run with -h to see usage."
       exit 1
@@ -61,7 +63,12 @@ if [ -z "$lastStable" ] ; then
 elif [[ "$lastStable" =~ stable/([0-9][0-9]*)\.([0-9][0-9]*)$ ]] ; then
   majVer=${BASH_REMATCH[1]}
   minVer=${BASH_REMATCH[2]}
-  (( minVer += 1 ))
+  if test "$bumpMajor" = 1 ; then
+    (( majVer += 1 ))
+    minVer=0
+  else
+    (( minVer += 1 ))
+  fi
 else
   echo "ERROR: Last stable name does not match stable/xx.yy format"
   exit 1
