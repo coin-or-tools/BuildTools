@@ -63,7 +63,7 @@ case "${COIN_ENV:-git}" in
     ver_autoconf='2.69'
     ver_automake='1.16.2'
     ver_libtool='2.4.6'
-    ltfile=$AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
+    ltfile=$COIN_AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
     autotoolsFiles="config.guess config.sub depcomp install-sh"
     autotoolsFiles="$autotoolsFiles ltmain.sh missing compile ar-lib"
     ;;
@@ -72,7 +72,7 @@ case "${COIN_ENV:-git}" in
     ver_autoconf='2.69'
     ver_automake='1.16.2'
     ver_libtool='2.4.6'
-    ltfile=$AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
+    ltfile=$COIN_AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
     autotoolsFiles="config.guess config.sub depcomp install-sh"
     autotoolsFiles="$autotoolsFiles ltmain.sh missing compile ar-lib"
     ;;
@@ -81,7 +81,7 @@ case "${COIN_ENV:-git}" in
     ver_autoconf='2.69'
     ver_automake='1.16.2'
     ver_libtool='2.4.6'
-    ltfile=$AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
+    ltfile=$COIN_AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
     autotoolsFiles="config.guess config.sub depcomp install-sh"
     autotoolsFiles="$autotoolsFiles ltmain.sh missing compile ar-lib"
     ;;
@@ -90,7 +90,7 @@ case "${COIN_ENV:-git}" in
     ver_autoconf='2.59'
     ver_automake='1.9.6'
     ver_libtool='1.5.22'
-    ltfile=$AUTOTOOLS_DIR/share/libtool/ltmain.sh
+    ltfile=$COIN_AUTOTOOLS_DIR/share/libtool/ltmain.sh
     autotoolsFiles="config.guess config.sub depcomp install-sh"
     autotoolsFiles="$autotoolsFiles ltmain.sh missing"
     ;;
@@ -153,8 +153,8 @@ usage: run_autotools [-h] [-[n]r] [-ni] [-f] [ directory directory ... ]
   ThirdParty native configuration for COIN. Be sure you know what you're
   doing.
 
-  The environment variable AUTOTOOLS_DIR can be used to point to an alternate
-  installation of the autotools (current location $AUTOTOOLS_DIR)
+  The environment variable COIN_AUTOTOOLS_DIR can be used to point to an alternate
+  installation of the autotools (current location $COIN_AUTOTOOLS_DIR)
 
   Default autotools versions:
     autoconf: $ver_autoconf
@@ -186,7 +186,7 @@ checkAutotoolVersion () {
 
   local toolDir=`command -v $toolName | sed -e "s,/$toolName,,"`
   toolDir=`cd $toolDir ; pwd`
-  local autoDir=`cd $AUTOTOOLS_DIR/bin ; pwd`
+  local autoDir=`cd $COIN_AUTOTOOLS_DIR/bin ; pwd`
   if [[ "$toolDir" != "$autoDir" ]] ; then
     echo "$toolName is not picked up from the correct location."
     return 3
@@ -228,14 +228,14 @@ findProjects () {
 
 
 # Set up a default location for autotools executables, macros, etc. This
-# can be overidden if the user sets AUTOTOOLS_DIR in the environment. If this
+# can be overidden if the user sets COIN_AUTOTOOLS_DIR in the environment. If this
 # directory is not already in the PATH, add it.
 
-if [[ -z "$AUTOTOOLS_DIR" ]] ; then
-  AUTOTOOLS_DIR=/usr
+if [[ -z "$COIN_AUTOTOOLS_DIR" ]] ; then
+  COIN_AUTOTOOLS_DIR=/usr
 fi
-if ! expr ":${PATH}:" : '.*:'"${AUTOTOOLS_DIR}"'/bin:.*' &>/dev/null ; then
-  export PATH=$AUTOTOOLS_DIR/bin:$PATH
+if ! expr ":${PATH}:" : '.*:'"${COIN_AUTOTOOLS_DIR}"'/bin:.*' &>/dev/null ; then
+  export PATH=$COIN_AUTOTOOLS_DIR/bin:$PATH
 fi
 
 # See if the user just wants help, before we get into the thick if it.
@@ -541,10 +541,10 @@ for dir in ${dirs[@]} ; do
         for file in $autotoolsFiles ; do
           if test -e BuildTools/$file ; then
             cp BuildTools/$file .
-          elif test -e $AUTOTOOLS_DIR/share/automake-${ver_automake:0:4}/$file ; then
-            cp $AUTOTOOLS_DIR/share/automake-${ver_automake:0:4}/$file .
-          elif test -e $AUTOTOOLS_DIR/share/libtool/build-aux/$file ; then
-            cp $AUTOTOOLS_DIR/share/libtool/build-aux/$file .
+          elif test -e $COIN_AUTOTOOLS_DIR/share/automake-${ver_automake:0:4}/$file ; then
+            cp $COIN_AUTOTOOLS_DIR/share/automake-${ver_automake:0:4}/$file .
+          elif test -e $COIN_AUTOTOOLS_DIR/share/libtool/build-aux/$file ; then
+            cp $COIN_AUTOTOOLS_DIR/share/libtool/build-aux/$file .
           else
             echo "  Do not know where to take $file from."
             exit 1
@@ -559,7 +559,7 @@ for dir in ${dirs[@]} ; do
 
 # Get on with running the autotools.
 
-    m4Dirs="-I $AUTOTOOLS_DIR/share/aclocal"
+    m4Dirs="-I $COIN_AUTOTOOLS_DIR/share/aclocal"
     m4Dirs="$m4Dirs -I $toolsDir"
     if test -d m4 ; then
       m4Dirs="$m4Dirs -I m4"
