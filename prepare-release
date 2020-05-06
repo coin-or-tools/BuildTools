@@ -110,7 +110,7 @@ if test $isNormal = yes ; then
   echo "Libtool version: $newLTVer"
 fi
 
-# Find configure.ac files for the package and project and update the version.
+# Find configure.ac files and update the version.
 
 echo ''
 echo "===> Checking for configure.ac files ..."
