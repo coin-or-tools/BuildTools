@@ -17,7 +17,7 @@
 #      forcing installation of autotools auxilliary scripts. Also add some
 #      command line options and restore ability to specify individual
 #      directories on the command line.
-# Modified: Lou Hafer	       retired	2017-05-17
+# Modified: Lou Hafer          retired  2017-05-17
 #      Allow that we can use bash. Make sure help always works.
 
 # run_autotools takes care of running the autotools (automake, autoconf,
@@ -283,8 +283,7 @@ while expr "$runautotoolDir" : '.*/\.\.' >/dev/null 2>&1 ; do
   runautotoolDir=`echo $runautotoolDir | \
                   sed -e 's,/[^/][^/]*/\.\./,/,' -e 's,/[^/][^/]*/\.\.$,,'`
 done
-runautotoolDir=`echo $runautotoolDir | \
-		sed -e 's,/\./,/,g' -e 's,//,/,g' -e 's,/.$,,'`
+runautotoolDir=`echo $runautotoolDir | sed -e 's,/\./,/,g' -e 's,//,/,g' -e 's,/.$,,'`
 
 if [[ ! -f ${runautotoolDir}/coin.m4 ]] ; then
   echo "Found $myName in $runautotoolDir but coin.m4 is not present."
@@ -297,7 +296,7 @@ fi
 if ! checkAutotoolVersion autoconf $ver_autoconf ; then
   exit 2
 fi
-if !  checkAutotoolVersion automake $ver_automake ; then
+if ! checkAutotoolVersion automake $ver_automake ; then
   exit 2
 fi
 
@@ -308,7 +307,7 @@ if [[ ! -r $ltfile ]] ; then
   echo "WARNING: Cannot find libtool shell $ltfile"
 fi
 if ! grep -F $ver_libtool $ltfile &>/dev/null ; then 
-  echo WARNING: You are not using the correct version of libtool
+  echo "WARNING: You are not using the correct version of libtool"
 fi
 
 # Set up to process parameters. No parameters is the default.
@@ -394,7 +393,7 @@ if [[ ${#noSkipDirs[@]} -gt 0 && ${#dirsToProcess[@]} -gt 0 ]] ; then
     for dir in ${canonicalNoSkipDirs[@]} ; do
       if [[ $canonicalDir != $dir ]] ; then
         tmpDir+=(${dirsToProcess[$ndx]})
-	break
+        break
       fi
     done
   done
@@ -417,8 +416,8 @@ if [[ -n "$COIN_SKIP_PROJECTS" && ${#dirsToProcess[@]} -gt 0 ]] ; then
       # echo "comparing [$ndx] ${dirsToProcess[$ndx]} with $dir"
       if expr "${dirsToProcess[$ndx]}" : '.*/'"$dir"'$' &>/dev/null ; then
         # echo "  dropping ${dirsToProcess[$ndx]}"
-	drop=1
-	break
+        drop=1
+        break
       fi
     done
     if [[ $drop -eq 0 ]] ; then
