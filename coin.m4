@@ -1682,11 +1682,14 @@ if test "$dependency_linking" = auto; then
   fi
 fi
 
+# Set up LT_LDFLAGS, user can initialize and we augment below
+AC_ARG_VAR(LT_LDFLAGS,[Flags passed to libtool when building libraries or executables that are installed])
+
 if test "$dependency_linking" = yes ;
 then
-  LT_LDFLAGS="-no-undefined"
+  LT_LDFLAGS="$LT_LDFLAGS -no-undefined"
 else
-  LT_LDFLAGS=
+  LT_LDFLAGS="$LT_LDFLAGS"
 fi
 
 AM_CONDITIONAL(DEPENDENCY_LINKING, [test "$dependency_linking" = yes])
