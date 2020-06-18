@@ -846,8 +846,9 @@ AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
   AC_SUBST(COIN_PKG_CONFIG_PATH)
 
   COIN_PKG_CONFIG_PATH="${expanded_libdir}/pkgconfig:${COIN_PKG_CONFIG_PATH}"
-  AC_MSG_NOTICE([$PKG_CONFIG path is "$COIN_PKG_CONFIG_PATH"])
-
+  if test -n "$PKG_CONFIG"; then
+    AC_MSG_NOTICE([$PKG_CONFIG path is "$COIN_PKG_CONFIG_PATH"])
+  fi                              
 ])  # COIN_HAS_PKGCONFIG
 
 
