@@ -1299,7 +1299,7 @@ AC_DEFUN([AC_COIN_CHK_PKG],
     AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
     m4_bmatch([$3],skip,,[
       if test "$PKG_CONFIG$m4_tolower(coin_has_$1)" = no ; then
-        AC_MSG_WARN([check for $1 via pkg-config was skipped as no pkg-config available])
+        AC_MSG_WARN([Check for $1 via pkg-config was skipped as no pkg-config available. If $1 was meant to be found, then consider installing pkg-config or provide appropriate --with-m4_tolower($1)-lflags, --with-m4_tolower($1)-cflags, etc.])
       fi])
   else
     AC_MSG_RESULT([$m4_tolower(coin_has_$1) due to COIN_SKIP_PROJECTS])
