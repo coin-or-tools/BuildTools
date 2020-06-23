@@ -3,7 +3,10 @@
 This page used to help users and project managers to find information about COIN-OR.
 Much of it has been moved to https://coin-or.github.io.
 Information that is particular for the use of the BuildTools project and/or
-the use of autotools will be collected here for now.
+the use of autotools will be collected here for now:
+
+- [Introduction of Automake Concepts](./automake-intro)
+- ... (more to come)
 
 ---
 
