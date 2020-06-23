@@ -1297,6 +1297,10 @@ AC_DEFUN([AC_COIN_CHK_PKG],
       [AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,yes,$4)])
     AC_COIN_FIND_PRIM_PKG(m4_tolower($1),[$3],[$4],[$5])
     AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
+    m4_bmatch([$3],skip,,[
+      if test "$PKG_CONFIG$m4_tolower(coin_has_$1)" = no ; then
+        AC_MSG_WARN([check for $1 via pkg-config was skipped as no pkg-config available])
+      fi])
   else
     AC_MSG_RESULT([$m4_tolower(coin_has_$1) due to COIN_SKIP_PROJECTS])
   fi
