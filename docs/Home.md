@@ -1,11 +1,13 @@
 # BuildTools wiki
 
 This page used to help users and project managers to find information about COIN-OR.
-In the future, this page will focus more on BuildTools only.
+Much of it has been moved to https://coin-or.github.io.
+Information that is particular for the use of the BuildTools project and/or
+the use of autotools will be collected here for now.
 
-https://coin-or.github.io/index.html contains current information for users
-and developers.
-During transition, also some probably outdated information is still available here:
+---
+
+During transition, some probably outdated information is still available here:
 
 ## Detailed Information For Users
 
