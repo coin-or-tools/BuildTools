@@ -145,7 +145,7 @@ AC_DEFUN([AC_COIN_CHECK_ISFINITE],
 ###########################################################################
 
 AC_DEFUN([AC_COIN_CHECK_ISNAN],
-[ 
+[
   AC_REQUIRE([AC_COIN_CHECK_MATH_HDRS])
 
   COIN_C_ISNAN=

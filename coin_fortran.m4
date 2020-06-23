@@ -197,7 +197,7 @@ AC_DEFUN([AC_COIN_F77_SETUP],
 # -------------------------------------------------------------------------
 
 AC_DEFUN([AC_COIN_F77_WRAPPERS],
-[ 
+[
   # AC_MSG_NOTICE([In COIN_F77_WRAPPERS])
   AC_CACHE_CHECK(
     [Fortran name mangling scheme],

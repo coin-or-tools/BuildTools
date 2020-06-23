@@ -84,7 +84,7 @@ AC_DEFUN([AC_COIN_PROJECTVERSION],
 
 
 ###########################################################################
-#                          COIN_ENABLE_MSVC                               # 
+#                          COIN_ENABLE_MSVC                               #
 ###########################################################################
 
 # This macro is invoked by any PROG_compiler macro to establish the
@@ -723,7 +723,7 @@ AC_DEFUN([AC_COIN_NAMEMANGLING],
 #  pcfiles ($3) pc files to query for additional linker flags
 #  action-if-success ($4) commands to execute if any linking was successful
 #  action-if-failed ($5) commands to execute if no linking was successful
-# 
+#
 # The macro tries different name mangling schemes and expands into
 # action-if-success for the first one that succeeds.
 # It sets variable func_namemangling according to the found name mangling
@@ -848,7 +848,7 @@ AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
   COIN_PKG_CONFIG_PATH="${expanded_libdir}/pkgconfig:${COIN_PKG_CONFIG_PATH}"
   if test -n "$PKG_CONFIG"; then
     AC_MSG_NOTICE([$PKG_CONFIG path is "$COIN_PKG_CONFIG_PATH"])
-  fi                              
+  fi
 ])  # COIN_HAS_PKGCONFIG
 
 
@@ -1940,7 +1940,7 @@ dnl So for now the checks below will only work for shared MKL libs on Linux/Darw
            lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"])
       ;;
 
-      *-sgi-*) 
+      *-sgi-*)
         AC_COIN_TRY_LINK([dsyev],[-lcomplib.sgimath],[],[
           coin_has_lapack=yes
           lapack_lflags=-lcomplib.sgimath])
