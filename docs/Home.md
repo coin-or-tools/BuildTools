@@ -7,9 +7,7 @@ the use of autotools will be collected here for now.
 
 ---
 
-During transition, some probably outdated information is still available here:
-
-## Detailed Information For Users
+During transition, some probably outdated information for users is still available here:
 
 * [[user-download]]
 * [[user-directories]]
@@ -21,6 +19,6 @@ During transition, some probably outdated information is still available here:
 * [[user-troubleshooting]]
 * [current-issues](./current-issues)
 
-## Information for Project Managers
-
-See page index on the right for pages starting with `pm`.
+Information for project managers that relates to the times that COIN-OR
+projects lived in svn repositories and used BuildTools 0.5--0.8 can be found at
+https://github.com/coin-or-tools/BuildTools/tree/stable/0.8/doc .
