@@ -5,7 +5,7 @@ Much of it has been moved to https://coin-or.github.io.
 Information that is particular for the use of the BuildTools project and/or
 the use of autotools will be collected here for now:
 
-- [Introduction of Automake Concepts](./automake-intro)
+- [Working with the GNU Autotools](./autotools)
 - ... (more to come)
 
 ---
