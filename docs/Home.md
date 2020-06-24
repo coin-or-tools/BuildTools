@@ -24,5 +24,5 @@ During transition, some probably outdated information for users is still availab
 * [current-issues](./current-issues)
 
 Information for project managers that relates to the times that COIN-OR
-projects lived in svn repositories and used BuildTools 0.5--0.8 can be found at
+projects lived in svn repositories and used BuildTools 0.6--0.8 can be found at
 https://github.com/coin-or-tools/BuildTools/tree/stable/0.8/doc .
