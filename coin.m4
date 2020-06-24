@@ -970,7 +970,7 @@ AC_DEFUN([AC_COIN_DEF_PRIM_ARGS],
       ['yes' is equivalent to --with-m4_tolower($1),]
       m4_case($6,build,
       ['no' is equivalent to --without-m4_tolower($1)[,]
-       'build' will look for a COIN ThirdParty package.],
+       'build' will look for a COIN-OR ThirdParty package.],
       ['no' is equivalent to --without-m4_tolower($1).])
       m4_case($3$4$5,nonono,,
         nonoyes,
