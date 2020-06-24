@@ -7,7 +7,7 @@ the use of autotools will be collected here for now:
 
 - [Working with the GNU Autotools](./autotools)
 - [Autotools Basics](./autotools-intro)
-- [Basic Structure of the configure.ac File](./structure-config)
+- [The configure.ac File](./configure)
 - ... (more to come)
 
 ---
