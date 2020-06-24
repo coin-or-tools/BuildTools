@@ -6,6 +6,7 @@ Information that is particular for the use of the BuildTools project and/or
 the use of autotools will be collected here for now:
 
 - [Working with the GNU Autotools](./autotools)
+- [Autotools Basics](./autotools-intro)
 - ... (more to come)
 
 ---
