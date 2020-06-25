@@ -1,4 +1,3 @@
-
 # Introduction of Automake Concepts
 
 The language of the Automake `Makefile.am` input files is essentially that of a usual Makefile:

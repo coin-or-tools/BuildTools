@@ -9,6 +9,7 @@ the use of autotools will be collected here for now:
 - [Autotools Basics](./autotools-intro)
 - [The configure.ac File](./configure)
 - [Configuration Header Files](./config-header)
+- [Introduction of Automake Concepts](./automake-intro)
 - ... (more to come)
 
 ---
