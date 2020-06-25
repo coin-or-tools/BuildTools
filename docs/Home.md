@@ -8,6 +8,7 @@ the use of autotools will be collected here for now:
 - [Working with the GNU Autotools](./autotools)
 - [Autotools Basics](./autotools-intro)
 - [The configure.ac File](./configure)
+- [Configuration Header Files](./config-header)
 - ... (more to come)
 
 ---
