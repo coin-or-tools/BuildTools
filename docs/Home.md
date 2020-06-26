@@ -10,6 +10,9 @@ the use of autotools will be collected here for now:
 - [The configure.ac File](./configure)
 - [Configuration Header Files](./config-header)
 - [Introduction of Automake Concepts](./automake-intro)
+- [The Project Main Directory Makefile.am File](./make-main)
+- [The Source Directories Makefile.am Files](./make-src)
+- [The Test Directory Makefile.am File](./make-test)
 - ... (more to come)
 
 ---
