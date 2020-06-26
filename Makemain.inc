@@ -119,37 +119,6 @@ uninstall-doc:
 	done
 	rmdir $(DESTDIR)$(pkgdocdir) || true
 
-########################################################################
-#                         Maintainer Stuff                             #
-########################################################################
-
-if MAINTAINER_MODE
-
-# Make sure acinclude is using most recent coin.m4
-$(srcdir)/acinclude.m4: $(BUILDTOOLSDIR)/coin.m4
-	cat $(LIBTOOLM4) $< > $@
-
-# Make sure the autotools scripts are up to date
-$(AUX_DIR)/install-sh: $(BUILDTOOLSDIR)/install-sh
-	cp $< $@
-
-$(AUX_DIR)/missing: $(BUILDTOOLSDIR)/missing
-	cp $< $@
-
-$(AUX_DIR)/config.guess: $(BUILDTOOLSDIR)/config.guess
-	cp $< $@
-
-$(AUX_DIR)/config.sub: $(BUILDTOOLSDIR)/config.sub
-	cp $< $@
-
-$(AUX_DIR)/depcomp: $(BUILDTOOLSDIR)/depcomp
-	cp $< $@
-
-$(AUX_DIR)/ltmain.sh: $(BUILDTOOLSDIR)/ltmain.sh
-	cp $< $@
-
-endif
-
 .PHONY: install-doc uninstall-doc \
 	doxygen-docs pdf-doxygen-docs clean-doxygen-docs \
 	install-doxygen-docs uninstall-doxygen-docs
