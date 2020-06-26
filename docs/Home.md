@@ -1,9 +1,9 @@
 # BuildTools wiki
 
-This page used to help users and project managers to find information about COIN-OR.
+This page used to help both users and project managers to find information about COIN-OR.
 Much of it has been moved to https://coin-or.github.io.
-Information that is particular for the use of the BuildTools project and/or
-the use of autotools will be collected here for now:
+Information for project managers that is particular for the use of the BuildTools project and/or
+the use of autotools is provided here:
 
 - [Working with the GNU Autotools](./autotools)
 - [Autotools Basics](./autotools-intro)
@@ -14,7 +14,6 @@ the use of autotools will be collected here for now:
 - [The Source Directories Makefile.am Files](./make-src)
 - [The Test Directory Makefile.am File](./make-test)
 - [The pkg-config Configuration File](./pcfile)
-- ... (more to come)
 
 ---
 
