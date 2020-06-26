@@ -10,13 +10,16 @@
 ########################################################################
 
 # Set these up to provide some uniformity in naming while also conforming
-# to Gnu directory standards. For reasons known only to the autoconf
+# to GNU directory standards. For reasons known only to the autoconf
 # developers, autoconf leaves datadir = $(datarootdir) but forces docdir
 # to $(datarootdir)/doc/$(PACKAGE_TARNAME).
 
 pkgincludedir = $(includedir)/coin-or
 pkgdatadir = $(datadir)/$(PACKAGE_TARNAME)
 pkgdocdir = $(docdir)
+
+# The directory where to install .pc files is also always the same.
+pkgconfiglibdir = $(libdir)/pkgconfig
 
 # doxydocdir is the top-level directory for doxygen documentation. It holds
 # the tag file and possibly the PDF or Postscript version. doxyhtmldir is
