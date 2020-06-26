@@ -1,4 +1,4 @@
-# The Project Main Directory Makefile.am File
+# The Main Directory Makefile.am File
 
 The purpose of the Makefile here is to recurse into the source code directories to compile the code, to do the project specific installations, and to provide a `test` target to run the project's unit test (if available).
 
