@@ -14,6 +14,7 @@ the use of autotools is provided here:
 - [The Source Directories Makefile.am Files](./make-src)
 - [The Test Directory Makefile.am File](./make-test)
 - [The pkg-config Configuration File](./pcfile)
+- [Using Doxygen](./doxygen)
 
 ---
 
