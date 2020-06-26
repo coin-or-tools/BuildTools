@@ -62,15 +62,41 @@ Before looking at the descriptions below, please read the [introduction to autom
    It is recommended that the project provides a `Makefile.in` that produces a simple Makefile for the user that is configured for the user's system and can be easily modified for the user's own application.
    If you want to provide such a Makefile for your example program, have a look at existing COIN-OR projects for examples and adapt them to your needs.
 
+## Using the Correct Version of the Autotools
+
+We ask that every user of COIN-OR BuildTools uses the same distribution of the same version of the autotools.
+This is necessary in order to ensure that the custom defined COIN-OR additions work.
+Also, this way we guarantee that each developer generates the same output files, which avoids the mess that would occur if this were not the case.
+Specifically, the precompiled versions of autotools included in packaged distributions often contain small modifications to the m4 macros that are supplied with autoconf, automake, and libtool.
+These differences make their way into generated Makefiles and configure scripts.
+Allowing these differences to creep into the repository will result in chaos.
+For this reason, we ask that you download the original source packages for the autotools from GNU and build and install them by hand on your system.
+
+**We recommend that you install the self-compiled tools in a local directory of your choice**.
+To do so, the environment variable `COIN_AUTOTOOLS_DIR` is used to specify the prefix under which to install the autotools, e.g.,
+```
+export COIN_AUTOTOOLS_DIR=$HOME/local
+```
+The script that runs the autotools (see next section) respects the value of this variable.
+
+BuildTools provides the script [`install_autotools.sh`](https://github.com/coin-or-tools/BuildTools/blob/master/install_autotools.sh) that install the currently suggested versions of autoconf, autoconf-archive, automake, and libtool.
+The script just does a sequence of `curl`, `configure`, `make`, `make install` calls in the right order.
+If you do not want to use it, then see its header for the currently suggested autotools version numbers.
+
+If `COIN_AUTOTOOLS_DIR` has been set, it is no longer required to add the path for the installed autotools executables to your `$PATH`.
+
+<!--When you run `configure` in your local copy with the `--enable-maintainer-mode` flag (which you should do as a developer), it will test to see if the above conditions are met and will fail if they are not met. -->
 
 ## Running the Autotools
-
-First, you should make sure that you are using the [correct version of the autotools.](./get-autotools)
 
 You can run the autotools on your package by changing into the package's main directory and running `/path/to/BuildTools/run_autotools`.
 When run with no parameters, the script will examine the current directory for a `configure.ac` file, copy the required auxiliary files into the directory, create a temporary link to the BuildTools directory, and run the autotools.
 You can also explicitly specify a set of directories as arguments or enable a recursion that looks for `configure.ac` in subdirectories.
 Though it is probably not useful nowadays, the `run_autotools` script also observes the environment variable `COIN_SKIP_PROJECTS`.
+
+If `COIN_AUTOTOOLS_DIR` has been set, then `run_autotools` prefixes `PATH` with `$COIN_AUTOTOOLS_DIR/bin`.
+`run_autotools` then also checks whether the expected versions of the autotools are used.
+
 
 **Warning**: The maintainer mode mentioned in the following hasn't been tested for a while and may not work anymore as documented.
 
