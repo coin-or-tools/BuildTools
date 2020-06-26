@@ -95,7 +95,18 @@ You can also explicitly specify a set of directories as arguments or enable a re
 Though it is probably not useful nowadays, the `run_autotools` script also observes the environment variable `COIN_SKIP_PROJECTS`.
 
 If `COIN_AUTOTOOLS_DIR` has been set, then `run_autotools` prefixes `PATH` with `$COIN_AUTOTOOLS_DIR/bin`.
-`run_autotools` then also checks whether the expected versions of the autotools are used.
+`run_autotools` also checks whether the expected versions of the autotools are used.
+
+The run_autotools script essentially
+* runs `aclocal` with a number of `-I` flags to make use of the right `.m4` macros files; this produces `aclocal.m4`,
+* runs `autoheader` to produce `config.h.in`,
+* runs `automake` to produce `Makefile.in`
+* runs `autoconf` to produce `configure`,
+* copies static autotools scripts that are redistributed (`install-sh`, `compile`, `config.guess`, ...) into the project directory,
+* applies BuildTools specific patches for `libtool`, `compile`, etc., and
+* refreshes static configuration header files (`configall_system.h`, `configall_system_msc.h`) in the project directory.
+
+For the last step, the script checks for each file in `BuildTools/headers/` whether it can find a file of the same name in the project source tree and overwrites the latter.
 
 
 ### Maintainer Mode

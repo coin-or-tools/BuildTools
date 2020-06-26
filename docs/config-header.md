@@ -271,7 +271,8 @@ and the private header file `config_default.h` is
 /* #define COIN_HAS_ZLIB */
 ```
 Since both files need to be setup by the user, here the private header includes the public header to avoid redundancy.
-Further, a header `configall_system.h` is included that tries to provide commonly used defines.
+Further, a header `configall_system.h` (which includes `configall_system_msc.h`) is included that tries to provide commonly used defines.
+These `configall` header files are maintained in `BuildTools/headers` and, if present, are updated by the `run_autotools` script.
 
 Note that the file **config_coinutils.h** is installed as **CoinUtilsConfig.h** for use by users building against the CoinUtils library.
 This functionality is implemented by the following lines in `src/Makefile.am`:
