@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019 COIN-OR
+# Copyright (C) 2017-2020 COIN-OR
 # All Rights Reserved.
 # This file is distributed under the Eclipse Public License.
 #
@@ -46,12 +46,13 @@
 # COIN_PROG_F77 will find a Fortran compiler, or ensures that F77 is unset.
 # Alone, this is not sufficient to actually build Fortran code.
 # For that, use COIN_F77_SETUP.
-
+#
+# Defines configure variable ADD_FFLAGS.
+#
 # Unlike C/C++, automake doesn't mess with AC_PROG_F77.
 
 AC_DEFUN_ONCE([AC_COIN_PROG_F77],
 [
-  # AC_MSG_NOTICE([In COIN_PROG_F77])
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 
   AC_ARG_ENABLE([f77],
@@ -64,10 +65,10 @@ AC_DEFUN_ONCE([AC_COIN_PROG_F77],
     unset F77
   else
     # If enable-msvc, then test for Intel Fortran compiler for Windows
-    # explicitly and add the compile wrapper before AC_PROG_F77. The compile
-    # wrapper works around issues related to finding MS link.exe. (Unix
-    # link.exe occurs first in PATH, which causes compile and link checks to
-    # fail.) For the same reason, set LD to use the compile wrapper.
+    # explicitly and add the compile wrapper. The compile wrapper works
+    # around issues related to finding MS link.exe. (Unix link.exe occurs
+    # first in PATH, which causes compile and link checks to fail.)
+    # For the same reason, set LD to use the compile wrapper.
     if test $enable_msvc = yes ; then
       AC_CHECK_PROGS(F77, [ifort])
       if test -n "$F77" ; then
@@ -91,10 +92,7 @@ AC_DEFUN_ONCE([AC_COIN_PROG_F77],
   fi
   AM_CONDITIONAL([COIN_HAS_F77], test -n "$F77")
 
-  # Declare precious variable for additional compiler flags
   AC_ARG_VAR(ADD_FFLAGS,[Additional Fortran 77 compiler options (if not overwriting FFLAGS)])
-
-  # AC_MSG_NOTICE([Leaving COIN_PROG_F77])
 ])
 
 
@@ -105,15 +103,16 @@ AC_DEFUN_ONCE([AC_COIN_PROG_F77],
 # Set up the Fortran compiler, required to compile .f90 files.
 # We use the same compiler as F77, unless the user has set FC explicitly
 # or we didn't check for F77.
+#
+# Defines ADD_FCFLAGS configure variable.
 
 AC_DEFUN_ONCE([AC_COIN_PROG_FC],
 [
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 
   # If enable-msvc, then test for Intel Fortran compiler for Windows
-  # explicitly and add compile-wrapper before AC_PROG_FC, because
-  # the compile-wrapper work around issues when having the wrong link.exe
-  # in the PATH first, which could upset tests in AC_PROG_FC.
+  # explicitly and add compile-wrapper, because the compile-wrapper works
+  # around issues when having the wrong link.exe in the PATH first.
   if test $enable_msvc = yes ; then
     AC_CHECK_PROGS(FC, [ifort])
     if test -n "$FC" ; then
@@ -135,7 +134,6 @@ AC_DEFUN_ONCE([AC_COIN_PROG_FC],
     fi
   fi
 
-  # Declare precious variable for additional compiler flags
   AC_ARG_VAR(ADD_FCFLAGS,[Additional Fortran compiler options (if not overwriting FCFLAGS)])
 ])
 
@@ -152,10 +150,8 @@ AC_DEFUN_ONCE([AC_COIN_PROG_FC],
 
 AC_DEFUN([AC_COIN_F77_SETUP],
 [
-  # AC_MSG_NOTICE([In COIN_F77_SETUP])
-
-# F77_WRAPPERS will trigger the necessary F77 setup macros (F77_MAIN,
-# F77_LIBRARY_LDFLAGS, etc.)
+dnl F77_WRAPPERS will trigger the necessary F77 setup macros (F77_MAIN,
+dnl F77_LIBRARY_LDFLAGS, etc.)
   AC_F77_WRAPPERS
 
   # check whether compile script should be used to wrap around Fortran 77 compiler
@@ -169,7 +165,6 @@ AC_DEFUN([AC_COIN_F77_SETUP],
       ;;
     esac
   fi
-  # AC_MSG_NOTICE([Leaving COIN_F77_SETUP])
 ])
 
 # COIN_F77_WRAPPERS (lib,func)
@@ -198,7 +193,6 @@ AC_DEFUN([AC_COIN_F77_SETUP],
 
 AC_DEFUN([AC_COIN_F77_WRAPPERS],
 [
-  # AC_MSG_NOTICE([In COIN_F77_WRAPPERS])
   AC_CACHE_CHECK(
     [Fortran name mangling scheme],
     [ac_cv_f77_mangling],
@@ -208,7 +202,6 @@ AC_DEFUN([AC_COIN_F77_WRAPPERS],
        for ac_trail in "underscore" "no underscore" ; do
          for ac_extra in "no extra underscore" "extra underscore" ; do
            ac_cv_f77_mangling="${ac_case}, ${ac_trail}, ${ac_extra}"
-           # AC_MSG_NOTICE([Attempting link for $ac_cv_f77_mangling])
            case $ac_case in
              "lower case")
                ac_name=m4_tolower($2)
@@ -220,7 +213,6 @@ AC_DEFUN([AC_COIN_F77_WRAPPERS],
            if test "$ac_trail" = underscore ; then
              ac_name=${ac_name}_
            fi
-           # AC_MSG_CHECKING([$2 -> $ac_name])
            AC_LINK_IFELSE(
              [AC_LANG_PROGRAM(
                 [#ifdef __cplusplus
@@ -230,7 +222,6 @@ AC_DEFUN([AC_COIN_F77_WRAPPERS],
                 [$ac_name()])],
              [ac_result=success],
              [ac_result=failure])
-           # AC_MSG_RESULT([$result])
            if test $ac_result = success ; then
              break 3
            fi
@@ -242,8 +233,8 @@ AC_DEFUN([AC_COIN_F77_WRAPPERS],
      fi
      LIBS=$ac_save_LIBS])
 
-# Invoke the second-level internal autoconf macro _AC_FC_WRAPPERS to give the
-# functionality of AC_F77_WRAPPERS.
+dnl Invoke the second-level internal autoconf macro _AC_FC_WRAPPERS to give the
+dnl functionality of AC_F77_WRAPPERS.
 
   if test "$ac_cv_f77_mangling" != unknown ; then
     AC_LANG_PUSH([Fortran 77])
@@ -252,7 +243,6 @@ AC_DEFUN([AC_COIN_F77_WRAPPERS],
   else
     AC_MSG_WARN([Unable to determine correct Fortran name mangling scheme])
   fi
-  # AC_MSG_NOTICE([Done COIN_F77_WRAPPERS])
 ])
 
 
@@ -287,7 +277,7 @@ AC_DEFUN([AC_COIN_F77_FUNC],
 # macros that require a working Fortran compiler.
 
 AC_DEFUN([AC_COIN_TRY_FLINK],
-[ # AC_MSG_NOTICE([In COIN_TRY_FLINK])
+[
   case $ac_ext in
     f)
       AC_TRY_LINK(,[      call $1],[flink_try=yes],[flink_try=no])
@@ -296,7 +286,6 @@ AC_DEFUN([AC_COIN_TRY_FLINK],
       coin_need_flibs=no
       flink_try=no
       AC_COIN_F77_FUNC($1,cfunc$1)
-      # AC_MSG_NOTICE([COIN_TRY_FLINK: $1 -> $cfunc$1])
       AC_LINK_IFELSE(
         [AC_LANG_PROGRAM([void $cfunc$1();],[$cfunc$1()])],
         [flink_try=yes],
@@ -339,7 +328,6 @@ AC_DEFUN([AC_COIN_TRY_FLINK],
   else
     $3
   fi
-  # AC_MSG_NOTICE([Done COIN_TRY_FLINK])
 ])
 
 
