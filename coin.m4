@@ -55,17 +55,15 @@ AC_DEFUN([AC_COIN_VPATH_LINK],
 #
 # Further, breaks up AC_PACKAGE_VERSION into AC_PACKAGE_VERSION_MAJOR,
 # AC_PACKAGE_VERSION_MINOR, AC_PACKAGE_VERSION_RELEASE, assuming it has
-# the form major.minor.release.
+# the form major.minor.release, but use 9999 for missing values.
+# AC_PACKAGE_VERSION is defined by AC_INIT
 
 AC_DEFUN([AC_COIN_PROJECTVERSION],
 [
-  # break up package version number in major.minor.release
-  # AC_PACKAGE_VERSION is defined by AC_INIT
   m4_define(AC_PACKAGE_VERSION_MAJOR, m4_bregexp(AC_PACKAGE_VERSION, [^\([0-9]*\).*], [\1]))
   m4_define(AC_PACKAGE_VERSION_MINOR, m4_bregexp(AC_PACKAGE_VERSION, [^[0-9]*\.\([0-9]*\).*], [\1]))
   m4_define(AC_PACKAGE_VERSION_RELEASE, m4_bregexp(AC_PACKAGE_VERSION, [^[0-9]*\.[0-9]*\.\([0-9]*\).*], [\1]))
 
-  # ac-define AC_PACKAGE_VERSION macros, use 9999 for missing values
   AC_DEFINE_UNQUOTED(m4_toupper(AC_PACKAGE_NAME)_VERSION,
     "AC_PACKAGE_VERSION",
     [Version number of project])
@@ -114,9 +112,16 @@ AC_DEFUN([AC_COIN_ENABLE_MSVC],
 #                        COIN_COMPFLAGS_DEFAULTS                          #
 ###########################################################################
 
+# Overwrite default compiler flags, since the autoconf defaults don't work
+# well for cl/icl and we want to take --enable-debug and --enable-msvc into
+# account:
+# - debugging enabled: enable debug symbols (-g/-Z7)
+# - debugging disabled: disable debug code (-DNDEBUG); enable (more) optimization (-O2)
+# - enable exceptions for (i)cl
+
 AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
 [
-  # We want --enable-msvc setup and checked
+dnl We want --enable-msvc setup and checked
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 
   AC_ARG_ENABLE([debug],
@@ -124,18 +129,11 @@ AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
     [enable_debug=$enableval],
     [enable_debug=no])
 
-# This macro should run before the compiler checks (doesn't seem to be
-# sufficient for CFLAGS)
-
+dnl This macro should run before the compiler checks (does not seem to be sufficient for CFLAGS)
   AC_BEFORE([$0],[AC_PROG_CXX])
   AC_BEFORE([$0],[AC_PROG_CC])
   AC_BEFORE([$0],[AC_PROG_F77])
   AC_BEFORE([$0],[AC_PROG_FC])
-
-# change default compiler flags
-# - debugging enabled: enable debug symbols (-g/-Z7)
-# - debugging disabled: disable debug code (-DNDEBUG); enable (more) optimization (-O2)
-# - enable exceptions for (i)cl
 
   if test "$enable_debug" = yes ; then
     if test "$enable_msvc" = yes ; then
@@ -206,27 +204,40 @@ AC_DEFUN([AC_COIN_DEBUGLEVEL],
 # configure script, such as defining a few variables.
 #   version (optional): the libtool library version
 #                       project version number is used if not available
+# - enforces the required autoconf version
+# - sets the project's version numbers
+# - defines the ALWAYS_FALSE automake conditional that is always false
+# - changes the default compiler flags
+# - get and patch the build and host types
+# - Make silent build rules the default (https://www.gnu.org/software/automake/
+#   manual/html_node/Automake-Silent-Rules.html)
+# - Initialize automake
+#   - do not be as strict as for GNU projects
+#   - don't AC_DEFINE PACKAGE or VERSION (but there're still defined as shell
+#     variables in configure, and as make variables).
+#   - disable dist target
+#   - place objects from sources in subdirs into corresponding subdirs
+#   - enable all automake warnings
+# - Figure out the path where libraries are installed.
+# - Add a configure flag to indicate whether .pc files should be made relocatable.
+#   This is off by default, as it creates libtool warnings and doesn't account for
+#   cases where --libdir is used.
 
 AC_DEFUN([AC_COIN_INITIALIZE],
 [
-# Enforce the required autoconf version
   AC_PREREQ(2.69)
 
-# Set the project's version numbers
   AC_COIN_PROJECTVERSION($1)
 
-# A useful makefile conditional that is always false
   AM_CONDITIONAL(ALWAYS_FALSE, false)
 
-# Change the default compiler flags. This needs to run before
-# AC_CANONICAL_BUILD.
   AC_REQUIRE([AC_COIN_COMPFLAGS_DEFAULTS])
 
-# Get the build and host types
+dnl this needs to used before AC_CANONICAL_BUILD
   AC_CANONICAL_BUILD
   AC_CANONICAL_HOST
 
-# libtool has some magic for host_os and build_os being mingw, but doesn't know about msys
+  # libtool has some magic for host_os and build_os being mingw, but doesn't know about msys
   if test $host_os = msys ; then
     host_os=mingw
     host=`echo $host | sed -e 's/msys/mingw/'`
@@ -237,29 +248,17 @@ AC_DEFUN([AC_COIN_INITIALIZE],
     build=`echo $build | sed -e 's/msys/mingw/'`
   fi
 
-# Make silent build rules the default (https://www.gnu.org/software/automake/
-# manual/html_node/Automake-Silent-Rules.html). Run before AM_INIT_AUTOMAKE,
-# which will AC_REQUIRE it anyway.
+dnl this needs to be used before AM_INIT_AUTOMAKE
   AM_SILENT_RULES([yes])
 
-# Initialize automake
-# - do not be as strict as for GNU projects
-# - don't AC_DEFINE PACKAGE or VERSION (but there're still defined as shell
-#   variables in configure, and as make variables).
-# - disable dist target
-# - place objects from sources in subdirs into corresponding subdirs
-# - enable all automake warnings
   AM_INIT_AUTOMAKE([foreign no-define no-dist subdir-objects -Wall])
 
-# Disable automatic rebuild of configure/Makefile. Use run_autotools.
-  AM_MAINTAINER_MODE
-
-# Figure out the path where libraries are installed.
-# Unless the user specifies --prefix, prefix is set to NONE until the
-# end of configuration, at which point it will be set to $ac_default_prefix.
-# Unless the user specifies --exec-prefix, exec-prefix is set to NONE until
-# the end of configuration, at which point it's set to '${prefix}'.
-# Sheesh.  So do the expansion, then back it out.
+  # Figure out the path where libraries are installed.
+  # Unless the user specifies --prefix, prefix is set to NONE until the
+  # end of configuration, at which point it will be set to $ac_default_prefix.
+  # Unless the user specifies --exec-prefix, exec-prefix is set to NONE until
+  # the end of configuration, at which point it's set to '${prefix}'.
+  # Sheesh.  So do the expansion, then back it out.
   save_prefix=$prefix
   save_exec_prefix=$exec_prefix
   if test "x$prefix" = xNONE ; then
@@ -275,8 +274,6 @@ AC_DEFUN([AC_COIN_INITIALIZE],
   prefix=$save_prefix
   exec_prefix=$save_exec_prefix
 
-# add a configure flag to indicate whether .pc files should be made relocatable
-# off by default, as it creates libtool warnings
   AC_ARG_ENABLE([relocatable],
     [AC_HELP_STRING([--enable-relocatable],
        [whether prefix in installed .pc files should be setup relative to pcfiledir])],
@@ -290,18 +287,20 @@ AC_DEFUN([AC_COIN_INITIALIZE],
 #                           COIN_PROG_LIBTOOL                             #
 ###########################################################################
 
-# Set up libtool parameters and create libtool
+# Set up libtool parameters and create and patchup libtool
 # (https://www.gnu.org/software/libtool/manual/html_node/LT_005fINIT.html)
-# Pass no-win32-dll to omit passing win32-dll to LT_INIT
-
-AC_DEFUN([AC_COIN_PROG_LIBTOOL],
-[
-# checkout AR and decide whether to use ar-lib wrapper
-  AM_PROG_AR
-
-# Create libtool.
-  LT_INIT(disable-static pic-only m4_bmatch($1,no-win32-dll,,win32-dll))
-
+# Pass no-win32-dll to omit passing win32-dll to LT_INIT.
+# Checks whether ar-lib wrapper needs to be used.
+#
+# Set up LT_LDFLAGS variable, which user can initialize and configure augments:
+# - Add version info flag using the libtool library info, if defined,
+#   otherwise use the project version if a full major.minor.release number is available.
+# - Add -no-undefined as shared libraries should have no undefined symbols.
+#   For Windows DLLs, it is mandatory to add this.
+#
+# Defines automake conditional COIN_STATIC_BUILD on whether we build
+# shared or static. Used in .pc files.
+#
 # Patch libtool to circumvent some issues when using MSVC and MS lib.
 # This needs to be run after config.status has created libtool.
 # 1. Relax check which libraries can be used when linking a DLL.
@@ -327,6 +326,14 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 #    static libraries. Setting deplibs_check_method=pass_all will avoid
 #    this faulty check.
 
+AC_DEFUN([AC_COIN_PROG_LIBTOOL],
+[
+dnl checkout AR and decide whether to use ar-lib wrapper
+  AM_PROG_AR
+
+dnl create libtool
+  LT_INIT(disable-static pic-only m4_bmatch($1,no-win32-dll,,win32-dll))
+
   case "$am_cv_ar_interface" in
     lib )
       AC_CONFIG_COMMANDS([libtoolclpatch],
@@ -350,11 +357,8 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
       ;;
   esac
 
-  # Set up LT_LDFLAGS, user can initialize and we augment below
   AC_ARG_VAR(LT_LDFLAGS,[Flags passed to libtool when building libraries or executables that are installed])
 
-  # Use the libtool library info, if defined, otherwise use the project version info,
-  # if a full major.minor.release number was available
   m4_ifnblank(AC_COIN_LIBTOOL_VERSIONINFO,
     LT_LDFLAGS="$LT_LDFLAGS -version-info AC_COIN_LIBTOOL_VERSIONINFO"
     AC_MSG_NOTICE(libtool version info: -version-info AC_COIN_LIBTOOL_VERSIONINFO),
@@ -365,11 +369,8 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
        AC_MSG_NOTICE(libtool version info: -version-number AC_PACKAGE_VERSION_MAJOR:AC_PACKAGE_VERSION_MINOR:AC_PACKAGE_VERSION_RELEASE)
     ))))
 
-  # shared libraries should have no undefined symbols
-  # for Windows DLLs, it is mandatory to add this
   LT_LDFLAGS="$LT_LDFLAGS -no-undefined"
 
-  # add automake conditional on whether we build shared or static, useful for .pc files
   AM_CONDITIONAL([COIN_STATIC_BUILD],[test "$enable_shared" = no])
 ])
 
@@ -380,7 +381,17 @@ AC_DEFUN([AC_COIN_PROG_LIBTOOL],
 
 # Macros to find C and C++ compilers according to specified lists of compiler
 # names. For Fortran compilers, see coin_fortran.m4.
-
+#
+# If enable-msvc, then test for Intel (on Windows) and MS C/C++ compiler
+# explicitly and add the compile wrapper before AC_PROG_CC/CXX. The compile
+# wrapper works around issues related to finding MS link.exe. (Unix link.exe
+# occurs first in PATH, which causes compile and link checks to fail.) For
+# the same reason, set LD to use the compile wrapper. If CC/CXX remains unset
+# (neither icl or cl was found, and CC was not set by the user), stop with
+# an error.
+#
+# Declares ADD_C(XX)FLAGS variables for additional compiler flags.
+#
 # Note that automake redefines AC_PROG_CC to invoke _AM_PROG_CC_C_O (an
 # equivalent to AC_PROG_CC_C_O, plus wrap CC in the compile script if needed)
 # and _AM_DEPENDENCIES (`dependency style'). Look in aclocal.m4 to see this.
@@ -389,17 +400,9 @@ AC_DEFUN_ONCE([AC_COIN_PROG_CC],
 [
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 
-  # Setting up libtool with LT_INIT will AC_REQUIRE AC_PROG_CC, but we want
-  # to invoke it from this macro first so that we can supply a parameter.
+dnl Setting up libtool with LT_INIT will AC_REQUIRE AC_PROG_CC, but we want
+dnl to invoke it from this macro first so that we can supply a parameter.
   AC_BEFORE([$0],[LT_INIT])
-
-  # If enable-msvc, then test for Intel (on Windows) and MS C compiler
-  # explicitly and add the compile wrapper before AC_PROG_CC. The compile
-  # wrapper works around issues related to finding MS link.exe. (Unix link.exe
-  # occurs first in PATH, which causes compile and link checks to fail.) For
-  # the same reason, set LD to use the compile wrapper. If CC remains unset
-  # (neither icl or cl was found, and CC was not set by the user), stop with
-  # an error.
 
   if test $enable_msvc = yes ; then
     AC_CHECK_PROGS(CC, [icl cl])
@@ -413,14 +416,12 @@ AC_DEFUN_ONCE([AC_COIN_PROG_CC],
     fi
   fi
 
-  # Look for some C compiler and check that it works. If the user has set CC
-  # or we found icl/cl above, this shouldn't overwrite CC. Unlike the macros
-  # that establish C++ or Fortran compilers, PROG_CC also takes care of adding
-  # the compile wrapper if needed.
-
+dnl Look for some C compiler and check that it works. If the user has set CC
+dnl or we found icl/cl above, this should not overwrite CC. Unlike the macros
+dnl that establish C++ or Fortran compilers, PROG_CC also takes care of adding
+dnl the compile wrapper if needed.
   AC_PROG_CC([gcc clang cc icc icl cl cc xlc xlc_r pgcc])
 
-  # Declare precious variable for additional compiler flags
   AC_ARG_VAR(ADD_CFLAGS,[Additional C compiler options (if not overwriting CFLAGS)])
 ])
 
@@ -432,14 +433,6 @@ AC_DEFUN_ONCE([AC_COIN_PROG_CXX],
 [
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
   AC_REQUIRE([AC_COIN_PROG_CC])
-
-  # If enable-msvc, then test for Intel (on Windows) and MS C compiler
-  # explicitly and add the compile wrapper before AC_PROG_CXX. The compile
-  # wrapper works around issues related to finding MS link.exe. (Unix link.exe
-  # occurs first in PATH, which causes compile and link checks to fail.) For
-  # the same reason, set LD to use the compile wrapper. If CC remains unset
-  # (neither icl or cl was found, and CC was not set by the user), stop with
-  # an error.
 
   if test $enable_msvc = yes ; then
     AC_CHECK_PROGS(CXX, [icl cl])
@@ -453,19 +446,16 @@ AC_DEFUN_ONCE([AC_COIN_PROG_CXX],
     fi
   fi
 
-  # Look for some C++ compiler and check that it works. If the user has set
-  # CXX or we found icl/cl above, this shouldn't overwrite CXX.
-
+dnl Look for some C++ compiler and check that it works. If the user has set
+dnl CXX or we found icl/cl above, this should not overwrite CXX.
   AC_PROG_CXX([g++ clang++ c++ pgCC icpc gpp cxx cc++ icl cl FCC KCC RCC xlC_r aCC CC])
 
-  # If the compiler does not support -c -o, wrap it with the compile script.
-
+dnl If the compiler does not support -c -o, wrap it with the compile script.
   AC_PROG_CXX_C_O
   if test $ac_cv_prog_cxx_c_o = no ; then
     CXX="$am_aux_dir/compile $CXX"
   fi
 
-  # Declare precious variable for additional compiler flags
   AC_ARG_VAR(ADD_CXXFLAGS,[Additional C++ compiler options (if not overwriting CXXFLAGS)])
 ])
 
@@ -489,7 +479,6 @@ if test -z "$CXXLIBS"; then
       *)
         # clang uses libc++ as the default standard C++ library, not libstdc++
         # this test is supposed to recognize whether the compiler is clang
-        #
         AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <ciso646>]], [[
 #ifndef _LIBCPP_VERSION
        choke me
@@ -677,7 +666,6 @@ AC_DEFUN([AC_COIN_NAMEMANGLING],
        for ac_trail in "underscore" "no underscore" ; do
          for ac_extra in "no extra underscore" "extra underscore" ; do
            m4_tolower(ac_cv_$1_namemangling)="${ac_case}, ${ac_trail}, ${ac_extra}"
-           # AC_MSG_NOTICE([Attempting link for m4_tolower(ac_cv_$1_namemangling)])
            case $ac_case in
              "lower case")
                ac_name=m4_tolower($2)
@@ -689,9 +677,7 @@ AC_DEFUN([AC_COIN_NAMEMANGLING],
            if test "$ac_trail" = underscore ; then
              ac_name=${ac_name}_
            fi
-           # AC_MSG_CHECKING([$2 -> $ac_name])
            AC_TRY_LINK_FUNC([$ac_name],[ac_success=yes],[ac_success=no])
-           # AC_MSG_RESULT([$result])
            if test $ac_success = yes ; then
              break 3
            fi
@@ -704,10 +690,8 @@ AC_DEFUN([AC_COIN_NAMEMANGLING],
      LIBS=$ac_save_LIBS
      AC_LANG_POP(C)])
 
-  # setup the m4_toupper($1)_FUNC and m4_toupper($1)_FUNC_ macros
+dnl setup the m4_toupper($1)_FUNC and m4_toupper($1)_FUNC_ macros
   AC_COIN_DEFINENAMEMANGLING(m4_toupper(AC_PACKAGE_NAME)_[]m4_toupper($1),[$m4_tolower(ac_cv_$1_namemangling)])
-
-  # AC_MSG_NOTICE([Done COIN_NAMEMANGLING])
 ])
 
 
@@ -731,7 +715,7 @@ AC_DEFUN([AC_COIN_NAMEMANGLING],
 
 AC_DEFUN([AC_COIN_TRY_LINK],
 [
-  # setup LIBS by adding $2 and those from $3
+dnl setup LIBS by adding $2 and those from $3
   ac_save_LIBS="$LIBS"
   m4_ifnblank([$2], [LIBS="$2 $LIBS"])
   m4_ifnblank([$3],
@@ -743,12 +727,11 @@ AC_DEFUN([AC_COIN_TRY_LINK],
 
   $1_namemangling=unknown
 
-  # FIXME we had "extra underscore" as additional option for ac_extra
-  #   but since there is no use for ac_extra below, was there any use for it?
+dnl FIXME we had "extra underscore" as additional option for ac_extra
+dnl   but since there is no use for ac_extra below, was there any use for it?
   for ac_extra in "no extra underscore" ; do
     for ac_case in "lower case" "upper case" ; do
       for ac_trail in "underscore" "no underscore" ; do
-        #AC_MSG_NOTICE([Attempting link for ${ac_case}, ${ac_trail}, ${ac_extra}])
         case $ac_case in
           "lower case")
             ac_name=m4_tolower($1)
@@ -785,24 +768,33 @@ AC_DEFUN([AC_COIN_TRY_LINK],
 #                           COIN_HAS_PKGCONFIG                            #
 ###########################################################################
 
-# Check whether a suitable pkg-config tool is available.  If so, then the
-# variable PKGCONFIG is set to its path, otherwise it is set to "".  Further,
-# the AM_CONDITIONAL COIN_HAS_PKGCONFIG is set and PKGCONFIG is AC_SUBST'ed.
-# Finally, the search path for .pc files is assembled from the value of
-# $prefix and $PKG_CONFIG_PATH in a variable COIN_PKG_CONFIG_PATH, which is
-# also AC_SUBST'ed.
+# Check whether a suitable pkg-config tool is available.
+# pkgconf is the up-and-coming thing, replacing pkg-config, so it is preferred.
 # The default minimal version number is 0.16.0 because COIN-OR .pc files
 # include a URL field which breaks pkg-config version <= 0.15. A more recent
 # minimum version can be specified as a parameter.
 # Portions of the macro body are derived from macros in pkg.m4.
 
+# If a pkg-config tool is found, then the variable PKGCONFIG is set to its path,
+# otherwise it is set to "". Further, the AM_CONDITIONAL COIN_HAS_PKGCONFIG is set
+# and PKGCONFIG is AC_SUBST'ed.
+#
+# Finally, the search path for .pc files is assembled from the value of
+# $prefix and $PKG_CONFIG_PATH in a variable COIN_PKG_CONFIG_PATH, which is
+# also AC_SUBST'ed.
+# The search path will include the installation directory for .pc files
+# for COIN-OR packages. COIN-OR .pc files are installed in ${libdir}/pkgconfig
+# and COIN_INITIALIZE takes care of setting up $expanded_libdir based on $libdir.
+# Of course, this whole house of cards balances on the shaky assumption that
+# the user is sane and has installed all packages in the same place and does
+# not change that place when make executes. If not, well, it's their
+# responsibility to augment PKG_CONFIG_PATH in the environment.
+
 AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
 [
   AC_ARG_VAR([PKG_CONFIG],[path to pkg-config utility])
 
-# pkgconf is the up-and-coming thing, replacing pkg-config, so prefer it.
-# The next stanza is a modified version of PKG_PROG_PKG_CONFIG from pkg.m4.
-
+dnl This is a modified version of PKG_PROG_PKG_CONFIG from pkg.m4.
   if test -z "$PKG_CONFIG" ; then
    AC_CHECK_TOOLS([PKG_CONFIG],[pkgconf pkg-config])
   fi
@@ -818,9 +810,8 @@ AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
    fi
   fi
 
-# Check if PKG_CONFIG supports the short-errors flag. The next stanza is a
-# modified version of _PKG_SHORT_ERRORS_SUPPORTED from pkg.m4.
-
+  # Check if PKG_CONFIG supports the short-errors flag.
+dnl This is a modified version of _PKG_SHORT_ERRORS_SUPPORTED from pkg.m4.
   if test -n "$PKG_CONFIG" &&
      $PKG_CONFIG --atleast-pkgconfig-version 0.20 ; then
     pkg_short_errors=" --short-errors "
@@ -828,19 +819,9 @@ AC_DEFUN([AC_COIN_HAS_PKGCONFIG],
     pkg_short_errors=""
   fi
 
-# Create a makefile variable and conditional.
-
+dnl Create a automake conditional and PKG_CONFIG variable
   AM_CONDITIONAL([COIN_HAS_PKGCONFIG], [test -n "$PKG_CONFIG"])
   AC_SUBST(PKG_CONFIG)
-
-# Assemble a PKG_CONFIG search path that will include the installation
-# directory for .pc files for COIN packages.  Coin .pc files are installed in
-# ${libdir}/pkgconfig and COIN_INITIALIZE takes care of setting up
-# $expanded_libdir based on $libdir. Of course,
-# this whole house of cards balances on the shaky assumption that the user is
-# sane and has installed all packages in the same place and does not change
-# that place when make executes. If not, well, it's their responsibility to
-# augment PKG_CONFIG_PATH in the environment.
 
   COIN_PKG_CONFIG_PATH="${PKG_CONFIG_PATH}"
   AC_SUBST(COIN_PKG_CONFIG_PATH)
@@ -908,25 +889,21 @@ AC_DEFUN([AC_COIN_CHK_MOD_EXISTS],
 
 AC_DEFUN([AC_COIN_CHK_HERE],
 [
-
-# Make sure the necessary variables exist for each client package.
-
+dnl Make sure the necessary variables exist for each client package.
   m4_foreach_w([myvar],[$2],
     [AC_SUBST(m4_toupper(myvar)_LFLAGS)
      AC_SUBST(m4_toupper(myvar)_CFLAGS)
      AC_SUBST(m4_toupper(myvar)_PCFILES)
     ])
 
-# Add the .pc file and augment LFLAGS and CFLAGS.
-# From the CFLAGS of $1, remove the -D$1_BUILD, though.
-
+dnl Add the .pc file and augment LFLAGS and CFLAGS.
+dnl From the CFLAGS of $1, remove the -D$1_BUILD, though.
     m4_foreach_w([myvar],[$2],
       [if test -n "$m4_toupper(myvar)_PCFILES" ; then m4_toupper(myvar)_PCFILES="$m4_toupper(myvar)_PCFILES m4_default($3,m4_tolower($1))" ; fi
        m4_toupper(myvar)_LFLAGS="$m4_toupper(myvar)_LFLAGS $m4_toupper($1)_LFLAGS"
        m4_toupper(myvar)_CFLAGS="$m4_toupper(myvar)_CFLAGS `echo $m4_toupper($1)_CFLAGS | sed -e s/-D[]m4_toupper($1)_BUILD//`"
 
-# Define BUILDTOOLS_DEBUG to enable debugging output
-
+       # Define BUILDTOOLS_DEBUG to enable debugging output
        if test "$BUILDTOOLS_DEBUG" = 1 ; then
          AC_MSG_NOTICE([CHK_HERE adding $1 to myvar:])
          AC_MSG_NOTICE([m4_toupper(myvar)_PCFILES: "${m4_toupper(myvar)_PCFILES}"])
@@ -934,7 +911,6 @@ AC_DEFUN([AC_COIN_CHK_HERE],
          AC_MSG_NOTICE([m4_toupper(myvar)_CFLAGS: "${m4_toupper(myvar)_CFLAGS}"])
        fi
       ])
-
 ])   # COIN_CHK_HERE
 
 
@@ -1058,17 +1034,14 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
 
   dflt_action=m4_default([$3],[yes])
 
-# Initialize variables for the primary package.
-
+  # Initialize variables for the primary package.
   m4_tolower(coin_has_$1)=noInfo
   m4_tolower($1_lflags)=
   m4_tolower($1_cflags)=
   m4_tolower($1_data)=
   m4_tolower($1_pcfiles)=
 
-# --with-prim is always present. If the client specified dataonly, its value
-# is assigned to prim_data.
-
+  # --with-prim is always present.
   withval="$m4_tolower(with_$1)"
   if test -n "$withval" ; then
     case "$withval" in
@@ -1083,6 +1056,7 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
         ;;
       * )
         m4_tolower(coin_has_$1)=yes
+        dnl If the client specified dataonly, its value is assigned to prim_data.
         m4_if(m4_default($4,nodata),dataonly,
           [m4_tolower($1_data)="$withval"],
           [m4_tolower($1_lflags)="$withval"])
@@ -1090,12 +1064,10 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
     esac
   fi
 
-# --with-prim-libs and --with-prim-cflags are present unless the client
-# specified dataonly. Specifying --with-prim=no overrides the individual
-# options for libs and cflags.
-
+dnl --with-prim-libs and --with-prim-cflags are present unless the client specified dataonly.
   m4_if(m4_default($4,nodata),dataonly,[],
-    [if test "$m4_tolower(coin_has_$1)" != skipping ; then
+    [# Specifying --with-prim=no overrides the individual options for lflags and cflags.
+     if test "$m4_tolower(coin_has_$1)" != skipping ; then
        withval="$m4_tolower(with_$1_lflags)"
        if test -n "$withval" ; then
          case "$withval" in
@@ -1123,11 +1095,10 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
        fi
      fi])
 
-# --with-prim-data will be present unless the client specified nodata.
-# Specifying --with-prim=no overrides the individual option for data.
-
+dnl --with-prim-data will be present unless the client specified nodata.
   m4_if(m4_default($4,nodata),nodata,[],
-    [if test "$m4_tolower(coin_has_$1)" != skipping ; then
+    [# Specifying --with-prim=no overrides the individual option for data.
+     if test "$m4_tolower(coin_has_$1)" != skipping ; then
        withval="$m4_tolower(with_$1_data)"
        if test -n "$withval" ; then
          case "$withval" in
@@ -1142,16 +1113,17 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
        fi
      fi])
 
-# At this point, coin_has_prim can be one of noInfo (no user options
-# specified), skipping (user said no), requested or build (user said yes
-# or build and gave no further guidance), or yes (user specified one or
-# more --with-prim options). If we're already at yes or skipping, we're
-# done looking.
+  # At this point, coin_has_prim can be one of
+  # - noInfo (no user options specified),
+  # - skipping (user said no),
+  # - requested,
+  # - build (user said yes or build and gave no further guidance),
+  # - or yes (user specified one or more --with-prim options).
+  # If we're already at yes or skipping, we're done looking.
 
-# If there are no user options (noInfo) and the default is no, we're skipping.
-# Otherwise, the default must be yes or build; consider the package requested.
-# A default action we don't recognise defaults to yes.
-
+  # If there are no user options (noInfo) and the default is no, we're skipping.
+  # Otherwise, the default must be yes or build; consider the package requested.
+  # A default action we don't recognise defaults to yes.
   if test "$m4_tolower(coin_has_$1)" = noInfo ; then
     case $dflt_action in
       no )
@@ -1166,11 +1138,10 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
     esac
   fi
 
-# Now coin_has_prim can be one of skipping, yes, requested, or build. For
-# requested or build, try pkgconf, if it's available. If it's not available,
-# well, hope that the user knows their system and prim can be used with no
-# additional flags.
-
+  # Now coin_has_prim can be one of skipping, yes, requested, or build.
+  # For requested or build, try pkgconf, if it's available.
+  # If it's not available, well, hope that the user knows their system
+  # and prim can be used with no additional flags.
   case $m4_tolower(coin_has_$1) in
     requested | build )
       if test -n "$PKG_CONFIG" -a "$2" != skip ; then
@@ -1188,7 +1159,6 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
           [m4_tolower(coin_has_$1)=no])
       else
         m4_tolower(coin_has_$1)=no
-        # AC_MSG_WARN([skipped check via pkgconf as no pkgconf available])
       fi
       ;;
     skipping | yes )
@@ -1198,13 +1168,13 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
       ;;
   esac
 
-# The final value of coin_has_prim will be yes, no, or skipping. No means
-# we looked (with pkgconfig) and didn't find anything. Skipping means the
-# user said `don't use.' Yes means we have something, from the user or
-# from pkgconfig. Note that we haven't run a useability test!
+  # The final value of coin_has_prim will be yes, no, or skipping.
+  # No means we looked (with pkgconfig) and didn't find anything.
+  # Skipping means the user said `don't use.'
+  # Yes means we have something, from the user or from pkgconfig.
+  # Note that we haven't run a useability test!
 
-# Define BUILDTOOLS_DEBUG to enable debugging output
-
+  # Define BUILDTOOLS_DEBUG to enable debugging output
   if test "$BUILDTOOLS_DEBUG" = 1 ; then
     AC_MSG_NOTICE([FIND_PRIM_PKG result for $1: "$m4_tolower(coin_has_$1)"])
     AC_MSG_NOTICE([Collected values for package '$1'])
@@ -1267,16 +1237,14 @@ AC_DEFUN([AC_COIN_CHK_PKG],
 
   AC_MSG_CHECKING([for package $1])
 
-# Make sure the necessary variables exist for each client package.
-
+dnl Make sure the necessary variables exist for each client package.
   m4_foreach_w([myvar],[$2],
     [AC_SUBST(m4_toupper(myvar)_LFLAGS)
      AC_SUBST(m4_toupper(myvar)_CFLAGS)
      AC_SUBST(m4_toupper(myvar)_PCFILES)
     ])
 
-# Check to see if the user has set an override to skip this primary.
-
+  # Check to see if the user has set an override to skip this primary.
   m4_tolower(coin_has_$1)=noInfo
   if test x"$COIN_SKIP_PROJECTS" != x ; then
     for pkg in $COIN_SKIP_PROJECTS ; do
@@ -1286,10 +1254,9 @@ AC_DEFUN([AC_COIN_CHK_PKG],
     done
   fi
 
-# If we're not skipping this primary, define and process the command line
-# options according to the cmdopts parameter. Then invoke FIND_PRIM_PKG to do
-# the heavy lifting.
-
+dnl If we are not skipping this primary, define and process the command line
+dnl options according to the cmdopts parameter. Then invoke FIND_PRIM_PKG to do
+dnl the heavy lifting.
   if test "$m4_tolower(coin_has_$1)" != skipping ; then
     m4_case(m4_default($5,nodata),
       nodata,[AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,no,$4)],
@@ -1305,20 +1272,17 @@ AC_DEFUN([AC_COIN_CHK_PKG],
     AC_MSG_RESULT([$m4_tolower(coin_has_$1) due to COIN_SKIP_PROJECTS])
   fi
 
-# Possibilities are `yes', 'no', or `skipping'. Normalise to `yes' or `no'.
-
+  # Possibilities are `yes', 'no', or `skipping'. Normalise to `yes' or `no'.
   if test "$m4_tolower(coin_has_$1)" != yes ; then
     m4_tolower(coin_has_$1)=no
   fi
 
-# Create an automake conditional COIN_HAS_PRIM.
-
+dnl Create an automake conditional COIN_HAS_PRIM.
   AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
                    [test $m4_tolower(coin_has_$1) = yes])
 
-# If we've located the package, define preprocessor symbol COIN_HAS_PRIM and
-# augment the necessary variables for the client packages.
-
+  # If we have located the package, define preprocessor symbol PKG_HAS_PRIM and
+  # augment the necessary variables for the client packages.
   if test $m4_tolower(coin_has_$1) = yes ; then
     AC_DEFINE(m4_toupper(AC_PACKAGE_NAME)_HAS_[]m4_toupper($1),[1],
       [Define to 1 if $1 is available.])
@@ -1328,8 +1292,7 @@ AC_DEFUN([AC_COIN_CHK_PKG],
        m4_toupper(myvar)_CFLAGS="$m4_tolower($1_cflags) $m4_toupper(myvar)_CFLAGS"
       ])
 
-# Finally, set up PRIM_DATA, unless the user specified nodata.
-
+dnl Finally, set up PRIM_DATA, unless the user specified nodata.
     m4_if(m4_default([$5],nodata),nodata,[],
       [AC_SUBST(m4_toupper($1)_DATA)
        m4_toupper($1)_DATA=$m4_tolower($1_data)])
@@ -1396,16 +1359,14 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
 [
   dflt_action=m4_default([$7],[yes])
 
-# Initialize variables for the primary library.
-
+  # Initialize variables for the primary library.
   m4_tolower(coin_has_$1)=noInfo
   m4_tolower($1_lflags)=
   m4_tolower($1_cflags)=
   m4_tolower($1_data)=
 
-# --with-prim is always present. If the client specified dataonly, its value
-# is assigned to prim_data.
-
+  # --with-prim is always present.
+dnl If the client specified dataonly, its value is assigned to prim_data.
   withval="$m4_tolower(with_$1)"
   if test -n "$withval" ; then
     case "$withval" in
@@ -1427,12 +1388,10 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
     esac
   fi
 
-# --with-prim-lflags and --with-prim-cflags are present unless the client
-# specified dataonly. Specifying --with-prim=no overrides the individual
-# options for lflags and cflags.
-
   m4_if(m4_default($8,nodata),dataonly,[],
-    [if test "$m4_tolower(coin_has_$1)" != skipping ; then
+    [# --with-prim-lflags and --with-prim-cflags are present
+     # Specifying --with-prim=no overrides the individual options for lflags and cflags.
+     if test "$m4_tolower(coin_has_$1)" != skipping ; then
        withval="$m4_tolower(with_$1_lflags)"
        if test -n "$withval" ; then
          case "$withval" in
@@ -1460,11 +1419,10 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
        fi
      fi])
 
-# --with-prim-data will be present unless the client specified nodata.
-# Specifying --with-prim=no overrides the individual option for data.
-
   m4_if(m4_default($8,nodata),nodata,[],
-    [if test "$m4_tolower(coin_has_$1)" != skipping ; then
+    [# --with-prim-data will be present
+     # Specifying --with-prim=no overrides the individual option for data.
+     if test "$m4_tolower(coin_has_$1)" != skipping ; then
        withval="$m4_tolower(with_$1_data)"
        if test -n "$withval" ; then
          case "$withval" in
@@ -1479,16 +1437,17 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
        fi
      fi])
 
-# At this point, coin_has_prim can be one of noInfo (no user options
-# specified), skipping (user said no), requested or build (user said yes
-# or build and gave no further guidance), or yes (user specified one or
-# more --with-prim options). If we're already at yes or skipping, we're
-# done looking.
+  # At this point, coin_has_prim can be one of
+  # - noInfo (no user options specified),
+  # - skipping (user said no),
+  # - requested,
+  # - build (user said yes or build and gave no further guidance), or
+  # - yes (user specified one or more --with-prim options).
+  # If we're already at yes or skipping, we're done looking.
 
-# If there are no user options (noInfo) and the default is no, we're skipping.
-# Otherwise, the default must be yes or build; consider the package requested.
-# A default action we don't recognise defaults to yes.
-
+  # If there are no user options (noInfo) and the default is no, we're skipping.
+  # Otherwise, the default must be yes or build; consider the package requested.
+  # A default action we don't recognise defaults to yes.
   if test "$m4_tolower(coin_has_$1)" = noInfo ; then
     case $dflt_action in
       no )
@@ -1503,9 +1462,8 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
     esac
   fi
 
-# Now coin_has_prim can be one of skipping, yes, build, or requested. For
-# build or requested, use the parameter values or invent some.
-
+  # Now coin_has_prim can be one of skipping, yes, build, or requested.
+  # For build or requested, use the parameter values or invent some.
   case $m4_tolower(coin_has_$1) in
     build | requested)
       m4_if(m4_default($8,nodata),dataonly,[],
@@ -1537,34 +1495,30 @@ AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
       ;;
   esac
 
-# At this point, coin_has_prim is yes or skipping.  Time to run a link check,
-# if we have a function ($5). Use whatever we've collected for lflags, plus
-# other libraries ($6) as the other libraries parameter to AC_SEARCH_LIBS,
-# leaving the library parameter blank.
-
-  if test $m4_tolower(coin_has_$1) != skipping ; then
-    m4_ifnblank([$5],
-      [ac_save_LIBS=$LIBS
+  # At this point, coin_has_prim is yes or skipping.
+  m4_ifnblank([$5],
+    [if test $m4_tolower(coin_has_$1) != skipping ; then
+       # Time to run a link check since we have a function name.
+       # Use whatever we've collected for lflags, plus other libraries ($6).
+       ac_save_LIBS=$LIBS
        LIBS="$m4_tolower($1_lflags) $6"
        AC_TRY_LINK_FUNC([$5],[],m4_tolower(coin_has_$1)=no)
-       LIBS=$ac_save_LIBS],
-      [:])
+       LIBS=$ac_save_LIBS
+     fi])
+
+  # The final value of coin_has_prim will be yes, no, or skipping. No means that
+  # the link check failed. Yes means that we passed the link check, or no link
+  # check was performed. Skipping means the user said `don't use.'
+
+  # Define BUILDTOOLS_DEBUG to enable debugging output
+  if test "$BUILDTOOLS_DEBUG" = 1 ; then
+    AC_MSG_NOTICE([FIND_PRIM_LIB result for $1: "$m4_tolower(coin_has_$1)"])
+    AC_MSG_NOTICE([Collected values for package '$1'])
+    AC_MSG_NOTICE([m4_tolower($1_lflags) is "$m4_tolower($1_lflags)"])
+    AC_MSG_NOTICE([m4_tolower($1_cflags) is "$m4_tolower($1_cflags)"])
+    AC_MSG_NOTICE([m4_tolower($1_data) is "$m4_tolower($1_data)"])
+    AC_MSG_NOTICE([m4_tolower($1_pcfiles) is "$m4_tolower($1_pcfiles)"])
   fi
-
-# The final value of coin_has_prim will be yes, no, or skipping. No means that
-# the link check failed. Yes means that we passed the link check, or no link
-# check was performed. Skipping means the user said `don't use.'
-
-# Define BUILDTOOLS_DEBUG to enable debugging output
-
-    if test "$BUILDTOOLS_DEBUG" = 1 ; then
-      AC_MSG_NOTICE([FIND_PRIM_LIB result for $1: "$m4_tolower(coin_has_$1)"])
-      AC_MSG_NOTICE([Collected values for package '$1'])
-      AC_MSG_NOTICE([m4_tolower($1_lflags) is "$m4_tolower($1_lflags)"])
-      AC_MSG_NOTICE([m4_tolower($1_cflags) is "$m4_tolower($1_cflags)"])
-      AC_MSG_NOTICE([m4_tolower($1_data) is "$m4_tolower($1_data)"])
-      AC_MSG_NOTICE([m4_tolower($1_pcfiles) is "$m4_tolower($1_pcfiles)"])
-    fi
 
 ])  # COIN_FIND_PRIM_LIB
 
@@ -1616,16 +1570,14 @@ AC_DEFUN([AC_COIN_CHK_LIB],
 [
   AC_MSG_CHECKING(m4_ifnblank($6,[for package $1 with function $6],[for package $1]))
 
-# Make sure the necessary variables exist for each client package.
-
+dnl Make sure the necessary variables exist for each client package.
   m4_foreach_w([myvar],[$2],
     [AC_SUBST(m4_toupper(myvar)_LFLAGS)
      AC_SUBST(m4_toupper(myvar)_CFLAGS)
     ])
 
-# Check to see if the user has overridden configure parameters from the
-# environment.
-
+  # Check to see if the user has overridden configure parameters from the
+  # environment.
   m4_tolower(coin_has_$1)=noInfo
   if test x"$COIN_SKIP_PROJECTS" != x ; then
     for pkg in $COIN_SKIP_PROJECTS ; do
@@ -1635,10 +1587,9 @@ AC_DEFUN([AC_COIN_CHK_LIB],
     done
   fi
 
-# If we're not skipping this project, define and process the command line
-# options according to the cmdopts parameter. Then invoke FIND_PRIM_PKG to do
-# the heavy lifting.
-
+dnl If we are not skipping this project, define and process the command line
+dnl options according to the cmdopts parameter. Then invoke FIND_PRIM_PKG to do
+dnl the heavy lifting.
   if test "$m4_tolower(coin_has_$1)" != skipping ; then
     m4_case(m4_default($9,nodata),
       nodata,[AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,no,$4)],
@@ -1650,20 +1601,17 @@ AC_DEFUN([AC_COIN_CHK_LIB],
     AC_MSG_RESULT([$m4_tolower(coin_has_$1) due to COIN_SKIP_PROJECTS])
   fi
 
-# Possibilities are `yes', `no', or `skipping'. Normalise to `yes' or `no'.
-
+  # Possibilities are `yes', `no', or `skipping'. Normalise to `yes' or `no'.
   if test "$m4_tolower(coin_has_$1)" != yes ; then
     m4_tolower(coin_has_$1)=no
   fi
 
-# Create an automake conditional COIN_HAS_PRIM.
-
+dnl Create an automake conditional COIN_HAS_PRIM.
   AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
                    [test $m4_tolower(coin_has_$1) = yes])
 
-# If we've located the package, define preprocessor symbol COIN_HAS_PRIM
-# and augment the necessary variables for the client packages.
-
+  # If we've located the package, define preprocessor symbol COIN_HAS_PRIM
+  # and augment the necessary variables for the client packages.
   if test $m4_tolower(coin_has_$1) = yes ; then
     AC_DEFINE(m4_toupper(AC_PACKAGE_NAME)_HAS_[]m4_toupper($1),[1],
       [Define to 1 if the $1 package is available])
@@ -1672,8 +1620,7 @@ AC_DEFUN([AC_COIN_CHK_LIB],
        m4_toupper(myvar)_CFLAGS="$m4_tolower($1_cflags) $m4_toupper(myvar)_CFLAGS"
       ])
 
-# Finally, set up PRIM_DATA, unless the user specified nodata.
-
+dnl Finally, set up PRIM_DATA, unless the user specified nodata.
     m4_if(m4_default([$9],nodata),nodata,[],
       [AC_SUBST(m4_toupper($1)_DATA)
        m4_toupper($1)_DATA=$m4_tolower($1_data)])
@@ -1904,33 +1851,33 @@ AC_DEFUN([AC_COIN_CHK_GNU_READLINE],
 
 AC_DEFUN([AC_COIN_CHK_LAPACK],
 [
-# Make sure the necessary variables exist for each client package.
+dnl Make sure the necessary variables exist for each client package.
   m4_foreach_w([myvar],[$1],
     [AC_SUBST(m4_toupper(myvar)_CFLAGS)
      AC_SUBST(m4_toupper(myvar)_LFLAGS)
      AC_SUBST(m4_toupper(myvar)_PCFILES)
     ])
 
-# Set up command line arguments with DEF_PRIM_ARGS.
+dnl Set up command line arguments with DEF_PRIM_ARGS.
   AC_COIN_DEF_PRIM_ARGS([lapack],yes,yes,no,no)
 
-# Give FIND_PRIM_PKG a chance to look for user-specified lapack flags,
-# but skip any checks via a .pc file. The result (coin_has_lapack) will
-# be one of yes (the user specified something), no (user specified nothing),
-# or skipping (user said do not use). We'll also have variables
-# lapack_lflags, lapack_cflags, lapack_data, and lapack_pcfiles.
-  AC_COIN_FIND_PRIM_PKG([lapack],[skip])
+  # Look for user-specified lapack flags, but skip any checks via a .pc file.
+  # The result (coin_has_lapack) will be one of
+  # - yes (the user specified something),
+  # - no (user specified nothing), or
+  # - skipping (user said do not use).
+  # We'll also have variables lapack_lflags, lapack_cflags, and lapack_pcfiles.
+  AC_COIN_FIND_PRIM_PKG([lapack],[skip],,[nodata])
 
-# If FIND_PRIM_PKG found something, then we'll do a link check to figure
-# out whether it is working and what the name mangling scheme is.
-# This sets dsyev_namemangling
+  # If found something, then we'll do a link check to figure
+  # out whether it is working and what the name mangling scheme is.
+  # This sets dsyev_namemangling
   if test "$coin_has_lapack" = yes ; then
     AC_COIN_TRY_LINK([dsyev],[$lapack_lflags],[$lapack_pcfiles],,
       [AC_MSG_ERROR([Could not find dsyev in Lapack])])
   fi
 
-# If FIND_PRIM_PKG didn't find anything, try a few more guesses for
-# optimized blas/lapack libs (based on build system type).
+  # If not found anything, try a few more guesses for optimized blas/lapack libs (based on build system type).
 dnl To use static MKL libs on Linux/Darwin, one would need to enclose the libs into
 dnl -Wl,--start-group ... -Wl,--end-group. Unfortunately, libtool does not write these
 dnl flags into the dependency_libs of the .la file, so linking an executable fails.
@@ -1951,13 +1898,13 @@ dnl So for now the checks below will only work for shared MKL libs on Linux/Darw
       ;;
 
       *-*-solaris*)
-        # Ideally, we'd use -library=sunperf, but it's an imperfect world.
-        # Studio cc doesn't recognise -library, it wants -xlic_lib. Studio 12
-        # CC doesn't recognise -xlic_lib. Libtool doesn't like -xlic_lib
-        # anyway. Sun claims that CC and cc will understand -library in Studio
-        # 13. The main extra function of -xlic_lib and -library is to arrange
-        # for the Fortran run-time libraries to be linked for C++ and C. We
-        # can arrange that explicitly.
+dnl Ideally, we would use -library=sunperf, but it is an imperfect world.
+dnl Studio cc does not recognise -library, it wants -xlic_lib. Studio 12
+dnl CC does not recognise -xlic_lib. Libtool does not like -xlic_lib
+dnl anyway. Sun claims that CC and cc will understand -library in Studio
+dnl 13. The main extra function of -xlic_lib and -library is to arrange
+dnl for the Fortran run-time libraries to be linked for C++ and C. We
+dnl can arrange that explicitly.
         AC_COIN_TRY_LINK([dsyev],[-lsunperf],[],[
           coin_has_lapack=yes
           lapack_lflags=-lsunperf])
@@ -1965,6 +1912,7 @@ dnl So for now the checks below will only work for shared MKL libs on Linux/Darw
 
       *-cygwin* | *-mingw* | *-msys*)
         # check for 64-bit sequential MKL in $LIB
+dnl TODO we may want to add an option to check for parallel MKL or switch to it by default?
         old_IFS="$IFS"
         IFS=";"
         for d in $LIB ; do
@@ -2002,9 +1950,9 @@ dnl So for now the checks below will only work for shared MKL libs on Linux/Darw
     esac
   fi
 
-# If none of the above worked, check whether lapack.pc blas.pc exists and links
-# We check for both to ensure that blas lib also appears on link line in case
-# someone wants to use Blas functions but tests only for Lapack.
+  # If none of the above worked, check whether lapack.pc blas.pc exists and links.
+  # We check for both to ensure that blas lib also appears on link line in case
+  # someone wants to use Blas functions but tests only for Lapack.
   if test "$coin_has_lapack" = no ; then
     AC_MSG_CHECKING([for lapack.pc and blas.pc])
     AC_COIN_CHK_MOD_EXISTS([lapack],[lapack blas],
@@ -2015,25 +1963,23 @@ dnl So for now the checks below will only work for shared MKL libs on Linux/Darw
         [AC_MSG_WARN([lapack.pc and blas.pc present, but could not find dsyev when trying to link with it.])])],
       [AC_MSG_RESULT([no])])
   fi
+dnl TODO do we need another check with lapack.pc only?
 
-# TODO do we need another check with lapack.pc only?
-
-# If none of the above worked, try the generic -llapack -lblas as last resort.
-# We check for both to ensure that blas lib also appears on link line in case
-# someone wants to use Blas functions but tests only for Lapack.
+  # If none of the above worked, try the generic -llapack -lblas as last resort.
+  # We check for both to ensure that blas lib also appears on link line in case
+  # someone wants to use Blas functions but tests only for Lapack.
   if test "$coin_has_lapack" = no ; then
     AC_COIN_TRY_LINK([dsyev],[-llapack -lblas],[],[
       coin_has_lapack=yes
       lapack_lflags="-llapack -lblas"])
   fi
+dnl TODO do we need another check with -llapack only?
 
-# TODO do we need another check with -llapack only?
-
-# Time to set some variables. Create an automake conditional COIN_HAS_LAPACK.
+dnl Create an automake conditional COIN_HAS_LAPACK.
   AM_CONDITIONAL(COIN_HAS_LAPACK,[test $coin_has_lapack = yes])
 
-# If we've located the package, define preprocessor symbol COIN_HAS_LAPACK
-# and COIN_LAPACK_FUNC[_] and augment the necessary variables for the client packages.
+  # If we've located the package, define preprocessor symbol COIN_HAS_LAPACK
+  # and COIN_LAPACK_FUNC[_] and augment the necessary variables for the client packages.
   if test $coin_has_lapack = yes ; then
     AC_DEFINE(m4_toupper(AC_PACKAGE_NAME)_HAS_LAPACK,[1],
       [Define to 1 if the LAPACK package is available])
@@ -2077,53 +2023,46 @@ dnl So for now the checks below will only work for shared MKL libs on Linux/Darw
 
 AC_DEFUN([AC_COIN_DOXYGEN],
 [
+  AC_MSG_NOTICE([configuring doxygen documentation options])
 
-AC_MSG_NOTICE([configuring doxygen documentation options])
+  # Check to see if Doxygen and LaTeX are available.
+  AC_CHECK_PROG([coin_have_doxygen],[doxygen],[yes],[no])
+  AC_CHECK_PROG([coin_have_latex],[latex],[yes],[no])
 
-# Check to see if doxygen is available.
+  AC_ARG_WITH([dot],
+    AS_HELP_STRING([--with-dot],[use dot (from graphviz) when creating documentation with doxygen if available; --without-dot to disable]),
+    [],[withval=yes])
 
-AC_CHECK_PROG([coin_have_doxygen],[doxygen],[yes],[no])
-AC_CHECK_PROG([coin_have_latex],[latex],[yes],[no])
+  # Look for the dot tool from the graphviz package, unless the user has disabled it.
+  if test x"$withval" = xno ; then
+    coin_doxy_usedot=NO
+    AC_MSG_CHECKING([for dot ])
+    AC_MSG_RESULT([disabled])
+  else
+    AC_CHECK_PROG([coin_doxy_usedot],[dot],[YES],[NO])
+  fi
 
-# Look for the dot tool from the graphviz package, unless the user has
-# disabled it.
+  # Generate a tag file name and a log file name.
+  AC_SUBST([coin_doxy_tagname],[m4_tolower(AC_PACKAGE_NAME)_doxy.tag])
+  AC_SUBST([coin_doxy_logname],[m4_tolower(AC_PACKAGE_NAME)_doxy.log])
 
-AC_ARG_WITH([dot],
-  AS_HELP_STRING([--with-dot],
-                 [use dot (from graphviz) when creating documentation with
-                  doxygen if available; --without-dot to disable]),
-  [],[withval=yes])
-if test x"$withval" = xno ; then
-  coin_doxy_usedot=NO
-  AC_MSG_CHECKING([for dot ])
-  AC_MSG_RESULT([disabled])
-else
-  AC_CHECK_PROG([coin_doxy_usedot],[dot],[YES],[NO])
-fi
+  AM_CONDITIONAL(COIN_HAS_DOXYGEN, [test $coin_have_doxygen = yes])
+  AM_CONDITIONAL(COIN_HAS_LATEX, [test $coin_have_latex = yes])
 
-# Generate a tag file name and a log file name.
-
-lc_pkg=`echo ${PACKAGE_NAME} | [tr [A-Z] [a-z]]`
-AC_SUBST([coin_doxy_tagname],[${lc_pkg}_doxy.tag])
-AC_SUBST([coin_doxy_logname],[${lc_pkg}_doxy.log])
-AM_CONDITIONAL(COIN_HAS_DOXYGEN, [test $coin_have_doxygen = yes])
-AM_CONDITIONAL(COIN_HAS_LATEX, [test $coin_have_latex = yes])
-
-# Process the list of project names and massage each one into the name of
-# a tag file. The value of coin_doxy_tagfiles is substituted for TAGFILES
-# in doxygen.conf.in. Further substitution for @baredocdir_nosub@ will happen
-# as an edit during make install. See comments in Makemain.inc.
-
-coin_doxy_tagfiles=
-tmp="$1"
-for proj in $tmp ; do
-  lc_proj=`echo $proj | [tr [A-Z] [a-z]]`
-  doxytag=${lc_proj}_doxy.tag
-  doxydir="@baredocdir_nosub@/coin-or-${lc_proj}/doxydoc"
-  coin_doxy_tagfiles="$coin_doxy_tagfiles $doxydir/$doxytag=$doxydir/html"
-done
-AC_SUBST([coin_doxy_tagfiles])
-
+  # Process the list of project names and massage each one into the name of
+  # a tag file. The value of coin_doxy_tagfiles is substituted for TAGFILES
+  # in doxygen.conf.in. Further substitution for @baredocdir_nosub@ will happen
+  # as an edit during make install. See comments in Makemain.inc.
+dnl TODO this could be done while m4 is run, not during configure
+  coin_doxy_tagfiles=
+  tmp="$1"
+  for proj in $tmp ; do
+    lc_proj=`echo $proj | [tr [A-Z] [a-z]]`
+    doxytag=${lc_proj}_doxy.tag
+    doxydir="@baredocdir_nosub@/coin-or-${lc_proj}/doxydoc"
+    coin_doxy_tagfiles="$coin_doxy_tagfiles $doxydir/$doxytag=$doxydir/html"
+  done
+  AC_SUBST([coin_doxy_tagfiles])
 ]) # AC_COIN_DOXYGEN
 
 
@@ -2153,36 +2092,35 @@ AC_SUBST([coin_doxy_tagfiles])
 
 AC_DEFUN([AC_COIN_EXAMPLE_FILES],
 [
-AC_REQUIRE([AC_COIN_CHECK_VPATH])[]dnl
-AC_REQUIRE([AC_PROG_LN_S])[]dnl
-AM_CONDITIONAL([COIN_VPATH_BUILD],[test x$coin_vpath_config = xyes])
+  AC_REQUIRE([AC_COIN_CHECK_VPATH])[]dnl
+  AC_REQUIRE([AC_PROG_LN_S])[]dnl
+  AM_CONDITIONAL([COIN_VPATH_BUILD],[test x$coin_vpath_config = xyes])
 
-# Get the names of the files and sort them to the various variables. As
-# a convenient side-effect, the loop will remove newlines from the list
-# of files. Avoid adding duplicate file names. (Allowing wild cards makes
-# duplicates far too likely.) The redirect of stderr on the ls is arguable. It
-# avoids error messages in the configure output if the package maintainer
-# specifies files that don't exist (for example, generic wild card specs
-# that anticipate future growth) but it will hide honest errors.
+  # Get the names of the files and sort them to the various variables. As
+  # a convenient side-effect, the loop will remove newlines from the list
+  # of files. Avoid adding duplicate file names. (Allowing wild cards makes
+  # duplicates far too likely.)
+  # The redirect of stderr on the ls is arguable. It avoids error messages
+  # in the configure output if the package maintainer specifies files that
+  # don't exist (for example, generic wild card specs that anticipate future
+  # growth) but it will hide honest errors.
+  files=`cd $srcdir; ls $1 2>/dev/null`
+  for file in $files; do
+    if expr " $EXAMPLE_DIST_FILES " : '.* '"$file"' .*' >/dev/null 2>&1 ; then
+      continue ;
+    fi
+    EXAMPLE_DIST_FILES="$EXAMPLE_DIST_FILES $file"
+    if expr "$file" : '.*\.gz$' >/dev/null 2>&1 ; then
+      EXAMPLE_UNCOMP_FILES="$EXAMPLE_UNCOMP_FILES `expr "$file" : '\(.*\)\.gz$'`"
+      EXAMPLE_CLEAN_FILES="$EXAMPLE_CLEAN_FILES `expr "$file" : '\(.*\)\.gz$'`"
+    else
+      EXAMPLE_UNCOMP_FILES="$EXAMPLE_UNCOMP_FILES $file"
+    fi
+  done
 
-files=`cd $srcdir; ls $1 2>/dev/null`
-for file in $files; do
-  if expr " $EXAMPLE_DIST_FILES " : '.* '"$file"' .*' >/dev/null 2>&1 ; then
-    continue ;
-  fi
-  EXAMPLE_DIST_FILES="$EXAMPLE_DIST_FILES $file"
-  if expr "$file" : '.*\.gz$' >/dev/null 2>&1 ; then
-    EXAMPLE_UNCOMP_FILES="$EXAMPLE_UNCOMP_FILES `expr "$file" : '\(.*\)\.gz$'`"
-    EXAMPLE_CLEAN_FILES="$EXAMPLE_CLEAN_FILES `expr "$file" : '\(.*\)\.gz$'`"
-  else
-    EXAMPLE_UNCOMP_FILES="$EXAMPLE_UNCOMP_FILES $file"
-  fi
-done
-
-AC_SUBST(EXAMPLE_DIST_FILES)
-AC_SUBST(EXAMPLE_UNCOMP_FILES)
-AC_SUBST(EXAMPLE_CLEAN_FILES)
-
+  AC_SUBST(EXAMPLE_DIST_FILES)
+  AC_SUBST(EXAMPLE_UNCOMP_FILES)
+  AC_SUBST(EXAMPLE_CLEAN_FILES)
 ]) # AC_COIN_EXAMPLE_FILES
 
 
@@ -2257,6 +2195,6 @@ AC_DEFUN([AC_COIN_FINALIZE],
 [
   AC_OUTPUT
 
-  #AC_MSG_NOTICE([In case of trouble, first consult the troubleshooting page at https://projects.coin-or.org/BuildTools/wiki/user-troubleshooting])
+dnl AC_MSG_NOTICE([In case of trouble, first consult the documentation at https://coin-or.github.io/user_introduction])
   AC_MSG_NOTICE([Configuration of $PACKAGE_NAME successful])
 ])
