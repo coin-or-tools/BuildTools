@@ -1,24 +1,24 @@
-# Copyright (C) 2006, 2007 International Business Machines and others.
-# All Rights Reserved.
-# This file is distributed under the Eclipse Public License.
+## Copyright (C) 2006, 2007 International Business Machines and others.
+## All Rights Reserved.
+## This file is distributed under the Eclipse Public License.
+##
+## Author:  Andreas Waechter           IBM    2006-04-13
 
-# Author:  Andreas Waechter           IBM    2006-04-13
 
+## #####################################################################
+##        Variables for documentation and data directories             #
+## #####################################################################
 
-########################################################################
-#        Variables for documentation and data directories              #
-########################################################################
-
-# Set these up to provide some uniformity in naming while also conforming
-# to GNU directory standards. For reasons known only to the autoconf
-# developers, autoconf leaves datadir = $(datarootdir) but forces docdir
-# to $(datarootdir)/doc/$(PACKAGE_TARNAME).
+## Set these up to provide some uniformity in naming while also conforming
+## to GNU directory standards. For reasons known only to the autoconf
+## developers, autoconf leaves datadir = $(datarootdir) but forces docdir
+## to $(datarootdir)/doc/$(PACKAGE_TARNAME).
 
 pkgincludedir = $(includedir)/coin-or
 pkgdatadir = $(datadir)/$(PACKAGE_TARNAME)
 pkgdocdir = $(docdir)
 
-# The directory where to install .pc files is also always the same.
+## The directory where to install .pc files is also always the same.
 pkgconfiglibdir = $(libdir)/pkgconfig
 
 # doxydocdir is the top-level directory for doxygen documentation. It holds
@@ -29,17 +29,17 @@ pkgconfiglibdir = $(libdir)/pkgconfig
 doxydocdir = $(pkgdocdir)/doxydoc
 doxyhtmldir = $(doxydocdir)/html
 
-########################################################################
-#                    Documentation installation                        #
-########################################################################
+## #####################################################################
+##                    Documentation installation                       #
+## #####################################################################
 
 DocFiles =  README README.md AUTHORS AUTHORS.md LICENSE LICENSE.md
 
 COIN_HAS_DOXYGEN = @COIN_HAS_DOXYGEN_TRUE@TRUE
 COIN_HAS_LATEX = @COIN_HAS_LATEX_TRUE@TRUE
 
-# Needless to say, it's important that baredocdir_nosub not be a target for
-# autoconf substitution.
+## Needless to say, it's important that baredocdir_nosub not be a target for
+## autoconf substitution.
 
 DOXYTAG_EDIT = sed -e 's|@baredocdir_nosub@|$(datarootdir)/doc|g'
 
