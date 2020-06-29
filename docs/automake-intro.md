@@ -14,9 +14,10 @@ super_solver_SOURCES = super_solver.cpp super_solver.hpp
 
 lib_LTLIBRARIES = libgreatlib.la
 libgreatlib_la_SOURCES = greatlib1.cpp greatlib1.hpp greatlib2.cpp greatlib2.hpp
-libgreatlib_la_LDFLAGS = $(LT_LDFLAGS)
 
 include_HEADERS = ../inc/config_supersolver.h greatlib1.hpp
+
+AM_LDFLAGS = $(LT_LDFLAGS)
 ```
 
 The primaries in this example are the parts of the Makefile variables that are capitalized, and the prefixes are the strings before the primaries.
@@ -41,8 +42,9 @@ These are the primaries that are important for a COIN-OR project:
    A user may not need all the header files in the source code directory in order to build her/his application, and it is good practice to install only the header files that the user might need.
 
  * There are a number of additional primaries, such as **LDFLAGS** in the above example.
-   With this specific primary, one lists additional flags that should be used when the library is "linked" (a Libtool term).
-   The prefix specifies for which program or library this applies.
+   With this specific primary, one lists additional flags that should be used when a library or program is "linked" (a Libtool term).
+   A prefix can be used to specify for which program or library this applies.
+   The `AM_` prefix means that it applies to all programs and libraries.
 
 
 Automake provides the following features:
@@ -98,10 +100,13 @@ Some more important Automake Makefile variables are the following:
  * **AM_CXXFLAGS**:  This variable is provided to add additional C++ compiler flags (which are not already determined by `configure`).
    Similarly, **AM_CFLAGS** and **AM_F77FLAGS** can be used to add C and Fortran compiler flags.
 
+ * **AM_LDFLAGS**:  This variable is provided to add libtool or linker flags.
+   You should use this variable to pass the flags that were accumulated by configure in variable `LT_LDFLAGS` to libtool.
+
  * **SUBDIRS** can be set to the subdirectories into which the final Makefile should recurse for the Automake default targets (such as `all`, `install`, `clean`, _etc_.).
 
  * **srcdir** is an Autoconf output variable that is set to the directory with the source code corresponding to the `Makefile` that is run.
    In the case of a VPATH compilation, the current directory and the source code directory are two different directories.
 
- * **DISTCLEANFILES** can be set to all files (including wildcards) that should be deleted by a **make distclean** and are not deleted by default.
-   For example, if a test program generates output files, those should be listed here.
+ * **CLEANFILES** can be set to all files (including wildcards) that should be deleted by a **make clean** and are not deleted by default.
+   For example, if a test program generates output files, those could be listed here.

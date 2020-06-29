@@ -42,8 +42,6 @@ At the beginning of a `configure.ac` file in COIN-OR you will find something lik
 #                       Names and other basic things                        #
 #############################################################################
 
-AC_PREREQ(2.59)
-
 AC_INIT([SuperSolver],[1.2.1],[https://github.com/coin-or/SuperSolver/issues/new],,[https://github.com/coin-or/SuperSolver])
 
 AC_COPYRIGHT([
@@ -61,9 +59,6 @@ AC_COIN_INITIALIZE
 ```
 
  * The file should contain the **copyright notice**, information about the **authors**, and state under what **license** the file is made available.
-
- * The **`AC_PREREQ`** macro specifies the version number of `autoconf` that is required to generate a `configure` script from this input file.
-   In COIN-OR, we ask people to [use exactly the same versions of all the GNU autotools](./get-autotools), so that we can collectively take care of bug fixes and can avoid the situation where different versions of the autotools generate large differences in the generated configuration files when multiple developers work on a project simultaneously.
 
  * The **`AC_INIT`** macro takes as arguments the name of the project, its version number, contact information in case a user wants to report a bug, a tar ball name (omitted here, which results in using 'supersolver'), and a URL.
    The name and version number determine the name of the compiler defines for `config.h` that capture the version number (`SUPERSOLVER_VERSION`, `SUPERSOLVER_VERSION_MAJOR`, `SUPERSOLVER_VERSION_MINOR`, `SUPERSOLVER_VERSION_RELEASE`).

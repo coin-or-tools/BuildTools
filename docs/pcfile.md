@@ -76,7 +76,7 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@/coin-or
 
-Name: CoinUtils
+Name: @PACKAGE_NAME@
 Description: COIN-OR Utilities
 URL: @PACKAGE_URL@
 Version: @PACKAGE_VERSION@
@@ -90,8 +90,8 @@ The variables `prefix`, `exec_prefix`, `libdir`, and `includedir` are setup from
 However, if the configure option `--enable-relocatable` has been used, in which case the automake conditional `COIN_RELOCATABLE` has been enabled, then `prefix` is set to be relative to the location of the `.pc` file.
 This has the advantage that moving the installed package to another location still provides valid paths, but assumes that the prefix indeed equals `${pcfiledir}/../..`, which may not be the case if the user has specified an own `--libdir`.
 
-The `URL` and `Version` fields are setup to contain the value of `@PACKAGE_URL@` and `@PACKAGE_VERSION@`.
-These variable hold the value of the fifth and second parameter of the `AC_INIT` macro in the [beginning of the configure.ac file](./configure), respectively.
+The `Name`, `URL`, and `Version` fields are setup to contain the value of `@PACKAGE_NAME@`, `@PACKAGE_URL@`, and `@PACKAGE_VERSION@`, respectively.
+These variable hold the value of the first, fifth, and second parameter of the `AC_INIT` macro in the [beginning of the configure.ac file](./configure), respectively.
 
 The `Libs`, `Requires`, and `Requires.private` fields may make use of the variables `XYZ_PCFILES` and `XYZ_LFLAGS_NOPC` as they are setup by the [AC_COIN_CHK_* macros](./configure) in the configure.ac file.
 They contain an accumulated list of dependencies in form of linker flags and names of `.pc` files, respectively.

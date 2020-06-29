@@ -7,7 +7,7 @@ A typical COIN-OR project main subdirectory `Makefile.am` file looks like this e
 # Copyright (C) 2006 International Business Machines and others.
 # All Rights Reserved.
 # This file is distributed under the Eclipse Public License.
-
+#
 # Author:  John Doe              IIM    2011-04-01
 
 include BuildTools/Makemain.inc
@@ -31,28 +31,18 @@ SUBDIRS = src
 pkgconfiglib_DATA = clp.pc
 
 # Build OsiClp only if Osi is available.
-
 if COIN_HAS_OSI
   SUBDIRS += src/OsiClp
   pkgconfiglib_DATA += osi-clp.pc
-endif
-
-# We don't want to compile the test subdirectory unless the test target
-# is specified.  But we need to list it as subdirectory to make sure that
-# it's included in the tarball.
-
-if ALWAYS_FALSE
-  SUBDIRS += test
 endif
 ```
 
 In the **SUBDIRS** variable we specify the subdirectories into which to recurse in order to compile the libraries, programs, and whatever other products this project has to offer.
 In this examples, is is always the `src` directory.
 If `Osi` is also available (`COIN_HAS_OSI` is an automake conditional defined in [configure](./configure)), then we also recurse into the `src/OsiClp` directory.
-Alternatively, one could have specified `OsiClp` as subdirectory in `src/Makefile.am`.   
-The lines with the `ALWAYS_FALSE` Automake conditional (which is always false :) are a trick to skip recursion into the `test` subdirectory for a usual run of `make` to build the products, but it will cause a `make dist` to pick up the files in the `test` directory (even though we don't use the `make dist` mechanism to generate the COIN-OR tarballs.).
+Alternatively, one could have specified `OsiClp` as subdirectory in `src/Makefile.am`.
 
-The `pkgconfiglib_DATA` variable specifies the **pkg-config configuration files** that should be installed in directory `$(pkgconfiglibdir)` (typically `$prefix/lib/pkg-config`).
+The `pkgconfiglib_DATA` variable specifies the **pkg-config configuration files** that should be installed in directory `$(pkgconfiglibdir)` (typically `$prefix/lib/pkgconfig`).
 The files specified here will be installed by `make install` and removed again by `make uninstall`.
 The pkg-config configuration files are used to communicate project dependencies, compiler flags, and linker flags between projects.
 
@@ -89,5 +79,3 @@ The command line simply checks if the Makefile in the `test` subdirectory exists
 
 Further, we redirect to targets for installation, uninstallation, and cleaning of [doxygen documentation](./doxygen) and `AUTHORS`, `README`, and `LICENSE` files.
 Note, that doxygen documentation is not build or installed by any of these targets, thus a user is required to manually call "`make install-doxygen-docs`".
-<!--For C++ packages, we usually also provide a target *doxydoc*, which runs the `doxygen` program for all projects that have a doxydoc directory.
-The doxygen documentations may be connected with doxygen tag files to other projects.-->

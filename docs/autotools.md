@@ -85,8 +85,6 @@ If you do not want to use it, then see its header for the currently suggested au
 
 If `COIN_AUTOTOOLS_DIR` has been set, it is no longer required to add the path for the installed autotools executables to your `$PATH`.
 
-<!--When you run `configure` in your local copy with the `--enable-maintainer-mode` flag (which you should do as a developer), it will test to see if the above conditions are met and will fail if they are not met. -->
-
 ## Running the Autotools
 
 You can run the autotools on your package by changing into the package's main directory and running `/path/to/BuildTools/run_autotools`.
@@ -107,26 +105,6 @@ The run_autotools script essentially
 * refreshes static configuration header files (`configall_system.h`, `configall_system_msc.h`) in the project directory.
 
 For the last step, the script checks for each file in `BuildTools/headers/` whether it can find a file of the same name in the project source tree and overwrites the latter.
-
-
-### Maintainer Mode
-
-**Warning**: The maintainer mode hasn't been tested for a while and may not work anymore as documented.
-
-Once you have a working version of your project and you can run `make`, you should (re)run the `configure` script with the `--enable-maintainer-mode` parameter.
-This will activate a number of makefile rules that simplify the maintenance of the configuration files.
-When you now edit a `configure.ac` or `Makefile.am` file, the corresponding autotool program will be run at the next execution of `make`.
-If necessary, the `configure` script will be rerun so that everything is kept up-to-date.
-
-A few notes of caution when maintainer mode is enabled:
-
- * If changes to a `configure.ac` or `Makefile.am` input file introduce an error, the `make` for updating everything may fail.
-   It may be necessary to rerun the autotools "by hand" after the error has been corrected, using the `BuildTools/run_autotools` script.
-
- * When you make a change in a `configure.ac` file, `make` will rerun the `configure` script, but _not_ recursively.
-   If the change you made now requires recursion into a new directory, you will have to rerun the `configure` script by hand.
-   To determine the options used in the most recent run of the `configure` script, look at the beginning of the `config.log` output file.
-   Make sure that you don't use the `--no-create` or `--no-recursion` options when you rerun the script.
 
 
 ### Using autoreconf
@@ -157,10 +135,9 @@ More specifically, the following files should be included in the subversion repo
 
 ## Working On Your Project
 
-<!--If you are working on your project, you should run configure with the `--enable-maintainer-mode` flag.  This way, changes in your `configure.ac` and `Makefile.am` files will automatically trigger execution of the autotools programs.  If necessary, you can run the autotools "by hand" using the `BuildTools/run_autotools` script. -->
-
 If you want to compile the package's code with debug information, you should use the `--enable-debug` parameter when you run the `configure` script.
 This will add to the compile command the parameters necessary to produce code with debugging information.
+
 If a debugger should be run, then it is also convenient to switch to static libraries and executables, which can be achieved by using the configure flag `--disable-shared`.
 (This sidesteps a few less-than-obvious consequences of using `libtool`.
 When shared libraries are built, the libraries remain hidden in the `.libs` subdirectories until `make install` is executed.
