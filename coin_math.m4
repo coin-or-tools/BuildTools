@@ -1,3 +1,6 @@
+# Copyright (C) 2017-2020 COIN-OR
+# All Rights Reserved.
+# This file is distributed under the Eclipse Public License.
 
 ###########################################################################
 #                     Math Utility Macros                                 #

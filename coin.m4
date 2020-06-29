@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2019 COIN-OR
+# Copyright (C) 2013-2020 COIN-OR
 # All Rights Reserved.
 # This file is distributed under the Eclipse Public License.
 #
