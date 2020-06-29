@@ -206,7 +206,6 @@ AC_DEFUN([AC_COIN_DEBUGLEVEL],
 #                       project version number is used if not available
 # - enforces the required autoconf version
 # - sets the project's version numbers
-# - defines the ALWAYS_FALSE automake conditional that is always false
 # - changes the default compiler flags
 # - get and patch the build and host types
 # - Make silent build rules the default (https://www.gnu.org/software/automake/
@@ -228,8 +227,6 @@ AC_DEFUN([AC_COIN_INITIALIZE],
   AC_PREREQ(2.69)
 
   AC_COIN_PROJECTVERSION($1)
-
-  AM_CONDITIONAL(ALWAYS_FALSE, false)
 
   AC_REQUIRE([AC_COIN_COMPFLAGS_DEFAULTS])
 
