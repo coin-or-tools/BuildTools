@@ -210,6 +210,7 @@ AC_DEFUN([AC_COIN_DEBUGLEVEL],
 # - get and patch the build and host types
 # - Make silent build rules the default (https://www.gnu.org/software/automake/
 #   manual/html_node/Automake-Silent-Rules.html)
+# - disable automake maintainer mode
 # - Initialize automake
 #   - do not be as strict as for GNU projects
 #   - don't AC_DEFINE PACKAGE or VERSION (but there're still defined as shell
@@ -247,6 +248,10 @@ dnl this needs to used before AC_CANONICAL_BUILD
 
 dnl this needs to be used before AM_INIT_AUTOMAKE
   AM_SILENT_RULES([yes])
+
+dnl without this, automake adds targets that may try to rerun the autotools
+dnl on the users side, which asks for trouble
+  AM_MAINTAINER_MODE([disable])
 
   AM_INIT_AUTOMAKE([foreign no-define no-dist subdir-objects -Wall])
 
