@@ -1,26 +1,5 @@
-* text=auto !eol
-MSVisualStudio/v10/Common.props -text
-MSVisualStudio/v10/Debug.props -text
-MSVisualStudio/v10/Release.props -text
-MSVisualStudio/v10alt/BuildTools.sln -text
-MSVisualStudio/v10alt/BuildTools.vcxproj -text
-MSVisualStudio/v10alt/coin.props -text
-MSVisualStudio/v9/BuildTools.vcproj -text
-MSVisualStudio/v9alt/BuildTools.sln -text
-MSVisualStudio/v9alt/BuildTools.vcproj -text
-MSVisualStudio/v9alt/coin.vsprops -text
-/Makemain.inc -text
-/coin-functions -text
-/coin.m4 -text
-/coin_fortran.m4 -text
-/coin_math.m4 -text
-/commit_new_release -text
-/commit_new_stable -text
-/compile.patch -text
-/get.dependencies.sh -text
-/install_autotools.sh -text
-/prepare_new_release -text
-/prepare_new_stable -text
-/run_autotools -text
-/set_externals -text
-share/config.site -text
+# normalize line-endings by default
+* text=auto
+
+# do not normalize line-endings for anything in MSVisualStudio
+MSVisualStudio/* eol=crlf
