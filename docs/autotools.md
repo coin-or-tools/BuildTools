@@ -12,7 +12,7 @@ However, we have tried to hide most of the details that are required to successf
 In COIN-OR, we make use of the four GNU packages [autoconf](http://www.gnu.org/software/autoconf/), [autoconf-archive](http://www.gnu.org/software/autoconf-archive/), [automake](http://www.gnu.org/software/automake/), and [libtool](http://www.gnu.org/software/libtool/).
 
 A good description of those tools and how they play together can be found in the [Autobook](http://sources.redhat.com/autobook/), but the versions of the tools discussed there are not the most recent ones.
-The documentation for each tool can be found here for [autoconf](http://www.gnu.org/software/autoconf/manual/autoconf-2.59/), [automake](http://www.gnu.org/software/automake/manual/automake.html), and [libtool](http://www.gnu.org/software/libtool/manual.html).
+The documentation for each tool can be found here for [autoconf](http://www.gnu.org/software/autoconf/manual/autoconf-2.59/), [automake](http://www.gnu.org/software/automake/manual/automake.html), and [libtool](https://www.gnu.org/software/libtool/manual/).
 
 [Here you can find a short description of the autotools and how they are used in COIN-OR.](./autotools-intro)
 
