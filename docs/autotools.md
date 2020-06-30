@@ -46,14 +46,14 @@ Before looking at the descriptions below, please read the [introduction to autom
 
  * **Project main directory Makefile.am file**:  Each project's main directory contains the `Makefile` that takes care of project-specific activities, such as defining how `make test` is run.
    It also knows the source code directories into which `make` should recurse in order to build everything that the project must provide.
-   [Details of the main Makefile.am for a project can be found here](./project-make).
+   [Details of the main Makefile.am for a project can be found here](./make-main).
 
  * **Source code directory Makefile.am files**: This is where the actual build happens.
    Here one specifies what is to be built, what source files are required, where (and whether) the compiled files are to be installed, _etc._
-   [Details of the Makefile.am files for the source code directories can be found here](./source-make).
+   [Details of the Makefile.am files for the source code directories can be found here](./make-src).
 
  * **Unit Test Makefile.am files**:  These also specify how to compile a program and are thus similar to a source directory `Makefile.am` file, but they are usually simpler.
-   [Details of the Makefile.am files for the test code directories can be found here](./test-make).
+   [Details of the Makefile.am files for the test code directories can be found here](./make-test).
 
  * **Example Makefile.in files**:  COIN-OR projects that generate a library should provide some example code (typically a simple main program) that demonstrates how the library can be used.
    It is assumed that most users of COIN-OR software will lack the skills or the environment to run the autotools; it follows, therefore, that providing a `Makefile.am` file for an example is pointless.

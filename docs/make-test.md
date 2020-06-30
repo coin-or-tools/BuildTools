@@ -48,7 +48,7 @@ AM_LDFLAGS = $(LT_LDFLAGS)
 ```
 
 The above example is taken from the CoinUtils project.
-It follows the same scheme as describe for the [source directory Makefile.am file](./make-source) for defining the compilation of a program.
+It follows the same scheme as describe for the [source directory Makefile.am file](./make-src) for defining the compilation of a program.
 Since we don't want to install the `unitTest` program, we use the `noinst_` prefix for the `PROGRAMS` primary.
 
 

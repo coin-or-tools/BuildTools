@@ -1,7 +1,7 @@
 # Autotools Basics
 
 This page gives a general introduction to the autotools, in the specific context of using them in COIN-OR.
-If you want to use them, first make sure that you are [using the correct version of the autotools](./get-autotools).
+If you want to use them, first make sure that you are [using the correct version of the autotools](./autotools).
 
 ## `autoconf`
 
