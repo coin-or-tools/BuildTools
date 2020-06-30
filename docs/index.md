@@ -16,3 +16,5 @@ build system using the [COIN-OR BuildTools project](https://github.com/coin-or-t
 
 
 Documentation for BuildTools 0.6--0.8 can be found at https://github.com/coin-or-tools/BuildTools/tree/stable/0.8/docs .
+
+Documentation for BuildTools 0.5 can be found at https://github.com/coin-or-tools/BuildTools/tree/stable/0.5/docs .
