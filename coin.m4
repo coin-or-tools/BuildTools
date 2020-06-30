@@ -2051,19 +2051,11 @@ AC_DEFUN([AC_COIN_DOXYGEN],
   AM_CONDITIONAL(COIN_HAS_DOXYGEN, [test $coin_have_doxygen = yes])
   AM_CONDITIONAL(COIN_HAS_LATEX, [test $coin_have_latex = yes])
 
-  # Process the list of project names and massage each one into the name of
-  # a tag file. The value of coin_doxy_tagfiles is substituted for TAGFILES
-  # in doxygen.conf.in. Further substitution for @baredocdir_nosub@ will happen
-  # as an edit during make install. See comments in Makemain.inc.
-dnl TODO this could be done while m4 is run, not during configure
-  coin_doxy_tagfiles=
-  tmp="$1"
-  for proj in $tmp ; do
-    lc_proj=`echo $proj | [tr [A-Z] [a-z]]`
-    doxytag=${lc_proj}_doxy.tag
-    doxydir="@baredocdir_nosub@/coin-or-${lc_proj}/doxydoc"
-    coin_doxy_tagfiles="$coin_doxy_tagfiles $doxydir/$doxytag=$doxydir/html"
-  done
+dnl Process the list of project names and massage each one into the name of
+dnl a tag file. The value of coin_doxy_tagfiles is substituted for TAGFILES
+dnl in doxygen.conf.in. Further substitution for @baredocdir_nosub@ will happen
+dnl as an edit during make install. See comments in Makemain.inc.
+  coin_doxy_tagfiles="m4_foreach_w([myvar],[$1],[@baredocdir_nosub@/coin-or-m4_tolower(myvar)/doxydoc/m4_tolower(myvar)_doxy.tag=@baredocdir_nosub@/coin-or-m4_tolower(myvar)/doxydoc/html ])"
   AC_SUBST([coin_doxy_tagfiles])
 ]) # AC_COIN_DOXYGEN
 
