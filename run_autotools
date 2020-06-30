@@ -35,14 +35,14 @@
 
 # Each directory processed gets a temporary link to BuildTools, unless a
 # BuildTools subdirectory is already present. Mostly this is a convenience, but
-# one thing makes it mandatory: Many Makefile.am files in COIN use an include
+# one thing makes it mandatory: Many Makefile.am files in COIN-OR use an include
 # directive to pull in BuildTools/Makemain.inc. There's no way I (lh) can see
 # to alter the path that's hardcoded in the include directive. Just to make it
-# more interesting, COIN projects are generally constructed with the assumption
+# more interesting, COIN-OR projects are generally constructed with the assumption
 # that BuildTools will be one or two directories up, so you'll see things like
 # `include ../BuildTools/Makemain.inc'. run_autotools doesn't understand this
 # hierarchy, so it keeps all those temporary BuildTools links until the very
-# end. That way, it works with the old-style COIN organisation where a
+# end. That way, it works with the old-style COIN-OR organisation where a
 # BuildTools directory is pulled in as an external in the top directory of a
 # package, and with the new-style independent organisation, where there may be
 # only a single copy of BuildTools out there somewhere.
@@ -53,9 +53,6 @@
 # You can suppress installation of install-sh and associated
 # scripts with the -ni option. It's good to read the autoconf documentation for
 # AC_CONFIG_AUX_DIR if this doesn't make sense to you.
-
-# The required autotools versions, along with a few other differences. Current
-# (trunk) versions first, older (stable) versions next.
 
 # Find out the location for autotools executables, macros, etc.
 # This can be overidden if the user sets COIN_AUTOTOOLS_DIR in the environment.
@@ -70,48 +67,12 @@ else
 fi
 echo "Using COIN_AUTOTOOLS_DIR=$COIN_AUTOTOOLS_DIR"
 
-case "${COIN_ENV:-git}" in
-  "mixed" )
-    repoDir='.git .svn'
-    ver_autoconf='2.69'
-    ver_automake='1.16.2'
-    ver_libtool='2.4.6'
-    ltfile=$COIN_AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
-    autotoolsFiles="config.guess config.sub depcomp install-sh"
-    autotoolsFiles="$autotoolsFiles ltmain.sh missing compile ar-lib"
-    ;;
-  "git" )
-    repoDir='.git'
-    ver_autoconf='2.69'
-    ver_automake='1.16.2'
-    ver_libtool='2.4.6'
-    ltfile=$COIN_AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
-    autotoolsFiles="config.guess config.sub depcomp install-sh"
-    autotoolsFiles="$autotoolsFiles ltmain.sh missing compile ar-lib"
-    ;;
-  "trunk" )
-    repoDir='.svn'
-    ver_autoconf='2.69'
-    ver_automake='1.16.2'
-    ver_libtool='2.4.6'
-    ltfile=$COIN_AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
-    autotoolsFiles="config.guess config.sub depcomp install-sh"
-    autotoolsFiles="$autotoolsFiles ltmain.sh missing compile ar-lib"
-    ;;
-  "stable" )
-    repoDir='.svn'
-    ver_autoconf='2.59'
-    ver_automake='1.9.6'
-    ver_libtool='1.5.22'
-    ltfile=$COIN_AUTOTOOLS_DIR/share/libtool/ltmain.sh
-    autotoolsFiles="config.guess config.sub depcomp install-sh"
-    autotoolsFiles="$autotoolsFiles ltmain.sh missing"
-    ;;
-  * )
-    echo "Unknown COIN environment '$COIN_ENV'. Aborting."
-    exit
-    ;;
-esac
+repoDir='.git'
+ver_autoconf='2.69'
+ver_automake='1.16.2'
+ver_libtool='2.4.6'
+ltfile=$COIN_AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
+autotoolsFiles="config.guess config.sub depcomp install-sh ltmain.sh missing compile ar-lib"
 
 # Define a cleanup function. We'll set a trap below, just before we start to
 # do actual work.
@@ -135,7 +96,7 @@ usage: run_autotools [-h] [-[n]r] [-ni] [-f] [ directory directory ... ]
   -nr | --no-recursion   do not do recursive search for configure.ac files
   -ni | --dependent      do not install scripts necessary for an independent unit
   -f  | --foreign        process foreign configuration files (configure.ac
-                         does not contain COIN configuration macros).
+                         does not contain COIN-OR configuration macros).
   -d  | --dryrun         exit immediately after determining the list of
                          directories to be processed
 
@@ -143,7 +104,7 @@ usage: run_autotools [-h] [-[n]r] [-ni] [-f] [ directory directory ... ]
 
   If no directories and -r are specified, the tree rooted at the current
   directory is searched recursively for directories with configure.ac
-  files containing COIN configuration macros (AC_COIN_*) and autotools
+  files containing COIN-OR configuration macros (AC_COIN_*) and autotools
   is run in those directories. Directories listed in COIN_SKIP_PROJECTS
   are skipped.  If directories are specified on the command line, the
   search for configure.ac files is restricted to the specified directories.
@@ -158,12 +119,12 @@ usage: run_autotools [-h] [-[n]r] [-ni] [-f] [ directory directory ... ]
   The most common scenario for run_autotools is to process a project with a
   configure.ac file in the top-level directory of the project and no nested
   configure.ac files. Hence the default of no recursion and install autotools
-  scripts.  The -r option is useful if you have multiple COIN projects in
+  scripts.  The -r option is useful if you have multiple COIN-OR projects in
   sibling directories and want to do a batch run of autotools on all of them.
 
   The -f (--foreign) option causes run_autotools to process any configure.ac,
-  even if it contains no COIN macros. Occasionally useful for adapting
-  ThirdParty native configuration for COIN. Be sure you know what you're
+  even if it contains no COIN-OR macros. Occasionally useful for adapting
+  ThirdParty native configuration for COIN-OR. Be sure you know what you're
   doing.
 
   The environment variable COIN_AUTOTOOLS_DIR can be used to point to an alternate
