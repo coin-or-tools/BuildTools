@@ -3,9 +3,7 @@
 # configure script as command line arguments or environment variables.
 #
 # This file must be located either in $prefix/share or $prefix/etc, where
-# prefix is the installation location.  For the COIN packages, this is
-# by default the directory where the configure of the main package is run,
-# unless the --prefix option was given to the configure script.
+# prefix is the installation location.  By default $prefix is /usr/local.
 # Alternatively, one can set the environment variable CONFIG_SITE to the full
 # path to this file.
 #
@@ -34,108 +32,59 @@
 # used.
 #
 # In the following we show some arguments for configure that can be used
-# for the COIN configure scripts.
+# for the COIN-OR configure scripts.
 
 
 ##########################################################################
-#                      C++ compiler choice and options                   #
+#                      Compiler choices and flags                        #
 ##########################################################################
 
-# C++ compiler name
+# C, C++, Fortran 77, and Fortran 90 compiler names
+#CC=gcc
 #CXX=g++
+#F77=gfortran
+#FC=gfortran
 
-# C++ compiler options, overwriting configure's default choice
+# Compiler options, overwriting configure's default choice
+#CFLAGS='-O3 -pipe'
 #CXXFLAGS='-O3 -pipe'
+#FFLAGS='-O3 -pipe'
+#FCFLAGS='-O3 -pipe'
 
-# Additional C++ compiler options that are added to configure's default
+# Additional compiler options that are added to configure's default
 # choice
+#ADD_CFLAGS='-pg'
 #ADD_CXXFLAGS='-pg'
+#ADD_FFLAGS='-pg'
+#ADD_FCFLAGS='-pg'
 
-# Additional preprocessor definitions for the C++ compiler
+# Additional preprocessor definitions
+#CDEFS='-DZEROFAULT'
 #CXXDEFS='-DZEROFAULT'
 
-# Sometimes it is desirable to compile some projects in debug mode,
-# and some in default optimized mode (see also enable_debug_compile
-# below).  In those cases, you can set the separate C++ compiler
-# options for optimized and debug compilation using the following
-# variables:
-#OPT_CXXFLAGS='-O3 -pipe'
-#DBG_CXXFLAGS='-g -pipe'
-
-# If you are using MPI, it is best to specify the underlying C++
-# compiler for the configure script in CXX (so that it can figure out
+# If you are using MPI, it is best to specify the underlying
+# compiler for the configure script in CC/CXX (so that it can figure out
 # the default compiler options and test them), but then to tell the
 # configure script the actual MPI compiler (wrapper) using the
-# following variable
+# following variable   (TODO does this still work?)
+#MPICC='mpicc'
 #MPICXX='mpiCC'
+#MPIF77='mpif77'
 
 # If a project's library is generated from C++, but the compilers used
 # for linking is a C or Fortran compiler, one has to provide this
-# compilers with the C++ runtime libraries.  This is done with the
-# following variable:
+# compilers with the C++ runtime libraries.  configure tries to guess
+# these, if they are not specified via the following variable:
 #CXXLIBS='-lstdc++ -lm'
 
 
-##########################################################################
-#                       C compiler choice and options                    #
-##########################################################################
-
-# C compiler name
-#CC=gcc
-
-# C compiler options, overwriting configure's default choice
-#CFLAGS='-O3 -pipe'
-
-# Additional C compiler options that are added to configure's default choice
-#ADD_CFLAGS='-pg'
-
-# Additional preprocessor definitions for the C compiler
-#CDEFS='-DZEROFAULT'
-
-# Sometimes it is desirable to compile some projects in debug mode,
-# and some in default optimized mode (see also enable_debug_compile
-# below).  In those cases, you can set the separate C compiler
-# options for optimized and debug compilation using the following
-# variables:
-#OPT_CFLAGS='-O3 -pipe'
-#DBG_CFLAGS='-g -pipe'
-
-# If you are using MPI, it is best to specify the underlying C
-# compiler for the configure script in CC (so that it can figure out
-# the default compiler options and test them), but then to tell the
-# configure script the actual MPI compiler (wrapper) using the
-# following variable
-#MPICC='mpicc'
-
-
-##########################################################################
-#                   Fortran compiler choice and options                  #
-##########################################################################
-
-# Fortran compiler name
-#F77=gfortran
-
-# Fortran compiler options, overwriting configure's default choice
-#FFLAGS='-O3 -pipe'
-
-# Additional Fortran compiler options that are added to configure's default
-# choice
-#ADD_FFLAGS='-pg'
-
-# Sometimes it is desirable to compile some projects in debug mode,
-# and some in default optimized mode (see also enable_debug_compile
-# below).  In those cases, you can set the separate Fortran compiler
-# options for optimized and debug compilation using the following
-# variables:
-#OPT_FFLAGS='-O3 -pipe'
-#DBG_FFLAGS='-g -pipe'
-
-# If you are using MPI, it is best to specify the underlying Fortran
-# compiler for the configure script in F77 (so that it can figure out
-# the default compiler options and test them), but then to tell the
-# configure script the actual MPI compiler (wrapper) using the
-# following variable
-#MPIF77='mpif77'
+# Enabling MSVS mode
+# This changes a number of checks to look only for MS or Intel compilers
+# on Windows (cl, icl, ifort), ensure the use of the `compile` and
+# `ar-lib` scripts, etc.
+# It is recommended to set this if cl/icl/ifort should be used to prevent
+# a mix of MS/Intel and GNU compilers, which usually does not work.
+#enable_msvc=yes
 
 
 ##########################################################################
@@ -154,64 +103,22 @@
 ##########################################################################
 
 
-##### INSTALLATION LOCATION
-
-# This --prefix flag determines where the binaries etc. are going to
-# be installed.  By default, this is equal to the directory where
-# 'configure' is run, so that the 'bin/', 'lib/' etc. directories are
-# created as subdirectories there.  One could also choose other
-# destinations, but keep in mind that some COIN packages use the same
-# COIN "sub-projects", but possibly different and conflicting
-# versions.
-#prefix=$HOME/MyCOIN
-
-
-##### COMPILATION MODE UNDER CYGWIN
-
-# This options can only be used under Cygwin, and it has the following
-# possible choices:
-# - mingw (default): Use the GNU compilers to compile binaries that
-#          can be run independently of Cygwin (particularly without
-#          Cygwin1.dll)
-# - msvc: Use the "native" Windows compilers, such as cl, ifort
-# - no:   Use GNU compilers to generate Cygwin-specific binaries.
-#enable_doscompile=msvc
-
-
-##### SKIPPING CONFIGURATION AND COMPILATION OF SUBPROJECTS
-
-# It is possible to skip the configuration and compilation of COIN
-# projects in a package, even when the source code for the subproject
-# is there.  For this, list the directory names that are supposed to
-# be skipped in the variable
-#COIN_SKIP_PROJECTS="Bcp Couenne"
-
-
 ##### DEBUG COMPILATION
 
-# Switch on debug compilation for all projects.  (Note that this will also
-# switch to the usage of static instead of shared libraries, see
-# enable_shared below)
+# Switch on debug compilation. This changes the default compiler flags to
+# disable compiler optimization and enable debug symbols. You may also want
+# to disable shared library building (see below).
 #enable_debug=yes
 
-# Switch on debug compilation only for a specific project is done with
-# the command line flag enable-debug-project, where "project" is the string
-# with the project name (say, Clp, for the example).
-#enable_debug_clp=yes
-
-# Similarly, if the global enable-debug is set, we can switch it off for a
-# particular project, using
-#enable_debug_clp=no
-
-# Each project can make use of a project-specific "checklevel".  It
-# depends on the project manager, if and how this is used.  The level
+# Some projects can make use of a project-specific "checklevel".  It
+# depends on the project developers, if and how this is used.  The level
 # checklevel is specified with the --with-PROJECT-checklevel, where
 # PROJECT is the lower-case string of the project name.  For Ipopt,
 # this looks like
 #with_ipopt_checklevel=1
 
-# Each project can make use of a project-specific "verbosity" level.
-# It depends on the project manager, if and how this is used.  The
+# Some projects can make use of a project-specific "verbosity" level.
+# It depends on the project developers, if and how this is used.  The
 # level checklevel is specified with the --with-PROJECT-verbosity,
 # where PROJECT is the lower-case string of the project name.  For
 # Ipopt, this looks like
@@ -220,10 +127,8 @@
 
 ##### CREATING SHARED VS. STATIC LIBRARIES
 
-# By default, projects that are compiled in optimized mode, produce
-# shared libraries (if supported), and those compiled in debug mode,
-# produce static libraries.  This behavior can be changed using the
-# following options:
+# By default, shared libraries are produced (if supported).
+# This behavior can be changed using the following options:
 
 # disable shared mode: compile every library as static
 #enable_shared=no
@@ -239,70 +144,69 @@
 # addition to a shared one)
 #enable_static=yes
 
-##### MAINTAINER MODE
+# Enabling static mode does not prevent that the libraries and executable
+# that are build depend on shared libraries. To achieve this, the -static
+# flag needs to be passed to the linker. Since libtool also has an own
+# -static flag (with a different meaning), extra effort is necessary to
+# ensure that libtool passes -static to the linker.
+#enable_shared=no
+#LDFLAGS=-static
+#LT_LDFLAGS=-all-static
 
-# Project developers might want to make changes to the autotools files.
-# Using --enable-maintainer-mode enables a number of automatic updates,
-# including:
-#  - regeneration of Makefiles if Makefile.am is changes, 
-#  - regeneration and rerunning of configure script if required
-#  - updating the svn externals if the Externals file has changed
-#enable_maintainer_mode
+# even when building static libraries, PIC (position-independent code)
+# is enabled by default; as this is not always necessary, one may also
+# disable this via
+#with_pic=no
+
+
+##### RELOCATABLE pkg-config FILES
+
+# The generated pkg-config files (.pc) include the $prefix as absolute path.
+# Since this prevents moving an installed package to a different location,
+# one can enable that the prefix in a .pc file should be assumed to be
+# relative to the location of the .pc file. This assumes that libdir
+# has not been overwritten.
+#enable_relocatable=yes
+
+
+##### VERBOSE BUILD OUTPUT
+
+# The actual libtool and compiler calls are suppressed by default. One can
+# enable this when calling make by passing the option `V=1`, or change the
+# default in the Makefiles by disabling silent Makefile rules:
+#enable_silent_rules=no
 
 
 ##########################################################################
-#                      Third-Party Codes and Packages                    #
+#                           Build Dependencies                           #
 ##########################################################################
 
-##### GENERIC FLAGS
+# Use the following if we want to disable the use of GNU packages.
+#enable_readline=no
+#enable_gmp=no
 
-# Use the following if we want to have configure check for GNU packages
-# (such as zlib, bzlib, and readline)
-#enable_gnu_packages=yes
+# Use the following if we want to disable the use compression libraries.
+#enable_zlib=no
+#enable_bzlib=no
 
-# To use some third-party libraries, such as LP solvers, one needs to
-# specify both the directory with all header files as well as the
-# linker flags for linking with the library.  This is done with the
-# --with-LIB-incdir and --with-LIB-lib configure flags, where "LIB" is
-# replaced by the lower-case short-form of the library.  A possibly
-# incomplete list of choices for LIB in the current COIN-OR projects is:
-# cplex, gurobi, mosek, soplex, xpress.
-# For Cplex, one might set the following:
-#with_cplex_incdir='/usr/ilog/cplex90/include/ilcplex'
-#with_cplex_lib='-L/usr/ilog/cplex90/lib/static_pic -lcplex -lpthread'
+# To use other packages, such as LP solvers or other COIN-OR projects,
+# one may need to specify the compiler and linker flags, i.e., to find
+# header files or to link against a library, if the default mechanisms
+# of a project are not sufficient.  This is done with the
+# --with-LIB-cflags and --with-LIB-lflags configure flags, where "LIB" is
+# replaced by the lower-case short-form of the library.
 
-##### FLAGS FOR SPECIFIC LIBRARIES IN THIRDPARTY
+# For CPLEX, one might set the following:
+#with_cplex_cflags='-I/path/to/ilcplex'
+#with_cplex_lib='-L/path/to/cplex/lib/static_pic -lcplex -lpthread -lm -ldl'
 
-# For some third-party dependencies, COIN supports automatic build
-# procedures, for which the user can download the external source code
-# into appropriate subdirectories in a "ThirdParty" subdirectory.  But
-# the user might want to specify locations of already precompiled versions
-# of those dependencies.  Those flags are discussed next.
-
-### BLAS
-# Flag indicating where to find Blas.  If --with-blas is not used,
-# the configure script will try a few default locations of Blas, and
-# if it doesn't find Blas, it will test if the Blas source files are
-# in ThirdParty/Blas.  If so, those will be compiled, otherwise we
-# assume that Blas is not available.
-#
-# Specify precompiled Blas libraries via linker flags:
-#with_blas="-lf77blas -latlas /usr/lib64/libg2c.so"
-# Specify that Blas should be compiled within the 
-#with_blas=BUILD
-# Specify that Blas should not be used
-#with_blas=no
-
-### LAPACK
-# Flag indicating where to find Lapack.  If --with-lapack is not used,
-# the configure script will try a few default locations of Lapack, and
-# if it doesn't find Lapack, it will test if the Lapack source files are
-# in ThirdParty/Lapack.  If so, those will be compiled, otherwise we
-# assume that Lapack is not available.
-#
-# Specify precompiled Lapack libraries via linker flags:
+# For Lapack, the configure script will try a few default locations.
+# If this is not sufficient, one may specify the linker flags for Lapack
+# via a configure option. Since no header files are necessary for Lapack,
+# one may use --with-lapack instead of --with-lapack-lflags:
 #with_lapack="-L$HOME/lib -lmylapack"
-# Specify that Lapack should be compiled within the 
-#with_lapack=BUILD
-# Specify that Lapack should not be used
+
+# To disable the check for a certain library, use --without-LIB, which
+# in a config.site file translates to with_LIB=no, e.g.,
 #with_lapack=no
+#with_osi=no
