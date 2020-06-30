@@ -20,14 +20,14 @@ Run these scripts without options to get some help.
 ## Quick Start: Rerunning autotools for a project that uses BuildTools
 
 As BuildTools applies additional patches to autotools scripts, the autotools
-automatisms to regnerate the build scripts after a modification to
+automatisms to regenerate the build scripts after a modification to
 configure.ac, Makefile.am, etc., should not be used.
 Additionally, we strongly suggest that all developers of a project use
 the exact same version of the autotools.
 
 Detailed information on how to run the autotools can be found
 [in the documentation](https://coin-or-tools.github.io/BuildTools/autotools).
-For the inpatient, we repeat here the recommended steps to rerun the autotools
+For the impatient, we repeat here the recommended steps to rerun the autotools
 for an already existing BuildTools-based project.
 
 1. Set environment variable `COIN_AUTOTOOLS_DIR` to the prefix under
