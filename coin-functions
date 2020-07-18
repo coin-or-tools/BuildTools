@@ -1,7 +1,7 @@
 # Copyright (c) 2010 Lou Hafer   Simon Fraser University
 # All Rights Reserved.
-# This file is distributed under the Eclipse Public License.
-# It is part of the BuildTools project in COIN-OR (www.coin-or.org)
+# This file is distributed under the Eclipse Public License 2.0.
+# See LICENSE for details.
 #
 # Utility function definitions for the various COIN scripts.
 # Functions to calculate libtool version numbers.

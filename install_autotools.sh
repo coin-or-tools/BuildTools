@@ -1,4 +1,8 @@
 #!/bin/sh
+#
+# This file is distributed under the Eclipse Public License 2.0.
+# See LICENSE for details.
+#
 # script to download and install the autoools versions that we currently use with COIN-OR/BuildTools
 # original script by Pierre Bonami
 

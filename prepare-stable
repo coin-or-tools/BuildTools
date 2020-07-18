@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# This file is distributed under the Eclipse Public License 2.0.
+# See LICENSE for details.
 
 #set -x -v
 set -e

@@ -1,6 +1,7 @@
 # Copyright (C) 2013-2020 COIN-OR
 # All Rights Reserved.
-# This file is distributed under the Eclipse Public License.
+# This file is distributed under the Eclipse Public License 2.0.
+# See LICENSE for details.
 #
 # This file defines the common autoconf macros for COIN-OR
 
