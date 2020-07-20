@@ -1,4 +1,4 @@
-## Copyright (C) 2006, 2007 International Business Machines and others.
+## Copyright (C) 2020 COIN-OR Foundation
 ## All Rights Reserved.
 ##
 ## This file is distributed under the Eclipse Public License 2.0.
