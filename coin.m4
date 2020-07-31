@@ -724,7 +724,7 @@ dnl setup LIBS by adding $2 and those from $3
   m4_ifnblank([$3],
     [if test -n "$3" ; then
       AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
-      temp_LFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs $3`
+      temp_LFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs $pkg_static $3`
       LIBS="$temp_LFLAGS $LIBS"
     fi])
 
@@ -820,6 +820,12 @@ dnl This is a modified version of _PKG_SHORT_ERRORS_SUPPORTED from pkg.m4.
     pkg_short_errors=" --short-errors "
   else
     pkg_short_errors=""
+  fi
+
+  # Check whether -static option of pkg-config should be used when requesting libs
+  pkg_static=
+  if test -n "$PKG_CONFIG" ; then
+    case "$LDFLAGS" in "-static" | "* -static*" ) pkg_static=--static ;; esac
   fi
 
 dnl Create a automake conditional and PKG_CONFIG variable
@@ -2141,7 +2147,7 @@ AC_DEFUN([AC_COIN_FINALIZE_FLAGS],
       AC_SUBST(m4_toupper(myvar)_CFLAGS_NOPC,[$m4_toupper(myvar)_CFLAGS])
       if test -n "${m4_toupper(myvar)_PCFILES}" ; then
         temp_CFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --cflags ${m4_toupper(myvar)_PCFILES}`
-        temp_LFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs ${m4_toupper(myvar)_PCFILES}`
+        temp_LFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs $pkg_static ${m4_toupper(myvar)_PCFILES}`
         m4_toupper(myvar)_CFLAGS="$temp_CFLAGS ${m4_toupper(myvar)_CFLAGS}"
         m4_toupper(myvar)_LFLAGS="$temp_LFLAGS ${m4_toupper(myvar)_LFLAGS}"
       fi
