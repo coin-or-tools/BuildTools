@@ -1918,6 +1918,7 @@ dnl can arrange that explicitly.
 dnl TODO we may want to add an option to check for parallel MKL or switch to it by default?
         old_IFS="$IFS"
         IFS=";"
+        coin_mkl=""
         for d in $LIB ; do
           # turn $d into unix-style short path (no spaces); cannot do -us, so first do -ws, then -u
           d=`cygpath -ws "$d"`
@@ -1935,9 +1936,11 @@ dnl TODO we may want to add an option to check for parallel MKL or switch to it 
           fi
         done
         IFS="$old_IFS"
-        AC_COIN_TRY_LINK([dsyev],[$coin_mkl],[],
-            [coin_has_lapack=yes
-             lapack_lflags="$coin_mkl"])
+        if test -n "$coin_mkl" ; then
+           AC_COIN_TRY_LINK([dsyev],[$coin_mkl],[],
+               [coin_has_lapack=yes
+                lapack_lflags="$coin_mkl"])
+        fi
       ;;
 
       *-darwin*)
