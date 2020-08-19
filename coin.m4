@@ -1495,7 +1495,9 @@ dnl If the client specified dataonly, its value is assigned to prim_data.
             else
               m4_tolower($1_data)="/usr/local/share"
             fi])])
-      m4_tolower(coin_has_$1)=yes
+dnl go to linkcheck if we have a symbol to look for ($5)
+dnl otherwise skip project, since we cannot check whether made-up l/cflags work
+      m4_ifnblank([$5],m4_tolower(coin_has_$1)=yes,m4_tolower(coin_has_$1)=skipping)
       ;;
     skipping | yes )
       ;;
