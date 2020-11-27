@@ -1897,9 +1897,9 @@ dnl So for now the checks below will only work for shared MKL libs on Linux/Darw
   if test "$coin_has_lapack" = no ; then
     case $build in
       *-linux*)
-         AC_COIN_TRY_LINK([dsyev],[-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],[
+         AC_COIN_TRY_LINK([dsyev],[-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm],[],[
            coin_has_lapack=yes
-           lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"])
+           lapack_lflags="-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm"])
       ;;
 
       *-sgi-*)
@@ -1952,9 +1952,9 @@ dnl TODO we may want to add an option to check for parallel MKL or switch to it 
       ;;
 
       *-darwin*)
-        AC_COIN_TRY_LINK([dsyev],[-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],[
+        AC_COIN_TRY_LINK([dsyev],[-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm],[],[
           coin_has_lapack=yes
-          lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"])
+          lapack_lflags="-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm"])
         if test "$coin_has_lapack" = no ; then
           AC_COIN_TRY_LINK([dsyev],[-framework Accelerate],[],[
             coin_has_lapack=yes
