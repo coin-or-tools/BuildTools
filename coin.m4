@@ -1539,7 +1539,7 @@ dnl otherwise skip project, since we cannot check whether made-up l/cflags work
 
 
 ###########################################################################
-#                          COIN_CHK_LIB                                   #
+#                          COIN_CHK_LIB (obsolete)                        #
 ###########################################################################
 
 # COIN_CHK_LIB([prim],[client packages],[lflgs],[cflgs],[dflgs],
@@ -1581,7 +1581,7 @@ dnl otherwise skip project, since we cannot check whether made-up l/cflags work
 # individual variables specifying the data directory for each primitive. Hence
 # the macro defines PRIM_DATA for the primitive.
 
-AC_DEFUN([AC_COIN_CHK_LIB],
+AC_DEFUN([AC_COIN_CHK_LIB_OBS],
 [
   AC_MSG_CHECKING(m4_ifnblank($6,[for package $1 with function $6],[for package $1]))
 
@@ -1607,9 +1607,9 @@ dnl options according to the cmdopts parameter. Then invoke FIND_PRIM_PKG to do
 dnl the heavy lifting.
   if test "$m4_tolower(coin_has_$1)" != skipping ; then
     m4_case(m4_default($9,nodata),
-      nodata,[AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,no,$4)],
-      dataonly,[AC_COIN_DEF_PRIM_ARGS([$1],yes,no,no,yes,$4)],
-      [AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,yes,$4)])
+      nodata,[AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,no,$8)],
+      dataonly,[AC_COIN_DEF_PRIM_ARGS([$1],yes,no,no,yes,$8)],
+      [AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,yes,$8)])
     AC_COIN_FIND_PRIM_LIB(m4_tolower($1),[$3],[$4],[$5],[$6],[$7],[$8],[$9])
     AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
   else
@@ -1874,7 +1874,7 @@ dnl Make sure the necessary variables exist for each client package.
     ])
 
 dnl Set up command line arguments with DEF_PRIM_ARGS.
-  AC_COIN_DEF_PRIM_ARGS([lapack],yes,yes,no,no)
+  AC_COIN_DEF_PRIM_ARGS([lapack],yes,yes,yes,no)
 
   # Look for user-specified lapack flags, but skip any checks via a .pc file.
   # The result (coin_has_lapack) will be one of
@@ -1892,12 +1892,16 @@ dnl Set up command line arguments with DEF_PRIM_ARGS.
       [AC_MSG_ERROR([Could not find dsyev in Lapack])])
   fi
 
-  # If not found anything, try a few more guesses for optimized blas/lapack libs (based on build system type).
-dnl To use static MKL libs on Linux/Darwin, one would need to enclose the libs into
-dnl -Wl,--start-group ... -Wl,--end-group. Unfortunately, libtool does not write these
-dnl flags into the dependency_libs of the .la file, so linking an executable fails.
-dnl See also https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=159760&repeatmerged=yes
-dnl So for now the checks below will only work for shared MKL libs on Linux/Darwin.
+  # If not found anything, try a few more guesses for optimized blas/lapack
+  # libs (based on build system type).
+dnl To use static MKL libs on Linux/Darwin, one would need to enclose the libs
+dnl into -Wl,--start-group ... -Wl,--end-group. Unfortunately, libtool does
+dnl not write these flags into the dependency_libs of the .la file, so linking
+dnl an executable fails. See also
+dnl https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=159760&repeatmerged=yes
+dnl So for now the checks below will only work for shared MKL libs on
+dnl Linux/Darwin.
+
   if test "$coin_has_lapack" = no ; then
     case $build in
       *-linux*)
@@ -1906,6 +1910,7 @@ dnl So for now the checks below will only work for shared MKL libs on Linux/Darw
            lapack_lflags="-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm"])
       ;;
 
+dnl Do SGI systems even exist any more? Do we need this? -- lh, 201114 --
       *-sgi-*)
         AC_COIN_TRY_LINK([dsyev],[-lcomplib.sgimath],[],[
           coin_has_lapack=yes
@@ -1927,12 +1932,14 @@ dnl can arrange that explicitly.
 
       *-cygwin* | *-mingw* | *-msys*)
         # check for 64-bit sequential MKL in $LIB
-dnl TODO we may want to add an option to check for parallel MKL or switch to it by default?
+dnl TODO we may want to add an option to check for parallel MKL or switch to
+dnl it by default?
         old_IFS="$IFS"
         IFS=";"
         coin_mkl=""
         for d in $LIB ; do
-          # turn $d into unix-style short path (no spaces); cannot do -us, so first do -ws, then -u
+          # turn $d into unix-style short path (no spaces); cannot do -us,
+          # so first do -ws, then -u
           d=`cygpath -ws "$d"`
           d=`cygpath -u "$d"`
           if test "$enable_shared" = yes ; then
@@ -1968,9 +1975,10 @@ dnl TODO we may want to add an option to check for parallel MKL or switch to it 
     esac
   fi
 
-  # If none of the above worked, check whether lapack.pc blas.pc exists and links.
-  # We check for both to ensure that blas lib also appears on link line in case
-  # someone wants to use Blas functions but tests only for Lapack.
+  # If none of the above worked, check whether lapack.pc blas.pc exists and
+  # links. We check for both to ensure that blas lib also appears on link
+  # line in case someone wants to use Blas functions but tests only for Lapack.
+
   if test "$coin_has_lapack" = no ; then
     AC_MSG_CHECKING([for lapack.pc and blas.pc])
     AC_COIN_CHK_MOD_EXISTS([lapack],[lapack blas],
@@ -1997,7 +2005,8 @@ dnl Create an automake conditional COIN_HAS_LAPACK.
   AM_CONDITIONAL(COIN_HAS_LAPACK,[test $coin_has_lapack = yes])
 
   # If we've located the package, define preprocessor symbol COIN_HAS_LAPACK
-  # and COIN_LAPACK_FUNC[_] and augment the necessary variables for the client packages.
+  # and COIN_LAPACK_FUNC[_] and augment the necessary variables for the
+  # client packages.
   if test $coin_has_lapack = yes ; then
     AC_DEFINE(m4_toupper(AC_PACKAGE_NAME)_HAS_LAPACK,[1],
       [Define to 1 if the LAPACK package is available])
@@ -2021,10 +2030,10 @@ dnl Create an automake conditional COIN_HAS_LAPACK.
 # should be processed as external tag files. E.g., COIN_DOXYGEN([Clp Osi]).
 
 # This macro will define the following variables:
-#  coin_have_doxygen        Yes if doxygen is found, no otherwise
+#  coin_have_doxygen    Yes if doxygen is found, no otherwise
 #  coin_doxy_usedot     Defaults to `yes'; --with-dot will still check to see
 #                        if dot is available
-#  coin_doxy_tagname        Name of doxygen tag file (placed in doxydoc directory)
+#  coin_doxy_tagname    Name of doxygen tag file (placed in doxydoc directory)
 #  coin_doxy_logname    Name of doxygen log file (placed in doxydoc directory)
 #  coin_doxy_tagfiles   List of doxygen tag files used to reference other
 #                       doxygen documentation
