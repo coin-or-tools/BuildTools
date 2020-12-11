@@ -113,7 +113,8 @@ dnl the macro parameters, if given. Otherwise, make something up.
   m4_tolower($1_data)="m4_default([$4],[/usr/local/share/$1])"
   m4_if(AC_COIN_LIBHDR_DFLT_HACK([usage],[$7],[yes],[foo]),yes,
     [m4_tolower(coin_has_$1)=requested],
-    [m4_tolower(coin_has_$1)=skipping])
+    [m4_tolower(coin_has_$1)=skipping
+     m4_tolower($1_failmode)='default'])
 
 dnl See if the user specified --with-prim.  If the value is something other
 dnl than 'yes' or 'no' and the client specified dataonly, the value is assigned
@@ -124,12 +125,15 @@ dnl to prim_data, otherwise to prim_lflags.
     case "$withval" in
       no )
         m4_tolower(coin_has_$1)=skipping
+	m4_tolower($1_failmode)='command line'
         ;;
       yes )
         m4_tolower(coin_has_$1)=requested
+	m4_tolower($1_failmode)=''
         ;;
       * )
         m4_tolower(coin_has_$1)=requested
+	m4_tolower($1_failmode)=''
         m4_if(m4_default($8,nodata),dataonly,
           [m4_tolower($1_data)="$withval"],
           [m4_tolower($1_lflags)="$withval"])
@@ -180,8 +184,8 @@ dnl If we have [includes], try to compile them.
        CXXFLAGS="$m4_tolower($1_cflags)"
        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([$6],[])],
          [],
-	 [AC_MSG_ERROR(Compile check failed.)
-	  $m4_tolower(coin_has_$1)=no])
+	 [m4_tolower(coin_has_$1)='no'
+	  m4_tolower($1_failmode)="header compile"])
        CXXFLAGS=$ac_save_CXXFLAGS
      fi])
 
@@ -190,7 +194,7 @@ dnl [includes] and [function-body] unless the user has requested
 dnl otherwise by '*sep' as [dfltaction].
 
   m4_ifnblank([$5],
-    [if test $m4_tolower(coin_has_$1) != skipping ; then
+    [if test "$m4_tolower(coin_has_$1)" != skipping ; then
        ac_save_LIBS=$LIBS
        ac_save_CXXFLAGS=$CXXFLAGS
        LIBS="$m4_tolower($1_lflags)"
@@ -198,12 +202,20 @@ dnl otherwise by '*sep' as [dfltaction].
        m4_if(AC_COIN_LIBHDR_DFLT_HACK([link],[$7],[foo],[tog]),[sep],
 	 [AC_LINK_IFELSE([AC_LANG_SOURCE([$5])],
 	    [],
-	    [AC_MSG_ERROR(Link check (function only) failed.)
-	     m4_tolower(coin_has_$1)=no])],
+	    [m4_tolower(coin_has_$1)='no'
+	     if test -n "$m4_tolower($1_failmode)" ; then
+	       m4_tolower($1_failmode)="$m4_tolower($1_failmode), bare link"
+	     else
+	       m4_tolower($1_failmode)="bare link"
+	     fi])],
 	 [AC_LINK_IFELSE([AC_LANG_PROGRAM([$6],[$5])],
 	    [],
-	    [AC_MSG_ERROR(Link check (function with includes) failed.)
-	     m4_tolower(coin_has_$1)=no])])
+	    [m4_tolower(coin_has_$1)='no'
+	     if test -n "$m4_tolower($1_failmode)" ; then
+	       m4_tolower($1_failmode)="$m4_tolower($1_failmode), link with header"
+	     else
+	       m4_tolower($1_failmode)="link with header"
+	     fi])])
        LIBS=$ac_save_LIBS
        CXXFLAGS=$ac_save_CXXFLAGS
      fi])
@@ -333,9 +345,13 @@ dnl to do the heavy lifting.
 	        AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[yes],[foo]))])
     AC_COIN_FIND_PRIM_LIBHDR(m4_tolower($1),
       [$3],[$4],[$5],[$6],[$7],[$8],[$9])
-    AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
+    if test -n "$m4_tolower($1_failmode)" ; then
+      AC_MSG_RESULT([$m4_tolower(coin_has_$1) ($m4_tolower($1_failmode))])
+    else
+      AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
+    fi
   else
-    AC_MSG_RESULT([$m4_tolower(coin_has_$1) due to COIN_SKIP_PROJECTS])
+    AC_MSG_RESULT([$m4_tolower(coin_has_$1) (COIN_SKIP_PROJECTS)])
   fi
 
 dnl Possibilities are `yes', `no', or `skipping'. 'Skipping' implies we
