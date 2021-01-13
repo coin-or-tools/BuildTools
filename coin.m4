@@ -665,9 +665,9 @@ AC_DEFUN([AC_COIN_NAMEMANGLING],
     [AC_LANG_PUSH(C)
      ac_save_LIBS=$LIBS
      m4_ifblank([$3], [LIBS="-l$1"], [LIBS="$3"])
-     for ac_case in "lower case" "upper case" ; do
-       for ac_trail in "underscore" "no underscore" ; do
-         for ac_extra in "no extra underscore" "extra underscore" ; do
+     for ac_extra in "no extra underscore" "extra underscore" ; do
+       for ac_case in "lower case" "upper case" ; do
+	 for ac_trail in "underscore" "no underscore" ; do
            m4_tolower(ac_cv_$1_namemangling)="${ac_case}, ${ac_trail}, ${ac_extra}"
            case $ac_case in
              "lower case")
@@ -677,7 +677,10 @@ AC_DEFUN([AC_COIN_NAMEMANGLING],
                ac_name=m4_toupper($2)
                ;;
            esac
-           if test "$ac_trail" = underscore ; then
+           if test "$ac_trail" = "underscore" ; then
+             ac_name=${ac_name}_
+           fi
+           if test "$ac_extra" = "extra underscore" ; then
              ac_name=${ac_name}_
            fi
            AC_TRY_LINK_FUNC([$ac_name],[ac_success=yes],[ac_success=no])
@@ -730,11 +733,9 @@ dnl setup LIBS by adding $2 and those from $3
 
   $1_namemangling=unknown
 
-dnl FIXME we had "extra underscore" as additional option for ac_extra
-dnl   but since there is no use for ac_extra below, was there any use for it?
-  for ac_extra in "no extra underscore" ; do
+  for ac_extra in "no extra underscore" "extra underscore" ; do
     for ac_case in "lower case" "upper case" ; do
-      for ac_trail in "underscore" "no underscore" ; do
+      for ac_trail in "no underscore" "underscore" ; do
         case $ac_case in
           "lower case")
             ac_name=m4_tolower($1)
@@ -743,7 +744,10 @@ dnl   but since there is no use for ac_extra below, was there any use for it?
             ac_name=m4_toupper($1)
             ;;
         esac
-        if test "$ac_trail" = underscore ; then
+        if test "$ac_trail" = "underscore" ; then
+          ac_name=${ac_name}_
+        fi
+        if test "$ac_extra" = "extra underscore" ; then
           ac_name=${ac_name}_
         fi
         AC_MSG_CHECKING([for function $ac_name in $LIBS])
