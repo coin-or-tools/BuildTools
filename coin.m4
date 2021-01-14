@@ -707,12 +707,13 @@ dnl setup the m4_toupper($1)_FUNC and m4_toupper($1)_FUNC_ macros
 
 # This is a helper macro for checking if a library can be linked based on
 # a function name only.
-#   COIN_TRY_LINK(func,lflags,pcfiles,action-if-success,action-if-failed)
+#   COIN_TRY_LINK(func,lflags,pcfiles,action-if-success,action-if-failed,msg)
 #  func ($1) the name of the function to try to link
 #  lflags ($2) linker flags to use
 #  pcfiles ($3) pc files to query for additional linker flags
 #  action-if-success ($4) commands to execute if any linking was successful
 #  action-if-failed ($5) commands to execute if no linking was successful
+#  msg ($6) 'yes' to produce 'checking for' messages
 #
 # The macro tries different name mangling schemes and expands into
 # action-if-success for the first one that succeeds.
@@ -750,12 +751,12 @@ dnl setup LIBS by adding $2 and those from $3
         if test "$ac_extra" = "extra underscore" ; then
           ac_name=${ac_name}_
         fi
-        AC_MSG_CHECKING([for function $ac_name in $LIBS])
+        m4_if([$6],[yes],[AC_MSG_CHECKING([for function $ac_name in $LIBS])])
         AC_TRY_LINK_FUNC([$ac_name],
           [$1_namemangling="${ac_case}, ${ac_trail}, ${ac_extra}"
            ac_success=yes],
           [ac_success=no])
-        AC_MSG_RESULT([$ac_success])
+        m4_if([$6],[yes],[AC_MSG_RESULT([$ac_success])])
         if test $ac_success = yes ; then
           break 3
         fi
@@ -1499,6 +1500,8 @@ dnl If the client specified dataonly, its value is assigned to prim_data.
             else
               m4_tolower($1_data)="/usr/local/share"
             fi])])
+dnl FIXME This catches user-supplied as well as made up. And not checking is
+dnl a feature. We need to discuss  -lh, 210114-
 dnl go to linkcheck if we have a symbol to look for ($5)
 dnl otherwise skip project, since we cannot check whether made-up l/cflags work
       m4_ifnblank([$5],m4_tolower(coin_has_$1)=yes,m4_tolower(coin_has_$1)=skipping)
@@ -1875,25 +1878,27 @@ dnl Make sure the necessary variables exist for each client package.
 
 dnl Set up command line arguments with DEF_PRIM_ARGS.
   AC_COIN_DEF_PRIM_ARGS([lapack],yes,yes,yes,no)
+  AC_MSG_CHECKING(for LAPACK)
 
-  # Look for user-specified lapack flags, but skip any checks via a .pc file.
-  # The result (coin_has_lapack) will be one of
-  # - yes (the user specified something),
-  # - no (user specified nothing), or
-  # - skipping (user said do not use).
-  # We'll also have variables lapack_lflags, lapack_cflags, and lapack_pcfiles.
+dnl Look for user-specified lapack flags, but skip any checks via a .pc file.
+dnl The result (coin_has_lapack) will be one of
+dnl - yes (the user specified something),
+dnl - no (user specified nothing), or
+dnl - skipping (user said do not use).
+dnl We'll also have variables lapack_lflags, lapack_cflags, and lapack_pcfiles.
   AC_COIN_FIND_PRIM_PKG([lapack],[skip],,[nodata])
 
-  # If found something, then we'll do a link check to figure
-  # out whether it is working and what the name mangling scheme is.
-  # This sets dsyev_namemangling
+dnl If we found something, then we'll do a link check to figure
+dnl out whether it is working and what the name mangling scheme is.
+dnl This sets dorhr_col_namemangling
   if test "$coin_has_lapack" = yes ; then
-    AC_COIN_TRY_LINK([dsyev],[$lapack_lflags],[$lapack_pcfiles],,
-      [AC_MSG_ERROR([Could not find dsyev in Lapack])])
+    AC_COIN_TRY_LINK([dorhr_col],[$lapack_lflags],[$lapack_pcfiles],
+      [AC_MSG_RESULT([yes (user-specified)])],
+      [AC_MSG_ERROR([Could not find dorhr_col in user-specified Lapack when trying to link with it.])])
   fi
 
-  # If not found anything, try a few more guesses for optimized blas/lapack
-  # libs (based on build system type).
+dnl If not found anything, try a few more guesses for optimized blas/lapack
+dnl libs (based on build system type).
 dnl To use static MKL libs on Linux/Darwin, one would need to enclose the libs
 dnl into -Wl,--start-group ... -Wl,--end-group. Unfortunately, libtool does
 dnl not write these flags into the dependency_libs of the .la file, so linking
@@ -1905,16 +1910,18 @@ dnl Linux/Darwin.
   if test "$coin_has_lapack" = no ; then
     case $build in
       *-linux*)
-         AC_COIN_TRY_LINK([dsyev],[-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm],[],[
-           coin_has_lapack=yes
-           lapack_lflags="-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm"])
+        AC_COIN_TRY_LINK([dorhr_col],
+	  [-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],
+	  [coin_has_lapack=yes
+           lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"])
       ;;
 
 dnl Do SGI systems even exist any more? Do we need this? -- lh, 201114 --
       *-sgi-*)
-        AC_COIN_TRY_LINK([dsyev],[-lcomplib.sgimath],[],[
-          coin_has_lapack=yes
-          lapack_lflags=-lcomplib.sgimath])
+        AC_COIN_TRY_LINK([dorhr_col],
+	  [-lcomplib.sgimath],[],
+	  [coin_has_lapack=yes
+	   lapack_lflags=-lcomplib.sgimath])
       ;;
 
       *-*-solaris*)
@@ -1925,9 +1932,10 @@ dnl anyway. Sun claims that CC and cc will understand -library in Studio
 dnl 13. The main extra function of -xlic_lib and -library is to arrange
 dnl for the Fortran run-time libraries to be linked for C++ and C. We
 dnl can arrange that explicitly.
-        AC_COIN_TRY_LINK([dsyev],[-lsunperf],[],[
-          coin_has_lapack=yes
-          lapack_lflags=-lsunperf])
+        AC_COIN_TRY_LINK([dorhr_col],
+	  [-lsunperf],[],
+	  [coin_has_lapack=yes
+           lapack_lflags=-lsunperf])
       ;;
 
       *-cygwin* | *-mingw* | *-msys*)
@@ -1956,63 +1964,72 @@ dnl it by default?
         done
         IFS="$old_IFS"
         if test -n "$coin_mkl" ; then
-           AC_COIN_TRY_LINK([dsyev],[$coin_mkl],[],
+           AC_COIN_TRY_LINK([dorhr_col],[$coin_mkl],[],
                [coin_has_lapack=yes
                 lapack_lflags="$coin_mkl"])
         fi
       ;;
 
       *-darwin*)
-        AC_COIN_TRY_LINK([dsyev],[-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm],[],[
-          coin_has_lapack=yes
-          lapack_lflags="-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm"])
+        AC_COIN_TRY_LINK([dorhr_col],
+	  [-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],
+	  [coin_has_lapack=yes
+           lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"],
+	  [],[no])
         if test "$coin_has_lapack" = no ; then
-          AC_COIN_TRY_LINK([dsyev],[-framework Accelerate],[],[
-            coin_has_lapack=yes
-            lapack_lflags="-framework Accelerate"])
+          AC_COIN_TRY_LINK([dorhr_col],
+	    [-framework Accelerate],[],
+	    [coin_has_lapack=yes
+             lapack_lflags="-framework Accelerate"])
         fi
       ;;
     esac
+    if test "$coin_has_lapack" = yes ; then
+      AC_MSG_RESULT([yes (system special case)])
+    fi
   fi
 
-  # If none of the above worked, check whether lapack.pc blas.pc exists and
-  # links. We check for both to ensure that blas lib also appears on link
-  # line in case someone wants to use Blas functions but tests only for Lapack.
-
+dnl If none of the above worked, check whether lapack.pc blas.pc exists and
+dnl links. We check for both to ensure that blas lib also appears on link line
+dnl in case someone wants to use Blas functions but tests only for Lapack.
   if test "$coin_has_lapack" = no ; then
-    AC_MSG_CHECKING([for lapack.pc and blas.pc])
     AC_COIN_CHK_MOD_EXISTS([lapack],[lapack blas],
-      [AC_MSG_RESULT([yes])
-       AC_COIN_TRY_LINK([dsyev],[],[lapack],
+      [AC_MSG_RESULT([yes (lapack.pc and blas.pc)])
+       AC_COIN_TRY_LINK([dorhr_col],[],[lapack],
         [coin_has_lapack=yes
          lapack_pcfiles="lapack blas"],
-        [AC_MSG_WARN([lapack.pc and blas.pc present, but could not find dsyev when trying to link with it.])])],
-      [AC_MSG_RESULT([no])])
+        [AC_MSG_WARN([lapack.pc and blas.pc present, but could not find dorhr_col when trying to link with it.])])])
   fi
 dnl TODO do we need another check with lapack.pc only?
 
-  # If none of the above worked, try the generic -llapack -lblas as last resort.
-  # We check for both to ensure that blas lib also appears on link line in case
-  # someone wants to use Blas functions but tests only for Lapack.
+dnl If none of the above worked, try the generic -llapack -lblas as last
+dnl resort.  We check for both to ensure that blas lib also appears on
+dnl link line in case someone wants to use Blas functions but tests only
+dnl for Lapack.
   if test "$coin_has_lapack" = no ; then
-    AC_COIN_TRY_LINK([dsyev],[-llapack -lblas],[],[
-      coin_has_lapack=yes
-      lapack_lflags="-llapack -lblas"])
+    AC_COIN_TRY_LINK([dorhr_col],[-llapack -lblas],[],
+      [coin_has_lapack=yes
+       lapack_lflags="-llapack -lblas"
+       AC_MSG_RESULT([yes (generic -llapack -lblas)])],
+      [AC_MSG_RESULT([no])])
   fi
 dnl TODO do we need another check with -llapack only?
 
 dnl Create an automake conditional COIN_HAS_LAPACK.
   AM_CONDITIONAL(COIN_HAS_LAPACK,[test $coin_has_lapack = yes])
 
-  # If we've located the package, define preprocessor symbol COIN_HAS_LAPACK
-  # and COIN_LAPACK_FUNC[_] and augment the necessary variables for the
-  # client packages.
+dnl If we've located the package, define preprocessor symbol COIN_HAS_LAPACK
+dnl and COIN_LAPACK_FUNC[_] and augment the necessary variables for the
+dnl client packages.
   if test $coin_has_lapack = yes ; then
     AC_DEFINE(m4_toupper(AC_PACKAGE_NAME)_HAS_LAPACK,[1],
       [Define to 1 if the LAPACK package is available])
-    AC_COIN_DEFINENAMEMANGLING(m4_toupper(AC_PACKAGE_NAME)_LAPACK, ${dsyev_namemangling})
+    AC_COIN_DEFINENAMEMANGLING(m4_toupper(AC_PACKAGE_NAME)_LAPACK,
+      ${dorhr_col_namemangling})
     m4_foreach_w([myvar],[$1],
-      [if test -n "$lapack_pcfiles" ; then m4_toupper(myvar)_PCFILES="$lapack_pcfiles $m4_toupper(myvar)_PCFILES" ; fi
+      [if test -n "$lapack_pcfiles" ; then
+        m4_toupper(myvar)_PCFILES="$lapack_pcfiles $m4_toupper(myvar)_PCFILES"
+       fi
        m4_toupper(myvar)_LFLAGS="$lapack_lflags $m4_toupper(myvar)_LFLAGS"
        m4_toupper(myvar)_CFLAGS="$lapack_cflags $m4_toupper(myvar)_CFLAGS"
       ])
