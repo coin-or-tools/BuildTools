@@ -13,7 +13,7 @@
 
 # We're trying to control two distinct things: should the library be used
 # by default (yes or no), and should the link check use only the function
-# (sep(arate) or both the includes and the function (tog(ether)). This macro
+# (sep(arate)) or both the includes and the function (tog(ether)). This macro
 # looks at the possibilities and returns the appropriate string. [which]
 # ($1) controls whether it returns library usage ('usage') or the form
 # of the link check ('link'). [dfltaction] ($2) is the parameter to
@@ -56,8 +56,9 @@ AC_DEFUN([AC_COIN_LIBHDR_DFLT_HACK],
 # check will be performed if [function-body] ($5) is specified. The default is
 # to use a program composed by concatenating [includes] and [function-body]
 # with link flags specified by [lflgs] ($2), and compiler flags specified by
-# [cflgs] ($3). If [dfltaction] ($7) ends in 'sep', the link check will be
-# performed without the header (see LIBHDR_DFLT_HACK).
+# [cflgs] ($3) (but note these can be overridden; see below). If [dfltaction]
+# ($7) ends in 'sep', the link check will be performed without the header
+# (see LIBHDR_DFLT_HACK).
 
 # There's really no reasonable assumptions that can be made about how a data
 # directory is specified, so there's no attempt to test for existence.
@@ -70,13 +71,12 @@ AC_DEFUN([AC_COIN_LIBHDR_DFLT_HACK],
 # on [cmdlineopts]. `nodata' is the default.
 
 # --with-prim is interpreted as follows:
-#   * --with-prim=no is equivalent to --without-prim
+#   * --with-prim=no or --without-prim
 #     prim status is set to skipping
-#   * --with-prim or --with-prim=yes is equivalent to
-#       --with-prim-lflags=-lprim
-#       --with-prim-data=/usr/local/share/prim
-#     if the user doesn't override lflags & data from the command line
+#   * --with-prim or --with-prim=yes
 #     prim status is set to requested
+#     If dfltaction is no, an explicit --with-prim=yes is required to
+#     override the default, even if --with-prim-{lflags,cflags} are present.
 #   * Any other value is taken as equivalent to
 #       --with-prim-data=value (dataonly) or
 #       --with-prim-lflags=value (anything else)
@@ -106,19 +106,21 @@ AC_DEFUN([AC_COIN_LIBHDR_DFLT_HACK],
 AC_DEFUN([AC_COIN_FIND_PRIM_LIBHDR],
 [
 dnl Set default values for flags, action, and status. These are taken from
-dnl the macro parameters, if given. Otherwise, make something up.
+dnl the macro parameters.
 
-  m4_tolower($1_lflags)="m4_default([$2],[-l$1])"
-  m4_tolower($1_cflags)="m4_default([$3],[])"
-  m4_tolower($1_data)="m4_default([$4],[/usr/local/share/$1])"
+  m4_tolower($1_lflags)="$2"
+  m4_tolower($1_cflags)="$3"
+  m4_tolower($1_data)="$4"
   m4_if(AC_COIN_LIBHDR_DFLT_HACK([usage],[$7],[yes],[foo]),yes,
     [m4_tolower(coin_has_$1)=requested],
     [m4_tolower(coin_has_$1)=skipping
      m4_tolower($1_failmode)='default'])
 
-dnl See if the user specified --with-prim.  If the value is something other
-dnl than 'yes' or 'no' and the client specified dataonly, the value is assigned
-dnl to prim_data, otherwise to prim_lflags.
+dnl See if the user specified --with-prim.  If the value is something
+dnl other than 'yes' or 'no' and the client specified dataonly, the value is
+dnl assigned to prim_data, otherwise to prim_lflags. But in the absence of an
+dnl explicit 'no', allow non-null lflags, cflags, or data to be equivalent to
+dnl 'yes'.
 
   withval="$m4_tolower(with_$1)"
   if test -n "$withval" ; then
@@ -139,10 +141,17 @@ dnl to prim_data, otherwise to prim_lflags.
           [m4_tolower($1_lflags)="$withval"])
         ;;
     esac
+  else
+    if test -n "$m4_tolower(with_$1_lflags)" ||
+       test -n "$m4_tolower(with_$1_cflags)" ||
+       test -n "$m4_tolower(with_$1_data)" ; then
+      m4_tolower(coin_has_$1)=requested
+      m4_tolower($1_failmode)=''
+    fi
   fi
 
 dnl As long as we're not dataonly and we're not skipping prim, check for
-dnl --with-prim-lflags and --with-prim-cflgs. Values will override parameter
+dnl --with-prim-lflags and --with-prim-cflags. Values will override parameter
 dnl values.
 
   m4_if(m4_default($8,nodata),dataonly,[],
@@ -180,13 +189,13 @@ dnl If we have [includes], try to compile them.
 
   m4_ifnblank([$6],
     [if test $m4_tolower(coin_has_$1) != skipping ; then
-       ac_save_CXXFLAGS=$CXXFLAGS
-       CXXFLAGS="$m4_tolower($1_cflags)"
+       ac_save_CPPFLAGS=$CPPFLAGS
+       CPPFLAGS="$m4_tolower($1_cflags)"
        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([$6],[])],
          [],
 	 [m4_tolower(coin_has_$1)='no'
 	  m4_tolower($1_failmode)="header compile"])
-       CXXFLAGS=$ac_save_CXXFLAGS
+       CPPFLAGS=$ac_save_CPPFLAGS
      fi])
 
 dnl If we have a function-body, try to compile and link. Use both the
@@ -196,9 +205,9 @@ dnl otherwise by '*sep' as [dfltaction].
   m4_ifnblank([$5],
     [if test "$m4_tolower(coin_has_$1)" != skipping ; then
        ac_save_LIBS=$LIBS
-       ac_save_CXXFLAGS=$CXXFLAGS
+       ac_save_CPPFLAGS=$CPPFLAGS
        LIBS="$m4_tolower($1_lflags)"
-       CXXFLAGS="$m4_tolower($1_cflags)"
+       CPPFLAGS="$m4_tolower($1_cflags)"
        m4_if(AC_COIN_LIBHDR_DFLT_HACK([link],[$7],[foo],[tog]),[sep],
 	 [AC_LINK_IFELSE([AC_LANG_SOURCE([$5])],
 	    [],
@@ -217,7 +226,7 @@ dnl otherwise by '*sep' as [dfltaction].
 	       m4_tolower($1_failmode)="link with header"
 	     fi])])
        LIBS=$ac_save_LIBS
-       CXXFLAGS=$ac_save_CXXFLAGS
+       CPPFLAGS=$ac_save_CPPFLAGS
      fi])
 
 dnl If we're still showing requested, then we can say yes. We've passed all
@@ -352,6 +361,22 @@ dnl to do the heavy lifting.
     fi
   else
     AC_MSG_RESULT([$m4_tolower(coin_has_$1) (COIN_SKIP_PROJECTS)])
+  fi
+
+dnl Try to offer some helpful advice in the event of failure.
+  if test "$m4_tolower(coin_has_$1)" = "no" ; then
+    if expr "$m4_tolower($1_failmode)" : '.*header.*' &>/dev/null ; then
+      AC_MSG_WARN(m4_normalize(
+	[Compiler flags are "$m4_tolower($1)_cflags".]
+	[Check that they are correct.]
+	[You can supply correct values using --with-m4_tolower($1)-cflags.]))
+    fi
+    if expr "$m4_tolower($1_failmode)" : '.*link.*' &>/dev/null ; then
+      AC_MSG_WARN(m4_normalize(
+	[Linker flags are "$m4_tolower($1)_lflags".]
+	[Check that they are correct.]
+	[You can supply correct values using --with-m4_tolower($1)-lflags.]))
+    fi
   fi
 
 dnl Possibilities are `yes', `no', or `skipping'. 'Skipping' implies we

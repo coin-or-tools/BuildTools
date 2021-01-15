@@ -1070,7 +1070,8 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
         ;;
       * )
         m4_tolower(coin_has_$1)=yes
-        dnl If the client specified dataonly, its value is assigned to prim_data.
+dnl If the client specified dataonly, its value is assigned to prim_data,
+dnl otherwise to prim_lflags.
         m4_if(m4_default($4,nodata),dataonly,
           [m4_tolower($1_data)="$withval"],
           [m4_tolower($1_lflags)="$withval"])
@@ -1078,7 +1079,8 @@ AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
     esac
   fi
 
-dnl --with-prim-libs and --with-prim-cflags are present unless the client specified dataonly.
+dnl --with-prim-libs and --with-prim-cflags are present unless the client
+dnl specified dataonly.
   m4_if(m4_default($4,nodata),dataonly,[],
     [# Specifying --with-prim=no overrides the individual options for lflags and cflags.
      if test "$m4_tolower(coin_has_$1)" != skipping ; then
@@ -1848,193 +1850,6 @@ AC_DEFUN([AC_COIN_CHK_GNU_READLINE],
   AM_CONDITIONAL(COIN_HAS_READLINE,[test x$coin_has_readline = xyes])
 ]) # AC_COIN_CHK_GNU_READLINE
 
-
-###########################################################################
-#                       COIN_CHK_LAPACK                                   #
-###########################################################################
-
-# COIN_CHK_LAPACK([client packages])
-
-# This macro checks for a LAPACK library and adds the information necessary to
-# use it to the _LFLAGS, _CFLAGS, and _PCFILES variables of the client packages
-# passed as a space-separated list in parameter $1. These correspond to
-# Libs.private, Cflags.private, and Requires.private, respectively, in a .pc
-# file.
-
-# The algorithm first invokes FIND_PRIM_PKG. The parameters --with-lapack,
-# --with-lapack-lflags, and --with-lapack-cflags are interpreted there. If
-# nothing is found, default locations are checked.
-# A link check is used to determine whether default locations work and to
-# determine the name mangling scheme of the Lapack library.
-
-AC_DEFUN([AC_COIN_CHK_LAPACK],
-[
-dnl Make sure the necessary variables exist for each client package.
-  m4_foreach_w([myvar],[$1],
-    [AC_SUBST(m4_toupper(myvar)_CFLAGS)
-     AC_SUBST(m4_toupper(myvar)_LFLAGS)
-     AC_SUBST(m4_toupper(myvar)_PCFILES)
-    ])
-
-dnl Set up command line arguments with DEF_PRIM_ARGS.
-  AC_COIN_DEF_PRIM_ARGS([lapack],yes,yes,yes,no)
-  AC_MSG_CHECKING(for LAPACK)
-
-dnl Look for user-specified lapack flags, but skip any checks via a .pc file.
-dnl The result (coin_has_lapack) will be one of
-dnl - yes (the user specified something),
-dnl - no (user specified nothing), or
-dnl - skipping (user said do not use).
-dnl We'll also have variables lapack_lflags, lapack_cflags, and lapack_pcfiles.
-  AC_COIN_FIND_PRIM_PKG([lapack],[skip],,[nodata])
-
-dnl If we found something, then we'll do a link check to figure
-dnl out whether it is working and what the name mangling scheme is.
-dnl This sets dorhr_col_namemangling
-  if test "$coin_has_lapack" = yes ; then
-    AC_COIN_TRY_LINK([dorhr_col],[$lapack_lflags],[$lapack_pcfiles],
-      [AC_MSG_RESULT([yes (user-specified)])],
-      [AC_MSG_ERROR([Could not find dorhr_col in user-specified Lapack when trying to link with it.])])
-  fi
-
-dnl If not found anything, try a few more guesses for optimized blas/lapack
-dnl libs (based on build system type).
-dnl To use static MKL libs on Linux/Darwin, one would need to enclose the libs
-dnl into -Wl,--start-group ... -Wl,--end-group. Unfortunately, libtool does
-dnl not write these flags into the dependency_libs of the .la file, so linking
-dnl an executable fails. See also
-dnl https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=159760&repeatmerged=yes
-dnl So for now the checks below will only work for shared MKL libs on
-dnl Linux/Darwin.
-
-  if test "$coin_has_lapack" = no ; then
-    case $build in
-      *-linux*)
-        AC_COIN_TRY_LINK([dorhr_col],
-	  [-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],
-	  [coin_has_lapack=yes
-           lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"])
-      ;;
-
-dnl Do SGI systems even exist any more? Do we need this? -- lh, 201114 --
-      *-sgi-*)
-        AC_COIN_TRY_LINK([dorhr_col],
-	  [-lcomplib.sgimath],[],
-	  [coin_has_lapack=yes
-	   lapack_lflags=-lcomplib.sgimath])
-      ;;
-
-      *-*-solaris*)
-dnl Ideally, we would use -library=sunperf, but it is an imperfect world.
-dnl Studio cc does not recognise -library, it wants -xlic_lib. Studio 12
-dnl CC does not recognise -xlic_lib. Libtool does not like -xlic_lib
-dnl anyway. Sun claims that CC and cc will understand -library in Studio
-dnl 13. The main extra function of -xlic_lib and -library is to arrange
-dnl for the Fortran run-time libraries to be linked for C++ and C. We
-dnl can arrange that explicitly.
-        AC_COIN_TRY_LINK([dorhr_col],
-	  [-lsunperf],[],
-	  [coin_has_lapack=yes
-           lapack_lflags=-lsunperf])
-      ;;
-
-      *-cygwin* | *-mingw* | *-msys*)
-        # check for 64-bit sequential MKL in $LIB
-dnl TODO we may want to add an option to check for parallel MKL or switch to
-dnl it by default?
-        old_IFS="$IFS"
-        IFS=";"
-        coin_mkl=""
-        for d in $LIB ; do
-          # turn $d into unix-style short path (no spaces); cannot do -us,
-          # so first do -ws, then -u
-          d=`cygpath -ws "$d"`
-          d=`cygpath -u "$d"`
-          if test "$enable_shared" = yes ; then
-            if test -e "$d/mkl_core_dll.lib" ; then
-              coin_mkl="$d/mkl_intel_lp64_dll.lib $d/mkl_sequential_dll.lib $d/mkl_core_dll.lib"
-              break
-            fi
-          else
-            if test -e "$d/mkl_core.lib" ; then
-              coin_mkl="$d/mkl_intel_lp64.lib $d/mkl_sequential.lib $d/mkl_core.lib"
-              break
-            fi
-          fi
-        done
-        IFS="$old_IFS"
-        if test -n "$coin_mkl" ; then
-           AC_COIN_TRY_LINK([dorhr_col],[$coin_mkl],[],
-               [coin_has_lapack=yes
-                lapack_lflags="$coin_mkl"])
-        fi
-      ;;
-
-      *-darwin*)
-        AC_COIN_TRY_LINK([dorhr_col],
-	  [-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],
-	  [coin_has_lapack=yes
-           lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"],
-	  [],[no])
-        if test "$coin_has_lapack" = no ; then
-          AC_COIN_TRY_LINK([dorhr_col],
-	    [-framework Accelerate],[],
-	    [coin_has_lapack=yes
-             lapack_lflags="-framework Accelerate"])
-        fi
-      ;;
-    esac
-    if test "$coin_has_lapack" = yes ; then
-      AC_MSG_RESULT([yes (system special case)])
-    fi
-  fi
-
-dnl If none of the above worked, check whether lapack.pc blas.pc exists and
-dnl links. We check for both to ensure that blas lib also appears on link line
-dnl in case someone wants to use Blas functions but tests only for Lapack.
-  if test "$coin_has_lapack" = no ; then
-    AC_COIN_CHK_MOD_EXISTS([lapack],[lapack blas],
-      [AC_MSG_RESULT([yes (lapack.pc and blas.pc)])
-       AC_COIN_TRY_LINK([dorhr_col],[],[lapack],
-        [coin_has_lapack=yes
-         lapack_pcfiles="lapack blas"],
-        [AC_MSG_WARN([lapack.pc and blas.pc present, but could not find dorhr_col when trying to link with it.])])])
-  fi
-dnl TODO do we need another check with lapack.pc only?
-
-dnl If none of the above worked, try the generic -llapack -lblas as last
-dnl resort.  We check for both to ensure that blas lib also appears on
-dnl link line in case someone wants to use Blas functions but tests only
-dnl for Lapack.
-  if test "$coin_has_lapack" = no ; then
-    AC_COIN_TRY_LINK([dorhr_col],[-llapack -lblas],[],
-      [coin_has_lapack=yes
-       lapack_lflags="-llapack -lblas"
-       AC_MSG_RESULT([yes (generic -llapack -lblas)])],
-      [AC_MSG_RESULT([no])])
-  fi
-dnl TODO do we need another check with -llapack only?
-
-dnl Create an automake conditional COIN_HAS_LAPACK.
-  AM_CONDITIONAL(COIN_HAS_LAPACK,[test $coin_has_lapack = yes])
-
-dnl If we've located the package, define preprocessor symbol COIN_HAS_LAPACK
-dnl and COIN_LAPACK_FUNC[_] and augment the necessary variables for the
-dnl client packages.
-  if test $coin_has_lapack = yes ; then
-    AC_DEFINE(m4_toupper(AC_PACKAGE_NAME)_HAS_LAPACK,[1],
-      [Define to 1 if the LAPACK package is available])
-    AC_COIN_DEFINENAMEMANGLING(m4_toupper(AC_PACKAGE_NAME)_LAPACK,
-      ${dorhr_col_namemangling})
-    m4_foreach_w([myvar],[$1],
-      [if test -n "$lapack_pcfiles" ; then
-        m4_toupper(myvar)_PCFILES="$lapack_pcfiles $m4_toupper(myvar)_PCFILES"
-       fi
-       m4_toupper(myvar)_LFLAGS="$lapack_lflags $m4_toupper(myvar)_LFLAGS"
-       m4_toupper(myvar)_CFLAGS="$lapack_cflags $m4_toupper(myvar)_CFLAGS"
-      ])
-  fi
-]) # AC_COIN_CHK_LAPACK
 
 
 ###########################################################################
