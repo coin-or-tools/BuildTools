@@ -5,17 +5,21 @@
 
 # COIN_CHK_LAPACK([client packages])
 
-# This macro checks for a LAPACK library and adds the information necessary to
-# use it to the _LFLAGS, _CFLAGS, and _PCFILES variables of the client packages
+# This macro checks for a LAPACK library and adds the information necessary
+# to use it to the _LFLAGS and _PCFILES variables of the client packages
 # passed as a space-separated list in parameter $1. These correspond to
-# Libs.private, Cflags.private, and Requires.private, respectively, in a .pc
-# file.
+# Libs.private and Requires.private, respectively, in a .pc file.
 
-# The algorithm first looks for command line parameters --with-lapack,
-# --with-lapack-lflags, and --with-lapack-cflags. If nothing is found,
-# system-specific default locations are checked, followed by some generic
-# defaults.  A link check is used to determine whether default locations
-# work and to determine the name mangling scheme of the Lapack library.
+# The macro does not consider or set compile flags. The macro finds some
+# implementation of LAPACK for code that requires only the ability to link. If
+# you want to write code targeted to a specific implementation of LAPACK, you
+# should use CHK_LIBHDR & related to find it.
+
+# The algorithm first looks for command line parameters --with-lapack
+# and --with-lapack-lflags. If nothing is found, system-specific default
+# locations are checked, followed by some generic defaults.  A link check
+# is used to determine whether default locations work and to determine the
+# name mangling scheme of the Lapack library.
 
 AC_DEFUN([AC_COIN_CHK_LAPACK],
 [
@@ -23,13 +27,13 @@ AC_DEFUN([AC_COIN_CHK_LAPACK],
 
 dnl Make sure the necessary variables exist for each client package.
   m4_foreach_w([myvar],[$1],
-    [AC_SUBST(m4_toupper(myvar)_CFLAGS)
-     AC_SUBST(m4_toupper(myvar)_LFLAGS)
+    [AC_SUBST(m4_toupper(myvar)_LFLAGS)
      AC_SUBST(m4_toupper(myvar)_PCFILES)
     ])
 
-dnl Set up command line arguments with DEF_PRIM_ARGS.
-  AC_COIN_DEF_PRIM_ARGS([lapack],yes,yes,yes,no)
+dnl Set up command line arguments with DEF_PRIM_ARGS. cflags is deliberately
+dnl not provided.
+  AC_COIN_DEF_PRIM_ARGS([lapack],yes,yes,no,no)
 
 dnl Assume the worst and persist in the face of failure.
   coin_has_lapack=no
@@ -42,8 +46,7 @@ dnl attention if the user says 'no' on the command lin.
       AC_COIN_TRY_LINK([dorhr_col],[$with_lapack_lflags],[],
         [AC_MSG_RESULT([yes (user-specified)])
 	 lapack_keep_looking=no
-	 lapack_lflags=$with_lapack_lflags
-	 lapack_cflags=$with_lapack_cflags],
+	 lapack_lflags=$with_lapack_lflags],
 	[AC_MSG_ERROR([Cannot link to user-specified Lapack.])])
     fi
   else
@@ -155,7 +158,7 @@ dnl in case someone wants to use Blas functions but tests only for Lapack.
         [coin_has_lapack=yes
 	 lapack_keep_looking=no
          lapack_pcfiles="lapack blas"],
-        [AC_MSG_WARN([lapack.pc and blas.pc present, but could not find dorhr_col when trying to link with it.])])])
+        [AC_MSG_WARN([lapack.pc and blas.pc present, but could not find dorhr_col when trying to link.])])])
   fi
 dnl TODO do we need another check with lapack.pc only?
 
@@ -188,7 +191,6 @@ dnl client packages.
         m4_toupper(myvar)_PCFILES="$lapack_pcfiles $m4_toupper(myvar)_PCFILES"
        fi
        m4_toupper(myvar)_LFLAGS="$lapack_lflags $m4_toupper(myvar)_LFLAGS"
-       m4_toupper(myvar)_CFLAGS="$lapack_cflags $m4_toupper(myvar)_CFLAGS"
       ])
   fi
 ]) # AC_COIN_CHK_LAPACK
