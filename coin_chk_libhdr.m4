@@ -377,6 +377,10 @@ dnl Try to offer some helpful advice in the event of failure.
 	[Check that they are correct.]
 	[You can supply correct values using --with-m4_tolower($1)-lflags.]))
     fi
+    if expr "$m4_tolower($1_failmode)" : '.*header.*' &>/dev/null ||
+       expr "$m4_tolower($1_failmode)" : '.*link.*' &>/dev/null ; then
+      AC_MSG_WARN(
+        [Check config.log for details of failed compile or link attempts.])
   fi
 
 dnl Possibilities are `yes', `no', or `skipping'. 'Skipping' implies we
