@@ -947,16 +947,16 @@ dnl From the CFLAGS of $1, remove the -D$1_BUILD, though.
 # out unused options. To use the results, construct the name of the shell
 # variable as specified in the autoconf doc'n for ARG_WITH.
 
-# Setting the final parameter to 'build' will cause the phrase "'build' will
-# look for a COIN ThirdParty package" to be inserted in the documentation for
-# --with-prim.
+# Setting the final parameter to 'default_build' will cause the phrase
+# "'build' will look for a COIN ThirdParty package" to be inserted in the
+# documentation for --with-prim.
 
 AC_DEFUN([AC_COIN_DEF_PRIM_ARGS],
 [
   m4_define([extraHelp],[
     m4_normalize(Use $1. [If an argument is given,]
       ['yes' is equivalent to --with-m4_tolower($1),]
-      m4_case($6,build,
+      m4_case($6,[default_build],
       ['no' is equivalent to --without-m4_tolower($1)[,]
        'build' will look for a COIN-OR ThirdParty package.],
       ['no' is equivalent to --without-m4_tolower($1).])

@@ -11,19 +11,22 @@
 # and CHK_LIB macros. It's ugly but it's pure macro and will resolve at
 # run_autotools.
 
-# We're trying to control two distinct things: should the library be used
-# by default (yes or no), and should the link check use only the function
-# (separate) or both the includes and the function (together). This macro
-# looks at the possibilities and returns the appropriate string. [which]
-# ($1) controls whether it returns library usage ('usage') or the form
-# of the link check ('link'). [dfltaction] ($2) is the parameter to
-# be analysed. [dfltuse] ($3) specifies the default for usage, in case
+# We're trying to control two distinct things:
+# * should the library be used by default (default_use or default_skip)
+#   or built as a third-party package (default_build)
+# * should the link check use only the function (separate) or both the
+#   includes and the function (together).
+
+# This macro looks at the possibilities and returns the appropriate
+# string. [which] ($1) controls whether it returns library usage ('usage')
+# or the form of the link check ('link'). [dfltaction] ($2) is the parameter
+# to be analysed. [dfltuse] ($3) specifies the default for usage, in case
 # [dfltaction] doesn't specify it. [dfltlink] ($4) covers the default for
 # the link check, in case [dfltaction] doesn't specify it.
 
-# Specify [dfltaction] as {yes,no} x {separate,together}, separated by a space
-# if both usage and link are given, e.g., [yes separate]. m4_normalize deals
-# with excess leading, interior, trailing spaces.
+# Specify [dfltaction] as a space-separated string of keywords, e.g.,
+# [default_use separate]. m4_normalize deals with excess leading, interior,
+# trailing spaces.
 
 # The macro structure is expandable (new overloads can be added) and order
 # insensitive provided all keywords are unique.
@@ -35,7 +38,11 @@
 AC_DEFUN([AC_COIN_LIBHDR_DFLT_HACK],
 [m4_case([$1],
    [usage],
-     m4_bmatch([m4_normalize([ $2 ])],[.* yes .*],[yes],[.* no .*],[no],[$3]),
+     m4_bmatch([m4_normalize([ $2 ])],
+                             [.* default_use .*],[default_use],
+                             [.* default_skip .*],[default_skip],
+                             [.* default_build .*],[default_build],
+                             [$3]),
    [link],
      m4_bmatch([m4_normalize([ $2 ])],
                              [.* separate .*],[separate],
@@ -61,7 +68,7 @@ AC_DEFUN([AC_COIN_LIBHDR_DFLT_HACK],
 # to use a program composed by concatenating [includes] and [function-body]
 # with link flags specified by [lflgs] ($2), and compiler flags specified by
 # [cflgs] ($3) (but note these can be overridden; see below). If [dfltaction]
-# ($7) ends in 'sep', the link check will be performed without the header
+# ($7) contains 'separate', the link check will be performed without the header
 # (see LIBHDR_DFLT_HACK).
 
 # There's really no reasonable assumptions that can be made about how a data
@@ -79,26 +86,28 @@ AC_DEFUN([AC_COIN_LIBHDR_DFLT_HACK],
 #     prim status is set to skipping
 #   * --with-prim or --with-prim=yes
 #     prim status is set to requested
-#     If dfltaction is no, an explicit --with-prim=yes is required to
-#     override the default, even if --with-prim-{lflags,cflags} are present.
 #   * Any other value is taken as equivalent to
 #       --with-prim-data=value (dataonly) or
 #       --with-prim-lflags=value (anything else)
 #     prim status is set to requested
 
+# If dfltaction contains default_skip, an explicit --with-prim or non-null
+# --with-prim-{lflags,cflags} is required to override the default.
+
 # The algorithm first checks for a user-specified value of --with-prim; values
 # are interpreted as above.  Next, it looks for user specified values given
 # with command line parameters --with-prim-lflags, --with-prim-cflags, and
 # --with-prim-data. If any of these are specified, the value overrides the
-# value passed as a parameter.
+# value passed to the macro as a parameter.
 
-# The usage portion of [dfltaction] ($7) (no, yes) is used as the default
-# value of --with-prim if the user offers no guidance via command line
-# parameters. The (hardwired) default is yes.  See LIBHDR_DFLT_HACK for the
-# full story.
+# The usage portion of [dfltaction] ($7) (default_skip, default_use) is
+# used as the default value of --with-prim if the user offers no guidance
+# via command line parameters. The (hardwired) default is default_use.
+# See LIBHDR_DFLT_HACK for the full story.
 
-# If you really wanted to use the obsolete 'build', use COIN_CHK_PKG
-# instead. All COIN ThirdParty packages produce .pc files.
+# If you really wanted to use the obsolete 'default_build', use COIN_CHK_PKG
+# instead. All COIN ThirdParty packages produce .pc files. This macro doesn't
+# deal with it.
 
 # This macro doesn't test that the specified values actually work unless
 # [function-body] and/or [includes] are given as parameters. This
@@ -109,13 +118,19 @@ AC_DEFUN([AC_COIN_LIBHDR_DFLT_HACK],
 
 AC_DEFUN([AC_COIN_FIND_PRIM_LIBHDR],
 [
+dnl Trap default_build right up front and fail in run_autotools.
+  m4_if(AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]),[default_build],
+    [m4_fatal(m4_normalize(
+       [For default_build, use COIN_FIND_PRIM_PKG.]
+       [All COIN Third-Party packages produce .pc files.]))])
+
 dnl Set default values for flags, action, and status. These are taken from
 dnl the macro parameters.
 
   m4_tolower($1_lflags)="$2"
   m4_tolower($1_cflags)="$3"
   m4_tolower($1_data)="$4"
-  m4_if(AC_COIN_LIBHDR_DFLT_HACK([usage],[$7],[yes]),yes,
+  m4_if(AC_COIN_LIBHDR_DFLT_HACK([usage],[$7],[default_use]),default_use,
     [m4_tolower(coin_has_$1)=requested],
     [m4_tolower(coin_has_$1)=skipping
      m4_tolower($1_failmode)='default'])
@@ -293,12 +308,11 @@ dnl specific request, and no check failed.
 # only if there are no user-supplied values on the command line. A command
 # line value will override the parameter value.
 
-# [dfltaction] ($8) (no, yes) is used as the default value of --with-prim if
-# the user offers no guidance via command line parameters. The (hardwired)
-# default is yes.  'Yes or no' is a simplification; see LIBHDR_DFLT_HACK
-# for the full story.
+# [dfltaction] ($8) (default_skip, default_use) is used as the default for
+# library usage if the user offers no guidance via command line parameters. The
+# (hardwired) default is default_use.
 
-# If you really wanted to use the obsolete 'build', use COIN_CHK_PKG
+# If you really wanted to use the obsolete 'default_build', use COIN_CHK_PKG
 # instead. All COIN ThirdParty packages produce .pc files.
 
 # Define an automake conditional COIN_HAS_PRIM to record the result. If we
@@ -315,18 +329,24 @@ dnl specific request, and no check failed.
 
 AC_DEFUN([AC_COIN_CHK_LIBHDR],
 [ 
+dnl Trap default_build right up front and fail in run_autotools.
+  m4_if(AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]),[default_build],
+    [m4_fatal(m4_normalize(
+       [For default_build, use COIN_CHK_PKG.]
+       [All COIN Third-Party packages produce .pc files.]))])
+
   AC_MSG_CHECKING(
     m4_ifnblank([$6],
       m4_ifnblank([$7],
-        m4_normalize([for package $1 with
+        m4_normalize([for library $1 with
 	  m4_if(
 	    AC_COIN_LIBHDR_DFLT_HACK([link],[$8],[unused],[together]),
 	    [together],
 	    [combined link and compile check],
 	    [separate link and compile checks])]),
-        [for package $1 with link check]),
-      m4_ifnblank([$7],[for package $1 with compile check],
-                       [for package $1])))
+        [for library $1 with link check]),
+      m4_ifnblank([$7],[for library $1 with compile check],
+                       [for library $1 (setting flags only)])))
 
 dnl Make sure the necessary variables exist for each client package.
 
@@ -354,11 +374,11 @@ dnl to do the heavy lifting.
   if test "$m4_tolower(coin_has_$1)" != skipping ; then
     m4_case(m4_default($9,nodata),
       nodata,  [AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,no,
-                AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[yes]))],
+                AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]))],
       dataonly,[AC_COIN_DEF_PRIM_ARGS([$1],yes,no,no,yes,
-                AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[yes]))],
+                AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]))],
                [AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,yes,
-	        AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[yes]))])
+	        AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]))])
     AC_COIN_FIND_PRIM_LIBHDR(m4_tolower($1),
       [$3],[$4],[$5],[$6],[$7],[$8],[$9])
     if test -n "$m4_tolower($1_failmode)" ; then
@@ -452,7 +472,14 @@ dnl Finally, set up PRIM_DATA, unless the user specified nodata.
 # of expansion to CHK_LIBHDR. Hence the double quoting for the code strings.
 
 AC_DEFUN([AC_COIN_CHK_LIB],
-[ AC_COIN_CHK_LIBHDR([$1],[$2],[$3],[$4],[$5],
+[ 
+dnl Trap default_build right up front and fail in run_autotools.
+  m4_if(AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]),[default_build],
+    [m4_fatal(m4_normalize(
+       [For default_build, use COIN_CHK_PKG.]
+       [All COIN Third-Party packages produce .pc files.]))])
+
+  AC_COIN_CHK_LIBHDR([$1],[$2],[$3],[$4],[$5],
     m4_ifnblank([$6],
       [[
 #ifdef __cplusplus
@@ -461,7 +488,7 @@ AC_DEFUN([AC_COIN_CHK_LIB],
   void $6() ;
   int main () { $6() ; return (0) ; }]],[]),
     m4_ifnblank([$7],[[#include "$7"]],[]),
-    AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[yes])[ separate],
+    AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use])[ separate],
     [$9])
 ])   # COIN_CHK_LIB
 
