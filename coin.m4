@@ -726,11 +726,9 @@ dnl setup LIBS by adding $2 and those from $3
   ac_save_LIBS="$LIBS"
   m4_ifnblank([$2], [LIBS="$2 $LIBS"])
   m4_ifnblank([$3],
-    [if test -n "$3" ; then
-      AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
-      temp_LFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs $pkg_static $3`
-      LIBS="$temp_LFLAGS $LIBS"
-    fi])
+  [ AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
+    temp_LFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs $pkg_static $3`
+    LIBS="$temp_LFLAGS $LIBS"])
 
   $1_namemangling=unknown
 
