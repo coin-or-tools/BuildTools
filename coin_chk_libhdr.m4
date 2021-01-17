@@ -13,7 +13,7 @@
 
 # We're trying to control two distinct things: should the library be used
 # by default (yes or no), and should the link check use only the function
-# (sep(arate)) or both the includes and the function (tog(ether)). This macro
+# (separate) or both the includes and the function (together). This macro
 # looks at the possibilities and returns the appropriate string. [which]
 # ($1) controls whether it returns library usage ('usage') or the form
 # of the link check ('link'). [dfltaction] ($2) is the parameter to
@@ -21,22 +21,26 @@
 # [dfltaction] doesn't specify it. [dfltlink] ($4) covers the default for
 # the link check, in case [dfltaction] doesn't specify it.
 
+# Specify [dfltaction] as {yes,no} x {separate,together}, separated by a space
+# if both usage and link are given, e.g., [yes separate]. m4_normalize deals
+# with excess leading, interior, trailing spaces.
+
+# The macro structure is expandable (new overloads can be added) and order
+# insensitive provided all keywords are unique.
+
 # It's critical that the macro produce a result with no leading or trailing
 # spaces! Be careful if you modify it. In normal use, you want this macro to
 # expand immediately, so don't quote it.
 
 AC_DEFUN([AC_COIN_LIBHDR_DFLT_HACK],
-[m4_case([$2],
-   [yessep],[m4_if([$1],[link],[sep],[yes])],
-   [yestog],[m4_if([$1],[link],[tog],[yes])],
-   [nosep],[m4_if([$1],[link],[sep],[no])],
-   [notog],[m4_if([$1],[link],[tog],[no])],
-   [yes],[m4_if([$1],[link],[$4],[yes])],
-   [no],[m4_if([$1],[link],[$4],[no])],
-   [sep],[m4_if([$1],[link],[sep],[$3])],
-   [tog],[m4_if([$1],[link],[tog],[$3])],
-   [m4_if([$1],[link],[$4],[$3])])])dnl 	# COIN_LIBHDR_DFLT_HACK
-  
+[m4_case([$1],
+   [usage],
+     m4_bmatch([m4_normalize([ $2 ])],[.* yes .*],[yes],[.* no .*],[no],[$3]),
+   [link],
+     m4_bmatch([m4_normalize([ $2 ])],
+                             [.* separate .*],[separate],
+                             [.* together .*],[together],[$4]),
+   [DFLT_HACK unrecognised overload: $1!])])dnl     # LIBHDR_DFLT_HACK
 
 
 ###########################################################################
@@ -111,7 +115,7 @@ dnl the macro parameters.
   m4_tolower($1_lflags)="$2"
   m4_tolower($1_cflags)="$3"
   m4_tolower($1_data)="$4"
-  m4_if(AC_COIN_LIBHDR_DFLT_HACK([usage],[$7],[yes],[foo]),yes,
+  m4_if(AC_COIN_LIBHDR_DFLT_HACK([usage],[$7],[yes]),yes,
     [m4_tolower(coin_has_$1)=requested],
     [m4_tolower(coin_has_$1)=skipping
      m4_tolower($1_failmode)='default'])
@@ -200,7 +204,7 @@ dnl If we have [includes], try to compile them.
 
 dnl If we have a function-body, try to compile and link. Use both the
 dnl [includes] and [function-body] unless the user has requested
-dnl otherwise by '*sep' as [dfltaction].
+dnl otherwise by '*separate' as [dfltaction].
 
   m4_ifnblank([$5],
     [if test "$m4_tolower(coin_has_$1)" != skipping ; then
@@ -208,7 +212,8 @@ dnl otherwise by '*sep' as [dfltaction].
        ac_save_CPPFLAGS=$CPPFLAGS
        LIBS="$m4_tolower($1_lflags)"
        CPPFLAGS="$m4_tolower($1_cflags)"
-       m4_if(AC_COIN_LIBHDR_DFLT_HACK([link],[$7],[foo],[tog]),[sep],
+       m4_if(
+         AC_COIN_LIBHDR_DFLT_HACK([link],[$7],[unused],[together]),[separate],
 	 [AC_LINK_IFELSE([AC_LANG_SOURCE([$5])],
 	    [],
 	    [m4_tolower(coin_has_$1)='no'
@@ -314,7 +319,9 @@ AC_DEFUN([AC_COIN_CHK_LIBHDR],
     m4_ifnblank([$6],
       m4_ifnblank([$7],
         m4_normalize([for package $1 with
-	  m4_if(AC_COIN_LIBHDR_DFLT_HACK([link],[$8],[foo],[tog]),[tog],
+	  m4_if(
+	    AC_COIN_LIBHDR_DFLT_HACK([link],[$8],[unused],[together]),
+	    [together],
 	    [combined link and compile check],
 	    [separate link and compile checks])]),
         [for package $1 with link check]),
@@ -347,11 +354,11 @@ dnl to do the heavy lifting.
   if test "$m4_tolower(coin_has_$1)" != skipping ; then
     m4_case(m4_default($9,nodata),
       nodata,  [AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,no,
-                AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[yes],[foo]))],
+                AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[yes]))],
       dataonly,[AC_COIN_DEF_PRIM_ARGS([$1],yes,no,no,yes,
-                AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[yes],[foo]))],
+                AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[yes]))],
                [AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,yes,
-	        AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[yes],[foo]))])
+	        AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[yes]))])
     AC_COIN_FIND_PRIM_LIBHDR(m4_tolower($1),
       [$3],[$4],[$5],[$6],[$7],[$8],[$9])
     if test -n "$m4_tolower($1_failmode)" ; then
@@ -381,6 +388,7 @@ dnl Try to offer some helpful advice in the event of failure.
        expr "$m4_tolower($1_failmode)" : '.*link.*' &>/dev/null ; then
       AC_MSG_WARN(
         [Check config.log for details of failed compile or link attempts.])
+    fi
   fi
 
 dnl Possibilities are `yes', `no', or `skipping'. 'Skipping' implies we
@@ -438,9 +446,8 @@ dnl Finally, set up PRIM_DATA, unless the user specified nodata.
 # conflict with the simplified declaration used for the link check. If you
 # want the real thing, use COIN_CHK_LIBHDR directly.
 
-# The dual calls to LIBHDR_DFLT_HACK are intended to pick up the usual use
-# case (configure.ac specifies usage as yes or no) and tack on a request for
-# separate compile and link tests. The odd line break avoids an interior space.
+# The call to LIBHDR_DFLT_HACK picks up usage (yes or no) from configure.ac,
+# then we force separate compilation.
 # The calls to m4_ifnblank must expand here --- we want to pass the result
 # of expansion to CHK_LIBHDR. Hence the double quoting for the code strings.
 
@@ -454,8 +461,7 @@ AC_DEFUN([AC_COIN_CHK_LIB],
   void $6() ;
   int main () { $6() ; return (0) ; }]],[]),
     m4_ifnblank([$7],[[#include "$7"]],[]),
-    AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],
-      [yes],[foo])AC_COIN_LIBHDR_DFLT_HACK([link],[$8],[foo],[sep]),
+    AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[yes])[ separate],
     [$9])
-])   # COIN_CHK_LIBv2
+])   # COIN_CHK_LIB
 
