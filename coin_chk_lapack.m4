@@ -44,14 +44,15 @@ dnl attention if the user says 'no' on the command lin.
   if test "$with_lapack" != "no" ; then
     if test -n "$with_lapack_lflags" ; then
       AC_COIN_TRY_LINK([dorhr_col],[$with_lapack_lflags],[],
-        [AC_MSG_RESULT([yes (user-specified)])
+        [coin_has_lapack=yes
+	 lapack_what="user-specified"
 	 lapack_keep_looking=no
 	 lapack_lflags=$with_lapack_lflags],
 	[AC_MSG_ERROR([Cannot link to user-specified Lapack.])])
     fi
   else
     lapack_keep_looking=no
-    AC_MSG_RESULT([no (user-specified)])
+    lapack_what="user-specified"
   fi
 
 dnl If we didn't find anything, try a few more guesses for optimized
@@ -71,6 +72,7 @@ dnl Linux/Darwin.
         AC_COIN_TRY_LINK([dorhr_col],
 	  [-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],
 	  [coin_has_lapack=yes
+	   lapack_what="Linux MKL"
            lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"])
       ;;
 
@@ -79,6 +81,7 @@ dnl Do SGI systems even exist any more? Do we need this? -- lh, 201114 --
         AC_COIN_TRY_LINK([dorhr_col],
 	  [-lcomplib.sgimath],[],
 	  [coin_has_lapack=yes
+	   lapack_what="SGI sgimath"
 	   lapack_lflags=-lcomplib.sgimath])
       ;;
 
@@ -93,6 +96,7 @@ dnl can arrange that explicitly.
         AC_COIN_TRY_LINK([dorhr_col],
 	  [-lsunperf],[],
 	  [coin_has_lapack=yes
+	   lapack_what="Solaris sunperf"
            lapack_lflags=-lsunperf])
       ;;
 
@@ -124,6 +128,7 @@ dnl it by default?
         if test -n "$coin_mkl" ; then
            AC_COIN_TRY_LINK([dorhr_col],[$coin_mkl],[],
                [coin_has_lapack=yes
+	        lapack_what="Intel MKL"
                 lapack_lflags="$coin_mkl"])
         fi
       ;;
@@ -138,12 +143,12 @@ dnl it by default?
           AC_COIN_TRY_LINK([dorhr_col],
 	    [-framework Accelerate],[],
 	    [coin_has_lapack=yes
+	     lapack_what="Darwin accelerate"
              lapack_lflags="-framework Accelerate"])
         fi
       ;;
     esac
     if test "$coin_has_lapack" = yes ; then
-      AC_MSG_RESULT([yes (system special case)])
       lapack_keep_looking=no
     fi
   fi
@@ -153,12 +158,12 @@ dnl links. We check for both to ensure that blas lib also appears on link line
 dnl in case someone wants to use Blas functions but tests only for Lapack.
   if test "$lapack_keep_looking" = yes ; then
     AC_COIN_CHK_MOD_EXISTS([lapack],[lapack blas],
-      [AC_MSG_RESULT([yes (lapack.pc and blas.pc)])
+      [lapack_what="generic module"
        AC_COIN_TRY_LINK([dorhr_col],[],[lapack],
         [coin_has_lapack=yes
 	 lapack_keep_looking=no
          lapack_pcfiles="lapack blas"],
-        [AC_MSG_WARN([lapack.pc and blas.pc present, but could not find dorhr_col when trying to link.])])])
+        [AC_MSG_WARN([lapack.pc and blas.pc present, but could not find dorhr_col when trying to link with LAPACK.])])])
   fi
 dnl TODO do we need another check with lapack.pc only?
 
@@ -170,10 +175,32 @@ dnl for Lapack.
     AC_COIN_TRY_LINK([dorhr_col],[-llapack -lblas],[],
       [coin_has_lapack=yes
        lapack_lflags="-llapack -lblas"
-       AC_MSG_RESULT([yes (generic -llapack -lblas)])],
-      [AC_MSG_RESULT([no])])
+       lapack_what="generic library"])
   fi
 dnl TODO do we need another check with -llapack only?
+
+dnl Inform the user of the result.
+  case "$coin_has_lapack" in
+    yes)
+      AC_MSG_RESULT([$coin_has_lapack ($lapack_what)])
+      if test -n "$lapack_lflags" ; then
+        AC_MSG_NOTICE([  link flags: '$lapack_lflags'])
+      fi
+      if test -n "$lapack_pcfiles" ; then
+        AC_MSG_NOTICE([  .pc files: '$lapack_pcfiles'])
+      fi
+      ;;
+    no)
+      if test -n "$lapack_what" ; then
+        AC_MSG_RESULT([$coin_has_lapack ($lapack_what)])
+      else
+        AC_MSG_RESULT([$coin_has_lapack])
+      fi
+      ;;
+    *)
+      AC_MSG_WARN([CHK_LAPACK: unexpected result '$coin_has_lapack'])
+      ;;
+  esac
 
 dnl Create an automake conditional COIN_HAS_LAPACK.
   AM_CONDITIONAL(COIN_HAS_LAPACK,[test $coin_has_lapack = yes])
