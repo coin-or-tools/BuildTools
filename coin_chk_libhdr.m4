@@ -1,4 +1,34 @@
 
+###########################################################################
+#                       DEPRECATE_BUILD_OPTION                            #
+###########################################################################
+
+# COIN_DEPRECATE_BUILD_OPTION([macro name],[dfltaction])
+
+# Macro to encapsulate the warning / fatal error for the deprecated 'build'
+# option. From the LIBHDR chain this is fatal. From the PKG chain, it's a
+# warning.
+
+AC_DEFUN([AC_COIN_DEPRECATE_BUILD_OPTION],
+[
+  m4_bmatch([ $2 ],[.*build .*],
+    [m4_bmatch([$1],
+      [.*_LIB.*],
+      [m4_fatal(m4_newline([m4_text_wrap(
+         [$1:]
+	 [The 'default_build' or 'build' option is deprecated and not]
+	 [supported by COIN_CHK_LIB or COIN_CHK_LIBHDR.]
+	 [More generally, it is expected that COIN Third-Party packages]
+	 [will be phased out over time. Plan accordingly.]
+	 [If you really want to use 'default_build', use COIN_CHK_PKG.]
+	 [All COIN ThirdParty packages produce .pc files.],[**],[**])]))],
+      [.*_PKG.*],
+      m4_errprintn(m4_text_wrap(
+        [$1:]
+	[The 'default_build' or 'build' option is deprecated.]
+	[More generally, it is expected that COIN ThirdParty packages will be]
+	[phased out over time. Plan accordingly.],[**],[**])))])
+])dnl         # COIN_DEPRECATE_BUILD_OPTION
 
 ###########################################################################
 #                         LIBHDR_DFLT_HACK                                #
@@ -46,8 +76,9 @@ AC_DEFUN([AC_COIN_LIBHDR_DFLT_HACK],
    [link],
      m4_bmatch([m4_normalize([ $2 ])],
                              [.* separate .*],[separate],
-                             [.* together .*],[together],[$4]),
-   [DFLT_HACK unrecognised overload: $1!])])dnl     # LIBHDR_DFLT_HACK
+                             [.* together .*],[together],
+			     [$4]))])dnl
+# LIBHDR_DFLT_HACK
 
 
 ###########################################################################
@@ -119,10 +150,7 @@ AC_DEFUN([AC_COIN_LIBHDR_DFLT_HACK],
 AC_DEFUN([AC_COIN_FIND_PRIM_LIBHDR],
 [
 dnl Trap default_build right up front and fail in run_autotools.
-  m4_if(AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]),[default_build],
-    [m4_fatal(m4_normalize(
-       [For default_build, use COIN_FIND_PRIM_PKG.]
-       [All COIN Third-Party packages produce .pc files.]))])
+  AC_COIN_DEPRECATE_BUILD_OPTION([COIN_FIND_PRIM_LIBHDR],[$8])
 
 dnl Set default values for flags, action, and status. These are taken from
 dnl the macro parameters.
@@ -329,12 +357,8 @@ dnl specific request, and no check failed.
 
 AC_DEFUN([AC_COIN_CHK_LIBHDR],
 [ 
-dnl Trap default_build right up front and fail in run_autotools.
-
-  m4_if(AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]),[default_build],
-    [m4_fatal(m4_normalize(
-       [For default_build, use COIN_CHK_PKG.]
-       [All COIN Third-Party packages produce .pc files.]))])
+dnl Trap build or default_build right up front and fail in run_autotools.
+  AC_COIN_DEPRECATE_BUILD_OPTION([COIN_CHK_LIBHDR],[$8])
 
   AC_MSG_CHECKING(
     m4_ifnblank([$6],
@@ -385,7 +409,8 @@ dnl to do the heavy lifting.
       [AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,no,
          AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]))])
     AC_COIN_FIND_PRIM_LIBHDR(m4_tolower($1),
-      [$3],[$4],[$5],[$6],[$7],[$8],m4_default([$9],nodata))
+      [$3],[$4],[$5],[$6],[$7],
+      m4_if([$8],[build],[default_build],[$8]),m4_default([$9],nodata))
     if test -n "$m4_tolower($1_failmode)" ; then
       AC_MSG_RESULT([$m4_tolower(coin_has_$1) ($m4_tolower($1_failmode))])
     else
@@ -398,21 +423,21 @@ dnl to do the heavy lifting.
 dnl Try to offer some helpful advice in the event of failure.
   if test "$m4_tolower(coin_has_$1)" = "no" ; then
     if expr "$m4_tolower($1_failmode)" : '.*header.*' &>/dev/null ; then
-      AC_MSG_WARN(m4_normalize(
+      AC_MSG_WARN(m4_newline([m4_text_wrap(
 	[Compiler flags are "$m4_tolower($1)_cflags".]
-	[Check that they are correct.]
-	[You can supply correct values using --with-m4_tolower($1)-cflags.]))
+	[If you expected this test to succeed, check that they are correct.]
+	[You can supply correct values using --with-m4_tolower($1)-cflags.])]))
     fi
     if expr "$m4_tolower($1_failmode)" : '.*link.*' &>/dev/null ; then
-      AC_MSG_WARN(m4_normalize(
+      AC_MSG_WARN(m4_newline([m4_text_wrap(
 	[Linker flags are "$m4_tolower($1)_lflags".]
-	[Check that they are correct.]
-	[You can supply correct values using --with-m4_tolower($1)-lflags.]))
+	[If you expected this test to succeed, check that they are correct.]
+	[You can supply correct values using --with-m4_tolower($1)-lflags.])]))
     fi
     if expr "$m4_tolower($1_failmode)" : '.*header.*' &>/dev/null ||
        expr "$m4_tolower($1_failmode)" : '.*link.*' &>/dev/null ; then
-      AC_MSG_WARN(
-        [Check config.log for details of failed compile or link attempts.])
+      AC_MSG_WARN(m4_newline([m4_text_wrap(
+        [Check config.log for details of failed compile or link attempts.])]))
     fi
   fi
 
@@ -447,7 +472,7 @@ dnl Finally, set up PRIM_DATA, unless the user specified nodata.
        m4_toupper($1)_DATA=$m4_tolower($1_data)])
   fi
 
-])   # COIN_CHK_LIBHDR
+])dnl   # COIN_CHK_LIBHDR
 
 
 ###########################################################################
@@ -477,12 +502,10 @@ dnl Finally, set up PRIM_DATA, unless the user specified nodata.
 
 AC_DEFUN([AC_COIN_CHK_LIB],
 [ 
-dnl Trap default_build right up front and fail in run_autotools.
-  m4_if(AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]),[default_build],
-    [m4_fatal(m4_normalize(
-       [For default_build, use COIN_CHK_PKG.]
-       [All COIN Third-Party packages produce .pc files.]))])
+dnl Trap build or default_build right up front and fail in run_autotools.
+  AC_COIN_DEPRECATE_BUILD_OPTION([COIN_CHK_LIB],[$8])
 
+dnl Fabricate the call to COIN_LIBHDR
   AC_COIN_CHK_LIBHDR([$1],[$2],[$3],[$4],[$5],
     m4_ifnblank([$6],
       [[
@@ -492,7 +515,8 @@ dnl Trap default_build right up front and fail in run_autotools.
   void $6() ;
   int main () { $6() ; return (0) ; }]],[]),
     m4_ifnblank([$7],[[#include "$7"]],[]),
-    AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use])[ separate],
+    AC_COIN_LIBHDR_DFLT_HACK([usage],
+      m4_if([$8],[build],[default_build],[$8]),[default_use])[ separate],
     [$9])
-])   # COIN_CHK_LIB
+])dnl   # COIN_CHK_LIB
 
