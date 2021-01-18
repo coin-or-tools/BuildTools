@@ -300,8 +300,8 @@ dnl specific request, and no check failed.
 # The configure command line options offered to the user are controlled
 # by [cmdopts] ($9). 'nodata' offers --with-prim, --with-prim-lflags, and
 # --with-prim-cflags; 'dataonly' offers --with-prim and --with-prim-data;
-# 'all' offers all four. DEF_PRIM_ARGS and FIND_PRIM_LIB are tailored
-# accordingly. The (hardwired) default is 'nodata'.
+# 'all' offers all four. Anything else defaults to 'nodata'. DEF_PRIM_ARGS and
+# FIND_PRIM_LIB are tailored accordingly. The (hardwired) default is 'nodata'.
 
 # Macro parameters [lflgs] ($3), [cflgs] ($4), and [dflgs] ($5) are used
 # for --with-prim-lflags, --with-prim-cflags, and --with-prim-data if and
@@ -330,6 +330,7 @@ dnl specific request, and no check failed.
 AC_DEFUN([AC_COIN_CHK_LIBHDR],
 [ 
 dnl Trap default_build right up front and fail in run_autotools.
+
   m4_if(AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]),[default_build],
     [m4_fatal(m4_normalize(
        [For default_build, use COIN_CHK_PKG.]
@@ -374,13 +375,17 @@ dnl to do the heavy lifting.
   if test "$m4_tolower(coin_has_$1)" != skipping ; then
     m4_case(m4_default($9,nodata),
       nodata,  [AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,no,
-                AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]))],
+                  AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]))],
       dataonly,[AC_COIN_DEF_PRIM_ARGS([$1],yes,no,no,yes,
-                AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]))],
+                  AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]))],
                [AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,yes,
-	        AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]))])
+	          AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]))],
+      all,     [AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,yes,
+                  AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]))],
+      [AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,no,
+         AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]))])
     AC_COIN_FIND_PRIM_LIBHDR(m4_tolower($1),
-      [$3],[$4],[$5],[$6],[$7],[$8],[$9])
+      [$3],[$4],[$5],[$6],[$7],[$8],m4_default([$9],nodata))
     if test -n "$m4_tolower($1_failmode)" ; then
       AC_MSG_RESULT([$m4_tolower(coin_has_$1) ($m4_tolower($1_failmode))])
     else
@@ -422,8 +427,7 @@ dnl fail any tests. Normalise to yes or no for the remainder.
 
 dnl Create an automake conditional COIN_HAS_PRIM.
 
-  AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
-                   [test $m4_tolower(coin_has_$1) = yes])
+  AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),[test $m4_tolower(coin_has_$1) = yes])
 
 dnl If we've located the package, define preprocessor symbol PACKAGE_HAS_PRIM
 dnl and augment the necessary variables for the client packages.
