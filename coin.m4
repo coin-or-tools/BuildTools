@@ -774,23 +774,24 @@ dnl setup LIBS by adding $2 and those from $3
 #                           COIN_HAS_PKGCONFIG                            #
 ###########################################################################
 
-# Check whether a suitable pkg-config tool is available.
-# pkgconf is the up-and-coming thing, replacing pkg-config, so it is preferred.
-# The default minimal version number is 0.16.0 because COIN-OR .pc files
-# include a URL field which breaks pkg-config version <= 0.15. A more recent
-# minimum version can be specified as a parameter.
-# Portions of the macro body are derived from macros in pkg.m4.
+# Check whether a suitable pkg-config tool is available.  pkgconf is the
+# up-and-coming thing, replacing pkg-config, so it is preferred.  The default
+# minimal version number is 0.16.0 because COIN-OR .pc files include a
+# URL field which breaks pkg-config version <= 0.15. A more recent minimum
+# version can be specified as a parameter.  Portions of the macro body are
+# derived from macros in pkg.m4.
 
-# If a pkg-config tool is found, then the variable PKGCONFIG is set to its path,
-# otherwise it is set to "". Further, the AM_CONDITIONAL COIN_HAS_PKGCONFIG is set
-# and PKGCONFIG is AC_SUBST'ed.
-#
+# If a pkg-config tool is found, then the variable PKGCONFIG is set
+# to its path, otherwise it is set to "". Further, the AM_CONDITIONAL
+# COIN_HAS_PKGCONFIG is set and PKGCONFIG is AC_SUBST'ed.
+
 # Finally, the search path for .pc files is assembled from the value of
 # $prefix and $PKG_CONFIG_PATH in a variable COIN_PKG_CONFIG_PATH, which is
-# also AC_SUBST'ed.
-# The search path will include the installation directory for .pc files
-# for COIN-OR packages. COIN-OR .pc files are installed in ${libdir}/pkgconfig
-# and COIN_INITIALIZE takes care of setting up $expanded_libdir based on $libdir.
+# also AC_SUBST'ed.  The search path will include the installation directory
+# for .pc files for COIN-OR packages. COIN-OR .pc files are installed
+# in ${libdir}/pkgconfig and COIN_INITIALIZE takes care of setting up
+# $expanded_libdir based on $libdir.
+
 # Of course, this whole house of cards balances on the shaky assumption that
 # the user is sane and has installed all packages in the same place and does
 # not change that place when make executes. If not, well, it's their
@@ -816,7 +817,7 @@ dnl This is a modified version of PKG_PROG_PKG_CONFIG from pkg.m4.
    fi
   fi
 
-  # Check if PKG_CONFIG supports the short-errors flag.
+dnl Check if PKG_CONFIG supports the short-errors flag.
 dnl This is a modified version of _PKG_SHORT_ERRORS_SUPPORTED from pkg.m4.
   if test -n "$PKG_CONFIG" &&
      $PKG_CONFIG --atleast-pkgconfig-version 0.20 ; then
@@ -825,7 +826,8 @@ dnl This is a modified version of _PKG_SHORT_ERRORS_SUPPORTED from pkg.m4.
     pkg_short_errors=""
   fi
 
-  # Check whether -static option of pkg-config should be used when requesting libs
+dnl Check whether -static option of pkg-config should be used when requesting
+dnl libs
   pkg_static=
   if test -n "$PKG_CONFIG" ; then
     case "$LDFLAGS" in "-static" | "* -static*" ) pkg_static=--static ;; esac
@@ -992,330 +994,8 @@ AC_DEFUN([AC_COIN_DEF_PRIM_ARGS],
           environment.]))])
 ])   # COIN_DEF_PRIM_ARGS
 
-
 ###########################################################################
-#                     COIN_FIND_PRIM_PKG                                  #
-###########################################################################
-# COIN_FIND_PRIM_PKG([prim],[.pc file name],[default action],[cmdlineopts])
-
-# Determine whether we can use primary package prim ($1) and assemble
-# information on the required library flags (prim_lflags), compiler flags
-# (prim_cflags), and data directories (prim_data) as specified by cmdlineopts.
-
-# cmdlineopts ($4) specifies the set of configure command line options
-# defined and processed: 'nodata' produces --with-prim, --with-prim-libs, and
-# --with-prim-cflags; 'dataonly' produces --with-prim and --with-prim-data;
-# anything else ('all' works well) produces all four command line
-# options. Shell code produced by the macro is tailored based on
-# cmdlineopts. `nodata' is the default.
-
-# --with-prim is interpreted as follows: --with-prim=no is equivalent to
-# --without-prim. Any of --with-prim, --with-prim=yes, or --with-prim=build,
-# cause the macro to look for a .pc file. Any other value is taken as
-# equivalent to --with-prim-data=value (dataonly) or --with-prim-lflags=value
-# (anything else).
-
-# The algorithm first checks for a user-specified value of --with-prim;
-# if this is no, prim is skipped. Next, it looks for user specified values
-# given with command line parameters --with-prim-lflags, --with-prim-cflags,
-# and --with-prim-data. If none of these are specified, it will look for a
-# .pc file for prim using PKG_CONFIG.
-
-# Default action ($3) (no, yes, build) is the default action if the user
-# offers no guidance via command line parameters. The (hardwired) default is
-# yes.
-
-# If no .pc file names are specified, the macro will look for prim.pc if the
-# default is yes, coinprim.pc if the default is build.  If a .pc file name
-# ($2) is specified, but is not "skip", it overrides the macro defaults.
-# If $2=skip, then checks for .pc files are skipped.
-
-# Note that for the
-# majority of COIN packages, you should not specify `build' as .pc files
-# for most COIN packages are simply the package name (e.g., clp.pc). For
-# ThirdParty packages, this works (e.g., coinglpk.pc).
-
-# The macro doesn't test that the specified values actually work. This is
-# deliberate.  There's no guarantee that user-specified libraries and/or
-# directories actually exist yet. The same possibility exists for values
-# returned when pkgconf checks the .pc file.
-
-AC_DEFUN([AC_COIN_FIND_PRIM_PKG],
-[
-  AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
-
-  dflt_action=m4_default([$3],[yes])
-
-  # Initialize variables for the primary package.
-  m4_tolower(coin_has_$1)=noInfo
-  m4_tolower($1_lflags)=
-  m4_tolower($1_cflags)=
-  m4_tolower($1_data)=
-  m4_tolower($1_pcfiles)=
-
-  # --with-prim is always present.
-  withval="$m4_tolower(with_$1)"
-  if test -n "$withval" ; then
-    case "$withval" in
-      no )
-        m4_tolower(coin_has_$1)=skipping
-        ;;
-      yes )
-        m4_tolower(coin_has_$1)=requested
-        ;;
-      build )
-        m4_tolower(coin_has_$1)=build
-        ;;
-      * )
-        m4_tolower(coin_has_$1)=yes
-dnl If the client specified dataonly, its value is assigned to prim_data,
-dnl otherwise to prim_lflags.
-        m4_if(m4_default($4,nodata),dataonly,
-          [m4_tolower($1_data)="$withval"],
-          [m4_tolower($1_lflags)="$withval"])
-        ;;
-    esac
-  fi
-
-dnl --with-prim-libs and --with-prim-cflags are present unless the client
-dnl specified dataonly.
-  m4_if(m4_default($4,nodata),dataonly,[],
-    [# Specifying --with-prim=no overrides the individual options for lflags and cflags.
-     if test "$m4_tolower(coin_has_$1)" != skipping ; then
-       withval="$m4_tolower(with_$1_lflags)"
-       if test -n "$withval" ; then
-         case "$withval" in
-           build | no | yes )
-             AC_MSG_ERROR(["$withval" is not valid here; please specify linker flags appropriate for your environment.])
-             ;;
-           * )
-             m4_tolower(coin_has_$1)=yes
-             m4_tolower($1_lflags)="$withval"
-             ;;
-         esac
-       fi
-
-       withval="$m4_tolower(with_$1_cflags)"
-       if test -n "$withval" ; then
-         case "$withval" in
-           build | no | yes )
-             AC_MSG_ERROR(["$withval" is not valid here; please specify compiler flags appropriate for your environment.])
-             ;;
-           * )
-             m4_tolower(coin_has_$1)=yes
-             m4_tolower($1_cflags)="$withval"
-             ;;
-         esac
-       fi
-     fi])
-
-dnl --with-prim-data will be present unless the client specified nodata.
-  m4_if(m4_default($4,nodata),nodata,[],
-    [# Specifying --with-prim=no overrides the individual option for data.
-     if test "$m4_tolower(coin_has_$1)" != skipping ; then
-       withval="$m4_tolower(with_$1_data)"
-       if test -n "$withval" ; then
-         case "$withval" in
-           build | no | yes )
-             AC_MSG_ERROR(["$withval" is not valid here; please give a data directory specification appropriate for your environment.])
-             ;;
-           * )
-             m4_tolower(coin_has_$1)=yes
-             m4_tolower($1_data)="$withval"
-             ;;
-         esac
-       fi
-     fi])
-
-  # At this point, coin_has_prim can be one of
-  # - noInfo (no user options specified),
-  # - skipping (user said no),
-  # - requested,
-  # - build (user said yes or build and gave no further guidance),
-  # - or yes (user specified one or more --with-prim options).
-  # If we're already at yes or skipping, we're done looking.
-
-  # If there are no user options (noInfo) and the default is no, we're skipping.
-  # Otherwise, the default must be yes or build; consider the package requested.
-  # A default action we don't recognise defaults to yes.
-  if test "$m4_tolower(coin_has_$1)" = noInfo ; then
-    case $dflt_action in
-      no )
-        m4_tolower(coin_has_$1)=skipping
-        ;;
-      build )
-        m4_tolower(coin_has_$1)=build
-        ;;
-      * )
-        m4_tolower(coin_has_$1)=requested
-        ;;
-    esac
-  fi
-
-  # Now coin_has_prim can be one of skipping, yes, requested, or build.
-  # For requested or build, try pkgconf, if it's available.
-  # If it's not available, well, hope that the user knows their system
-  # and prim can be used with no additional flags.
-  case $m4_tolower(coin_has_$1) in
-    requested | build )
-      if test -n "$PKG_CONFIG" -a "$2" != skip ; then
-        m4_ifnblank($2,
-          [pcfile="$2"],
-          [if test $m4_tolower(coin_has_$1) = build ; then
-             pcfile=m4_tolower(coin$1)
-           else
-             pcfile=m4_tolower($1)
-           fi])
-        AC_COIN_CHK_MOD_EXISTS([$1],[$pcfile],
-          [m4_tolower(coin_has_$1)=yes
-           m4_tolower($1_data)=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --variable=datadir "$pcfile" 2>/dev/null`
-           m4_tolower($1_pcfiles)="$pcfile"],
-          [m4_tolower(coin_has_$1)=no])
-      else
-        m4_tolower(coin_has_$1)=no
-      fi
-      ;;
-    skipping | yes )
-      ;;
-    * )
-      AC_MSG_WARN([Unexpected status "$m4_tolower(coin_has_$1)" in COIN_FIND_PRIM_PKG])
-      ;;
-  esac
-
-  # The final value of coin_has_prim will be yes, no, or skipping.
-  # No means we looked (with pkgconfig) and didn't find anything.
-  # Skipping means the user said `don't use.'
-  # Yes means we have something, from the user or from pkgconfig.
-  # Note that we haven't run a useability test!
-
-  # Define BUILDTOOLS_DEBUG to enable debugging output
-  if test "$BUILDTOOLS_DEBUG" = 1 ; then
-    AC_MSG_NOTICE([FIND_PRIM_PKG result for $1: "$m4_tolower(coin_has_$1)"])
-    AC_MSG_NOTICE([Collected values for package '$1'])
-    AC_MSG_NOTICE([m4_tolower($1_lflags) is "$m4_tolower($1_lflags)"])
-    AC_MSG_NOTICE([m4_tolower($1_cflags) is "$m4_tolower($1_cflags)"])
-    AC_MSG_NOTICE([m4_tolower($1_data) is "$m4_tolower($1_data)"])
-    AC_MSG_NOTICE([m4_tolower($1_pcfiles) is "$m4_tolower($1_pcfiles)"])
-  fi
-
-])  # COIN_FIND_PRIM_PKG
-
-
-###########################################################################
-#                          COIN_CHK_PKG                                   #
-###########################################################################
-
-# COIN_CHK_PKG([prim],[client packages],[.pc file name],
-#              [default action],[cmdopts])
-
-# Determine whether we can use primary package prim ($1) and assemble
-# information on the required linker flags (prim_lflags), compiler flags
-# (prim_cflags), and data directories (prim_data).
-
-# The configure command line options offered to the user are controlled
-# by cmdopts ($5). 'nodata' offers --with-prim, --with-prim-lflags, and
-# --with-prim-cflags. 'dataonly' offers --with-prim and --with-prim-data.
-# 'all' offers all four. DEF_PRIM_ARGS and FIND_PRIM_PKG are tailored
-# accordingly. The (hardwired) default is 'nodata'.
-
-# Default action ($4) (no, yes, build) is the default action if the user
-# offers no guidance via command line parameters. Really, 'build' has no hope
-# of working except for COIN ThirdParty packages. Don't use it for other COIN
-# packages.
-
-# If no .pc file names are specified, the macro will look for prim.pc if the
-# default is yes, coinprim.pc if the default is build.  If a .pc file name
-# ($3) is specified, it overrides the macro defaults.
-
-# Define an automake conditional COIN_HAS_PRIM to record the result. If we
-# decide to use prim, also define a preprocessor symbol COIN_HAS_PRIM.
-
-# Linker and compiler flag information will be propagated to the space-
-# separated list of client packages ($2) using the _PCFILES variable if
-# a .pc file is used, otherwise by the _LFLAGS and _CFLAGS variables of
-# client packages. These variables match Requires.private, Libs.private,
-# and Cflags.private, respectively, in a .pc file.
-
-# Data directory information is used differently. Typically what's wanted is
-# individual variables specifying the data directory for each primitive. Hence
-# the macro defines PRIM_DATA for the primitive.
-
-# The macro doesn't test that the specified values actually work. This is
-# deliberate.  There's no guarantee that user-specified libraries and/or
-# directories actually exist yet. The same possibility exists for values
-# returned when pkgconf checks the .pc file.
-
-AC_DEFUN([AC_COIN_CHK_PKG],
-[
-  AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
-
-  AC_MSG_CHECKING([for package $1])
-
-dnl Make sure the necessary variables exist for each client package.
-  m4_foreach_w([myvar],[$2],
-    [AC_SUBST(m4_toupper(myvar)_LFLAGS)
-     AC_SUBST(m4_toupper(myvar)_CFLAGS)
-     AC_SUBST(m4_toupper(myvar)_PCFILES)
-    ])
-
-  # Check to see if the user has set an override to skip this primary.
-  m4_tolower(coin_has_$1)=noInfo
-  if test x"$COIN_SKIP_PROJECTS" != x ; then
-    for pkg in $COIN_SKIP_PROJECTS ; do
-      if test "$m4_tolower(pkg)" = "$m4_tolower($1)" ; then
-        m4_tolower(coin_has_$1)=skipping
-      fi
-    done
-  fi
-
-dnl If we are not skipping this primary, define and process the command line
-dnl options according to the cmdopts parameter. Then invoke FIND_PRIM_PKG to do
-dnl the heavy lifting.
-  if test "$m4_tolower(coin_has_$1)" != skipping ; then
-    m4_case(m4_default($5,nodata),
-      nodata,[AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,no,$4)],
-      dataonly,[AC_COIN_DEF_PRIM_ARGS([$1],yes,no,no,yes,$4)],
-      [AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,yes,$4)])
-    AC_COIN_FIND_PRIM_PKG(m4_tolower($1),[$3],[$4],[$5])
-    AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
-    m4_bmatch([$3],skip,,[
-      if test "$PKG_CONFIG$m4_tolower(coin_has_$1)" = no ; then
-        AC_MSG_WARN([Check for $1 via pkg-config was skipped as no pkg-config available. If $1 was meant to be found, then consider installing pkg-config or provide appropriate --with-m4_tolower($1)-lflags, --with-m4_tolower($1)-cflags, etc.])
-      fi])
-  else
-    AC_MSG_RESULT([$m4_tolower(coin_has_$1) due to COIN_SKIP_PROJECTS])
-  fi
-
-  # Possibilities are `yes', 'no', or `skipping'. Normalise to `yes' or `no'.
-  if test "$m4_tolower(coin_has_$1)" != yes ; then
-    m4_tolower(coin_has_$1)=no
-  fi
-
-dnl Create an automake conditional COIN_HAS_PRIM.
-  AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),
-                   [test $m4_tolower(coin_has_$1) = yes])
-
-  # If we have located the package, define preprocessor symbol PKG_HAS_PRIM and
-  # augment the necessary variables for the client packages.
-  if test $m4_tolower(coin_has_$1) = yes ; then
-    AC_DEFINE(m4_toupper(AC_PACKAGE_NAME)_HAS_[]m4_toupper($1),[1],
-      [Define to 1 if $1 is available.])
-    m4_foreach_w([myvar],[$2],
-      [if test -n "$m4_tolower($1_pcfiles)" ; then m4_toupper(myvar)_PCFILES="$m4_tolower($1_pcfiles) $m4_toupper(myvar)_PCFILES" ; fi
-       m4_toupper(myvar)_LFLAGS="$m4_tolower($1_lflags) $m4_toupper(myvar)_LFLAGS"
-       m4_toupper(myvar)_CFLAGS="$m4_tolower($1_cflags) $m4_toupper(myvar)_CFLAGS"
-      ])
-
-dnl Finally, set up PRIM_DATA, unless the user specified nodata.
-    m4_if(m4_default([$5],nodata),nodata,[],
-      [AC_SUBST(m4_toupper($1)_DATA)
-       m4_toupper($1)_DATA=$m4_tolower($1_data)])
-  fi
-])   # COIN_CHK_PKG
-
-
-###########################################################################
-#                          FIND_PRIM_LIB                                  #
+#                     FIND_PRIM_LIB (obsolete)                            #
 ###########################################################################
 
 # COIN_FIND_PRIM_LIB([prim],[lflgs],[cflgs],[dflgs],
@@ -1369,7 +1049,7 @@ dnl Finally, set up PRIM_DATA, unless the user specified nodata.
 # flags. Except for the link check, all we're doing here is filling in
 # variables using a complicated algorithm.
 
-AC_DEFUN([AC_COIN_FIND_PRIM_LIB],
+AC_DEFUN([AC_COIN_FIND_PRIM_LIB_OBS],
 [
   dflt_action=m4_default([$7],[yes])
 
