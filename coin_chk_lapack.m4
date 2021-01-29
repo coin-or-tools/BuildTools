@@ -45,10 +45,10 @@ dnl attention if the user says 'no' on the command lin.
     if test -n "$with_lapack_lflags" ; then
       AC_COIN_TRY_LINK([dorhr_col],[$with_lapack_lflags],[],
         [coin_has_lapack=yes
-         lapack_what="user-specified"
+         lapack_what="user-specified ($with_lapack_lflags)"
          lapack_keep_looking=no
          lapack_lflags=$with_lapack_lflags],
-        [AC_MSG_ERROR([Cannot link to user-specified Lapack.])])
+        [AC_MSG_ERROR([Cannot link to user-specified Lapack $with_lapack_lflags.])])
     fi
   else
     lapack_keep_looking=no
@@ -72,17 +72,9 @@ dnl Linux/Darwin.
         AC_COIN_TRY_LINK([dorhr_col],
           [-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],
           [coin_has_lapack=yes
-           lapack_what="Linux MKL"
-           lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"])
-      ;;
-
-dnl Do SGI systems even exist any more? Do we need this? -- lh, 201114 --
-      *-sgi-*)
-        AC_COIN_TRY_LINK([dorhr_col],
-          [-lcomplib.sgimath],[],
-          [coin_has_lapack=yes
-          lapack_what="SGI sgimath"
-          lapack_lflags=-lcomplib.sgimath])
+           lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"
+           lapack_what="Intel MKL ($lapack_lflags)"
+          ])
       ;;
 
 dnl Ideally, we would use -library=sunperf, but it is an imperfect world.
@@ -96,8 +88,9 @@ dnl can arrange that explicitly.
         AC_COIN_TRY_LINK([dorhr_col],
           [-lsunperf],[],
           [coin_has_lapack=yes
-           lapack_what="Solaris sunperf"
-           lapack_lflags=-lsunperf])
+           lapack_lflags=-lsunperf
+           lapack_what="Sun Performance Library ($lapack_lflags)"
+         ])
       ;;
 
       *-cygwin* | *-mingw* | *-msys*)
@@ -128,8 +121,9 @@ dnl it by default?
         if test -n "$coin_mkl" ; then
            AC_COIN_TRY_LINK([dorhr_col],[$coin_mkl],[],
                [coin_has_lapack=yes
-                lapack_what="Intel MKL"
-                lapack_lflags="$coin_mkl"])
+                lapack_lflags="$coin_mkl"
+                lapack_what="Intel MKL ($lapack_lflags)"
+               ])
         fi
       ;;
 
@@ -137,14 +131,17 @@ dnl it by default?
         AC_COIN_TRY_LINK([dorhr_col],
           [-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],
           [coin_has_lapack=yes
-           lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"],
+           lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"
+           lapack_what="Intel MKL ($lapack_lflags)"
+          ],
           [],[no])
         if test "$coin_has_lapack" = no ; then
           AC_COIN_TRY_LINK([dorhr_col],
             [-framework Accelerate],[],
             [coin_has_lapack=yes
-             lapack_what="Darwin accelerate"
-             lapack_lflags="-framework Accelerate"])
+             lapack_lflags="-framework Accelerate"
+             lapack_what="Accelerate framework ($lapack_lflags)"
+            ])
         fi
       ;;
     esac
@@ -158,7 +155,7 @@ dnl links. We check for both to ensure that blas lib also appears on link line
 dnl in case someone wants to use Blas functions but tests only for Lapack.
   if test "$lapack_keep_looking" = yes ; then
     AC_COIN_CHK_MOD_EXISTS([lapack],[lapack blas],
-      [lapack_what="generic module"
+      [lapack_what="generic module (lapack.pc blas.pc)"
        AC_COIN_TRY_LINK([dorhr_col],[],[lapack],
         [coin_has_lapack=yes
          lapack_keep_looking=no
@@ -175,20 +172,14 @@ dnl for Lapack.
     AC_COIN_TRY_LINK([dorhr_col],[-llapack -lblas],[],
       [coin_has_lapack=yes
        lapack_lflags="-llapack -lblas"
-       lapack_what="generic library"])
+       lapack_what="generic library ($lapack_lflags)"])
   fi
 dnl TODO do we need another check with -llapack only?
 
 dnl Inform the user of the result.
   case "$coin_has_lapack" in
     yes)
-      AC_MSG_RESULT([$coin_has_lapack ($lapack_what)])
-      if test -n "$lapack_lflags" ; then
-        AC_MSG_NOTICE([  link flags: '$lapack_lflags'])
-      fi
-      if test -n "$lapack_pcfiles" ; then
-        AC_MSG_NOTICE([  .pc files: '$lapack_pcfiles'])
-      fi
+      AC_MSG_RESULT([$coin_has_lapack: $lapack_what])
       ;;
     no)
       if test -n "$lapack_what" ; then
@@ -221,4 +212,3 @@ dnl client packages.
       ])
   fi
 ]) # AC_COIN_CHK_LAPACK
-
