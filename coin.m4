@@ -668,7 +668,7 @@ dnl setup LIBS by adding $2 and those from $3
 
   for ac_extra in "no extra underscore" "extra underscore" ; do
     for ac_case in "lower case" "upper case" ; do
-      for ac_trail in "no underscore" "underscore" ; do
+      for ac_trail in "underscore" "no underscore" ; do
         case $ac_case in
           "lower case")
             ac_name=m4_tolower($1)
