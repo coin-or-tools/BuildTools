@@ -16,18 +16,18 @@ AC_DEFUN([AC_COIN_DEPRECATE_BUILD_OPTION],
       [.*_LIB.*],
       [m4_fatal(m4_newline([m4_text_wrap(
          [$1:]
-	 [The 'default_build' or 'build' option is deprecated and not]
-	 [supported by COIN_CHK_LIB or COIN_CHK_LIBHDR.]
-	 [More generally, it is expected that COIN Third-Party packages]
-	 [will be phased out over time. Plan accordingly.]
-	 [If you really want to use 'default_build', use COIN_CHK_PKG.]
-	 [All COIN ThirdParty packages produce .pc files.],[**],[**])]))],
+      [The 'default_build' or 'build' option is deprecated and not]
+      [supported by COIN_CHK_LIB or COIN_CHK_LIBHDR.]
+      [More generally, it is expected that COIN Third-Party packages]
+      [will be phased out over time. Plan accordingly.]
+      [If you really want to use 'default_build', use COIN_CHK_PKG.]
+      [All COIN-OR ThirdParty packages produce .pc files.],[**],[**])]))],
       [.*_PKG.*],
       m4_errprintn(m4_text_wrap(
         [$1:]
-	[The 'default_build' or 'build' option is deprecated.]
-	[More generally, it is expected that COIN ThirdParty packages will be]
-	[phased out over time. Plan accordingly.],[**],[**])))])
+        [The 'default_build' or 'build' option is deprecated.]
+        [More generally, it is expected that COIN-OR ThirdParty packages will be]
+        [phased out over time. Plan accordingly.],[**],[**])))])
 ])dnl         # COIN_DEPRECATE_BUILD_OPTION
 
 ###########################################################################
@@ -77,7 +77,7 @@ AC_DEFUN([AC_COIN_LIBHDR_DFLT_HACK],
      m4_bmatch([m4_normalize([ $2 ])],
                              [.* separate .*],[separate],
                              [.* together .*],[together],
-			     [$4]))])dnl
+                             [$4]))])dnl
 # LIBHDR_DFLT_HACK
 
 
@@ -174,15 +174,15 @@ dnl 'yes'.
     case "$withval" in
       no )
         m4_tolower(coin_has_$1)=skipping
-	m4_tolower($1_failmode)='command line'
+        m4_tolower($1_failmode)='command line'
         ;;
       yes )
         m4_tolower(coin_has_$1)=requested
-	m4_tolower($1_failmode)=''
+        m4_tolower($1_failmode)=''
         ;;
       * )
         m4_tolower(coin_has_$1)=requested
-	m4_tolower($1_failmode)=''
+        m4_tolower($1_failmode)=''
         m4_if(m4_default($8,nodata),dataonly,
           [m4_tolower($1_data)="$withval"],
           [m4_tolower($1_lflags)="$withval"])
@@ -205,14 +205,14 @@ dnl values.
     [if test "$m4_tolower(coin_has_$1)" != skipping ; then
        withval="$m4_tolower(with_$1_lflags)"
        if test -n "$withval" ; then
-	 m4_tolower(coin_has_$1)=requested
-	 m4_tolower($1_lflags)="$withval"
+         m4_tolower(coin_has_$1)=requested
+         m4_tolower($1_lflags)="$withval"
        fi
 
        withval="$m4_tolower(with_$1_cflags)"
        if test -n "$withval" ; then
-	 m4_tolower(coin_has_$1)=requested
-	 m4_tolower($1_cflags)="$withval"
+         m4_tolower(coin_has_$1)=requested
+         m4_tolower($1_cflags)="$withval"
        fi
      fi])
 
@@ -223,8 +223,8 @@ dnl --with-prim-data. A value will override the parameter value.
     [if test "$m4_tolower(coin_has_$1)" != skipping ; then
        withval="$m4_tolower(with_$1_data)"
        if test -n "$withval" ; then
-	 m4_tolower(coin_has_$1)=requested
-	 m4_tolower($1_data)="$withval"
+         m4_tolower(coin_has_$1)=requested
+         m4_tolower($1_data)="$withval"
        fi
      fi])
 
@@ -240,8 +240,8 @@ dnl If we have [includes], try to compile them.
        CPPFLAGS="$m4_tolower($1_cflags)"
        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([$6],[])],
          [],
-	 [m4_tolower(coin_has_$1)='no'
-	  m4_tolower($1_failmode)="header compile"])
+         [m4_tolower(coin_has_$1)='no'
+          m4_tolower($1_failmode)="header compile"])
        CPPFLAGS=$ac_save_CPPFLAGS
      fi])
 
@@ -257,22 +257,22 @@ dnl otherwise by '*separate' as [dfltaction].
        CPPFLAGS="$m4_tolower($1_cflags)"
        m4_if(
          AC_COIN_LIBHDR_DFLT_HACK([link],[$7],[unused],[together]),[separate],
-	 [AC_LINK_IFELSE([AC_LANG_SOURCE([$5])],
-	    [],
-	    [m4_tolower(coin_has_$1)='no'
-	     if test -n "$m4_tolower($1_failmode)" ; then
-	       m4_tolower($1_failmode)="$m4_tolower($1_failmode), bare link"
-	     else
-	       m4_tolower($1_failmode)="bare link"
-	     fi])],
-	 [AC_LINK_IFELSE([AC_LANG_PROGRAM([$6],[$5])],
-	    [],
-	    [m4_tolower(coin_has_$1)='no'
-	     if test -n "$m4_tolower($1_failmode)" ; then
-	       m4_tolower($1_failmode)="$m4_tolower($1_failmode), link with header"
-	     else
-	       m4_tolower($1_failmode)="link with header"
-	     fi])])
+         [AC_LINK_IFELSE([AC_LANG_SOURCE([$5])],
+           [],
+           [m4_tolower(coin_has_$1)='no'
+            if test -n "$m4_tolower($1_failmode)" ; then
+              m4_tolower($1_failmode)="$m4_tolower($1_failmode), bare link"
+            else
+              m4_tolower($1_failmode)="bare link"
+            fi])],
+         [AC_LINK_IFELSE([AC_LANG_PROGRAM([$6],[$5])],
+           [],
+           [m4_tolower(coin_has_$1)='no'
+            if test -n "$m4_tolower($1_failmode)" ; then
+              m4_tolower($1_failmode)="$m4_tolower($1_failmode), link with header"
+            else
+              m4_tolower($1_failmode)="link with header"
+            fi])])
        LIBS=$ac_save_LIBS
        CPPFLAGS=$ac_save_CPPFLAGS
      fi])
@@ -364,11 +364,11 @@ dnl Trap build or default_build right up front and fail in run_autotools.
     m4_ifnblank([$6],
       m4_ifnblank([$7],
         m4_normalize([for library $1 with
-	  m4_if(
-	    AC_COIN_LIBHDR_DFLT_HACK([link],[$8],[unused],[together]),
-	    [together],
-	    [combined link and compile check],
-	    [separate link and compile checks])]),
+        m4_if(
+          AC_COIN_LIBHDR_DFLT_HACK([link],[$8],[unused],[together]),
+          [together],
+          [combined link and compile check],
+          [separate link and compile checks])]),
         [for library $1 with link check]),
       m4_ifnblank([$7],[for library $1 with compile check],
                        [for library $1 (setting flags only)])))
@@ -403,7 +403,7 @@ dnl to do the heavy lifting.
       dataonly,[AC_COIN_DEF_PRIM_ARGS([$1],yes,no,no,yes,
                   AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]))],
                [AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,yes,
-	          AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]))],
+                  AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]))],
       all,     [AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,yes,
                   AC_COIN_LIBHDR_DFLT_HACK([usage],[$8],[default_use]))],
       [AC_COIN_DEF_PRIM_ARGS([$1],yes,yes,yes,no,
@@ -424,15 +424,15 @@ dnl Try to offer some helpful advice in the event of failure.
   if test "$m4_tolower(coin_has_$1)" = "no" ; then
     if expr "$m4_tolower($1_failmode)" : '.*header.*' &>/dev/null ; then
       AC_MSG_WARN(m4_newline([m4_text_wrap(
-	[Compiler flags are "$m4_tolower($1)_cflags".]
-	[If you expected this test to succeed, check that they are correct.]
-	[You can supply correct values using --with-m4_tolower($1)-cflags.])]))
+       [Compiler flags are "$m4_tolower($1)_cflags".]
+       [If you expected this test to succeed, check that they are correct.]
+       [You can supply correct values using --with-m4_tolower($1)-cflags.])]))
     fi
     if expr "$m4_tolower($1_failmode)" : '.*link.*' &>/dev/null ; then
       AC_MSG_WARN(m4_newline([m4_text_wrap(
-	[Linker flags are "$m4_tolower($1)_lflags".]
-	[If you expected this test to succeed, check that they are correct.]
-	[You can supply correct values using --with-m4_tolower($1)-lflags.])]))
+        [Linker flags are "$m4_tolower($1)_lflags".]
+        [If you expected this test to succeed, check that they are correct.]
+        [You can supply correct values using --with-m4_tolower($1)-lflags.])]))
     fi
     if expr "$m4_tolower($1_failmode)" : '.*header.*' &>/dev/null ||
        expr "$m4_tolower($1_failmode)" : '.*link.*' &>/dev/null ; then

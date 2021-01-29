@@ -45,10 +45,10 @@ dnl attention if the user says 'no' on the command lin.
     if test -n "$with_lapack_lflags" ; then
       AC_COIN_TRY_LINK([dorhr_col],[$with_lapack_lflags],[],
         [coin_has_lapack=yes
-	 lapack_what="user-specified"
-	 lapack_keep_looking=no
-	 lapack_lflags=$with_lapack_lflags],
-	[AC_MSG_ERROR([Cannot link to user-specified Lapack.])])
+         lapack_what="user-specified"
+         lapack_keep_looking=no
+         lapack_lflags=$with_lapack_lflags],
+        [AC_MSG_ERROR([Cannot link to user-specified Lapack.])])
     fi
   else
     lapack_keep_looking=no
@@ -70,19 +70,19 @@ dnl Linux/Darwin.
     case $build in
       *-linux*)
         AC_COIN_TRY_LINK([dorhr_col],
-	  [-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],
-	  [coin_has_lapack=yes
-	   lapack_what="Linux MKL"
+          [-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],
+          [coin_has_lapack=yes
+           lapack_what="Linux MKL"
            lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"])
       ;;
 
 dnl Do SGI systems even exist any more? Do we need this? -- lh, 201114 --
       *-sgi-*)
         AC_COIN_TRY_LINK([dorhr_col],
-	  [-lcomplib.sgimath],[],
-	  [coin_has_lapack=yes
-	   lapack_what="SGI sgimath"
-	   lapack_lflags=-lcomplib.sgimath])
+          [-lcomplib.sgimath],[],
+          [coin_has_lapack=yes
+          lapack_what="SGI sgimath"
+          lapack_lflags=-lcomplib.sgimath])
       ;;
 
 dnl Ideally, we would use -library=sunperf, but it is an imperfect world.
@@ -94,9 +94,9 @@ dnl for the Fortran run-time libraries to be linked for C++ and C. We
 dnl can arrange that explicitly.
       *-*-solaris*)
         AC_COIN_TRY_LINK([dorhr_col],
-	  [-lsunperf],[],
-	  [coin_has_lapack=yes
-	   lapack_what="Solaris sunperf"
+          [-lsunperf],[],
+          [coin_has_lapack=yes
+           lapack_what="Solaris sunperf"
            lapack_lflags=-lsunperf])
       ;;
 
@@ -128,22 +128,22 @@ dnl it by default?
         if test -n "$coin_mkl" ; then
            AC_COIN_TRY_LINK([dorhr_col],[$coin_mkl],[],
                [coin_has_lapack=yes
-	        lapack_what="Intel MKL"
+                lapack_what="Intel MKL"
                 lapack_lflags="$coin_mkl"])
         fi
       ;;
 
       *-darwin*)
         AC_COIN_TRY_LINK([dorhr_col],
-	  [-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],
-	  [coin_has_lapack=yes
+          [-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],
+          [coin_has_lapack=yes
            lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"],
-	  [],[no])
+          [],[no])
         if test "$coin_has_lapack" = no ; then
           AC_COIN_TRY_LINK([dorhr_col],
-	    [-framework Accelerate],[],
-	    [coin_has_lapack=yes
-	     lapack_what="Darwin accelerate"
+            [-framework Accelerate],[],
+            [coin_has_lapack=yes
+             lapack_what="Darwin accelerate"
              lapack_lflags="-framework Accelerate"])
         fi
       ;;
@@ -161,7 +161,7 @@ dnl in case someone wants to use Blas functions but tests only for Lapack.
       [lapack_what="generic module"
        AC_COIN_TRY_LINK([dorhr_col],[],[lapack],
         [coin_has_lapack=yes
-	 lapack_keep_looking=no
+         lapack_keep_looking=no
          lapack_pcfiles="lapack blas"],
         [AC_MSG_WARN([lapack.pc and blas.pc present, but could not find dorhr_col when trying to link with LAPACK.])])])
   fi

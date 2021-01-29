@@ -667,7 +667,7 @@ AC_DEFUN([AC_COIN_NAMEMANGLING],
      m4_ifblank([$3], [LIBS="-l$1"], [LIBS="$3"])
      for ac_extra in "no extra underscore" "extra underscore" ; do
        for ac_case in "lower case" "upper case" ; do
-	 for ac_trail in "underscore" "no underscore" ; do
+         for ac_trail in "underscore" "no underscore" ; do
            m4_tolower(ac_cv_$1_namemangling)="${ac_case}, ${ac_trail}, ${ac_extra}"
            case $ac_case in
              "lower case")

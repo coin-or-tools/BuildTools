@@ -99,7 +99,7 @@ dnl be equivalent to 'yes'.
         ;;
       build )
         m4_tolower(coin_has_$1)=requested
-	m4_tolower($1_build)=yes
+        m4_tolower($1_build)=yes
         m4_tolower($1_failmode)=''
         ;;
       * )
@@ -131,8 +131,8 @@ dnl accept them on faith.
          case "$withval" in
            build | no | yes )
              AC_MSG_ERROR(m4_normalize(
-	       ["$withval" is not useful here; please specify link flags]
-	       [appropriate for your environment.]))
+               ["$withval" is not useful here; please specify link flags]
+               [appropriate for your environment.]))
              ;;
            * )
              m4_tolower(coin_has_$1)=yes
@@ -146,8 +146,8 @@ dnl accept them on faith.
          case "$withval" in
            build | no | yes )
              AC_MSG_ERROR(m4_normalize(
-	       ["$withval" is not useful here; please specify compile flags]
-	       [appropriate for your environment.]))
+               ["$withval" is not useful here; please specify compile flags]
+               [appropriate for your environment.]))
              ;;
            * )
              m4_tolower(coin_has_$1)=yes
@@ -165,8 +165,8 @@ dnl really can't do anything except accept on faith.
     [if test "$m4_tolower(coin_has_$1)" != skipping ; then
        withval="$m4_tolower(with_$1_data)"
        if test -n "$withval" ; then
-	 m4_tolower(coin_has_$1)=yes
-	 m4_tolower($1_data)="$withval"
+         m4_tolower(coin_has_$1)=yes
+         m4_tolower($1_data)="$withval"
        fi
      fi])
 
@@ -183,27 +183,25 @@ dnl thing if the .pc file name is the first word in the pcfile string
   if test $m4_tolower(coin_has_$1) = requested ; then
     if test -n "$PKG_CONFIG" ; then
       if test x"$m4_tolower($1_build)" = xyes ; then
-	pcfile="coin$m4_tolower($1)_pcfiles"
+        pcfile="coin$m4_tolower($1)_pcfiles"
         AC_COIN_CHK_MOD_EXISTS([$1],[$pcfile],
-	  [m4_tolower(coin_has_$1)=yes],
-	  [m4_tolower(coin_has_$1)=no])
+         [m4_tolower(coin_has_$1)=yes],
+         [m4_tolower(coin_has_$1)=no])
       fi
       if ! test $m4_tolower(coin_has_$1) = yes ; then
         pcfile="$m4_tolower($1)_pcfiles"
         AC_COIN_CHK_MOD_EXISTS([$1],[$pcfile],
-	  [m4_tolower(coin_has_$1)=yes],
-	  [m4_tolower(coin_has_$1)=no])
+          [m4_tolower(coin_has_$1)=yes],
+          [m4_tolower(coin_has_$1)=no])
       fi
       if test $m4_tolower(coin_has_$1) = yes ; then
-	m4_tolower($1_data)=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --variable=datadir "$pcfile" 2>/dev/null`
-	m4_tolower($1_pcfiles)="$pcfile"
+        m4_tolower($1_data)=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --variable=datadir "$pcfile" 2>/dev/null`
+        m4_tolower($1_pcfiles)="$pcfile"
       fi
     else
       AC_MSG_WARN(m4_normalize(
-        [Check for $1 via pkg-config could not be performed as there is no]
-	[pkg-config available.]
-	[Consider installing pkg-config or  provide appropriate values for]
-	[--with-m4_tolower($1)-lflags and --with-m4_tolower($1)-cflags.]))
+        [Check for $1 via pkg-config could not be performed as there is no pkg-config available.]
+        [Consider installing pkg-config or  provide appropriate values for --with-m4_tolower($1)-lflags and --with-m4_tolower($1)-cflags.]))
       m4_tolower(coin_has_$1)=no
     fi
   fi
@@ -320,7 +318,7 @@ dnl 'default_build'. This should go away eventually. -lh,210118-
          AC_COIN_LIBHDR_DFLT_HACK([usage],[$4],[default_use]))])
     AC_COIN_FIND_PRIM_PKG(m4_tolower($1),m4_default([$3],m4_tolower($1)),
                           m4_if([$4],[build],[default_build],[$4]),
-			  m4_default([$5],nodata))
+                          m4_default([$5],nodata))
     AC_MSG_RESULT([$m4_tolower(coin_has_$1)])
   else
     AC_MSG_RESULT([$m4_tolower(coin_has_$1) (COIN_SKIP_PROJECTS)])
