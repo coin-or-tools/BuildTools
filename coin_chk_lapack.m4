@@ -42,6 +42,10 @@ dnl Assume the worst and persist in the face of failure.
 dnl Look for user-specified lapack flags and try them if present. Pay
 dnl attention if the user says 'no' on the command lin.
   if test "$with_lapack" != "no" ; then
+dnl If --with-lapack is neither no or yes, then treat it as if --with-lapack-lflags was actually meant
+    if test "$with_lapack" != "yes" ; then
+      with_lapack_lflags="$with_lapack"
+    fi
     if test -n "$with_lapack_lflags" ; then
       AC_COIN_TRY_LINK([dorhr_col],[$with_lapack_lflags],[],
         [coin_has_lapack=yes
