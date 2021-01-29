@@ -47,7 +47,7 @@ dnl If --with-lapack is neither no or yes, then treat it as if --with-lapack-lfl
       with_lapack_lflags="$with_lapack"
     fi
     if test -n "$with_lapack_lflags" ; then
-      AC_COIN_TRY_LINK([dorhr_col],[$with_lapack_lflags],[],
+      AC_COIN_TRY_LINK([dsyev],[$with_lapack_lflags],[],
         [coin_has_lapack=yes
          lapack_what="user-specified ($with_lapack_lflags)"
          lapack_keep_looking=no
@@ -73,7 +73,7 @@ dnl Linux/Darwin.
   if test "$lapack_keep_looking" = yes ; then
     case $build in
       *-linux*)
-        AC_COIN_TRY_LINK([dorhr_col],
+        AC_COIN_TRY_LINK([dsyev],
           [-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],
           [coin_has_lapack=yes
            lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"
@@ -89,7 +89,7 @@ dnl 13. The main extra function of -xlic_lib and -library is to arrange
 dnl for the Fortran run-time libraries to be linked for C++ and C. We
 dnl can arrange that explicitly.
       *-*-solaris*)
-        AC_COIN_TRY_LINK([dorhr_col],
+        AC_COIN_TRY_LINK([dsyev],
           [-lsunperf],[],
           [coin_has_lapack=yes
            lapack_lflags=-lsunperf
@@ -123,7 +123,7 @@ dnl it by default?
         done
         IFS="$old_IFS"
         if test -n "$coin_mkl" ; then
-           AC_COIN_TRY_LINK([dorhr_col],[$coin_mkl],[],
+           AC_COIN_TRY_LINK([dsyev],[$coin_mkl],[],
                [coin_has_lapack=yes
                 lapack_lflags="$coin_mkl"
                 lapack_what="Intel MKL ($lapack_lflags)"
@@ -132,14 +132,14 @@ dnl it by default?
       ;;
 
       *-darwin*)
-        AC_COIN_TRY_LINK([dorhr_col],
+        AC_COIN_TRY_LINK([dsyev],
           [-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],
           [coin_has_lapack=yes
            lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"
            lapack_what="Intel MKL ($lapack_lflags)"
           ],,no)
         if test "$coin_has_lapack" = no ; then
-          AC_COIN_TRY_LINK([dorhr_col],
+          AC_COIN_TRY_LINK([dsyev],
             [-framework Accelerate],[],
             [coin_has_lapack=yes
              lapack_lflags="-framework Accelerate"
@@ -159,11 +159,11 @@ dnl in case someone wants to use Blas functions but tests only for Lapack.
   if test "$lapack_keep_looking" = yes ; then
     AC_COIN_CHK_MOD_EXISTS([lapack],[lapack blas],
       [lapack_what="generic module (lapack.pc blas.pc)"
-       AC_COIN_TRY_LINK([dorhr_col],[],[lapack],
+       AC_COIN_TRY_LINK([dsyev],[],[lapack],
         [coin_has_lapack=yes
          lapack_keep_looking=no
          lapack_pcfiles="lapack blas"],
-        [AC_MSG_WARN([lapack.pc and blas.pc present, but could not find dorhr_col when trying to link with LAPACK.])],no)])
+        [AC_MSG_WARN([lapack.pc and blas.pc present, but could not find dsyev when trying to link with LAPACK.])],no)])
   fi
 dnl TODO do we need another check with lapack.pc only?
 
@@ -172,7 +172,7 @@ dnl resort.  We check for both to ensure that blas lib also appears on
 dnl link line in case someone wants to use Blas functions but tests only
 dnl for Lapack.
   if test "$lapack_keep_looking" = yes ; then
-    AC_COIN_TRY_LINK([dorhr_col],[-llapack -lblas],[],
+    AC_COIN_TRY_LINK([dsyev],[-llapack -lblas],[],
       [coin_has_lapack=yes
        lapack_lflags="-llapack -lblas"
        lapack_what="generic library ($lapack_lflags)"],,no)
@@ -206,7 +206,7 @@ dnl client packages.
     AC_DEFINE(m4_toupper(AC_PACKAGE_NAME)_HAS_LAPACK,[1],
       [Define to 1 if the LAPACK package is available])
     AC_COIN_DEFINENAMEMANGLING(m4_toupper(AC_PACKAGE_NAME)_LAPACK,
-      ${dorhr_col_namemangling})
+      ${dsyev_namemangling})
     m4_foreach_w([myvar],[$1],
       [if test -n "$lapack_pcfiles" ; then
         m4_toupper(myvar)_PCFILES="$lapack_pcfiles $m4_toupper(myvar)_PCFILES"
