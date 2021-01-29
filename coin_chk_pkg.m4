@@ -246,9 +246,9 @@ dnl Define BUILDTOOLS_DEBUG to enable debugging output
 # accordingly. The (hardwired) default is 'nodata'.
 
 # Default action ($4) (no, yes, build) is the default action if the user
-# offers no guidance via command line parameters. Really, 'build' has no hope
-# of working except for COIN ThirdParty packages. Don't use it for anything
-# else.
+# offers no guidance via command line parameters. 'build' is deprecated
+# and has no hope of working except for COIN-OR ThirdParty packages. Don't
+# use it.
 
 # If no .pc file names are specified, the macro will look for prim.pc. If
 # there's exactly one .pc file name xxx.pc (either explicit or default) and
