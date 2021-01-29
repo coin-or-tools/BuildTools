@@ -52,7 +52,7 @@ dnl If --with-lapack is neither no or yes, then treat it as if --with-lapack-lfl
          lapack_what="user-specified ($with_lapack_lflags)"
          lapack_keep_looking=no
          lapack_lflags=$with_lapack_lflags],
-        [AC_MSG_ERROR([Cannot link to user-specified Lapack $with_lapack_lflags.])])
+        [AC_MSG_ERROR([Cannot link to user-specified Lapack $with_lapack_lflags.])],no)
     fi
   else
     lapack_keep_looking=no
@@ -78,7 +78,7 @@ dnl Linux/Darwin.
           [coin_has_lapack=yes
            lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"
            lapack_what="Intel MKL ($lapack_lflags)"
-          ])
+          ],,no)
       ;;
 
 dnl Ideally, we would use -library=sunperf, but it is an imperfect world.
@@ -94,7 +94,7 @@ dnl can arrange that explicitly.
           [coin_has_lapack=yes
            lapack_lflags=-lsunperf
            lapack_what="Sun Performance Library ($lapack_lflags)"
-         ])
+         ],,no)
       ;;
 
       *-cygwin* | *-mingw* | *-msys*)
@@ -127,7 +127,7 @@ dnl it by default?
                [coin_has_lapack=yes
                 lapack_lflags="$coin_mkl"
                 lapack_what="Intel MKL ($lapack_lflags)"
-               ])
+               ],,no)
         fi
       ;;
 
@@ -137,15 +137,14 @@ dnl it by default?
           [coin_has_lapack=yes
            lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"
            lapack_what="Intel MKL ($lapack_lflags)"
-          ],
-          [],[no])
+          ],,no)
         if test "$coin_has_lapack" = no ; then
           AC_COIN_TRY_LINK([dorhr_col],
             [-framework Accelerate],[],
             [coin_has_lapack=yes
              lapack_lflags="-framework Accelerate"
              lapack_what="Accelerate framework ($lapack_lflags)"
-            ])
+            ],,no)
         fi
       ;;
     esac
@@ -164,7 +163,7 @@ dnl in case someone wants to use Blas functions but tests only for Lapack.
         [coin_has_lapack=yes
          lapack_keep_looking=no
          lapack_pcfiles="lapack blas"],
-        [AC_MSG_WARN([lapack.pc and blas.pc present, but could not find dorhr_col when trying to link with LAPACK.])])])
+        [AC_MSG_WARN([lapack.pc and blas.pc present, but could not find dorhr_col when trying to link with LAPACK.])],no)])
   fi
 dnl TODO do we need another check with lapack.pc only?
 
@@ -176,7 +175,7 @@ dnl for Lapack.
     AC_COIN_TRY_LINK([dorhr_col],[-llapack -lblas],[],
       [coin_has_lapack=yes
        lapack_lflags="-llapack -lblas"
-       lapack_what="generic library ($lapack_lflags)"])
+       lapack_what="generic library ($lapack_lflags)"],,no)
   fi
 dnl TODO do we need another check with -llapack only?
 

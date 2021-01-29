@@ -713,7 +713,7 @@ dnl setup the m4_toupper($1)_FUNC and m4_toupper($1)_FUNC_ macros
 #  pcfiles ($3) pc files to query for additional linker flags
 #  action-if-success ($4) commands to execute if any linking was successful
 #  action-if-failed ($5) commands to execute if no linking was successful
-#  msg ($6) 'yes' to produce 'checking for' messages
+#  msg ($6) 'no' to suppress 'checking for' messages
 #
 # The macro tries different name mangling schemes and expands into
 # action-if-success for the first one that succeeds.
@@ -749,12 +749,12 @@ dnl setup LIBS by adding $2 and those from $3
         if test "$ac_extra" = "extra underscore" ; then
           ac_name=${ac_name}_
         fi
-        m4_if([$6],[yes],[AC_MSG_CHECKING([for function $ac_name in $LIBS])])
+        m4_if([$6],[no],[],[AC_MSG_CHECKING([for function $ac_name in $LIBS])])
         AC_TRY_LINK_FUNC([$ac_name],
           [$1_namemangling="${ac_case}, ${ac_trail}, ${ac_extra}"
            ac_success=yes],
           [ac_success=no])
-        m4_if([$6],[yes],[AC_MSG_RESULT([$ac_success])])
+        m4_if([$6],[no],[],[AC_MSG_RESULT([$ac_success])])
         if test $ac_success = yes ; then
           break 3
         fi
