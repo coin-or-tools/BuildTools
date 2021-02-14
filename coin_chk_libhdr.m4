@@ -162,6 +162,7 @@ dnl the macro parameters.
     [m4_tolower(coin_has_$1)=requested],
     [m4_tolower(coin_has_$1)=skipping
      m4_tolower($1_failmode)='default'])
+  m4_tolower($1_userflags)='no'
 
 dnl See if the user specified --with-prim.  If the value is something
 dnl other than 'yes' or 'no' and the client specified dataonly, the value is
@@ -186,6 +187,7 @@ dnl 'yes'.
         m4_if(m4_default($8,nodata),dataonly,
           [m4_tolower($1_data)="$withval"],
           [m4_tolower($1_lflags)="$withval"])
+	m4_tolower($1_userflags)='yes'
         ;;
     esac
   else
@@ -194,6 +196,7 @@ dnl 'yes'.
        test -n "$m4_tolower(with_$1_data)" ; then
       m4_tolower(coin_has_$1)=requested
       m4_tolower($1_failmode)=''
+      m4_tolower($1_userflags)='yes'
     fi
   fi
 
@@ -207,12 +210,14 @@ dnl values.
        if test -n "$withval" ; then
          m4_tolower(coin_has_$1)=requested
          m4_tolower($1_lflags)="$withval"
+	 m4_tolower($1_userflags)='yes'
        fi
 
        withval="$m4_tolower(with_$1_cflags)"
        if test -n "$withval" ; then
          m4_tolower(coin_has_$1)=requested
          m4_tolower($1_cflags)="$withval"
+	 m4_tolower($1_userflags)='yes'
        fi
      fi])
 
@@ -225,12 +230,13 @@ dnl --with-prim-data. A value will override the parameter value.
        if test -n "$withval" ; then
          m4_tolower(coin_has_$1)=requested
          m4_tolower($1_data)="$withval"
+	 m4_tolower($1_userflags)='yes'
        fi
      fi])
 
-dnl At this point, coin_has_prim can be one of skipping (user said no, or
-dnl default was no without override), or requested (user said yes, or default
-dnl was yes without override).
+dnl At this point, coin_has_prim can be one of skipping (user said no,
+dnl or default was skip without override), or requested (user said yes,
+dnl or default was use without override).
 
 dnl If we have [includes], try to compile them.
 
@@ -420,8 +426,13 @@ dnl to do the heavy lifting.
     AC_MSG_RESULT([$m4_tolower(coin_has_$1) (COIN_SKIP_PROJECTS)])
   fi
 
+dnl Possible outcomes are `yes', `no', or `skipping'. 'Skipping' implies we
+dnl decided to skip the package for some reason. 'No' means we wanted the
+dnl package but failed a test. 'Yes' means we wanted the package and didn't
+dnl fail any tests.
+
 dnl Try to offer some helpful advice in the event of failure.
-  if test "$m4_tolower(coin_has_$1)" = "no" ; then
+  if test "$m4_tolower(coin_has_$1)" = 'no' ; then
     if expr "$m4_tolower($1_failmode)" : '.*header.*' &>/dev/null ; then
       AC_MSG_WARN(m4_newline([m4_text_wrap(
        [Compiler flags are "$m4_tolower($1)_cflags".]
@@ -439,12 +450,12 @@ dnl Try to offer some helpful advice in the event of failure.
       AC_MSG_WARN(m4_newline([m4_text_wrap(
         [Check config.log for details of failed compile or link attempts.])]))
     fi
+    if test "$m4_tolower($1_userflags)" = 'yes' ; then
+      AC_MSG_ERROR([Aborting configure; user-specified flags failed.])
+    fi
   fi
 
-dnl Possibilities are `yes', `no', or `skipping'. 'Skipping' implies we
-dnl decided to skip the package for some reason. 'No' means we wanted the
-dnl package but failed a test. 'Yes' means we wanted the package and didn't
-dnl fail any tests. Normalise to yes or no for the remainder.
+dnl Normalise to yes or no for the remainder.
 
   if test "$m4_tolower(coin_has_$1)" != yes ; then
     m4_tolower(coin_has_$1)=no
