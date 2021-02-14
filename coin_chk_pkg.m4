@@ -108,6 +108,7 @@ dnl be equivalent to 'yes'.
         m4_if(m4_default($8,nodata),dataonly,
           [m4_tolower($1_data)="$withval"],
           [m4_tolower($1_lflags)="$withval"])
+	m4_tolower($1_pcfiles)=''
         ;;
     esac
   else
@@ -116,6 +117,7 @@ dnl be equivalent to 'yes'.
        test -n "$m4_tolower(with_$1_data)" ; then
       m4_tolower(coin_has_$1)=requested
       m4_tolower($1_failmode)=''
+      m4_tolower($1_pcfiles)=''
     fi
   fi
 
@@ -137,6 +139,7 @@ dnl accept them on faith.
            * )
              m4_tolower(coin_has_$1)=yes
              m4_tolower($1_lflags)="$withval"
+	     m4_tolower($1_pcfiles)=''
              ;;
          esac
        fi
@@ -152,6 +155,7 @@ dnl accept them on faith.
            * )
              m4_tolower(coin_has_$1)=yes
              m4_tolower($1_cflags)="$withval"
+	     m4_tolower($1_pcfiles)=''
              ;;
          esac
        fi
@@ -167,6 +171,7 @@ dnl really can't do anything except accept on faith.
        if test -n "$withval" ; then
          m4_tolower(coin_has_$1)=yes
          m4_tolower($1_data)="$withval"
+	 m4_tolower($1_pcfiles)=''
        fi
      fi])
 
@@ -201,7 +206,7 @@ dnl thing if the .pc file name is the first word in the pcfile string
     else
       AC_MSG_WARN(m4_normalize(
         [Check for $1 via pkg-config could not be performed as there is no pkg-config available.]
-        [Consider installing pkg-config or  provide appropriate values for --with-m4_tolower($1)-lflags and --with-m4_tolower($1)-cflags.]))
+        [Consider installing pkg-config or provide appropriate values for --with-m4_tolower($1)-lflags and --with-m4_tolower($1)-cflags.]))
       m4_tolower(coin_has_$1)=no
     fi
   fi
