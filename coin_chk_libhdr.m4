@@ -387,12 +387,12 @@ dnl Make sure the necessary variables exist for each client package.
     ])
 
 dnl Check to see if the user has overridden configure parameters from the
-dnl environment.
+dnl environment. Caution! Quadrigraphs.
 
   m4_tolower(coin_has_$1)=noInfo
   if test x"$COIN_SKIP_PROJECTS" != x ; then
-    for pkg in $COIN_SKIP_PROJECTS ; do
-      if test "$m4_tolower(pkg)" = "$m4_tolower($1)" ; then
+    for pkg in `echo $COIN_SKIP_PROJECTS | tr '@<:@:upper:@:>@' '@<:@:lower:@:>@'` ; do
+      if test "$pkg" = "m4_tolower($1)" ; then
         m4_tolower(coin_has_$1)=skipping
       fi
     done
