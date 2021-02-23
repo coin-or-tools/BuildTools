@@ -108,7 +108,7 @@ dnl be equivalent to 'yes'.
         m4_if(m4_default($8,nodata),dataonly,
           [m4_tolower($1_data)="$withval"],
           [m4_tolower($1_lflags)="$withval"])
-	m4_tolower($1_pcfiles)=''
+        m4_tolower($1_pcfiles)=''
         ;;
     esac
   else
@@ -139,7 +139,7 @@ dnl accept them on faith.
            * )
              m4_tolower(coin_has_$1)=yes
              m4_tolower($1_lflags)="$withval"
-	     m4_tolower($1_pcfiles)=''
+             m4_tolower($1_pcfiles)=''
              ;;
          esac
        fi
@@ -155,7 +155,7 @@ dnl accept them on faith.
            * )
              m4_tolower(coin_has_$1)=yes
              m4_tolower($1_cflags)="$withval"
-	     m4_tolower($1_pcfiles)=''
+             m4_tolower($1_pcfiles)=''
              ;;
          esac
        fi
@@ -171,7 +171,7 @@ dnl really can't do anything except accept on faith.
        if test -n "$withval" ; then
          m4_tolower(coin_has_$1)=yes
          m4_tolower($1_data)="$withval"
-	 m4_tolower($1_pcfiles)=''
+         m4_tolower($1_pcfiles)=''
        fi
      fi])
 

@@ -187,7 +187,7 @@ dnl 'yes'.
         m4_if(m4_default($8,nodata),dataonly,
           [m4_tolower($1_data)="$withval"],
           [m4_tolower($1_lflags)="$withval"])
-	m4_tolower($1_userflags)='yes'
+        m4_tolower($1_userflags)='yes'
         ;;
     esac
   else
@@ -210,14 +210,14 @@ dnl values.
        if test -n "$withval" ; then
          m4_tolower(coin_has_$1)=requested
          m4_tolower($1_lflags)="$withval"
-	 m4_tolower($1_userflags)='yes'
+         m4_tolower($1_userflags)='yes'
        fi
 
        withval="$m4_tolower(with_$1_cflags)"
        if test -n "$withval" ; then
          m4_tolower(coin_has_$1)=requested
          m4_tolower($1_cflags)="$withval"
-	 m4_tolower($1_userflags)='yes'
+         m4_tolower($1_userflags)='yes'
        fi
      fi])
 
@@ -230,7 +230,7 @@ dnl --with-prim-data. A value will override the parameter value.
        if test -n "$withval" ; then
          m4_tolower(coin_has_$1)=requested
          m4_tolower($1_data)="$withval"
-	 m4_tolower($1_userflags)='yes'
+         m4_tolower($1_userflags)='yes'
        fi
      fi])
 
