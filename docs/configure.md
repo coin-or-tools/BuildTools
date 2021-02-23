@@ -284,7 +284,7 @@ AC_COIN_DEBUGLEVEL
  * The macro **`AC_COIN_PROG_LIBTOOL`** executes a number of tests, and then creates the [libtool script](./autotools-intro).
  
  * The macro **`AC_COIN_RPATH_FLAGS`** defines a variable `RPATH_FLAGS` that can be used by the linker to hardwire the library search path for the given directories into a shared library.
-   This is useful to setup Makefiles for examples or tests, but not used for
+   This is useful to setup Makefiles for examples, but is not used for
    the project's own libraries or executable binaries.
 
  * The macro **`AC_COIN_CXXLIBS`** stores the C++ runtime libraries required for linking a C++ library with a Fortran or C compiler in variable `CXXLIBS`.
