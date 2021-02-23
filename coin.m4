@@ -847,7 +847,7 @@ dnl Make sure the necessary variables exist for each client package.
 dnl Add the .pc file and augment LFLAGS and CFLAGS.
 dnl From the CFLAGS of $1, remove the -D$1_BUILD, though.
     m4_foreach_w([myvar],[$2],
-      [if test -n "$m4_toupper(myvar)_PCFILES" ; then m4_toupper(myvar)_PCFILES="$m4_toupper(myvar)_PCFILES m4_default($3,m4_tolower($1))" ; fi
+      [m4_toupper(myvar)_PCFILES="$m4_toupper(myvar)_PCFILES m4_default($3,m4_tolower($1))"
        m4_toupper(myvar)_LFLAGS="$m4_toupper(myvar)_LFLAGS $m4_toupper($1)_LFLAGS"
        m4_toupper(myvar)_CFLAGS="$m4_toupper(myvar)_CFLAGS `echo $m4_toupper($1)_CFLAGS | sed -e s/-D[]m4_toupper($1)_BUILD//`"
 

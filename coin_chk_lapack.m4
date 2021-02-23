@@ -209,7 +209,7 @@ dnl client packages.
       ${dsyev_namemangling})
     m4_foreach_w([myvar],[$1],
       [if test -n "$lapack_pcfiles" ; then
-        m4_toupper(myvar)_PCFILES="$lapack_pcfiles $m4_toupper(myvar)_PCFILES"
+         m4_toupper(myvar)_PCFILES="$lapack_pcfiles $m4_toupper(myvar)_PCFILES"
        fi
        m4_toupper(myvar)_LFLAGS="$lapack_lflags $m4_toupper(myvar)_LFLAGS"
       ])
