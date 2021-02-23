@@ -451,7 +451,7 @@ dnl Try to offer some helpful advice in the event of failure.
         [Check config.log for details of failed compile or link attempts.])]))
     fi
     if test "$m4_tolower($1_userflags)" = 'yes' ; then
-      AC_MSG_ERROR([Aborting configure; user-specified flags failed.])
+      AC_MSG_ERROR([user-specified flags for $1 do not work.])
     fi
   fi
 
