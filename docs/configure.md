@@ -658,10 +658,6 @@ Except for AC_COIN_CHK_LIBM, the macros also
 * add a configure option to disable the check for the library
   (_e.g._, `--disable-zlib`).
 
-Note that CoinUtils already checks for the math library and thus every
-project using CoinUtils automatically has the math library in its
-dependencies and thus does not need to check for it separately.
-
 #### Check for LAPACK
 
 For Lapack, a customized macro `AC_COIN_CHK_LAPACK` has been setup.
