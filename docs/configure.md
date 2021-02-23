@@ -415,9 +415,11 @@ Note that information about compilation and link flags held in `.pc` files has
 The variables `X_CFLAGS` and `X_LFLAGS` are updated at a later point by the
 macro `AC_COIN_FINALIZE_FLAGS`.
   
-In the example, the following variables for use in Makefiles are created:
+In the example, the following automake-conditionals for use
+in Makefiles are created:
 * `COIN_HAS_COINUTILS`, `COIN_HAS_OSI`,
-  `COIN_HAS_OSITESTS`, `COIN_HAS_SAMPLE`, and `COIN_HAS_NETLIB`,
+  `COIN_HAS_OSITESTS`, `COIN_HAS_SAMPLE`, and `COIN_HAS_NETLIB`.
+In addition, the following variables are created:
 * `CLPLIB_CFLAGS`, `CLPLIB_LFLAGS`, `CLPLIB_PCFILES`,
 * `OSICLPLIB_CFLAGS`, `OSICLPLIB_LFLAGS`, `OSICLPLIB_PCFILES`,
 * `OSICLPUNITTEST_CFLAGS`, `OSICLPUNITTEST_LFLAGS`,
