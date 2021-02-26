@@ -74,9 +74,9 @@ dnl Linux/Darwin.
     case $build in
       *-linux*)
         AC_COIN_TRY_LINK([dsyev],
-          [-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],
+          [-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm],[],
           [coin_has_lapack=yes
-           lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"
+           lapack_lflags="-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm"
            lapack_what="Intel MKL ($lapack_lflags)"
           ],,no)
       ;;
@@ -133,9 +133,9 @@ dnl it by default?
 
       *-darwin*)
         AC_COIN_TRY_LINK([dsyev],
-          [-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],
+          [-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm],[],
           [coin_has_lapack=yes
-           lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"
+           lapack_lflags="-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm"
            lapack_what="Intel MKL ($lapack_lflags)"
           ],,no)
         if test "$coin_has_lapack" = no ; then
