@@ -6,9 +6,9 @@
 # script to download and install the autoools versions that we currently use with COIN-OR/BuildTools
 # original script by Pierre Bonami
 
-acver=2.69
-aaver=2019.01.06
-amver=1.16.2
+acver=2.71
+aaver=2021.02.19
+amver=1.16.3
 ltver=2.4.6
 
 # exit immediately if something fails

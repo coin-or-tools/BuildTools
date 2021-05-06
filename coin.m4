@@ -6,7 +6,7 @@
 # This file defines the common autoconf macros for COIN-OR
 
 # Check requirements
-AC_PREREQ(2.69)
+AC_PREREQ([2.71])
 
 ###########################################################################
 #                           COIN_CHECK_VPATH                              #
@@ -96,8 +96,7 @@ AC_DEFUN([AC_COIN_ENABLE_MSVC],
   AC_CANONICAL_BUILD
 
   AC_ARG_ENABLE([msvc],
-    [AC_HELP_STRING([--enable-msvc],
-       [look for and allow only Intel/Microsoft compilers on MinGW/MSys/Cygwin])],
+    [AS_HELP_STRING([--enable-msvc],[look for and allow only Intel/Microsoft compilers on MinGW/MSys/Cygwin])],
     [enable_msvc=$enableval],
     [enable_msvc=no
      case $build in
@@ -126,7 +125,7 @@ dnl We want --enable-msvc setup and checked
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 
   AC_ARG_ENABLE([debug],
-    [AC_HELP_STRING([--enable-debug],[build debugging symbols and turn off compiler optimization])],
+    [AS_HELP_STRING([--enable-debug],[build debugging symbols and turn off compiler optimization])],
     [enable_debug=$enableval],
     [enable_debug=no])
 
@@ -176,7 +175,7 @@ dnl This macro should run before the compiler checks (does not seem to be suffic
 AC_DEFUN([AC_COIN_DEBUGLEVEL],
 [
   AC_ARG_WITH(m4_tolower(AC_PACKAGE_NAME)-verbosity,
-    AC_HELP_STRING([--with-m4_tolower(AC_PACKAGE_NAME)-verbosity],[specify the debug verbosity level]),
+    AS_HELP_STRING([--with-m4_tolower(AC_PACKAGE_NAME)-verbosity],[specify the debug verbosity level]),
     [if test "$withval" = yes; then withval=1 ; fi
      coin_verbosity=$withval],
     [coin_verbosity=0])
@@ -185,7 +184,7 @@ AC_DEFUN([AC_COIN_DEBUGLEVEL],
                      [Define to the debug verbosity level (0 is no output)])
 
   AC_ARG_WITH(m4_tolower(AC_PACKAGE_NAME)-checklevel,
-    AC_HELP_STRING([--with-m4_tolower(AC_PACKAGE_NAME)-checklevel],[specify the sanity check level]),
+    AS_HELP_STRING([--with-m4_tolower(AC_PACKAGE_NAME)-checklevel],[specify the sanity check level]),
     [if test "$withval" = yes; then withval=1 ; fi
      coin_checklevel=$withval],
     [coin_checklevel=0])
@@ -226,7 +225,7 @@ AC_DEFUN([AC_COIN_DEBUGLEVEL],
 
 AC_DEFUN([AC_COIN_INITIALIZE],
 [
-  AC_PREREQ(2.69)
+  AC_PREREQ([2.71])
 
   AC_COIN_PROJECTVERSION($1)
 
@@ -278,8 +277,7 @@ dnl on the users side, which asks for trouble
   exec_prefix=$save_exec_prefix
 
   AC_ARG_ENABLE([relocatable],
-    [AC_HELP_STRING([--enable-relocatable],
-       [whether prefix in installed .pc files should be setup relative to pcfiledir])],
+    [AS_HELP_STRING([--enable-relocatable],[whether prefix in installed .pc files should be setup relative to pcfiledir])],
     [coin_enable_relocatable=$enableval],
     [coin_enable_relocatable=no])
   AM_CONDITIONAL([COIN_RELOCATABLE], [test $coin_enable_relocatable = yes])
@@ -520,7 +518,7 @@ fi
 if test -z "$CXXLIBS"; then
   AC_MSG_WARN([Could not automatically determine CXXLIBS (C++ link libraries; necessary if main program is in Fortran or C).])
 else
-  AC_MSG_NOTICE([Assuming that CXXLIBS is \"$CXXLIBS\".])
+  AC_MSG_NOTICE([Assuming that CXXLIBS is $CXXLIBS.])
 fi
 if test x"$CXXLIBS" = xnothing; then
   CXXLIBS=
@@ -1306,8 +1304,7 @@ AC_DEFUN([AC_COIN_CHK_ZLIB],
   coin_has_zlib=no
 
   AC_ARG_ENABLE([zlib],
-    [AC_HELP_STRING([--disable-zlib],
-       [do not compile with compression library zlib])],
+    [AS_HELP_STRING([--disable-zlib],[do not compile with compression library zlib])],
     [coin_enable_zlib=$enableval],
     [coin_enable_zlib=yes])
 
@@ -1348,8 +1345,7 @@ AC_DEFUN([AC_COIN_CHK_BZLIB],
   coin_has_bzlib=no
 
   AC_ARG_ENABLE([bzlib],
-    [AC_HELP_STRING([--disable-bzlib],
-       [do not compile with compression library bzlib])],
+    [AS_HELP_STRING([--disable-bzlib],[do not compile with compression library bzlib])],
     [coin_enable_bzlib=$enableval],
     [coin_enable_bzlib=yes])
 
@@ -1390,8 +1386,7 @@ AC_DEFUN([AC_COIN_CHK_GMP],
   coin_has_gmp=no
 
   AC_ARG_ENABLE([gmp],
-    [AC_HELP_STRING([--disable-gmp],
-       [do not compile with GNU multiple precision library])],
+    [AS_HELP_STRING([--disable-gmp],[do not compile with GNU multiple precision library])],
     [coin_enable_gmp=$enableval],
     [coin_enable_gmp=yes])
 
@@ -1433,8 +1428,7 @@ AC_DEFUN([AC_COIN_CHK_GNU_READLINE],
   coin_has_readline=no
 
   AC_ARG_ENABLE([readline],
-    [AC_HELP_STRING([--disable-readline],
-       [do not compile with readline library])],
+    [AS_HELP_STRING([--disable-readline],[do not compile with readline library])],
     [coin_enable_readline=$enableval],
     [coin_enable_readline=yes])
 
