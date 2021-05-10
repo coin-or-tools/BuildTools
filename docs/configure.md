@@ -696,6 +696,16 @@ A separate macro to check for Blas only has been omitted, but it can be
 assumed that availablity of Lapack is sufficient to indicate availability
 of Blas.
 
+#### Check for LAPACK with 64-bit integers
+
+If AC_COIN_CHK_LAPACK is invoked with int64 as second argument, the checks
+for available Lapack installations look for version that use integers that
+are 64-bit wide:
+- the ILP64 instead of the LP64 variant of Intel MKL is tried,
+- the check for the Accelerate framework on macOS is omitted,
+- the check for the Sun Performance Library on Solaris is omitted,
+- the check for lapack.pc and blas.pc is omitted,
+- the linking flags `-llapack64 -lblas64` are tried instead of `-llapack -lblas`.
 
 ### Finalizing compiler and linker flags
 
