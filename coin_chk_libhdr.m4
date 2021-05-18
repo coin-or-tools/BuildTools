@@ -434,21 +434,10 @@ dnl fail any tests.
 dnl Try to offer some helpful advice in the event of failure.
   if test "$m4_tolower(coin_has_$1)" = 'no' ; then
     if expr "$m4_tolower($1_failmode)" : '.*header.*' &>/dev/null ; then
-      AC_MSG_WARN(m4_newline([m4_text_wrap(
-       [Compiler flags are "$m4_tolower($1)_cflags".]
-       [If you expected this test to succeed, check that they are correct.]
-       [You can supply correct values using --with-m4_tolower($1)-cflags.])]))
+      AC_MSG_NOTICE([Compiler flags were "$m4_tolower($1)_cflags". Use --with-m4_tolower($1)-cflags to overwrite. Check config.log for details of failed compile attempt.])
     fi
     if expr "$m4_tolower($1_failmode)" : '.*link.*' &>/dev/null ; then
-      AC_MSG_WARN(m4_newline([m4_text_wrap(
-        [Linker flags are "$m4_tolower($1)_lflags".]
-        [If you expected this test to succeed, check that they are correct.]
-        [You can supply correct values using --with-m4_tolower($1)-lflags.])]))
-    fi
-    if expr "$m4_tolower($1_failmode)" : '.*header.*' &>/dev/null ||
-       expr "$m4_tolower($1_failmode)" : '.*link.*' &>/dev/null ; then
-      AC_MSG_WARN(m4_newline([m4_text_wrap(
-        [Check config.log for details of failed compile or link attempts.])]))
+      AC_MSG_NOTICE([Linker flags are "$m4_tolower($1)_lflags". Use --with-m4_tolower($1)-lflags to overwrite. Check config.log for details of failed link attempt.])
     fi
     if test "$m4_tolower($1_userflags)" = 'yes' ; then
       AC_MSG_ERROR([user-specified flags for $1 do not work.])
