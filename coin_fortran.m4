@@ -159,12 +159,6 @@ dnl F77_LIBRARY_LDFLAGS, etc.)
   AC_PROG_F77_C_O
   if test $ac_cv_prog_f77_c_o = no ; then
     F77="$am_aux_dir/compile $F77"
-  else
-    case "$F77" in *ifort )
-      case $build in
-        *-mingw* | *-cygwin* | *-msys* ) F77="$am_aux_dir/compile $F77" ;; esac
-      ;;
-    esac
   fi
 ])
 
