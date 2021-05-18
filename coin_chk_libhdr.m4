@@ -200,7 +200,7 @@ dnl 'yes'.
     fi
   fi
 
-dnl As long as we're not dataonly and we're not skipping prim, check for
+dnl As long as we are not dataonly and we are not skipping prim, check for
 dnl --with-prim-lflags and --with-prim-cflags. Values will override parameter
 dnl values.
 
@@ -221,7 +221,7 @@ dnl values.
        fi
      fi])
 
-dnl If we're not nodata and we're not skipping prim, check for
+dnl If we are not nodata and we are not skipping prim, check for
 dnl --with-prim-data. A value will override the parameter value.
 
   m4_if(m4_default($8,nodata),nodata,[],
@@ -283,9 +283,9 @@ dnl otherwise by '*separate' as [dfltaction].
        CPPFLAGS=$ac_save_CPPFLAGS
      fi])
 
-dnl If we're still showing requested, then we can say yes. We've passed all
-dnl the tests requested by the user (which might be none, but that's on the
-dnl user's head).
+dnl If we are still showing requested, then we can say yes. We have passed all
+dnl the tests requested by the user (which might be none, but that is on the
+dnl head of the user).
 
   if test $m4_tolower(coin_has_$1) = requested ; then
     m4_tolower(coin_has_$1)=yes
@@ -426,9 +426,9 @@ dnl to do the heavy lifting.
     AC_MSG_RESULT([$m4_tolower(coin_has_$1) (COIN_SKIP_PROJECTS)])
   fi
 
-dnl Possible outcomes are `yes', `no', or `skipping'. 'Skipping' implies we
+dnl Possible outcomes are 'yes', 'no', or 'skipping'. 'Skipping' implies we
 dnl decided to skip the package for some reason. 'No' means we wanted the
-dnl package but failed a test. 'Yes' means we wanted the package and didn't
+dnl package but failed a test. 'Yes' means we wanted the package and did not
 dnl fail any tests.
 
 dnl Try to offer some helpful advice in the event of failure.
@@ -465,7 +465,7 @@ dnl Create an automake conditional COIN_HAS_PRIM.
 
   AM_CONDITIONAL(m4_toupper(COIN_HAS_$1),[test $m4_tolower(coin_has_$1) = yes])
 
-dnl If we've located the package, define preprocessor symbol PACKAGE_HAS_PRIM
+dnl If we have located the package, define preprocessor symbol PACKAGE_HAS_PRIM
 dnl and augment the necessary variables for the client packages.
 
   if test $m4_tolower(coin_has_$1) = yes ; then
