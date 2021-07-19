@@ -275,8 +275,11 @@ AC_COIN_DEBUGLEVEL
 ```
 
  * The macros **`AC_COIN_PROG_CC`**, **`AC_COIN_PROG_CXX`**, **`AC_COIN_PROG_F77`**, and **`AC_COIN_PROG_FC`** determine the name of the C, C++, Fortran 77, and Fortran 90 compilers, and choose the default compiler options.
-   One only needs to specify those compilers that are required to compile the source code in the project.
-   If the source code does not contain Fortran source, one should omit **`AC_COIN_PROG_F77`** and **`AC_COIN_PROG_FC`**.
+   One only needs to specify those language that are used in the source code in the project.
+   That is, if the source code does not contain Fortran source, one should omit **`AC_COIN_PROG_F77`** and **`AC_COIN_PROG_FC`**.
+   
+   The default autotools macros already try to figure out compiler flags that are necessary to ensure C++11 or higher.
+   In addition, checks for C++11 or C++14 support can be enabled via the [`AX_CXX_COMPILE_STDCXX` macro](https://www.gnu.org/software/autoconf-archive/ax_cxx_compile_stdcxx.html).
    
  * The macro **`AC_COIN_F77_SETUP`** determines variables required to compile Fortran object files and invoke Fortran functions from C/C++ code.
    This has been separated out from **`AC_COIN_PROG_F77`** to allow a projects configure to succeed even if a Fortran compiler is not found (in which case building of Fortran code must be omitted).
