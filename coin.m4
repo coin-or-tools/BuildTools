@@ -889,24 +889,24 @@ dnl From the CFLAGS of $1, remove the -D$1_BUILD, though.
 AC_DEFUN([AC_COIN_DEF_PRIM_ARGS],
 [
   m4_define([extraHelp],[
-    m4_normalize(Use $1. [If an argument is given,]
+    m4_normalize(Do not use $1. [If an argument is given to --with-m4_tolower($1), then]
       ['yes' is equivalent to --with-m4_tolower($1),]
       m4_case($6,[default_build],
       ['no' is equivalent to --without-m4_tolower($1)[,]
        'build' will look for a COIN-OR ThirdParty package.],
-      ['no' is equivalent to --without-m4_tolower($1).])
+      ['no' is equivalent to --without-m4_tolower($1)])
       m4_case($3$4$5,nonono,,
         nonoyes,
-        Any other argument is applied as for --with-m4_tolower($1)-data,
+        and any other argument is applied as for --with-m4_tolower($1)-data,
         noyesno,
-        Any other argument is applied as for --with-m4_tolower($1)-cflags,
+        and any other argument is applied as for --with-m4_tolower($1)-cflags,
         noyesyes,
-        Any other argument is applied as for --with-m4_tolower($1)-cflags,
-        Any other argument is applied as for --with-m4_tolower($1)-lflags))])
+        and any other argument is applied as for --with-m4_tolower($1)-cflags,
+        and any other argument is applied as for --with-m4_tolower($1)-lflags)[.])])
 
   m4_if($2,yes,
     [AC_ARG_WITH([m4_tolower($1)],
-       AS_HELP_STRING([--with-m4_tolower($1)],extraHelp))])
+       AS_HELP_STRING([--without-m4_tolower($1)],extraHelp))])
 
   m4_if($3,yes,
     [AC_ARG_WITH([m4_tolower($1)-lflags],
