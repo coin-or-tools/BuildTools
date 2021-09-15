@@ -45,10 +45,10 @@ dnl Assume the worst and persist in the face of failure.
   lapack_keep_looking=yes
 
 dnl Look for user-specified lapack flags and try them if present. Pay
-dnl attention if the user says 'no' on the command lin.
+dnl attention if the user says 'no' on the command line.
   if test "$with_lapack" != "no" ; then
-dnl If --with-lapack is neither no or yes, then treat it as if --with-lapack-lflags was actually meant
-    if test "$with_lapack" != "yes" ; then
+dnl If --with-lapack is neither no or yes, then treat it as if --with-lapack-lflags was actually meant, unless --with-lapack-lflags is given (with_lapack is empty by default)
+    if test "$with_lapack" != "yes" && test -z "$with_lapack_lflags" ; then
       with_lapack_lflags="$with_lapack"
     fi
     if test -n "$with_lapack_lflags" ; then
