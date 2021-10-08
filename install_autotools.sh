@@ -41,6 +41,12 @@ make install
 cd ..
 rm -rf autoconf-archive-$aaver*
 
+# apply patch to AX_JNI_INCLUDE_DIR to support macOS >= 11.0.0
+# taken from https://stackoverflow.com/questions/163747/autoconf-test-for-jni-include-dir
+if test -e $COIN_AUTOTOOLS_DIR/share/aclocal/ax_jni_include_dir.m4 ; then
+  patch $COIN_AUTOTOOLS_DIR/share/aclocal/ax_jni_include_dir.m4 ax_jni_include_dir.fix
+fi
+
 curl -O https://ftp.gnu.org/gnu/automake/automake-$amver.tar.gz
 tar xvzf automake-$amver.tar.gz
 cd automake-$amver
