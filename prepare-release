@@ -196,6 +196,32 @@ if [ $topProjName != BuildTools ] ; then
   [ -e BuildTools.bak ] && mv BuildTools.bak BuildTools
 fi
 
+if [ -e .coin-or/generate_readme ]; then
+  if [ x"${COINBREW_HOME-}" == x ]; then
+    if ! command -v coinbrew; then
+      export COINBREW_HOME=$(command -V coinbrew | head -n1 | cut -d ' ' -f 3)
+    else  
+      echo "EXIT: To generate README, you must either have coinbrew in your"
+      echo "      path or manually set COINBREW_HOME to the location of the"
+      echo "      coinbrew repo." 
+      exit 1
+    fi
+  fi
+  echo ''
+  echo '===> Generating README ...'
+  echo ''
+  
+  COIN_VERSION_OVERRIDE=releases/$newVer bash .coin-or/generate_readme > README.md
+
+  git diff README.md
+fi
+
+echo ''
+echo '===> Showing status, just to be sure ...'
+echo ''
+
+git status
+
 echo ''
 echo '===> Applying changes to local git clone ...'
 echo ''
@@ -230,3 +256,5 @@ if [ "$releaseStyle" = "revert" ] ;
 then
   echo "   git reset --hard HEAD~2"
 fi
+echo
+echo "Don't forget to also run update-doxygen, as appropriate!"
