@@ -1,0 +1,100 @@
+#!/bin/bash
+#
+# This file is distributed under the Eclipse Public License 2.0.
+# See LICENSE for details.
+
+#set -x -v
+set -e
+
+if expr "$0" : '.*/.*' >/dev/null 2>&1 ; then
+  cmdDir=`dirname $0`
+else
+  cmdDir='.'
+fi
+if test -r $cmdDir/coin-functions ; then
+  . $cmdDir/coin-functions
+else
+  echo "Cannot find utility functions file coin-functions; exiting."
+  exit 1
+fi
+
+if [ x"${COINBREW_HOME-}" == x ]; then
+  if ! command -v coinbrew; then
+    export COINBREW_HOME=$(command -V coinbrew | head -n1 | cut -d ' ' -f 3)
+  else  
+    echo "EXIT: To generate README, you must either have coinbrew in your"
+    echo "      path or manually set COINBREW_HOME to the location of the"
+    echo "      coinbrew repo." 
+    exit 1
+  fi
+fi
+
+if ! git diff --exit-code --quiet HEAD ; then
+  echo "EXIT: There are uncommitted changes. I'm too afraid to proceed."
+  exit 1
+fi
+
+# figure out name of project from repo URL, remove possible .git suffix
+topProjName=`git remote get-url origin`
+topProjName=${topProjName##*/}
+topProjName=${topProjName/.git/}
+echo "Project        : $topProjName"
+
+branchName=`git rev-parse --abbrev-ref HEAD`
+echo "Branch         : $branchName"
+
+
+if [[ "$branchName" != stable/* ]] ; then
+  echo "ERROR: Expected branchname to start with 'stable/"
+  exit 1
+fi
+
+# get tags from remote
+git fetch -t
+
+# get last release from current stable branch
+
+lastRelease=`git tag --list "${branchName/stable/releases}*" | sort -V | tail -1`
+echo "Checking out current release   : $lastRelease"
+
+git checkout $lastRelease
+
+echo
+echo "===> Making temporary directory and building doxygen docs..."
+echo
+
+mkdir tmp
+cd tmp
+../configure --prefix=$PWD
+make doxydoc
+cd -
+
+echo
+echo "===> Switching to gh-pages to update documentation..."
+echo
+
+if ! git checkout gh-pages; then
+  echo "EXIT: gh-pages doesn't seem to exist."
+  exit 1
+fi
+
+git pull --rebase
+
+if [ -d Doxygen ]; then 
+  git rm -r Doxygen
+  git commit -m "Removing old Doxygen documentation"  
+fi  
+
+mkdir Doxygen
+cp -r tmp/doxydoc/html/* Doxygen
+git add Doxygen
+git commit -m "Updating Doxygen documentation to release $lastRelease"
+
+echo 
+echo "===> Done ..."
+echo 
+echo "After reviewing the output, commit result by doing"
+echo
+echo "   git push origin gh-pages"
+echo
+
