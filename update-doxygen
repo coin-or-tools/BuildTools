@@ -63,8 +63,8 @@ echo
 echo "===> Making temporary directory and building doxygen docs..."
 echo
 
-mkdir tmp
-cd tmp
+mkdir tmp_doxygen
+cd tmp_doxygen
 ../configure --prefix=$PWD
 make doxydoc
 cd -
@@ -86,9 +86,15 @@ if [ -d Doxygen ]; then
 fi  
 
 mkdir Doxygen
-cp -r tmp/doxydoc/html/* Doxygen
+cp -r tmp_doxygen/doxydoc/html/* Doxygen
 git add Doxygen
 git commit -m "Updating Doxygen documentation to release $lastRelease"
+
+echo
+echo "===> Removing temporary directory..."
+echo
+
+rm -rf tmp_doxygen
 
 echo 
 echo "===> Done ..."
