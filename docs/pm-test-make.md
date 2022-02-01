@@ -58,7 +58,7 @@ AM_CPPFLAGS = -I`$(CYGPATH_W) $(srcdir)/../src`
 DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
 ```
 
- * The above example is taken from the CoinUtils project.  It follows the same scheme as describe for the [source directory Makefile.am file](./pm-source-make) for defining the compilation of a program.  Since we don't want to install the `unitTest` program, we use the `noinst_` prefix for the `PROGRAMS` primary.
+ * The above example is taken from the CoinUtils project.  It follows the same scheme as describe for the [source directory Makefile.am file](./pm-source-make.md) for defining the compilation of a program.  Since we don't want to install the `unitTest` program, we use the `noinst_` prefix for the `PROGRAMS` primary.
 
 
 ## The Test Target
@@ -80,7 +80,7 @@ test: unitTest$(EXEEXT)
 
  * The *test target* above depends on the `unitTest` executable.  Note the addition of the *EXEEXT* variable to the executable name; this variable is set to the extension of executables on the specific platform.  For example, on UNIX systems it is an empty string, and on Windows it is automatically set to "`.exe`".
 
- For this particular test, the executable will use files of the `Data/Sample` and `Data/Netlib` projects, if available. The paths under which the data of these projects can be found has been setup by the [configure script in the project directory](./pm-project-config) and stored in the `SAMPLE_DATA` and `NETLIB_DATA` variables.
+ For this particular test, the executable will use files of the `Data/Sample` and `Data/Netlib` projects, if available. The paths under which the data of these projects can be found has been setup by the [configure script in the project directory](./pm-project-config.md) and stored in the `SAMPLE_DATA` and `NETLIB_DATA` variables.
 
 
 ## House Cleaning

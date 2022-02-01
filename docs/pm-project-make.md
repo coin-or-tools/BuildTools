@@ -37,7 +37,7 @@ endif
 
  * One should always start with a copyright note and author information, and include the `svn:keyword` "`$Id`".  The line with the keyword should start with "`##`" so that it is not copied into the generated `Makefile.in` file, which causes some confusion for subversion.
 
- * Like in a [base directory Makefile.am file](./pm-base-make), we first specify, in the *SUBDIRS* variable the subdirectories into which to recurse in order to compile the libraries, programs, and whatever other products this project has to offer.  In this examples, this is only one directory, but in order to organize your code, you might want to split the source files into different directories, in which case you need to specify them all here.  These lines with the `ALWAYS_FALSE` Automake conditional (which is always false :) are a trick to skip recursion into the `test` subdirectory for a usual run of `make` to build the products, but it will cause a `make dist` to pick up the files in the `test` directory (even though we don't use the `make dist` mechanism to generate the COIN-OR tarballs.)
+ * Like in a [base directory Makefile.am file](./pm-base-make.md), we first specify, in the *SUBDIRS* variable the subdirectories into which to recurse in order to compile the libraries, programs, and whatever other products this project has to offer.  In this examples, this is only one directory, but in order to organize your code, you might want to split the source files into different directories, in which case you need to specify them all here.  These lines with the `ALWAYS_FALSE` Automake conditional (which is always false :) are a trick to skip recursion into the `test` subdirectory for a usual run of `make` to build the products, but it will cause a `make dist` to pick up the files in the `test` directory (even though we don't use the `make dist` mechanism to generate the COIN-OR tarballs.)
 
 ```
 ########################################################################
@@ -100,7 +100,7 @@ In this section we define some extra targets:
 
  * The *test* (and *unitTest*) target, which first makes sure that everything has been compiled (since it depends on `all`), changes into the `test` subdirectory, where it runs the `test` target.  If the project does not provide a unit test, this should of course not be there.
 
- * The *doxydoc* target, which can be used to [generate documentation via doxygen](./pm-doxygen).
+ * The *doxydoc* target, which can be used to [generate documentation via doxygen](./pm-doxygen.md).
 
  * The *clean-local* and *distclean-local* targets are special Automake targets.  They are "called", when the user does a "`make clean`" and "`make distclean`", respectively. It allows us to specify additional actions for those default targets.  Here, we want to make sure that the `test` subdirectory is cleaned; by default it is not, since it is not included in the `SUBDIRS` variable because the `ALWAYS_FALSE` Automake conditional is always false.  The command line simply checks if the Makefile in the `test` subdirectory exists, and if it does, the corresponding target is made.
 
@@ -149,7 +149,7 @@ uninstall-hook:
 
   The variable `COIN_PKG_CONFIG_PATH` is setup by configure to contain the system `PKG_CONFIG_PATH` accumulated with the installation directories of `.pc` files, so the successive call to pkg-config can find the `.pc` files of the project and all it's dependencies.
 
-  If pkg-config is not used, then the [macros in the project's configure file](./pm-project-config), esp. the _fallback_ mechanism of the `AC_COIN_CHECK_PACKAGE` should have setup a variable `X_LIBS_INSTALLED` where X is a target like `CLPLIB` in this example. This variable contains the linker flags that are _additionally_ necessary to link against the projects library - where it is assumed that all dependencies have been installed already. Together with the flags for linking against the projects library itself, they are writting into the addlibs file.
+  If pkg-config is not used, then the [macros in the project's configure file](./pm-project-config.md), esp. the _fallback_ mechanism of the `AC_COIN_CHECK_PACKAGE` should have setup a variable `X_LIBS_INSTALLED` where X is a target like `CLPLIB` in this example. This variable contains the linker flags that are _additionally_ necessary to link against the projects library - where it is assumed that all dependencies have been installed already. Together with the flags for linking against the projects library itself, they are writting into the addlibs file.
 
   Since that is not complicated enough yet, we also distinguish between possible users of the addlibs file here. If the current C++ compiler is the MS or Intel compiler under Windows (cl or icl), then the automake conditional `COIN_CXX_IS_CL` is set to `TRUE`. In this case, we write the linker flags in the syntax expected by this compiler, otherwise we can use standard syntax.
 

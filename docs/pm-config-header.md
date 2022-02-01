@@ -3,7 +3,7 @@
 
 # Configuration Header Files
 
-Recall the [introduction on configuration header files](./pm-autotools-intro#ConfigurationHeaderFiles).
+Recall the [introduction on configuration header files](./pm-autotools-intro.md#ConfigurationHeaderFiles).
 The `AC_CONFIG_HEADER` macro in `configure.ac` allows to setup a list of configuration header files that convey information about the configuration run to the source code of the package in the form of `#define` statements.
 Since the define statements in different projects may define the same symbols (e.g., `PACKAGE_NAME` or `HAVE_ZLIB`), it is undesirable to install a full configuration header file and to require them for building against the package. On the other hand, sometimes it is necessary to convey some information about a package configuration via the header file to users of that package.
 

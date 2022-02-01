@@ -7,7 +7,7 @@ A: Just a few easy steps...
   1. Ask for personY's uid.  If they don't have one, they need to create one by registering on Trac. There's a little red "Register" word on the upper right-hand-side of the Trac page. SVN and Trac currently use the same file for authentication.
   1. The system requires a CSRO on file for everyone with write-access. Check to see if personY has a CSRO on file by looking at the [list of people with CSROs on file](http://www.coin-or.org/management/contributors.html).  If personY is not on the list, ask personY to fill out the [CSRO form](http://www.coin-or.org/management/forms/csro.pdf) and send it to secretary`@`coin-or.org. The secretary will update the web list. 
   1. If personY just submitted an CSRO, their uid needs to be manually added to the file on the server of people with CSROs. (This file is how we automatically ensure only people with CSRO's on file are making commits to the repository). Currently, only Laci Ladanyi and Matthew Saltzman have permissions to edit this file. Send a request to Laci or Matt with the uid. 
-  1. Edit the ["perms.txt" configuration file](./pm-svn-server#Configurationfiles).
+  1. Edit the ["perms.txt" configuration file](./pm-svn-server.md#Configurationfiles).
 
 
 ## How do I update my project's .xml file (e.g., http://www.coin-or.org/projects/Cgl.xml) ?
@@ -57,7 +57,7 @@ A final note.  The CDT project perspective looks very good.  CDT has matured gre
 ## How do I build CoinAll without rpaths?
 
  1. get rid of all `-rpath` occurrences in Makefile.am by running [this script](https://projects.coin-or.org/svn/CoinBinary/rpm/trunk/noRpathsPatch.sh).
- 1. re-run autotools [with the right versions of automake, autoconf, and libtool.](./pm-get-autotools)
+ 1. re-run autotools [with the right versions of automake, autoconf, and libtool.](./pm-get-autotools.md)
  1. configure with `--prefix` pointing to a standard place
  1. make
  1. add all .libs with libraries in them to `LD_LIBRARY_PATH` so that tests have a chance. For example, from the CoinAll base directory do:

@@ -4,7 +4,7 @@
 
 ## Basics
 
-Externals are defined as a [subversion property](./pm-svn-cmds#SubversionProperties) associated with a directory in a subversion repository (with the name `svn:externals`).  If someone checks out such a directory, the corresponding externals (defined using URLs) are also checked out, into subdirectories of that directory.  The names of those subdirectories, as well as the URL, are defined in the `svn:externals` property.  It is possible to specify a specific revision number for an external.  This helps us in COIN-OR to ensure that people get a compatible version of a dependency --- the latest development version in the `trunk` of a dependency might not work with the code of the package one is trying to download and compile, if the development of the dependency has introduced incompatible changes.  Also, we can ensure in this way that point releases will always obtain the same version of their dependencies.
+Externals are defined as a [subversion property](./pm-svn-cmds.md#SubversionProperties) associated with a directory in a subversion repository (with the name `svn:externals`).  If someone checks out such a directory, the corresponding externals (defined using URLs) are also checked out, into subdirectories of that directory.  The names of those subdirectories, as well as the URL, are defined in the `svn:externals` property.  It is possible to specify a specific revision number for an external.  This helps us in COIN-OR to ensure that people get a compatible version of a dependency --- the latest development version in the `trunk` of a dependency might not work with the code of the package one is trying to download and compile, if the development of the dependency has introduced incompatible changes.  Also, we can ensure in this way that point releases will always obtain the same version of their dependencies.
 
 Externals are checked out recursively, _i.e._, if there is an `svn:externals` property defined in a directory downloaded for an external, it is also downloaded.  One can suppress the checkout (or the action of other `svn` commands) of externals by specifying the `--ignore-externals` flag.
 
@@ -39,9 +39,9 @@ Osi         https://projects.coin-or.org/svn/Osi/releases/0.104.2/Osi
 
 ## Important Considerations For Externals
 
-*It is [mandatory](./pm-svn-releases) that the externals for a point release in a `releases/` subdirectory specify dependencies that do not change at any later point in time*, so that the original [point release](./pm-svn-releases#WorkingWithPointReleases) can always be recreated.  _We have no mechanism in place that enforces this, so we rely on the project manager's discipline to adhere to this convention._
+*It is [mandatory](./pm-svn-releases.md) that the externals for a point release in a `releases/` subdirectory specify dependencies that do not change at any later point in time*, so that the original [point release](./pm-svn-releases.md#WorkingWithPointReleases) can always be recreated.  _We have no mechanism in place that enforces this, so we rely on the project manager's discipline to adhere to this convention._
 
-In the above example we see that all externals have been set to things that are not going to change at some later point in time:  By [convention](./pm-svn-releases), subdirectories in the `releases/` directory for each COIN-OR project are [tags](./pm-svn-branches), _i.e._, they should never be changed once they have been created. Pointing to specific `releases/` subdirectories is recommended.  If, for some reason, the required code is not available in a `releases/` subdirectory, the externals definition _must_ specify a particular subversion repository revision number using the `-r` flag.
+In the above example we see that all externals have been set to things that are not going to change at some later point in time:  By [convention](./pm-svn-releases.md), subdirectories in the `releases/` directory for each COIN-OR project are [tags](./pm-svn-branches.md), _i.e._, they should never be changed once they have been created. Pointing to specific `releases/` subdirectories is recommended.  If, for some reason, the required code is not available in a `releases/` subdirectory, the externals definition _must_ specify a particular subversion repository revision number using the `-r` flag.
 
 Thus, modifications to externals are only allowed for development versions and stable branches.
 Note, however, that modifications to stable branches should consist of bugfixes only.
@@ -86,7 +86,7 @@ More information about externals can be obtained in the [Externals Definitions](
 
 ## Preparing Externals For A Point Release
 
-(_There are two scripts in BuildTools that automate this process. Read [Creating New Point Release](./pm-svn-releases#CreatingaNewPointRelease) first._)
+(_There are two scripts in BuildTools that automate this process. Read [Creating New Point Release](./pm-svn-releases.md#CreatingaNewPointRelease) first._)
 
 Typically, a stable version of a COIN-OR project that depends on other COIN-OR projects will specify a particular point release version (subdirectory) in the `releases/` directory of each dependency.  By convention, the compilation should not break when these versions are updated to new point releases _of the same stable branch_; a project manager should ensure compatibility of the project's code with the externals selected for use in a particular stable version.
 
@@ -107,4 +107,4 @@ If you now want to create a new point release from the latest version in your st
     i. Run your tests (`make tests`) and do whatever you do to convince yourself that your project's code works correctly.
  1. If that works fine, commit what is now in your local copy back into the stable branch of your project (`svn commit`).
  1. To confirm portability and act as a sanity test, you might want to check that the code now in your stable branch compiles and runs fine on a different machine (`svn update` and `make tests` on the other machine).
- 1. Create a copy of the current version of your stable branch as a new point release, as described [here](./pm-svn-releases#CreatingaNewPointRelease).
+ 1. Create a copy of the current version of your stable branch as a new point release, as described [here](./pm-svn-releases.md#CreatingaNewPointRelease).

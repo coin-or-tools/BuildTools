@@ -3,7 +3,7 @@
 
 A *_tag*_ is a name that is given by the project maintainer to a particular revision of the code in a repository, so that one can easily retrieve it without having to specify a revision number.  Typically, one might want to give tags to stable versions of the code.
 
-A *_branch*_ is a specific "line" of code development.  One always has a main branch, which contains the main development branch.  In subversion, this main development branch is by convention called *_trunk*_.  But it is a very good idea, and we highly recommend this, to maintain stable branches, which allow the common user to work with a recent version of the code, without being disturbed by every single change and intermediate unstable version.  The recommended way to handle a project's repository in terms of stable branches and official point releases is discussed [here](./pm-svn-releases).
+A *_branch*_ is a specific "line" of code development.  One always has a main branch, which contains the main development branch.  In subversion, this main development branch is by convention called *_trunk*_.  But it is a very good idea, and we highly recommend this, to maintain stable branches, which allow the common user to work with a recent version of the code, without being disturbed by every single change and intermediate unstable version.  The recommended way to handle a project's repository in terms of stable branches and official point releases is discussed [here](./pm-svn-releases.md).
 
 In the trunk development branch one can safely continue to work, possibly sharing the changes with other developers, and if a new stable version has been obtained, the changes can be *_merged*_ to a stable branch.
 
@@ -11,7 +11,7 @@ If you have used CVS before, you know the notion of "branches" and "tags".  In C
 
 Subversion itself does not know about tags and branches.  Instead, one can use the fact that subversion (in contrast to CVS) also keeps revisions of directories, just as for files, and that an `svn copy` retains the change history for copied files and directories.
 
-*Project managers are encouraged to follow the [COIN-OR release management policy](./pm-svn-releases).*  In this case, the directory structure in the svn repository at the very base of a project (say, `Prjct`), is
+*Project managers are encouraged to follow the [COIN-OR release management policy](./pm-svn-releases.md).*  In this case, the directory structure in the svn repository at the very base of a project (say, `Prjct`), is
 ```
 Prjct ---- trunk
   |
@@ -27,7 +27,7 @@ Prjct ---- trunk
 ```
 Here, `stable` contains subdirectories `x.y` with 2-digit release numbers, indicating a *stable branch*, and `releases` contains subdirectories `x.y.z` with 3-digit release numbers, indicating *tags for stable point releases*.  The latest development is meant to take place in `trunk`.  The directories `branches` and `tags` are meant for further branches and tags, respectively, and `conf` contains some configuration files.
 
-You can find out more about the subversion commands used here by typing `svn help command`, or look at our short documentation [here](./pm-svn-cmds).
+You can find out more about the subversion commands used here by typing `svn help command`, or look at our short documentation [here](./pm-svn-cmds.md).
 
 
 ## Creating New Branches and Tags
@@ -84,7 +84,7 @@ The subversion repository is essentially a large file system with revision contr
 
 ## Merging Branches
 
-*Please make sure you read the [page about the COIN-OR policy of handling releases and stable branches](./pm-svn-releases).*
+*Please make sure you read the [page about the COIN-OR policy of handling releases and stable branches](./pm-svn-releases.md).*
 
 
 ### Synchronizing two branches
@@ -97,7 +97,7 @@ As an example, assume that the current content in `stable/2.5` was the content o
 ```
 svn merge -r 450 https://projects.coin-or.org/svn/Prjct/trunk
 ```
-This will merge then changes that occurred in `trunk` since revision 450 into your local copy (of `stable/2.5`).  If you have made no local modifications in `stable/2.5` (and it is a good idea do keep it that way), everything should just work fine.  If you have local modification in your `trunk` copy, you might encounter conflicts that you have to resolve, just as if you have done an `svn commit` and encountered conflicts (see the description of `svn commit` [here](./pm-svn-cmds)).
+This will merge then changes that occurred in `trunk` since revision 450 into your local copy (of `stable/2.5`).  If you have made no local modifications in `stable/2.5` (and it is a good idea do keep it that way), everything should just work fine.  If you have local modification in your `trunk` copy, you might encounter conflicts that you have to resolve, just as if you have done an `svn commit` and encountered conflicts (see the description of `svn commit` [here](./pm-svn-cmds.md)).
 
 Note: Once you have successfully synchronized `stable/2.5` with `trunk`, you should commit the changes in `stable/2.5` and *include the current repository number in your commit message, so that you know the beginning point for your next merge operation.*
 

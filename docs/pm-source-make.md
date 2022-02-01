@@ -161,7 +161,7 @@ clp_LDADD = libClp.la \
 LIBS += $(ADDLIBS) `cat $(COINUTILSOBJDIR)/coinutils_addlibs.txt`
 ```
 
- * The *_LDADD* variable is used to specify all library dependencies of a the binary (using the libtool extension "`.la`"). For the `clp` binary, we specify here the Clp library (of course), and all libraries that are required to link against the Clp library. The latter are [accumulated by configure](./pm-project-config) in the `CLPLIB_LIBS` variable.
+ * The *_LDADD* variable is used to specify all library dependencies of a the binary (using the libtool extension "`.la`"). For the `clp` binary, we specify here the Clp library (of course), and all libraries that are required to link against the Clp library. The latter are [accumulated by configure](./pm-project-config.md) in the `CLPLIB_LIBS` variable.
 
  * The *_DEPENDENCIES* variable is used by make to generate dependency rules for the binary, so that it is recompiled if one of its dependencies is modified. The default mechanism of automake for setting up the `_DEPENDENCIES` variable does not work for us, since it sets up this variable based on the `_LDADD` variable at the time automake is executed. However, at this time, the values of the `CLPLIB_LIBS` variable is not known, so the dependencies would be incomplete. 
 
@@ -187,7 +187,7 @@ AM_CPPFLAGS = $(COINDEPEND_CFLAGS) \
         -I`$(CYGPATH_W) $(srcdir)/..`
 ```
 
- * To specify the compiler flags for include directories for header files, one should use the *AM_CPPFLAGS* variable. The [macros that check for other projects in configure](./pm-project-config) already setup a variable that contain all compiler flags (esp. specifications of include directories) necessary to build against these projects.
+ * To specify the compiler flags for include directories for header files, one should use the *AM_CPPFLAGS* variable. The [macros that check for other projects in configure](./pm-project-config.md) already setup a variable that contain all compiler flags (esp. specifications of include directories) necessary to build against these projects.
 
  Additionally, we may have to specify other directories with header files in this project, which can be done as shown here. The usage of the *CYGPATH_W* variable might seem a bit cumbersome (and it is), but this is necessary to ensure that the code can also be compiled with native Windows compilers under Cygwin.  The `CYGPATH_W` variable is automatically set to "`cygpath -w`" on Cygwin, which translates the UNIX-style path to a proper Windows path.  On other platforms, it is simply set to "`echo`".
 
@@ -210,7 +210,7 @@ DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src
 ```
 
  * You should have the lines above somewhere in your `Makefile.am` file, to make sure that users can compile your code in a VPATH configuration.  The default setting for *DEFAULT_INCLUDES* does not use the `CYGPATH_W` variable and does not add the include for the src subdirectory of the build directory.
- The latter is needed to find [automatically generated config header files](./pm-config-header) (provided they are put into this directory).
+ The latter is needed to find [automatically generated config header files](./pm-config-header.md) (provided they are put into this directory).
 
 -------------------------
 
@@ -261,5 +261,5 @@ uninstall-local:
         rm -f $(DESTDIR)$(includedir)/ClpConfig.h
 ```
 
- * As discussed in the [Configuration Header files page](./pm-config-header), in COIN-OR we don't include the configuration header files `config*.h` directly.  Instead, this is done via the *_Pkg_Config.h* file, to make sure that the compilation can also be done smoothly in a non-autotools setup. However, when building against an installed version of a project, only the _public_ configuration header file is required. Thus, the above lines ensure that the public header is installed as *_Pkg_Config.h* file. *Do not install the _private_ configuration header file `config.h`*, recall the information [here](./pm-config-header).
+ * As discussed in the [Configuration Header files page](./pm-config-header.md), in COIN-OR we don't include the configuration header files `config*.h` directly.  Instead, this is done via the *_Pkg_Config.h* file, to make sure that the compilation can also be done smoothly in a non-autotools setup. However, when building against an installed version of a project, only the _public_ configuration header file is required. Thus, the above lines ensure that the public header is installed as *_Pkg_Config.h* file. *Do not install the _private_ configuration header file `config.h`*, recall the information [here](./pm-config-header.md).
  The `install-exec-local` is run by the generated Makefile for a `make install`, and the commands for `uninstall-local` are executed for the `make uninstall`.

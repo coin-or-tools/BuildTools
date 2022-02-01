@@ -46,7 +46,7 @@ Lists all available `svn` commands.  *Help for a specific command* `cmd` can be 
 
 If you want to specify a specific revision that you want to check out, you can do this using the `-r N` flag, where `N` is the revision number.
 
-By default, `svn checkout` will download files from other subversion repositories, if [svn externals](./pm-svn-externals) are defined for directories in the specified URL, and will recurse to further locations if externals are defined there.  If you don't want to download any externals, specify the `--ignore-externals` flag.
+By default, `svn checkout` will download files from other subversion repositories, if [svn externals](./pm-svn-externals.md) are defined for directories in the specified URL, and will recurse to further locations if externals are defined there.  If you don't want to download any externals, specify the `--ignore-externals` flag.
 
 The COIN-OR svn repository is set up in a way, so that everybody can download files, without having to provide a password.  You will have to provide your id and password once, if you want to do a write action, such as `svn submit`.
 
@@ -80,7 +80,7 @@ This command it used to *commit your local modifications to the subversion repos
 
 You should enter a message that describe the changes that you made, so that later on you can see in the subversion history what has been going on.  You can enter the message on the command line, using the "`-m`" flag, followed by the message (in quotes).  If you omit the `-m` flag, you default editor will open for you to enter the message.
 
-*Note*:  For most COIN-OR packages, we use [subversion externals](./pm-svn-externals) to obtain dependencies.  The `commit` command does not automatically recurse into externals; therefore, you have to do a `commit` by hand.  *Make sure you are not committing code to an external with a specified version number in the externals definition! *
+*Note*:  For most COIN-OR packages, we use [subversion externals](./pm-svn-externals.md) to obtain dependencies.  The `commit` command does not automatically recurse into externals; therefore, you have to do a `commit` by hand.  *Make sure you are not committing code to an external with a specified version number in the externals definition! *
 
 
 ### svn diff (short form: svn di)
@@ -120,7 +120,7 @@ This command *creates a new version controlled subdirectory* in your local copy.
 
 ### svn merge
 
-This command is used to *merge changes in a different part of the repository (like a branch) into the local copy*.  Please see the [wiki page on branches](./pm-svn-branches) to see how you can use it properly.
+This command is used to *merge changes in a different part of the repository (like a branch) into the local copy*.  Please see the [wiki page on branches](./pm-svn-branches.md) to see how you can use it properly.
 
 
 ### svn export
@@ -134,7 +134,7 @@ To understand the next set of commands you need to know what [Subversion Propert
 
  * *svn:executable*: If this property is set (with or without a value), subversion knows that this is an executable file, and will make it executable when you check it out.  Note, when you want to mark a file as an executable file, you simply need to set this property for this file, and subversion will automatically make it executable in your local copy.
  * *svn:eol-style*:  This property should be set to the value *native* for any text file.  This way, it will be adapted correctly at a checkout to have the correct line-end bytes (which differ for example between UNIX and Windows systems).
- * *svn:externals*: This is a property that can be set for directories, and it defines [subversion externals](./pm-svn-externals).
+ * *svn:externals*: This is a property that can be set for directories, and it defines [subversion externals](./pm-svn-externals.md).
  * *svn:mime-type*: This property, set for a file, tells subversion the MIME type of the file.
 
 
@@ -150,7 +150,7 @@ This command *tells you the value for a specific property for a file or director
 
 ### svn propset (short form: svn pset)
 
-With this command you can *set the value of a specify property for a file or directory*.  As the first argument, you need to specify the name of the property, then the value of the property (use quotation if this has more than one word), and finally you need to specify the name of the file or directory.  You can also provide the value as the content of a file, say `FileName`, in which case you omit the value argument, and use the "`-F FileName`" flag instead.  In COIN-OR, we use this to assign [subversion externals](./pm-svn-externals).
+With this command you can *set the value of a specify property for a file or directory*.  As the first argument, you need to specify the name of the property, then the value of the property (use quotation if this has more than one word), and finally you need to specify the name of the file or directory.  You can also provide the value as the content of a file, say `FileName`, in which case you omit the value argument, and use the "`-F FileName`" flag instead.  In COIN-OR, we use this to assign [subversion externals](./pm-svn-externals.md).
 
 
 ### svn propdel (short form: svn pdel)

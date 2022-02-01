@@ -98,7 +98,7 @@ uninstall-local: uninstall-doxydoc
 .PHONY: test unitTest tests unitTests doxydoc
 ```
 
- * For C++ packages, we usually also provide a target *doxydoc*, which runs the `doxygen` program for all projects that have a doxydoc directory. The doxygen documentations may be connected with doxygen tag files, so we create first the doxygen projects of all other projects and finally the one of our project. See the [Using Doxygen in COIN-OR Documentation](./pm-doxygen) for more details.
+ * For C++ packages, we usually also provide a target *doxydoc*, which runs the `doxygen` program for all projects that have a doxydoc directory. The doxygen documentations may be connected with doxygen tag files, so we create first the doxygen projects of all other projects and finally the one of our project. See the [Using Doxygen in COIN-OR Documentation](./pm-doxygen.md) for more details.
 
 ```
 ########################################################################

@@ -73,12 +73,12 @@ Cflags: -I${includedir}
 Requires: `@`XYZ_PCREQUIRES`@`
 ```
 The variables `prefix`, `exec_prefix`, `libdir`, and `includedir` are setup from default configure variables.
-The `Version` field is setup to contain the value of ``@`PACKAGE_VERSION`@``. This variable holds the value of the second parameter of the `AC_INIT` macro in the [beginning of the configure.ac file](./pm-structure-config#Beginningofaconfigure.acfile).
-The `Libs` and `Requires` fields make use of the variables ``@`XYZ_PCLIBS`@`` and ``@`XYZ_PCREQUIRES`@`` variables as they are setup by the [AC_COIN_CHECK_* macros](./pm-project-config#CheckforotherCOIN-ORComponents) in the configure.ac file. They contain an accumulated list of dependencies in form of linker flags and names of `.pc` files, respectively.
+The `Version` field is setup to contain the value of ``@`PACKAGE_VERSION`@``. This variable holds the value of the second parameter of the `AC_INIT` macro in the [beginning of the configure.ac file](./pm-structure-config.md#Beginningofaconfigure.acfile).
+The `Libs` and `Requires` fields make use of the variables ``@`XYZ_PCLIBS`@`` and ``@`XYZ_PCREQUIRES`@`` variables as they are setup by the [AC_COIN_CHECK_* macros](./pm-project-config.md#CheckforotherCOIN-ORComponents) in the configure.ac file. They contain an accumulated list of dependencies in form of linker flags and names of `.pc` files, respectively.
 
 The `xyz.pc.in` file is translated into a `xyz.pc` file by replacing all ``@`...`@`` variables by their value as computed by configure, if the `xyz.pc.in` file is listed in the `AC_CONFIG_FILES` macro at
-[the end of the configure.ac file](./pm-structure-config#TheEndoftheconfigure.acFile).
-When "`make install`" is executed, it should be installed together with the `Xyz` library into the directory `$(libdir)/pkgconfig` as described [here](./pm-project-make#TheProjectMainDirectoryMakefile.amFile).
+[the end of the configure.ac file](./pm-structure-config.md#TheEndoftheconfigure.acFile).
+When "`make install`" is executed, it should be installed together with the `Xyz` library into the directory `$(libdir)/pkgconfig` as described [here](./pm-project-make.md#TheProjectMainDirectoryMakefile.amFile).
 
 
 ## The .pc file of an uninstalled COIN-OR project library
@@ -108,7 +108,7 @@ Requires: `@`XYZLIB_PCREQUIRES`@`
 In difference to the `xyz.pc.in` file, the `libdir` is now not set to the library installation directory, but to the *directory where the library is build*: ``@`ABSBUILDDIR`@`/src`. The variable `@`ABSBUILDDIR`@` is automatically setup by configure (in the AC_COIN_FINALIZE macro) to contain the absolute path to the project's build directory.
 
 In the *`Libs` field*, we now do not use `-L/-l` notation to specify the library path and name, but provide the name of the libraries libtool auxiliary file (`.la`) with full (absolute) path.
-The reason is that this way the value in the `Libs` field can be used to setup the `_DEPENDENCIES` variable of a binary in a `Makefile.am`, see [here](./pm-source-make#SpecifyingLinkingFlags).
+The reason is that this way the value in the `Libs` field can be used to setup the `_DEPENDENCIES` variable of a binary in a `Makefile.am`, see [here](./pm-source-make.md#SpecifyingLinkingFlags).
 Since the location of an uninstalled library depends on whether a shared or static library is build and since the `xyz-uninstalled.pc` files are not meant for use outside of COIN-OR, it is ok to specify an `.la` file here.
 
 In the *`Cflags` field*, we specify the location of header files before the project is installed.
@@ -116,7 +116,7 @@ The variable ``@`abs_source_dir`@`` is thereby setup by configure to contain the
 Note that next to the `src` subdirectory, we also specify the `inc` directory which contains the `config_xyz.h` file. (This is likely to change in the future.)
 
 The `xyz-uninstalled.pc.in` file is translated into a `xyz-uninstalled.pc` file by replacing all ``@`...`@`` variables by their value as computed by configure, if the `xyz-uninstalled.pc.in` file is listed in the `AC_CONFIG_FILES` macro at
-[the end of the configure.ac file](./pm-structure-config#TheEndoftheconfigure.acFile).
+[the end of the configure.ac file](./pm-structure-config.md#TheEndoftheconfigure.acFile).
 In order to allow other projects to find this file, it is assumed that it is put into the main build directory of the project.
 It should not be installed.
 
@@ -142,7 +142,7 @@ I.e., the classic setup where one checks out and builds a project with all its d
 
 Therefore, the COIN-OR build system contains some *fallback macros which parse `.pc` files by simple shell scripting*.
 Of course, this comes with *limitations*, which are:
-* It is not possible to build against installed versions of other projects, i.e., the macro ignores `PKG_CONFIG_PATH` and searches only in the configure directories setup by a [project's base configure file](./pm-base-config).
+* It is not possible to build against installed versions of other projects, i.e., the macro ignores `PKG_CONFIG_PATH` and searches only in the configure directories setup by a [project's base configure file](./pm-base-config.md).
 
 * The syntax in the `xyz-uninstalled.pc` file that can be processed by the macro may be limited. (To retrieve compiler and linker flags, the macro replaces the strings `Cflags: ` and `Libs: ` by an `echo` command, then eliminates all remaining lines that start with a string of the form `[A-Za-z]*:`, and finally executes the resulting file as shell script.)
 

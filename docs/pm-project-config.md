@@ -5,7 +5,7 @@
 
 The purpose of the configuration script in a project's main directory (`Clp` and `CoinUtils` in the [example](./user-directories)) is to test everything required for the compilation of the project's source code, and to set up all Makefiles.
 
-The beginning and the end of the file follow the [basic structure](./pm-structure-config) of `configure.ac` files.  The body for a project main directory `configure.ac` contains the following parts:
+The beginning and the end of the file follow the [basic structure](./pm-structure-config.md) of `configure.ac` files.  The body for a project main directory `configure.ac` contains the following parts:
 
  * Initialization of tools and checks for programs, such as a compiler.
  * Checks for other COIN-OR components.

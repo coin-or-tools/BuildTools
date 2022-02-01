@@ -3,7 +3,7 @@
 
 # Basic Structure of the configure.ac File
 
-Make sure you read the [introduction to the autotools](./pm-autotools-intro) first.
+Make sure you read the [introduction to the autotools](./pm-autotools-intro.md) first.
 [Here you can find the full autoconf documentation](http://www.gnu.org/software/autoconf/manual/).
 
 
@@ -56,9 +56,9 @@ AC_CONFIG_SRCDIR(src/SuperSolverMain.cpp)
 AC_PREFIX_DEFAULT([`pwd`])
 ```
 
- * The file should contain the *copyright notice*, information about the *authors*, and state under what *license* the file is made available.  Note the *$Id ...$* string.  This is a [subversion property keyword](./pm-svn-cmds#SubversionProperties), which is expanded to contain information about the file, such as revision number, author and date of the last submission, _etc._, when the file is committed (assuming that the `svn:keywords` property for this file contains "`Id`").
+ * The file should contain the *copyright notice*, information about the *authors*, and state under what *license* the file is made available.  Note the *$Id ...$* string.  This is a [subversion property keyword](./pm-svn-cmds.md#SubversionProperties), which is expanded to contain information about the file, such as revision number, author and date of the last submission, _etc._, when the file is committed (assuming that the `svn:keywords` property for this file contains "`Id`").
 
- * The *`AC_PREREQ`* macro specifies the version number of `autoconf` that is required to generate a `configure` script from this input file.  In COIN-OR, we ask people to [use exactly the same versions of all the GNU autotools](./pm-get-autotools), so that we can collectively take care of bug fixes and can avoid the situation where different versions of the autotools generate large differences in the generated configuration files when multiple developers work on a project simultaneously.
+ * The *`AC_PREREQ`* macro specifies the version number of `autoconf` that is required to generate a `configure` script from this input file.  In COIN-OR, we ask people to [use exactly the same versions of all the GNU autotools](./pm-get-autotools.md), so that we can collectively take care of bug fixes and can avoid the situation where different versions of the autotools generate large differences in the generated configuration files when multiple developers work on a project simultaneously.
 
  * The *`AC_INIT`* macro takes as arguments the name of the project, its version number, and contact information in case a user wants to get in touch with the developers, _e.g._, in order to report a bug.  The name and version number determine the name of the tarball that will be created by '`make dist`'.
 
@@ -73,7 +73,7 @@ AC_PREFIX_DEFAULT([`pwd`])
 
 ## The Body of the `configure.ac` File
 
-After the initialization described above, `configure.ac` usually contains a number of *macros that will be expanded into the tests* that are to be run by the `configure` script. The content of the body depends on whether this is a [base directory configure.ac](./pm-autotools#BaseDirConfigAc) file or a [project directory configure.ac](./pm-autotools#ProjDirConfigAc) file. In general, one checks for the *availability and names of programs* (such as compilers and other tools), tests for the presence of *header files, libraries, _etc._ *, and sets the values of `autoconf` output variables and [configuration header](./pm-autotools-intro#ConfigurationHeaderFiles) `#define`s.
+After the initialization described above, `configure.ac` usually contains a number of *macros that will be expanded into the tests* that are to be run by the `configure` script. The content of the body depends on whether this is a [base directory configure.ac](./pm-autotools.md#BaseDirConfigAc) file or a [project directory configure.ac](./pm-autotools.md#ProjDirConfigAc) file. In general, one checks for the *availability and names of programs* (such as compilers and other tools), tests for the presence of *header files, libraries, _etc._ *, and sets the values of `autoconf` output variables and [configuration header](./pm-autotools-intro.md#ConfigurationHeaderFiles) `#define`s.
 
 Autoconf output variables are specified with the macro invocation *`AC_SUBST(VARNAME)`*, where `VARNAME` is the name of the output variable.  The value of the output variable will be the value of the corresponding shell variable in the `configure` script.  Therefore, setting the value of an output variable is done with a shell command like
 ```
@@ -110,6 +110,6 @@ AC_COIN_FINALIZE
 
  * The *`AC_CONFIG_FILES`* macro takes as its single argument a space-separated list of the files that are to be created from the corresponding `.in` template files. These are all the `Makefile`s and maybe some additional files.  In the example shown here, the project installs a _prjct_`.pc` file, and this will also be created from a template. *A template file must exist for each file listed in the argument to `AC_CONFIG_FILES`.*
 
- * The *`AC_CONFIG_HEADER`* macro takes as its single argument a space-separated list of names of [configuration header](./pm-autotools-intro#ConfigurationHeaderFiles) files that are to be created by `configure`.  For the first file in this list, the template will be created by the autotools utility `autoheader`. For the remaining ones, the project manager has to provide the template files. [Base directory configure.ac](./pm-autotools#BaseDirConfigAc) files don't need this, since they do not gather information for compilation.
+ * The *`AC_CONFIG_HEADER`* macro takes as its single argument a space-separated list of names of [configuration header](./pm-autotools-intro.md#ConfigurationHeaderFiles) files that are to be created by `configure`.  For the first file in this list, the template will be created by the autotools utility `autoheader`. For the remaining ones, the project manager has to provide the template files. [Base directory configure.ac](./pm-autotools.md#BaseDirConfigAc) files don't need this, since they do not gather information for compilation.
 
  * The *`AC_COIN_FINALIZE`* macro takes care of actually writing the output. Internally, it uses the `AC_OUTPUT` macro, but since additional actions might have to be taken, you should use `AC_COIN_FINALIZE` instead of using `AC_OUTPUT` directly.  `AC_COIN_FINALIZE` also writes the "configuration successful" message before the `configure` script finally stops.

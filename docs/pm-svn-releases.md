@@ -1,10 +1,10 @@
 
- This page describes how the [policy for versioning suggested by COIN-OR](https://projects.coin-or.org/CoinTLC/wiki/VersionsAndReleases) can be implemented within the subversion repository for your project. You might want to first read the page on [understanding branches and tags](./pm-svn-branches), or other pages for [understanding subversion](./pm-svn). Below, the string _YourProject_ is to be replaced by the name of your project.
+ This page describes how the [policy for versioning suggested by COIN-OR](https://projects.coin-or.org/CoinTLC/wiki/VersionsAndReleases) can be implemented within the subversion repository for your project. You might want to first read the page on [understanding branches and tags](./pm-svn-branches.md), or other pages for [understanding subversion](./pm-svn.md). Below, the string _YourProject_ is to be replaced by the name of your project.
 
 
 ## Overview
 
-The purpose of the COIN-OR versioning and release system is to specify standard procedures for maintaining the code base of COIN-OR projects so that users can obtain the version of the code most appropriate for them. The recommended [subversion](./pm-svn) repository layout for COIN-OR projects includes the top-level directories `trunk/`, `branches/`, `tags/`, `stable/`, and `releases/`.
+The purpose of the COIN-OR versioning and release system is to specify standard procedures for maintaining the code base of COIN-OR projects so that users can obtain the version of the code most appropriate for them. The recommended [subversion](./pm-svn.md) repository layout for COIN-OR projects includes the top-level directories `trunk/`, `branches/`, `tags/`, `stable/`, and `releases/`.
 
 At all times, the main development line is to be contained in `trunk/`. The code in `trunk/` is not expected to be completely functional and is the "bleeding edge" of the project. At appropriate points in time, specific versions can be split off from the main development line for the purpose of declaring a stable version (see below) or implementing new features.
 
@@ -108,7 +108,7 @@ and looked at the line that starts with "`Revision:`".
 
 ### Maintaining a Stable Version
 
-To change the content of a stable version, you work with it as usual: creating (checking out) a local copy of the code in that branch, making changes there (directly by editing, or [by using svn merge](./pm-svn-branches) to include changes made in a different version in the repository, such as `trunk`), and finally submitting the changes back to the repository.
+To change the content of a stable version, you work with it as usual: creating (checking out) a local copy of the code in that branch, making changes there (directly by editing, or [by using svn merge](./pm-svn-branches.md) to include changes made in a different version in the repository, such as `trunk`), and finally submitting the changes back to the repository.
 
 
 ## Working With Point Releases
@@ -163,4 +163,4 @@ and looked at the line that starts with "`Revision:`".
 
 ### Tarball Creation
 
-For information on the automatic tarball creation look [here](./pm-svn-server).
+For information on the automatic tarball creation look [here](./pm-svn-server.md).

@@ -49,7 +49,7 @@ endif
 ```
  These variables can then be used in `#ifdef` statements inside the C++ code. See `CbcConfig.h` for an example of how to use the `config_cbc.h` file. 
 
-4. *Use the Correct Version of Autotools*. Whatever you do take the [advice given at this page](./pm-get-autotools) and put your autotools in `$HOME/bin` and the configuration files in `$HOME/share`.  The BuildTools page says you can alternatively install them in another directory and set the appropriate environment variable (like doing `export AUTOTOOLS_DIR=/somepath/autotools; export PATH=/somepath/autotools/bin`). Don't even think about it! Also make sure you don't have alternative versions of the autotools lurking about in directories such as `/usr/bin` that appear before `$HOME/bin` in `PATH`.
+4. *Use the Correct Version of Autotools*. Whatever you do take the [advice given at this page](./pm-get-autotools.md) and put your autotools in `$HOME/bin` and the configuration files in `$HOME/share`.  The BuildTools page says you can alternatively install them in another directory and set the appropriate environment variable (like doing `export AUTOTOOLS_DIR=/somepath/autotools; export PATH=/somepath/autotools/bin`). Don't even think about it! Also make sure you don't have alternative versions of the autotools lurking about in directories such as `/usr/bin` that appear before `$HOME/bin` in `PATH`.
 
 -------------------------------
 
