@@ -7,9 +7,9 @@
 # original script by Pierre Bonami
 
 acver=2.71
-aaver=2021.02.19
-amver=1.16.3
-ltver=2.4.6
+aaver=2022.09.03
+amver=1.16.5
+ltver=2.4.7
 
 # exit immediately if something fails
 set -e

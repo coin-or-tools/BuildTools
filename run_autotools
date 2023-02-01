@@ -69,8 +69,8 @@ echo "Using COIN_AUTOTOOLS_DIR=$COIN_AUTOTOOLS_DIR"
 
 repoDir='.git'
 ver_autoconf='2.71'
-ver_automake='1.16.3'
-ver_libtool='2.4.6'
+ver_automake='1.16.5'
+ver_libtool='2.4.7'
 ltfile=$COIN_AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
 autotoolsFiles="config.guess config.sub depcomp install-sh ltmain.sh missing compile ar-lib"
 
