@@ -268,7 +268,8 @@ if [[ ! -r $ltfile ]] ; then
   echo "WARNING: Cannot find libtool shell $ltfile"
 fi
 if ! grep -F $ver_libtool $ltfile &>/dev/null ; then 
-  echo "WARNING: You are not using the correct version of libtool"
+  echo "ERROR: You are not using the correct version of libtool"
+  exit 2
 fi
 
 # Set up to process parameters. No parameters is the default.
