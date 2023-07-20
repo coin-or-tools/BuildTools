@@ -42,7 +42,7 @@ echo "Project        : $topProjName"
 
 branchName=`git rev-parse --abbrev-ref HEAD`
 echo "Branch         : $branchName"
-
+versionNum=$(echo $branchName | cut -d '/' -f 2)
 
 if [[ "$branchName" != stable/* ]] ; then
   echo "ERROR: Expected branchname to start with 'stable/"
@@ -55,6 +55,9 @@ git fetch -t
 # get last release from current stable branch
 
 lastRelease=`git tag --list "${branchName/stable/releases}*" | sort -V | tail -1`
+
+versionNum=$(echo $branchName | cut -d '/' -f 2)
+
 echo "Checking out current release   : $lastRelease"
 
 git checkout $lastRelease
@@ -80,14 +83,14 @@ fi
 
 git pull --rebase
 
-if [ -d Doxygen ]; then 
-  git rm -r Doxygen
+if [ -d Doxygen/$versionNum ]; then 
+  git rm -r Doxygen/$versionNum
   git commit -m "Removing old Doxygen documentation"  
 fi  
 
-mkdir Doxygen
-cp -r tmp_doxygen/doxydoc/html/* Doxygen
-git add Doxygen
+mkdir Doxygen/$versionNum
+cp -r tmp_doxygen/doxydoc/html/* Doxygen/$versionNum
+git add Doxygen/$versionNum
 git commit -m "Updating Doxygen documentation to release $lastRelease"
 
 echo
