@@ -2038,7 +2038,7 @@ if test x$coin_skip_ac_output != xyes; then
     done
   fi
 
-  AC_MSG_NOTICE([In case of trouble, first consult the troubleshooting page at https://projects.coin-or.org/BuildTools/wiki/user-troubleshooting])
+  AC_MSG_NOTICE([In case of trouble, first consult the troubleshooting page at https://github.com/coin-or-tools/BuildTools/wiki/user-troubleshooting])
   if test x$coin_projectdir = xyes; then
     AC_MSG_NOTICE([Configuration of $PACKAGE_NAME successful])
   else
