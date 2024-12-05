@@ -86,10 +86,10 @@
  }
  
  eat=
-@@ -256,7 +291,8 @@ EOF
-     exit $?
+@@ -259,7 +294,8 @@ EOF
      ;;
    cl | *[/\\]cl | cl.exe | *[/\\]cl.exe | \
+   clang-cl | *[/\\]clang-cl | clang-cl.exe | *[/\\]clang-cl.exe | \
 -  icl | *[/\\]icl | icl.exe | *[/\\]icl.exe )
 +  icl | *[/\\]icl | icl.exe | *[/\\]icl.exe | \
 +  ifort | *[/\\]ifort | ifort.exe | *[/\\]ifort.exe )
