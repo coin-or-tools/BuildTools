@@ -71,7 +71,7 @@ AC_DEFUN_ONCE([AC_COIN_PROG_F77],
     # first in PATH, which causes compile and link checks to fail.)
     # For the same reason, set LD to use the compile wrapper.
     if test $enable_msvc = yes ; then
-      AC_CHECK_PROGS(F77, [ifort])
+      AC_CHECK_PROGS(F77, [ifx ifort])
       if test -n "$F77" ; then
         F77="$am_aux_dir/compile $F77"
         ac_cv_prog_F77="$F77"
@@ -83,7 +83,7 @@ AC_DEFUN_ONCE([AC_COIN_PROG_F77],
     # If not msvc-enabled, then look for some Fortran compiler and check
     # whether it works. If F77 is set, this simply checks whether it works.
     if test $enable_msvc = no || test -n "$F77" ; then
-      AC_PROG_F77([gfortran ifort g95 fort77 f77 f95 f90 g77 pgf90 pgf77 ifc frt af77 xlf_r fl32])
+      AC_PROG_F77([gfortran ifx ifort g95 fort77 f77 f95 f90 g77 pgf90 pgf77 ifc frt af77 xlf_r fl32])
     fi
   fi
 
@@ -115,7 +115,7 @@ AC_DEFUN_ONCE([AC_COIN_PROG_FC],
   # explicitly and add compile-wrapper, because the compile-wrapper works
   # around issues when having the wrong link.exe in the PATH first.
   if test $enable_msvc = yes ; then
-    AC_CHECK_PROGS(FC, [ifort])
+    AC_CHECK_PROGS(FC, [ifx ifort])
     if test -n "$FC" ; then
       FC="$am_aux_dir/compile $FC"
     fi
@@ -124,7 +124,7 @@ AC_DEFUN_ONCE([AC_COIN_PROG_FC],
   # if not msvc-enabled, then look for some Fortran compiler and check whether it works
   # if FC is set, then this only checks whether it works
   if test $enable_msvc = no || test -n "$FC" ; then
-    AC_PROG_FC([gfortran ifort g95 f95 f90 pgf90 ifc frt xlf_r fl32])
+    AC_PROG_FC([gfortran ifx ifort g95 f95 f90 pgf90 ifc frt xlf_r fl32])
   fi
 
   # check whether compile script should be used to wrap around Fortran compiler

@@ -101,8 +101,8 @@ AC_DEFUN([AC_COIN_ENABLE_MSVC],
     [enable_msvc=no
      case $build in
        *-mingw* | *-cygwin* | *-msys* )
-         AC_CHECK_PROGS(CC, [gcc clang icl cl])
-         case "$CC" in *cl ) enable_msvc=yes ;; esac
+         AC_CHECK_PROGS(CC, [gcc clang icx icl cl])
+         case "$CC" in *cl | *icx ) enable_msvc=yes ;; esac
        ;;
      esac])
 ])
@@ -113,7 +113,7 @@ AC_DEFUN([AC_COIN_ENABLE_MSVC],
 ###########################################################################
 
 # Overwrite default compiler flags, since the autoconf defaults don't work
-# well for cl/icl and we want to take --enable-debug and --enable-msvc into
+# well for cl/icl/icx and we want to take --enable-debug and --enable-msvc into
 # account:
 # - debugging enabled: enable debug symbols (-g/-Z7)
 # - debugging disabled: disable debug code (-DNDEBUG); enable (more) optimization (-O2)
@@ -389,7 +389,7 @@ dnl create libtool
 # wrapper works around issues related to finding MS link.exe. (Unix link.exe
 # occurs first in PATH, which causes compile and link checks to fail.) For
 # the same reason, set LD to use the compile wrapper. If CC/CXX remains unset
-# (neither icl or cl was found, and CC was not set by the user), stop with
+# (neither icl, icx, or cl was found, and CC was not set by the user), stop with
 # an error.
 #
 # Declares ADD_C(XX)FLAGS variables for additional compiler flags.
@@ -407,7 +407,7 @@ dnl to invoke it from this macro first so that we can supply a parameter.
   AC_BEFORE([$0],[LT_INIT])
 
   if test $enable_msvc = yes ; then
-    AC_CHECK_PROGS(CC, [icl cl])
+    AC_CHECK_PROGS(CC, [icx icl cl])
     if test -n "$CC" ; then
       CC="$am_aux_dir/compile $CC"
       ac_cv_prog_CC="$CC"
@@ -419,10 +419,10 @@ dnl to invoke it from this macro first so that we can supply a parameter.
   fi
 
 dnl Look for some C compiler and check that it works. If the user has set CC
-dnl or we found icl/cl above, this should not overwrite CC. Unlike the macros
+dnl or we found icl/icx/cl above, this should not overwrite CC. Unlike the macros
 dnl that establish C++ or Fortran compilers, PROG_CC also takes care of adding
 dnl the compile wrapper if needed.
-  AC_PROG_CC([gcc clang cc icc icl cl cc xlc xlc_r pgcc])
+  AC_PROG_CC([gcc clang cc icx icc icl cl cc xlc xlc_r pgcc])
 
   AC_ARG_VAR(ADD_CFLAGS,[Additional C compiler options (if not overwriting CFLAGS)])
 ])
@@ -437,7 +437,7 @@ AC_DEFUN_ONCE([AC_COIN_PROG_CXX],
   AC_REQUIRE([AC_COIN_PROG_CC])
 
   if test $enable_msvc = yes ; then
-    AC_CHECK_PROGS(CXX, [icl cl])
+    AC_CHECK_PROGS(CXX, [icx icl cl])
     if test -n "$CXX" ; then
       CXX="$am_aux_dir/compile $CXX"
       ac_cv_prog_CXX="$CXX"
@@ -449,8 +449,8 @@ AC_DEFUN_ONCE([AC_COIN_PROG_CXX],
   fi
 
 dnl Look for some C++ compiler and check that it works. If the user has set
-dnl CXX or we found icl/cl above, this should not overwrite CXX.
-  AC_PROG_CXX([g++ clang++ c++ pgCC icpc gpp cxx cc++ icl cl FCC KCC RCC xlC_r aCC CC])
+dnl CXX or we found icl/icx/cl above, this should not overwrite CXX.
+  AC_PROG_CXX([g++ clang++ c++ pgCC icx icpc gpp cxx cc++ icl cl FCC KCC RCC xlC_r aCC CC])
 
 dnl If the compiler does not support -c -o, wrap it with the compile script.
   AC_PROG_CXX_C_O
