@@ -83,7 +83,7 @@ AC_DEFUN_ONCE([AC_COIN_PROG_F77],
     # If not msvc-enabled, then look for some Fortran compiler and check
     # whether it works. If F77 is set, this simply checks whether it works.
     if test $enable_msvc = no || test -n "$F77" ; then
-      AC_PROG_F77([gfortran ifx ifort g95 fort77 f77 f95 f90 g77 pgf90 pgf77 ifc frt af77 xlf_r fl32])
+      AC_PROG_F77([gfortran ifx ifort flang g95 fort77 f77 f95 f90 g77 pgf90 pgf77 ifc frt af77 xlf_r fl32])
     fi
   fi
 
@@ -124,7 +124,7 @@ AC_DEFUN_ONCE([AC_COIN_PROG_FC],
   # if not msvc-enabled, then look for some Fortran compiler and check whether it works
   # if FC is set, then this only checks whether it works
   if test $enable_msvc = no || test -n "$FC" ; then
-    AC_PROG_FC([gfortran ifx ifort g95 f95 f90 pgf90 ifc frt xlf_r fl32])
+    AC_PROG_FC([gfortran ifx ifort flang g95 f95 f90 pgf90 ifc frt xlf_r fl32])
   fi
 
   # check whether compile script should be used to wrap around Fortran compiler
